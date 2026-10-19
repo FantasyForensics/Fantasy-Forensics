@@ -260,7 +260,7 @@
       .hc-alt:hover { text-decoration: underline; }
       .hc-note { margin: 8px 0 0; color: var(--ink-3); font-size: 13px; }
 
-      /* ---------- this week's movers strip (under the hero) ---------- */
+      /* ---------- this week's movers strip (below the values board) ---------- */
       .movers-strip { margin: 16px 0 4px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 15px 18px 9px; }
       .ms-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
       .ms-title { font-family: "Space Grotesk", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--ink); }
@@ -587,6 +587,17 @@
       .swap .asset { background: rgba(0,0,0,.25); }
       .suggestion .why-list { margin: 10px 0 0; padding-left: 18px; color: var(--ink-2); }
       .fit-score { font-family: "Space Grotesk", sans-serif; font-weight: 700; color: var(--accent); }
+      .window-line {
+        margin-top: 12px; padding: 10px 13px; border-radius: 10px; font-size: 15px; line-height: 1.5;
+        background: rgba(198,255,0,.07); border: 1px solid rgba(198,255,0,.35); color: var(--ink);
+      }
+      .window-line.sell { background: rgba(64,200,255,.07); border-color: rgba(64,200,255,.35); }
+      .dir-tag {
+        display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+        padding: 2px 8px; border-radius: 999px; margin-right: 8px; vertical-align: 2px;
+        background: var(--accent); color: var(--accent-ink);
+      }
+      .dir-tag.sell { background: var(--cyan); color: #04121A; }
 
       /* ---------- values board ---------- */
       .board-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
@@ -704,6 +715,9 @@
       }
       .inj-toggle:hover { border-color: var(--gold); }
       .inj-toggle[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: #1A1200; box-shadow: 0 0 14px rgba(255,176,32,.35); }
+      .flex-toggle { border-color: rgba(198,255,0,.45); color: var(--accent); }
+      .flex-toggle:hover { border-color: var(--accent); }
+      .flex-toggle[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: 0 0 14px rgba(198,255,0,.35); }
       .inj-note {
         margin: 0 0 14px; padding: 13px 16px; font-size: 14px; line-height: 1.55; color: var(--ink-2);
         background: rgba(255,176,32,.06); border: 1px solid rgba(255,176,32,.3); border-radius: var(--radius);
@@ -960,6 +974,10 @@
       .seg.seg-big button { padding: 9px 26px; font-size: 15.5px; min-height: 44px; }
       .format-note { color: var(--ink-2); font-size: 13.5px; font-weight: 600; }
       body.redraft .format-note { color: var(--cyan); }
+      /* Redraft prices carry no age information: the board's Age column
+         (4th cell) leaves with the age curves. */
+      body.redraft .board-table th:nth-child(4),
+      body.redraft .board-table td:nth-child(4) { display: none; }
       @media (max-width: 640px) {
         .format-bar { padding: 10px; gap: 8px 10px; }
         .seg.seg-big button { padding: 9px 20px; }
@@ -1406,6 +1424,8 @@
       .rt-empty-side { color: var(--ink-3); font-size: 13.5px; padding: 5px 0; }
       .rt-side-total { margin-top: 8px; font-size: 12.5px; color: var(--ink-2); font-weight: 600; }
       .rt-side-total strong { color: var(--ink); font-size: 13.5px; }
+      .rt-side-total.adj { margin-top: 2px; font-size: 12px; color: var(--ink-3); }
+      .rt-side-total.adj strong { font-size: 12.5px; color: var(--ink-2); }
       .rt-swap { color: var(--ink-3); font-size: 18px; font-weight: 800; padding-top: 26px; }
       .rt-more {
         display: block; width: 100%; margin: 4px 0 8px; padding: 12px; background: var(--surface);
@@ -1548,6 +1568,60 @@
         .ins-body p { font-size: 16px; }
         .ins-standfirst { font-size: 16.5px; }
       }
+      /* ---------- injury freshness line (Lineup tab) ---------- */
+      .inj-fresh {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        color: var(--ink-2); font-size: 13.5px; margin: 2px 0 14px;
+      }
+      .inj-fresh .inj-dot {
+        display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+        background: var(--accent); margin-right: 7px; vertical-align: 1px;
+      }
+      .inj-fresh.stale .inj-dot { background: #FFB020; }
+      .inj-refresh {
+        background: none; border: 1px solid var(--line); color: var(--cyan);
+        border-radius: 999px; padding: 4px 12px; font-size: 12.5px; font-weight: 600;
+        cursor: pointer; min-height: 30px;
+      }
+      .inj-refresh:hover { background: rgba(0,229,255,.08); }
+      .inj-refresh[disabled] { opacity: .5; cursor: default; }
+      /* ---------- Improve Your Odds panel (redraft mode) ---------- */
+      .odds-card {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+        padding: 18px 20px 8px; margin: 0 0 26px;
+      }
+      .odds-intro { color: var(--ink-2); font-size: 15px; line-height: 1.55; margin: 0 0 6px; }
+      .odds-intro strong { color: var(--ink); }
+      .odds-row {
+        display: flex; gap: 14px; align-items: center;
+        padding: 13px 0; border-top: 1px solid var(--line);
+      }
+      .odds-rank {
+        font-family: "Space Grotesk", sans-serif; font-size: 22px; font-weight: 700;
+        color: var(--accent); width: 26px; text-align: center; flex: none;
+      }
+      .odds-main { flex: 1; min-width: 0; }
+      .odds-kind {
+        display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+        text-transform: uppercase; color: var(--cyan); border: 1px solid rgba(0,229,255,.4);
+        border-radius: 999px; padding: 1px 8px; margin-right: 8px; vertical-align: 2px;
+      }
+      .odds-title { font-weight: 600; font-size: 15.5px; line-height: 1.4; }
+      .odds-sub { color: var(--ink-2); font-size: 13.5px; line-height: 1.5; margin-top: 2px; }
+      .odds-delta {
+        text-align: right; font-family: "Space Grotesk", sans-serif; font-weight: 700;
+        color: var(--accent); font-size: 19px; flex: none; font-variant-numeric: tabular-nums;
+      }
+      .odds-delta small {
+        display: block; font-size: 10px; color: var(--ink-3); font-weight: 600;
+        letter-spacing: .05em; text-transform: uppercase; margin-top: 1px;
+      }
+      .odds-none { color: var(--ink-2); font-size: 15px; line-height: 1.55; padding-bottom: 10px; }
+      @media (max-width: 640px) {
+        .odds-card { padding: 14px 14px 4px; }
+        .odds-delta { font-size: 16px; }
+        .odds-title { font-size: 14.5px; }
+      }
     </style>
   </head>
   <body>
@@ -1613,16 +1687,6 @@
           <span class="ticker-tag"><span class="dot"></span>The Wire</span>
           <div class="ticker-view"><div class="ticker-track" id="ticker-track"></div></div>
         </div>
-        <div class="movers-strip" id="movers-strip">
-          <div class="ms-head">
-            <span class="ms-title">This week's movers</span>
-            <button type="button" class="ms-link" id="ms-all">All risers &amp; fallers →</button>
-          </div>
-          <div class="ms-cols">
-            <div class="ms-col"><div class="ms-col-h"><span class="up">▲ Top risers</span></div><div id="ms-risers"></div></div>
-            <div class="ms-col"><div class="ms-col-h"><span class="dn">▼ Top fallers</span></div><div id="ms-fallers"></div></div>
-          </div>
-        </div>
         <div class="receipt" id="receipt-strip" hidden>
           <span class="receipt-tag">The Receipt</span>
           <span class="receipt-line" id="receipt-line"></span>
@@ -1640,6 +1704,7 @@
             <button data-pos="TE" aria-pressed="false">TE</button>
           </div>
           <button type="button" class="inj-toggle" id="inj-filter" aria-pressed="false">Injured</button>
+          <button type="button" class="inj-toggle flex-toggle" id="flex-filter" aria-pressed="false">Flex only</button>
           <select id="board-sort" aria-label="Sort players">
             <option value="value">Sort: Value</option>
             <option value="ageAsc">Sort: Age (youngest)</option>
@@ -1677,6 +1742,16 @@
         </div>
         <button class="show-more" id="board-more">Show more players</button>
               <p class="tab-intro below" id="board-intro">Every price on this board is computed by our <strong>proprietary Dynasty Value Algorithm</strong> — a two-clock engine that combines production, role and usage, age curves, and availability into a single value for every player, then adjusts for <strong>this league’s scoring</strong>. A <strong>bounded model tilt</strong> keeps any one signal from dominating: the engine may lean a value at most <strong>±15%</strong> from the algorithm’s calibrated baseline, and only 83 players lean as far as ±12% — those are flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>, priced for the format set in the <strong>League Format</strong> block in More. Tap “Why?” on any player to see the full math.</p>
+        <div class="movers-strip" id="movers-strip">
+          <div class="ms-head">
+            <span class="ms-title">This week's movers</span>
+            <button type="button" class="ms-link" id="ms-all">All risers &amp; fallers →</button>
+          </div>
+          <div class="ms-cols">
+            <div class="ms-col"><div class="ms-col-h"><span class="up">▲ Top risers</span></div><div id="ms-risers"></div></div>
+            <div class="ms-col"><div class="ms-col-h"><span class="dn">▼ Top fallers</span></div><div id="ms-fallers"></div></div>
+          </div>
+        </div>
       </section>
 
       <section class="tab" id="tab-power" role="tabpanel">
@@ -1693,6 +1768,7 @@
         </div>
         <h2 class="block-title">Your Team</h2>
         <div id="myteams-out"></div>
+        <div id="odds-panel"></div>
         <h2 class="block-title">Power Rankings</h2>
         <div id="power-list"></div>
       </section>
@@ -1714,7 +1790,7 @@
       </section>
 
       <section class="tab" id="tab-lineup" role="tabpanel">
-        <p class="tab-intro">The weekly question: <strong>who do I start Sunday?</strong> For the team you pick, this builds the <strong>optimal Week 6 lineup</strong> from the same rest-of-season projections behind Season Outlook — with a one-week availability adjustment on top: a player on <strong>bye</strong> (Week 6: Cincinnati, Detroit, Miami, Minnesota) or listed <strong>Out / IR / PUP</strong> projects for zero and is auto-benched, Doubtful is halved, Questionable is trimmed 10%. Below it, this week's <strong>real Sleeper matchup</strong>: both teams' optimal lineups, a win probability, and the decisions the game swings on. Same separation rule as everything else here — <strong>projections never touch dynasty values</strong>, and nothing in this tab moves a price on the board.</p>
+        <p class="tab-intro">The weekly question: <strong>who do I start Sunday?</strong> For the team you pick, this builds the <strong>optimal Week 6 lineup</strong> from the same rest-of-season projections behind Season Outlook — with a one-week availability adjustment on top: a player on <strong>bye</strong> (Week 6: Cincinnati, Detroit, Miami, Minnesota) or listed <strong>Out / IR / PUP / Suspended</strong> projects for zero and is auto-benched, Doubtful is halved, Questionable is trimmed 10%. Below it, this week's <strong>real Sleeper matchup</strong>: both teams' optimal lineups, a win probability, and the decisions the game swings on. Same separation rule as everything else here — <strong>projections never touch dynasty values</strong>, and nothing in this tab moves a price on the board.</p>
         <div class="locked-state" data-locked="lineup">
           <div class="locked-body">
             <h2>Start / sit lives here</h2>
@@ -1728,6 +1804,10 @@
         <div class="finder-controls">
           <label for="lineup-team"><strong>Lineup for:</strong></label>
           <select id="lineup-team"></select>
+        </div>
+        <div class="inj-fresh" id="inj-fresh" hidden>
+          <span id="inj-fresh-txt"></span>
+          <button type="button" class="inj-refresh" id="inj-refresh">Refresh injuries</button>
         </div>
         <div id="lineup-out"></div>
 
@@ -1750,16 +1830,25 @@
         <div id="rt-calc-strip" hidden></div>
         <div id="rt-offer" hidden></div>
         <h2 class="block-title finder-part">Trade Finder</h2>
-        <p class="tab-intro finder-part">Pick a team and the finder scans the other 11 rosters for <strong>mutual fits</strong>: their surplus at your weak spots against your surplus at theirs, balanced with picks when the values are close.</p>
+        <p class="tab-intro finder-part" id="finder-intro">Pick a team and the finder works <strong>your window</strong>, not just your needs. A <strong>Win-Now</strong> team only sees buys: picks, prospects and depth go out, production comes in — and every idea is checked against the rest-of-season projection engine, so a deal that lowers your optimal lineup’s projected points per week <strong>never appears</strong>, however the dynasty values balance. A <strong>Rebuilder</strong> only sees sells: veteran starters converted into picks and young value, with the points-per-week cost printed on the deal. <strong>Tweeners</strong> see both directions, each labeled with the window it serves. Targets are priced on the youth-plus-production curve — a young producer costs real capital, an aging veteran with the same points is the discount aisle — and partners are matched by mirror windows: buyers shop from rebuilders, sellers shop to contenders.</p>
         <div class="finder-controls finder-part">
           <label for="finder-team"><strong>Find trades for:</strong></label>
           <select id="finder-team"></select>
+          <label for="finder-want"><strong>I want:</strong></label>
+          <select id="finder-want">
+            <option value="">Any position</option>
+            <option value="QB">QB</option>
+            <option value="RB">RB</option>
+            <option value="WR">WR</option>
+            <option value="TE">TE</option>
+            <option value="FLEX">Flex (RB / WR / TE)</option>
+          </select>
         </div>
         <div id="finder-out" class="finder-part"></div>
         <div class="locked-state" data-locked="finder">
           <div class="locked-body">
             <h2>Trade Finder lives here</h2>
-            <p>The finder scans <strong>the other rosters in a league</strong> for mutual fits — their surplus at your weak spots against your surplus at theirs, balanced with picks, with each deal’s title-odds swing attached. The calculator above works without a league; the finder can’t.</p>
+            <p>The finder scans <strong>the other rosters in a league</strong> for window-correct deals — contenders buy production with picks and depth (and never see a deal that lowers their projected points per week), rebuilders sell veterans for picks and youth, and each deal carries its title-odds swing. The calculator above works without a league; the finder can’t.</p>
             <div class="locked-actions">
               <button type="button" class="locked-cta">Connect your league</button>
             </div>
@@ -2266,7 +2355,7 @@
          loads (both demos, any future league) gets the same treatment. */
       function bestBallLineup(ids) {
         const pool = ids.map(id => PBY[id]).filter(Boolean)
-          .filter(p => p.inj !== "IR" && p.inj !== "PUP" && p.inj !== "Out")
+          .filter(p => p.inj !== "IR" && p.inj !== "PUP" && p.inj !== "Out" && p.inj !== "Suspended")
           .sort((a, b) => b.value - a.value);
         const used = new Set(); const lineup = []; let total = 0;
         function take(cands, n, slot) {
@@ -2285,6 +2374,14 @@
         DATA.players.forEach(p => {
           p.value = Math.round(p.snapValue * factorRatio(p.pos));
           if (p.rdSnap != null) p.rdValue = Math.round(p.rdSnap * factorRatio(p.pos));
+          /* Redraft prices are rest-of-season only, and a player on
+             injured reserve or the PUP list has no return date the data
+             can stand behind — to a redraft manager he is worth ~0,
+             because this season is the only season he owns. (Questionable
+             / Doubtful / week-to-week Out designations keep the baked
+             availability haircuts inside the ROS projection instead.)
+             Dynasty prices are untouched: p.value never reads this. */
+          if (p.inj === "IR" || p.inj === "PUP") p.rdValue = 0;
         });
         const depth = { QB: 2, RB: 4, WR: 5, TE: 2 };
         DATA.teams.forEach(t => {
@@ -2437,15 +2534,23 @@
           /* Slot tags mark the best-ball lineup — the same optimal lineup
              starters value is summed from — not the manager's set lineup. */
           const bbLineup = t.bestLineup ? t.bestLineup.map(l => ({ id: l.p.id, slot: l.slot })) : t.lineup;
+          /* Redraft mode re-prices this whole card in rest-of-season
+             value and drops the dynasty furniture: no archetype tag,
+             no pick capital, no picks in the roster detail. */
+          const rdP = typeof VALMODE !== "undefined" && VALMODE === "redraft";
+          const pv = p => rdP ? dispVal(p) : p.value;
+          const totDisp = t.playerIds.reduce((s2, id) => { const p = PBY[id]; return p ? s2 + pv(p) : s2; }, 0);
+          const stDisp = bbLineup.reduce((s2, l) => { const p = PBY[l.id]; return p ? s2 + pv(p) : s2; }, 0);
+          const explTxt = rdP ? `${t.record} start · power rank #${t.powerRank} of ${DATA.teams.length}.${t.isUser ? " This is your roster." : ""}` : t.expl;
           const lineupIds = new Set(bbLineup.map(l => l.id));
           const slotOf = {};
           bbLineup.forEach(l => { slotOf[l.id] = l.slot; });
           const rosterRows = t.playerIds.map(id => PBY[id]).filter(Boolean)
-            .sort((a, b) => b.value - a.value)
+            .sort((a, b) => pv(b) - pv(a))
             .map(p => `<tr>
               <td><span class="p-name">${esc(p.name)}</span>${lineupIds.has(p.id) ? ` <span class="slot-tag">${slotOf[p.id]}</span>` : ""}<div class="p-sub">${esc(p.team)} · Age ${p.age ?? "—"}${p.inj ? " · " + esc(injLabel(p)) : ""}</div></td>
               <td>${p.pos}${p.posRank}</td>
-              <td class="num">${fmt(p.value)}</td></tr>`).join("");
+              <td class="num">${p.unpriced ? '<span class="p-sub">Unpriced</span>' : fmt(pv(p))}</td></tr>`).join("");
           const pickChips = t.picks.filter(pk => pk.value >= 300)
             .sort((a, b) => b.value - a.value)
             .map(pk => `<span class="pick-chip">${esc(pk.label)} · <b>${fmt(pk.value)}</b></span>`).join("");
@@ -2458,17 +2563,18 @@
                 <div class="team-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div>
                 <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div>
               </div>
-              <div class="arch ${archClass}">${esc(t.arch)}</div>
+${rdP ? "" : `
+              <div class="arch ${archClass}">${esc(t.arch)}</div>`}
             </div>
             <div class="power-row">
               <div class="power-bar"><div class="power-fill" style="width:${t.power}%"></div></div>
               <div class="power-num">${t.power} <small>POWER</small></div>
             </div>
-            <p class="expl">${esc(t.expl)}</p>
+            <p class="expl">${esc(explTxt)}</p>
             <div class="stat-row">
-              <div><span>Starters value · best-ball</span><b>${fmt(t.starterVal)}</b></div>
-              <div><span>Roster value</span><b>${fmt(t.totalVal)}</b></div>
-              <div><span>Pick capital</span><b>${fmt(t.picksVal)}</b></div>
+              <div><span>Starters value · best-ball</span><b>${fmt(rdP ? stDisp : t.starterVal)}</b></div>
+              <div><span>Roster value</span><b>${fmt(rdP ? totDisp : t.totalVal)}</b></div>
+              ${rdP ? "" : `<div><span>Pick capital</span><b>${fmt(t.picksVal)}</b></div>`}
               <div><span>Core age (top 10)</span><b>${t.avgAgeTop}</b></div>
             </div>
             ${ss ? `<div class="stat-row">
@@ -2480,13 +2586,14 @@
             <div class="grades">${["QB", "RB", "WR", "TE"].map(pos =>
               `<span class="grade ${gradeClass(t.grades[pos])}">${pos} <b>${t.grades[pos]}</b></span>`).join("")}
             </div>
-            <button class="expand-btn" data-expand="${t.rid}">View roster &amp; picks ▾</button>
+            <button class="expand-btn" data-expand="${t.rid}">View roster${rdP ? "" : " &amp; picks"} ▾</button>
             <div class="roster-detail" id="detail-${t.rid}">
-              <h3>Roster by value <span class="p-sub">(slot tags = best-ball lineup)</span></h3>
+              <h3>Roster by ${rdP ? "redraft value" : "value"} <span class="p-sub">(slot tags = best-ball lineup)</span></h3>
               <table class="mini"><thead><tr><th>Player</th><th>Pos rank</th><th class="num">Value</th></tr></thead>
               <tbody>${rosterRows}</tbody></table>
+${rdP ? "" : `
               <h3 style="margin-top:14px">Draft picks (worth 300+)</h3>
-              <div class="pick-list">${pickChips || '<span class="p-sub">None</span>'}</div>
+              <div class="pick-list">${pickChips || '<span class="p-sub">None</span>'}</div>`}
             </div>
           </article>`;
         }).join("");
@@ -2494,7 +2601,8 @@
           btn.addEventListener("click", () => {
             const d = document.getElementById("detail-" + btn.dataset.expand);
             const open = d.classList.toggle("open");
-            btn.textContent = open ? "Hide roster & picks ▴" : "View roster & picks ▾";
+            const rdT = typeof VALMODE !== "undefined" && VALMODE === "redraft";
+            btn.textContent = open ? (rdT ? "Hide roster ▴" : "Hide roster & picks ▴") : (rdT ? "View roster ▾" : "View roster & picks ▾");
           });
         });
       }
@@ -2639,7 +2747,7 @@
         box.innerHTML = list.length ? list.map(p => `
           <button data-add="${p.id}">
             <span><span class="who">${esc(p.name)}</span> <span class="sub">${p.pos}${p.posRank} · ${esc(p.team)} · Age ${p.age ?? "—"}</span></span>
-            <span class="val">${fmt(dispVal(p))}</span>
+            <span class="val">${p.unpriced ? "Unpriced" : fmt(dispVal(p))}</span>
           </button>`).join("") : `<div class="empty">No players match.</div>`;
         box.querySelectorAll("[data-add]").forEach(btn => {
           btn.addEventListener("click", () => {
@@ -2699,13 +2807,15 @@
         outPlayers.forEach(p => {
           if (lineupIds.has(p.id)) notes.push({ cls: "warn", txt: `Losing ${p.name} costs a best-ball starter at ${p.pos} — judged on the peak lineup, not the set one.` });
         });
-        if (t.arch === "Win-Now" && inPicks.length && !inPlayers.length)
+        /* Window fit notes are dynasty logic; redraft has no windows
+           and no picks, so none of them can fire in redraft mode. */
+        if (VALMODE !== "redraft" && t.arch === "Win-Now" && inPicks.length && !inPlayers.length)
           notes.push({ cls: "warn", txt: `${t.name} is tagged Win-Now — taking only picks back trades this year's run for future capital.` });
-        if (t.arch === "Win-Now" && outPicks.length)
+        if (VALMODE !== "redraft" && t.arch === "Win-Now" && outPicks.length)
           notes.push({ cls: "good", txt: `Spending picks fits a Win-Now window.` });
-        if (t.arch === "Rebuilder" && inPlayers.some(p => (p.age ?? 0) >= 28 && p.pos === "RB"))
+        if (VALMODE !== "redraft" && t.arch === "Rebuilder" && inPlayers.some(p => (p.age ?? 0) >= 28 && p.pos === "RB"))
           notes.push({ cls: "warn", txt: `A rebuilding roster taking on a 28+ RB is buying the decline phase of the age curve.` });
-        if (t.arch === "Rebuilder" && inPicks.length)
+        if (VALMODE !== "redraft" && t.arch === "Rebuilder" && inPicks.length)
           notes.push({ cls: "good", txt: `Extra picks fit the rebuild timeline.` });
         if (!notes.length) notes.push({ cls: "", txt: "No strong fit signals either way — this one is close to a pure value swap for this roster." });
         return notes;
@@ -2945,92 +3055,276 @@
       }
       function needScore(rid, pos) { return MED[pos] - TBY[rid].strengths[pos]; } // >0 = need
 
-      function findTrades(rid) {
-        const mine = TBY[rid];
-        const myTradable = tradableAssets(rid);
-        const myNeeds = ["QB", "RB", "WR", "TE"].filter(pos => needScore(rid, pos) > 400)
-          .sort((a, b) => needScore(rid, b) - needScore(rid, a));
-        const suggestions = [];
-        DATA.teams.filter(t => t.rid !== rid).forEach(partner => {
-          const theirTradable = tradableAssets(partner.rid);
-          myNeeds.forEach(needPos => {
-            const targets = theirTradable.filter(p => p.pos === needPos);
-            if (!targets.length) return;
-            // my surplus positions they need
-            const givePos = ["QB", "RB", "WR", "TE"].filter(pos => needScore(partner.rid, pos) > 400 && myTradable.some(p => p.pos === pos));
-            givePos.forEach(gp => {
-              const gives = myTradable.filter(p => p.pos === gp);
-              targets.slice(0, 2).forEach(target => {
-                gives.slice(0, 2).forEach(give => {
-                  let gap = target.value - give.value;
-                  let balancer = null, balancerSide = null;
-                  if (Math.abs(gap) > target.value * 0.18) {
-                    // side receiving less adds a pick
-                    const fromRid = gap > 0 ? rid : partner.rid;
-                    const pool = TBY[fromRid].picks.filter(pk => pk.value >= 150 && pk.value <= Math.abs(gap) * 1.6)
-                      .sort((x, y) => Math.abs(x.value - Math.abs(gap)) - Math.abs(y.value - Math.abs(gap)));
-                    if (pool.length) { balancer = pool[0]; balancerSide = fromRid; gap -= (gap > 0 ? balancer.value : -balancer.value); }
-                    else return;
-                  }
-                  if (Math.abs(gap) > Math.max(target.value, give.value) * 0.22) return;
-                  const score = needScore(rid, needPos) / 100 + needScore(partner.rid, gp) / 100 - Math.abs(gap) / 500;
-                  suggestions.push({ partner, target, give, balancer, balancerSide, score, needPos, givePos: gp });
-                });
-              });
+      /* ---------- Window-aware trade logic ----------
+         Every suggestion is built for the selected team's archetype and
+         priced on the youth+production curve the dynasty values already
+         encode: reaching a young producer's price takes a stack of picks
+         and players; an aging veteran with the same weekly points takes
+         one modest asset. Lineup math is the Season Outlook engine's own
+         (SOS-adjusted rest-of-season projections, this league's slots),
+         recomputed here so every candidate deal can be checked cheaply.
+         The hard rules: a win-now team's projected points per week can
+         never go down in a suggested deal, a win-now team never takes a
+         draft pick back or sends out a starter, and partners are matched
+         by mirror window — buyers shop from rebuilders, sellers shop to
+         contenders, never two contenders swapping starters sideways. */
+      const finderState = { want: "" };
+      function rosProj(p) { const s = (window.SOS || {})[p.id]; return (p.ros || 0) * (s ? s[0] : 1); }
+      function optimalLineup(ids) {
+        const pool = ids.map(id => PBY[id]).filter(Boolean).slice().sort((a, b) => rosProj(b) - rosProj(a));
+        const used = new Set(); const lineup = []; let total = 0;
+        function take(cands, n) {
+          let c = 0;
+          for (const p of pool) {
+            if (c >= n) break;
+            if (used.has(p.id) || !cands.includes(p.pos)) continue;
+            used.add(p.id); lineup.push(p); total += rosProj(p); c++;
+          }
+        }
+        take(["QB"], 1); take(["RB"], 2); take(["WR"], 3); take(["TE"], 1);
+        take(["RB", "WR", "TE"], (DATA.league && DATA.league.flex) || 3);
+        take(["QB", "RB", "WR", "TE"], 1);
+        return { total, lineup };
+      }
+      function lineupSet(rid) { return new Set(optimalLineup(TBY[rid].playerIds).lineup.map(p => p.id)); }
+      function wantMatch(pos) {
+        const w = finderState.want;
+        if (!w) return true;
+        return w === "FLEX" ? ["RB", "WR", "TE"].includes(pos) : pos === w;
+      }
+      function pickAssets(t) {
+        /* Redraft has no draft picks — they are not assets, in either
+           direction, anywhere in the finder. */
+        if (VALMODE === "redraft") return [];
+        return (t.picks || []).filter(pk => pk.value >= 100).map(pk => ({ kind: "pick", label: pk.label, value: pk.value }));
+      }
+      /* Asset prices follow the active value mode: dispVal is the
+         dynasty price in dynasty mode and the rest-of-season redraft
+         price in redraft mode, so packages price identically to the
+         board and the calculator in whichever mode is live. */
+      function playerAsset(p) { return { kind: "player", p, label: `${p.name} (${p.pos}${p.posRank}, age ${p.age ?? "—"})`, value: dispVal(p) }; }
+      /* Assemble an offer out of a pool of picks/players that lands inside
+         [lo, hi] x the target price — the mechanism that makes young studs
+         cost a stack and veterans cost a song. Tries several orderings and
+         keeps the package closest to the target price. */
+      function buildPackage(pool, targetVal, lo, hi, anchor) {
+        if (!pool.length && !anchor) return null;
+        const orders = [
+          [...pool].sort((a, b) => b.value - a.value),
+          [...pool].sort((a, b) => (b.kind === "pick") - (a.kind === "pick") || b.value - a.value),
+          [...pool].sort((a, b) => a.value - b.value),
+        ];
+        let best = null;
+        orders.forEach(ord => {
+          const pkg = anchor ? [anchor] : [];
+          let tot = anchor ? anchor.value : 0;
+          for (const a of ord) {
+            if (tot >= targetVal * lo || pkg.length >= 4) break;
+            if (anchor && a === anchor) continue;
+            if (pkg.length && tot + a.value > targetVal * hi) continue;
+            pkg.push(a); tot += a.value;
+          }
+          if (pkg.length && tot >= targetVal * lo && tot <= targetVal * hi) {
+            if (!best || Math.abs(tot - targetVal) < Math.abs(best.tot - targetVal)) best = { pkg, tot };
+          }
+        });
+        return best ? best.pkg : null;
+      }
+      const pkgValue = pkg => pkg.reduce((x, a) => x + a.value, 0);
+      const pkgPlayerIds = pkg => pkg.filter(a => a.kind === "player").map(a => a.p.id);
+
+      /* BUY: the user sends picks / prospects / bench depth and receives
+         one producer — any age, priced on the youth+production curve.
+         Partners are rebuilders first, then tweeners; fellow contenders
+         are never shopped. The guardrail is absolute: unless the deal
+         raises the user's optimal-lineup projection, it does not exist. */
+      function buySuggestions(rid, mine) {
+        const myIds = mine.playerIds;
+        const base = optimalLineup(myIds).total;
+        const myLineup = lineupSet(rid);
+        const payPool = [
+          ...pickAssets(mine),
+          ...tradableAssets(rid).filter(p => !myLineup.has(p.id) && dispVal(p) >= 400).map(playerAsset),
+        ];
+        if (!payPool.length) return [];
+        const out = [];
+        /* Dynasty matches buyers with mirror windows (rebuilders and
+           tweeners sell production; fellow contenders are never shopped).
+           Redraft has no windows: every team is playing for this season,
+           so every other roster is a potential partner. */
+        DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || t.arch !== "Win-Now")).forEach(partner => {
+          const windowBonus = VALMODE === "redraft" ? 2 : partner.arch === "Rebuilder" ? 5 : 1.5;
+          teamPlayers(partner.rid)
+            .filter(p => dispVal(p) >= 900 && (p.ros || 0) > 0 && wantMatch(p.pos))
+            .forEach(target => {
+              const pkg = buildPackage(payPool, target.value, 0.85, 1.22);
+              if (!pkg) return;
+              const outIds = pkgPlayerIds(pkg);
+              const newIds = myIds.filter(id => !outIds.includes(id)).concat([target.id]);
+              const dPpg = optimalLineup(newIds).total - base;
+              if (dPpg < 0.15) return; // HARD GUARDRAIL — a buy must add points, never subtract them
+              const gapPct = Math.abs(pkgValue(pkg) - target.value) / target.value;
+              const score = dPpg * 6 + windowBonus + Math.max(0, 8 - gapPct * 20) + Math.min(3, target.value / 3000);
+              out.push({ dir: "buy", partner, target, pkg, dPpg, score, basePpg: base });
             });
+        });
+        return out;
+      }
+
+      /* SELL: the user sends one veteran starter and receives picks and
+         players 24 or younger at full value or better. Partners are
+         contenders first, then tweeners — and the veteran has to actually
+         help them this season, or there is no deal. The weekly-points
+         cost is computed and printed on the suggestion, not hidden. */
+      function sellSuggestions(rid, mine) {
+        const myIds = mine.playerIds;
+        const base = optimalLineup(myIds).total;
+        const myLineup = lineupSet(rid);
+        const vets = teamPlayers(rid)
+          .filter(p => p.value >= 1200 && (p.age ?? 0) >= 27)
+          .sort((a, b) => ((myLineup.has(b.id) ? 1 : 0) - (myLineup.has(a.id) ? 1 : 0)) || b.value - a.value)
+          .slice(0, 6);
+        const out = [];
+        vets.forEach(vet => {
+          DATA.teams.filter(t => t.rid !== rid && t.arch !== "Rebuilder").forEach(partner => {
+            const windowBonus = partner.arch === "Win-Now" ? 5 : 1.5;
+            const pLineup = lineupSet(partner.rid);
+            const young = teamPlayers(partner.rid).filter(p => (p.age ?? 99) <= 24 && !pLineup.has(p.id) && p.value >= 500);
+            const pool = [...pickAssets(partner), ...young.map(playerAsset)];
+            if (!pool.length) return;
+            let pkg = null;
+            if (finderState.want) {
+              // "I want" for a seller: a young player at that position headlines the return
+              const anchorP = young.filter(p => wantMatch(p.pos)).sort((a, b) => b.value - a.value)[0];
+              if (!anchorP) return;
+              pkg = buildPackage(pool, vet.value, 1.0, 1.32, playerAsset(anchorP));
+            } else {
+              pkg = buildPackage(pool, vet.value, 1.0, 1.32);
+            }
+            if (!pkg) return;
+            const getsVal = pkgValue(pkg);
+            if (getsVal < vet.value) return; // a sell never loses dynasty value
+            const pOut = pkgPlayerIds(pkg);
+            const pNew = partner.playerIds.filter(id => !pOut.includes(id)).concat([vet.id]);
+            const pD = optimalLineup(pNew).total - optimalLineup(partner.playerIds).total;
+            if (pD < 0.1 && needScore(partner.rid, vet.pos) <= 300) return;
+            const myNew = myIds.filter(id => id !== vet.id).concat(pOut);
+            const dPpg = optimalLineup(myNew).total - base;
+            const futureGain = getsVal - vet.value;
+            const score = futureGain / 120 + windowBonus + (myLineup.has(vet.id) ? 2 : 0) + Math.max(0, pD);
+            out.push({ dir: "sell", partner, vet, pkg, dPpg, futureGain, score, basePpg: base });
           });
         });
-        // dedupe by partner+target, keep best, diversify partners
-        const seen = new Set(); const out = [];
-        suggestions.sort((a, b) => b.score - a.score);
-        for (const s of suggestions) {
-          const k = s.partner.rid + ":" + s.target.id;
+        return out;
+      }
+
+      function findTrades(rid) {
+        const mine = TBY[rid];
+        const myNeeds = ["QB", "RB", "WR", "TE"].filter(pos => needScore(rid, pos) > 400)
+          .sort((a, b) => needScore(rid, b) - needScore(rid, a));
+        let all = [];
+        /* Redraft: every team is effectively win-now — there is no
+           future to build for — so every team gets buys under the
+           win-now rules (raise projected pts/wk or the deal doesn't
+           exist), whatever its dynasty tag says. No sells, ever. */
+        if (VALMODE === "redraft") all = buySuggestions(rid, mine);
+        else if (mine.arch === "Win-Now") all = buySuggestions(rid, mine);
+        else if (mine.arch === "Rebuilder") all = sellSuggestions(rid, mine);
+        else all = [...buySuggestions(rid, mine), ...sellSuggestions(rid, mine)];
+        // dedupe by direction+partner+headline asset, diversify partners
+        const seen = new Set(); const out = []; const perPartner = {};
+        all.sort((a, b) => b.score - a.score);
+        for (const s of all) {
+          const head = s.dir === "buy" ? s.target.id : s.vet.id;
+          const k = s.dir + ":" + s.partner.rid + ":" + head;
           if (seen.has(k)) continue;
-          seen.add(k); out.push(s);
+          if ((perPartner[s.partner.rid] || 0) >= 3) continue;
+          seen.add(k); perPartner[s.partner.rid] = (perPartner[s.partner.rid] || 0) + 1;
+          out.push(s);
           if (out.length >= 8) break;
         }
-        return { myNeeds, myTradable, suggestions: out, mine };
+        return { myNeeds, suggestions: out, mine };
       }
 
       function renderFinder() {
         const rid = Number(document.getElementById("finder-team").value);
         if (window.GUEST_MODE || !TBY[rid]) { const el = document.getElementById("finder-out"); if (el) el.innerHTML = ""; return; }
-        const { myNeeds, suggestions, mine } = findTrades(rid);
+        const { suggestions, mine } = findTrades(rid);
         const el = document.getElementById("finder-out");
-        const weakTxt = myNeeds.length
-          ? myNeeds.map(pos => `<strong>${pos}</strong> (room value ${fmt(mine.strengths[pos])} vs league median ${fmt(MED[pos])})`).join(", ")
-          : "no glaring holes — every position room is at or above the league median";
-        const surplusPos = ["QB", "RB", "WR", "TE"].filter(pos => mine.strengths[pos] > MED[pos] * 1.08);
+        const basePpg = optimalLineup(mine.playerIds).total;
+        const want = finderState.want;
+        const wantName = want === "FLEX" ? "flex (RB/WR/TE)" : want;
+        let strat = mine.arch === "Win-Now"
+          ? `Window strategy: <strong>buy production</strong>. Every idea below sends picks, prospects or bench depth out and brings a player in — and each was checked against the rest-of-season projection engine: from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown. You never take a pick back, and you never send out a starter.`
+          : mine.arch === "Rebuilder"
+            ? `Window strategy: <strong>sell veterans</strong>. Every idea below converts a veteran starter into picks and players 24 or younger at full value or better, with contenders shopped first. The cost in this season's projected pts/week — from a <strong>${Math.round(basePpg)}</strong> baseline — is printed on each deal, because that's the trade being made on purpose.`
+            : `Window strategy: <strong>either direction</strong>. This roster sits between windows at a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, so buys and sells both appear below — each one labeled with the window it serves, and each held to that window's rules.`;
+        if (VALMODE === "redraft") strat = `Window strategy: <strong>win now — the only window there is</strong>. This is a redraft league, so every idea below is a buy: bench depth goes out, a producer comes in, and each was checked against the rest-of-season projection engine — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown. No draft picks change hands; picks don't exist in redraft.`;
         let html = `<div class="diag"><h3>${esc(mine.name)} — diagnosis</h3>
-          <p>Tagged <strong>${esc(mine.arch)}</strong>. Weakest rooms: ${weakTxt}.</p>
-          <p>Surplus to deal from: ${surplusPos.length ? surplusPos.map(p => `<strong>${p}</strong>`).join(", ") : "no position is far enough above the median to deal from painlessly"}.</p></div>`;
+          <p>${VALMODE === "redraft" ? "" : `Tagged <strong>${esc(mine.arch)}</strong>. `}${strat}${want ? ` Targeting: <strong>${esc(wantName)}</strong>.` : ""}</p></div>`;
         if (!suggestions.length) {
-          html += `<div class="diag"><p>No clean mutual fits surfaced — no partner pairs a surplus at this team's weak spots with a need this team can fill at fair value. Try the calculator for one-sided ideas.</p></div>`;
+          const why = VALMODE === "redraft"
+            ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every producer who would raise this lineup either can't be priced fairly with this team's bench depth, or the deal would cost a starter to make the values balance. Try another position, or build the deal by hand in the calculator.`
+            : mine.arch === "Win-Now"
+            ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every available producer who would raise this lineup either plays for another contender — not a window fit — or can't be priced fairly with this team's picks and depth. Try another position, or build the deal by hand in the calculator.`
+            : mine.arch === "Rebuilder"
+              ? `No sell cleared the bar${want ? ` with a young ${esc(wantName)} player headlining the return` : ""}: a veteran only appears here when a contender or tweener can pay full value in picks and youth <em>and</em> the veteran genuinely helps them this season. Try another position, or the calculator for one-sided ideas.`
+              : `No deal in either direction cleared its bar${want ? ` for ${esc(wantName)}` : ""} — buys must raise the projected lineup, sells must return full future value. Try another position, or the calculator for one-sided ideas.`;
+          html += `<div class="diag"><p>${why}</p></div>`;
         }
         const topScore = suggestions.length ? suggestions[0].score : 1;
         html += suggestions.map(s => {
           const fitIdx = Math.max(1, Math.round(100 * s.score / topScore));
-          const myGives = [s.give] .map(p => ({ label: `${p.name} (${p.pos}${p.posRank}, age ${p.age ?? "—"})`, value: p.value }));
-          const myGets = [{ label: `${s.target.name} (${s.target.pos}${s.target.posRank}, age ${s.target.age ?? "—"})`, value: s.target.value }];
-          if (s.balancer) {
-            const item = { label: s.balancer.label, value: s.balancer.value };
-            if (s.balancerSide === rid) myGives.push(item); else myGets.push(item);
-          }
+          const isBuy = s.dir === "buy";
+          const giveAssets = isBuy ? s.pkg : [playerAsset(s.vet)];
+          const getAssets = isBuy ? [playerAsset(s.target)] : s.pkg;
           const tot = arr => arr.reduce((x, y) => x + y.value, 0);
           const assetHtml = arr => arr.map(a => `<div class="asset"><span>${esc(a.label)}</span><span class="val">${fmt(a.value)}</span></div>`).join("");
-          const impact = window.SeasonSim ? window.SeasonSim.finderImpact(rid, s, tot(myGives), tot(myGets)) : "";
+          const impact = window.SeasonSim ? window.SeasonSim.finderImpact(rid, {
+            partner: s.partner,
+            givePlayers: giveAssets.filter(a => a.kind === "player").map(a => a.p),
+            getPlayers: getAssets.filter(a => a.kind === "player").map(a => a.p),
+          }, tot(giveAssets), tot(getAssets)) : "";
+          const dTxt = `${s.dPpg >= 0 ? "+" : "−"}${Math.abs(s.dPpg).toFixed(1)}`;
+          let windowLine; const why = [];
+          if (isBuy) {
+            const t = s.target;
+            const payDesc = s.pkg.every(a => a.kind === "pick") ? "draft capital" : s.pkg.some(a => a.kind === "pick") ? "picks and bench depth" : "bench depth";
+            windowLine = VALMODE === "redraft"
+              ? `<span class="dir-tag">Win-now buy</span>Redraft rules: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, never a starter. There is no next season to save for.`
+              : mine.arch === "Win-Now"
+              ? `<span class="dir-tag">Win-now buy</span>You're win-now: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, not a starter.`
+              : `<span class="dir-tag">Win-now move</span>Buys production now: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc} — future capital spent on this season.`;
+            why.push(VALMODE === "redraft"
+              ? `${esc(t.name)} ${lineupSet(s.partner.rid).has(t.id) ? "starts for" : "is depth on"} ${esc(s.partner.name)} — in redraft there are no windows to match, only lineups to raise.`
+              : `${esc(s.partner.name)} is tagged ${esc(s.partner.arch)} — the mirror window: the team that should be trading production for future capital.`);
+            why.push(`${esc(t.name)} projects <strong>${rosProj(t).toFixed(1)} pts/wk</strong> the rest of the way and lifts your optimal lineup ${Math.round(s.basePpg)} → ${Math.round(s.basePpg + s.dPpg)} projected pts/week.`);
+            if (VALMODE === "redraft") why.push(`Priced on rest-of-season production alone: the ${rosProj(t).toFixed(1)} projected pts/wk is the whole price — no age curve, no youth premium, no future seasons.`);
+            else if ((t.age ?? 99) <= 24) why.push(`Premium price: at ${t.age}, ${esc(t.name)} is young <em>and</em> producing — the most expensive profile in dynasty, so the offer stacks ${s.pkg.length} asset${s.pkg.length > 1 ? "s" : ""} to reach his price.`);
+            else if ((t.age ?? 0) >= 29) why.push(`Discount aisle: ${t.age}-year-old production — the same weekly points a young player costs a fortune for, at a fraction of the price. Exactly the arbitrage a win-now window should hunt.`);
+            else why.push(`Priced on the youth-plus-production curve: at ${t.age ?? "—"}, ${esc(t.name)}'s price sits between the young-stud premium and the veteran discount, so the offer is built to match it.`);
+            why.push(`${VALMODE === "redraft" ? "Redraft math" : "Dynasty math"}: you send ${fmt(tot(giveAssets))} for ${fmt(tot(getAssets))}.`);
+          } else {
+            const v = s.vet;
+            windowLine = mine.arch === "Rebuilder"
+              ? `<span class="dir-tag sell">Rebuilder sell</span>Rebuilder move: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season — production this roster isn't contending with, converted into picks and youth.`
+              : `<span class="dir-tag sell">Rebuild move</span>Sells a veteran for the future: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season.`;
+            why.push(`${esc(s.partner.name)} is tagged ${esc(s.partner.arch)} — the mirror window: the team that should be paying future capital for production now.`);
+            why.push(`${esc(v.name)} (age ${v.age ?? "—"}) still produces — ${rosProj(v).toFixed(1)} projected pts/wk — but his value peaks before this roster's window opens. The return is all picks and players 24 or younger.`);
+            why.push(s.dPpg >= -0.05
+              ? `It barely touches this season: your optimal lineup holds at ~${Math.round(s.basePpg + s.dPpg)} projected pts/week without him.`
+              : `The honest cost: your optimal lineup drops ${Math.round(s.basePpg)} → ${Math.round(s.basePpg + s.dPpg)} projected pts/week this season. That's the rebuild trade — future value up, this year down.`);
+            why.push(`Dynasty math: you send ${fmt(tot(giveAssets))} for ${fmt(tot(getAssets))} — full value or better, all of it future assets.`);
+          }
           return `<article class="suggestion">
-            <h3>With ${esc(s.partner.name)} <span class="p-sub">(${esc(s.partner.arch)})</span> · <span class="fit-score">match index ${fitIdx}/100</span></h3>
+            <h3>With ${esc(s.partner.name)}${VALMODE === "redraft" ? "" : ` <span class="p-sub">(${esc(s.partner.arch)})</span>`} · <span class="fit-score">match index ${fitIdx}/100</span></h3>
             <div class="swap">
-              <div class="col"><div class="lbl">You give · ${fmt(tot(myGives))}</div>${assetHtml(myGives)}</div>
+              <div class="col"><div class="lbl">You give · ${fmt(tot(giveAssets))}</div>${assetHtml(giveAssets)}</div>
               <div class="arrow">⇄</div>
-              <div class="col"><div class="lbl">You get · ${fmt(tot(myGets))}</div>${assetHtml(myGets)}</div>
+              <div class="col"><div class="lbl">You get · ${fmt(tot(getAssets))}</div>${assetHtml(getAssets)}</div>
             </div>
-            <ul class="why-list">
-              <li>Fills your ${s.needPos} need: their room runs ${fmt(s.partner.strengths[s.needPos])} deep vs a ${fmt(MED[s.needPos])} median, so ${esc(s.target.name)} is movable depth for them.</li>
-              <li>They need ${s.givePos} help (room value ${fmt(s.partner.strengths[s.givePos])} vs median ${fmt(MED[s.givePos])}) — ${esc(s.give.name)} starts for them.</li>
-              ${s.balancer ? `<li>A pick balances the values to within ${fmt(Math.abs(tot(myGives) - tot(myGets)))}.</li>` : `<li>Player-for-player, the values land within ${fmt(Math.abs(tot(myGives) - tot(myGets)))} — no sweetener needed.</li>`}
-            </ul>
+            <div class="window-line${isBuy ? "" : " sell"}">${windowLine}</div>
+            <ul class="why-list">${why.map(w => `<li>${w}</li>`).join("")}</ul>
             ${impact}
           </article>`;
         }).join("");
@@ -3040,10 +3334,12 @@
       finderSel.innerHTML = DATA.teams.map(t =>
         `<option value="${t.rid}" ${t.rid === USER_RID ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("");
       finderSel.addEventListener("change", renderFinder);
+      const finderWantSel = document.getElementById("finder-want");
+      if (finderWantSel) finderWantSel.addEventListener("change", e => { finderState.want = e.target.value; renderFinder(); });
       renderFinder();
 
       /* ================= Player values board ================= */
-      const boardState = { pos: "ALL", q: "", sort: "value", owner: "ALL", shown: 60, injOnly: false };
+      const boardState = { pos: "ALL", q: "", sort: "value", owner: "ALL", shown: 60, injOnly: false, flexOnly: false };
       const boardOwnerSel = document.getElementById("board-owner");
       DATA.teams.forEach(t => {
         const o = document.createElement("option");
@@ -3053,6 +3349,7 @@
       function boardList() {
         let list = [...DATA.players].sort((a, b) => dispVal(b) - dispVal(a));
         if (boardState.injOnly) list = list.filter(p => p.inj);
+        if (boardState.flexOnly) list = list.filter(p => ["RB", "WR", "TE"].includes(p.pos));
         if (boardState.pos !== "ALL") list = list.filter(p => p.pos === boardState.pos);
         if (boardState.owner === "FA") list = list.filter(p => !p.owner);
         else if (boardState.owner !== "ALL") list = list.filter(p => p.owner === Number(boardState.owner));
@@ -3175,19 +3472,26 @@
         </div>`;
       }
       function redraftWhy(p) {
-        return `Redraft value — rest of season only, in the scoring format set in More. No age curve, no future seasons, no draft picks: the price is this year's remaining production, from the same rest-of-season projection engine behind Season Outlook — ${(p.ros || 0).toFixed(1)} projected pts/wk from Week ${DATA.league.week} on.`;
+        const base = `Redraft value — rest of season only, in the scoring format set in More. No age curve, no future seasons, no draft picks: the price is this year's remaining production, from the same rest-of-season projection engine behind Season Outlook — ${(p.ros || 0).toFixed(1)} projected pts/wk from Week ${DATA.league.week} on.`;
+        if (p.inj === "IR" || p.inj === "PUP") return base + ` He is on ${p.inj === "IR" ? "injured reserve" : "the PUP list"} with no return date the data can stand behind, so his redraft price is 0 — a redraft manager owns only this season, and he isn't playing it.`;
+        return base;
       }
       function renderTeamStrip() {
         const t = DATA.teams.find(x => x.isUser);
         const el = document.getElementById("team-strip");
         if (!t || !el) return;
         if (window.GUEST_MODE) { el.innerHTML = ""; return; }
-        const valRank = [...DATA.teams].sort((a, b) => b.totalVal - a.totalVal).indexOf(t) + 1;
+        const rdStrip = typeof VALMODE !== "undefined" && VALMODE === "redraft";
+        const pvS = p => rdStrip ? dispVal(p) : p.value;
+        const totOf = tm => tm.playerIds.reduce((s2, id) => { const p = PBY[id]; return p ? s2 + pvS(p) : s2; }, 0);
+        const valRank = [...DATA.teams].sort((a, b) => totOf(b) - totOf(a)).indexOf(t) + 1;
+        const totDispS = totOf(t);
+        const stDispS = (t.bestLineup || []).reduce((s2, l) => { const p = PBY[l.p.id]; return p ? s2 + pvS(p) : s2; }, 0);
         const ss = window.SeasonSim ? window.SeasonSim.results[t.rid] : null;
         el.innerHTML = `<div class="strip-card">
           <div class="strip-main">
             <div class="strip-title">Your team — ${esc(t.name)}</div>
-            <div class="strip-sub">Power rank <strong>#${t.powerRank} of 12</strong> · ${esc(t.arch)} · ${esc(t.record)} · Roster value <strong>${fmt(t.totalVal)}</strong> (#${valRank} in the league) · Starters <strong>${fmt(t.starterVal)}</strong> · Pick capital <strong>${fmt(t.picksVal)}</strong>${ss ? ` · This season: <strong>${oddsPct(ss.playoff)}</strong> playoffs · <strong>${oddsPct(ss.champ)}</strong> title` : ""}</div>
+            <div class="strip-sub">Power rank <strong>#${t.powerRank} of 12</strong>${rdStrip ? "" : ` · ${esc(t.arch)}`} · ${esc(t.record)} · Roster value <strong>${fmt(rdStrip ? totDispS : t.totalVal)}</strong> (#${valRank} in the league) · Starters <strong>${fmt(rdStrip ? stDispS : t.starterVal)}</strong>${rdStrip ? "" : ` · Pick capital <strong>${fmt(t.picksVal)}</strong>`}${ss ? ` · This season: <strong>${oddsPct(ss.playoff)}</strong> playoffs · <strong>${oddsPct(ss.champ)}</strong> title` : ""}</div>
           </div>
           <button class="strip-btn" id="strip-go" type="button">See your team vs the league →</button>
         </div>`;
@@ -3262,6 +3566,12 @@
         boardState.injOnly = !boardState.injOnly;
         injBtn.setAttribute("aria-pressed", boardState.injOnly ? "true" : "false");
         document.getElementById("inj-note").hidden = !boardState.injOnly;
+        boardState.shown = 60; renderBoard();
+      });
+      const flexBtn = document.getElementById("flex-filter");
+      flexBtn.addEventListener("click", () => {
+        boardState.flexOnly = !boardState.flexOnly;
+        flexBtn.setAttribute("aria-pressed", boardState.flexOnly ? "true" : "false");
         boardState.shown = 60; renderBoard();
       });
       document.getElementById("board-more").addEventListener("click", () => { boardState.shown += 80; renderBoard(); });
@@ -3556,31 +3866,58 @@
           return res;
         }
 
+        /* Anchored odds for an arbitrary team-strength map — the same
+           paired-delta anchoring impact() uses (common random numbers,
+           deltas applied to the headline 10,000-sim odds), exposed so
+           other tools can price a change in a team's projected pts/wk
+           as a title-odds swing without rebuilding the sim. */
+        function oddsWithMeans(mn) {
+          const simAfter = simulate(mn, DELTA_SIMS, DELTA_SEED);
+          const adj = {};
+          DATA.teams.forEach(t => {
+            const r = t.rid;
+            let poA = Math.min(1, Math.max(0, results[r].playoff + (simAfter[r].playoff - deltaBase[r].playoff)));
+            if (!results[r].elim && poA <= 0) poA = 0.005;
+            adj[r] = {
+              expWins: results[r].expWins + (simAfter[r].expWins - deltaBase[r].expWins),
+              playoff: poA,
+              champ: poA * simAfter[r].bracket,
+              elim: results[r].elim,
+            };
+          });
+          return adj;
+        }
+
         const pct = x => oddsPct(x);
         const pp = x => { const v = Math.round(x * 100); return (v > 0 ? "+" : "") + v + " pp"; };
 
         function finderImpact(rid, s, givesTot, getsTot) {
           const partner = s.partner;
-          const vIds = TBY[rid].playerIds.filter(id => id !== s.give.id).concat([s.target.id]);
-          const pIds = partner.playerIds.filter(id => id !== s.target.id).concat([s.give.id]);
+          const outIds = (s.givePlayers || []).map(p => p.id);
+          const inIds = (s.getPlayers || []).map(p => p.id);
+          const vIds = TBY[rid].playerIds.filter(id => !outIds.includes(id)).concat(inIds);
+          const pIds = partner.playerIds.filter(id => !inIds.includes(id)).concat(outIds);
           const imp = impact(rid, vIds, partner.rid, pIds);
           const meB = imp.before[rid], meA = imp.after[rid], thB = imp.before[partner.rid], thA = imp.after[partner.rid];
           const dChamp = meA.champ - meB.champ, dThem = thA.champ - thB.champ;
           const overpay = givesTot - getsTot;
           const mine = TBY[rid];
+          /* Redraft: no windows, no rebuilders, no dynasty math — the
+             impact lines speak in rest-of-season value only. */
+          const rdF = typeof VALMODE !== "undefined" && VALMODE === "redraft";
           const lines = [];
           lines.push(`<p><strong>This season:</strong> your title odds <strong>${pct(meB.champ)} → ${pct(meA.champ)}</strong> (${pp(dChamp)}), playoff odds <strong>${pct(meB.playoff)} → ${pct(meA.playoff)}</strong>. ${esc(partner.name)}’s title odds move <strong>${pct(thB.champ)} → ${pct(thA.champ)}</strong>. Your projected lineup: <strong>${Math.round(means[rid])} → ${Math.round(imp.meansAfter[rid])} pts/wk</strong>.</p>`);
-          if (mine.arch !== "Rebuilder" && dChamp >= 0.03 && overpay >= 150)
-            lines.push(`<p class="good">Worth the overpay: you’d pay ${fmt(overpay)} extra dynasty value for ${pp(dChamp)} of title odds — a contending window is exactly when that trade makes sense.</p>`);
-          else if (mine.arch !== "Rebuilder" && dChamp >= 0.03 && overpay <= -150)
-            lines.push(`<p class="good">A double win: your title odds rise ${pp(dChamp)} and the dynasty math favors you too.</p>`);
-          else if (mine.arch !== "Rebuilder" && dChamp >= 0.03)
-            lines.push(`<p class="good">Fair on value and a clear win this season: title odds ${pp(dChamp)} for essentially even dynasty math.</p>`);
-          if (mine.arch === "Rebuilder" && dThem - dChamp >= 0.03)
+          if ((rdF || mine.arch !== "Rebuilder") && dChamp >= 0.03 && overpay >= 150)
+            lines.push(`<p class="good">Worth the overpay: you’d pay ${fmt(overpay)} extra ${rdF ? "rest-of-season value" : "dynasty value"} for ${pp(dChamp)} of title odds — ${rdF ? "in redraft, this season is exactly when that trade makes sense" : "a contending window is exactly when that trade makes sense"}.</p>`);
+          else if ((rdF || mine.arch !== "Rebuilder") && dChamp >= 0.03 && overpay <= -150)
+            lines.push(`<p class="good">A double win: your title odds rise ${pp(dChamp)} and the ${rdF ? "value math" : "dynasty math"} favors you too.</p>`);
+          else if ((rdF || mine.arch !== "Rebuilder") && dChamp >= 0.03)
+            lines.push(`<p class="good">Fair on value and a clear win this season: title odds ${pp(dChamp)} for essentially even ${rdF ? "value math" : "dynasty math"}.</p>`);
+          if (!rdF && mine.arch === "Rebuilder" && dThem - dChamp >= 0.03)
             lines.push(`<p class="warn">Helps them more than you: their title odds gain ${pp(dThem)} against your ${pp(dChamp)}, and you’re rebuilding — this season’s points shouldn’t be what you’re buying.</p>`);
           if (dChamp <= -0.03)
-            lines.push(`<p class="warn">It costs you this season: your title odds fall ${Math.round(Math.abs(dChamp) * 100)} pp even though the dynasty math is close — the production you’re sending out matters more in 2026 than the value gap suggests.</p>`);
-          return `<div class="impact"><p class="impact-head">Season impact — separate from dynasty value</p>${lines.join("")}</div>`;
+            lines.push(`<p class="warn">It costs you this season: your title odds fall ${Math.round(Math.abs(dChamp) * 100)} pp even though the ${rdF ? "value math" : "dynasty math"} is close — the production you’re sending out matters more in 2026 than the value gap suggests.</p>`);
+          return `<div class="impact"><p class="impact-head">${rdF ? "Season impact — what it does to your title odds" : "Season impact — separate from dynasty value"}</p>${lines.join("")}</div>`;
         }
 
         function calcImpactHtml() {
@@ -3589,18 +3926,19 @@
           const outA = A.assets.filter(a => a.kind === "player").map(a => a.id);
           const outB = B.assets.filter(a => a.kind === "player").map(a => a.id);
           if (!outA.length && !outB.length)
-            return `<div class="impact"><p class="impact-head">Season impact — this season only</p><p>Picks alone don’t change 2026 odds — no players are moving. Add a player to either side to see the title-odds swing.</p></div>`;
+            return `<div class="impact"><p class="impact-head">Season impact — this season only</p><p>${typeof VALMODE !== "undefined" && VALMODE === "redraft" ? "No players are moving yet" : "Picks alone don’t change 2026 odds — no players are moving"}. Add a player to either side to see the title-odds swing.</p></div>`;
           const tA = TBY[A.team], tB = TBY[B.team];
           const idsA = tA.playerIds.filter(id => !outA.includes(id)).concat(outB);
           const idsB = tB.playerIds.filter(id => !outB.includes(id)).concat(outA);
           const imp = impact(A.team, idsA, B.team, idsB);
           const aB = imp.before[A.team], aA = imp.after[A.team], bB = imp.before[B.team], bA = imp.after[B.team];
-          return `<div class="impact"><p class="impact-head">Season impact — this season only</p><p>If this deal went through: <strong>${esc(tA.name)}</strong> title odds <strong>${pct(aB.champ)} → ${pct(aA.champ)}</strong> (playoffs ${pct(aB.playoff)} → ${pct(aA.playoff)}) · <strong>${esc(tB.name)}</strong> title odds <strong>${pct(bB.champ)} → ${pct(bA.champ)}</strong> (playoffs ${pct(bB.playoff)} → ${pct(bA.playoff)}). The verdict above is pure dynasty value — this line never feeds it.</p></div>`;
+          return `<div class="impact"><p class="impact-head">Season impact — this season only</p><p>If this deal went through: <strong>${esc(tA.name)}</strong> title odds <strong>${pct(aB.champ)} → ${pct(aA.champ)}</strong> (playoffs ${pct(aB.playoff)} → ${pct(aA.playoff)}) · <strong>${esc(tB.name)}</strong> title odds <strong>${pct(bB.champ)} → ${pct(bA.champ)}</strong> (playoffs ${pct(bB.playoff)} → ${pct(bA.playoff)}). The verdict above is pure ${typeof VALMODE !== "undefined" && VALMODE === "redraft" ? "rest-of-season value" : "dynasty value"} — this line never feeds it.</p></div>`;
         }
 
         function renderSeason() {
           const el = document.getElementById("season-out");
           if (!el) return;
+          const rdS = typeof VALMODE !== "undefined" && VALMODE === "redraft";
           const sorted = DATA.teams.slice().sort((a, b) => (results[b.rid].champ - results[a.rid].champ) || (results[b.rid].playoff - results[a.rid].playoff));
           const meanRank = {};
           DATA.teams.slice().sort((a, b) => means[b.rid] - means[a.rid]).forEach((t, i) => { meanRank[t.rid] = i + 1; });
@@ -3613,8 +3951,8 @@
             else if (r.playoff >= 0.9) s += " A near-lock for the postseason; the title race is where the variance lives.";
             else if (r.playoff >= 0.5) s += " In the mix — a move or two changes this number fast, which is what the Trade Finder’s season impact is for.";
             else if (r.playoff >= 0.15) s += " Needs help: the path runs through a trade or a breakout, not the current lineup.";
-            else if (r.elim) s += " Mathematically eliminated — every decision from here is a dynasty decision.";
-            else s += " Still mathematically alive — the path needs a win-out run and help elsewhere, so every other decision is a dynasty decision.";
+            else if (r.elim) s += rdS ? " Mathematically eliminated — the title path is closed; what's left is pride and playing spoiler." : " Mathematically eliminated — every decision from here is a dynasty decision.";
+            else s += rdS ? " Still mathematically alive — the path needs a win-out run and help elsewhere, so every point still matters." : " Still mathematically alive — the path needs a win-out run and help elsewhere, so every other decision is a dynasty decision.";
             return s;
           }
           function lineupRows(t) {
@@ -3627,7 +3965,7 @@
                 <div class="rank-num">${i + 1}</div>
                 <div class="team-main">
                   <div class="team-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div>
-                  <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for · Dynasty tag: ${esc(t.arch)}</div>
+                  <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for${rdS ? "" : ` · Dynasty tag: ${esc(t.arch)}`}</div>
                 </div>
               </div>
               <div class="prob-row"><span class="lbl">Playoffs</span><div class="prob-bar"><div class="prob-fill" style="width:${Math.round(r.playoff * 100)}%"></div></div><span class="prob-val">${oddsPct(r.playoff)}</span></div>
@@ -3685,7 +4023,7 @@
             <li><strong>Trade impact.</strong> Title-odds swings on the Trade Finder and in the calculator come from 3,000 paired simulations run before and after the deal with the same random stream, so the delta reflects the trade, not Monte Carlo noise. Draft picks don’t change 2026 odds — they change future seasons, which is the dynasty engine’s department.</li>
           </ul>`; }
 
-        return { results, means, baseOpt, finderImpact, calcImpactHtml, impact, renderSeason };
+        return { results, means, baseOpt, finderImpact, calcImpactHtml, impact, renderSeason, oddsWithMeans };
       };
       window.SeasonSim = DATA.teams.length ? window.buildSeasonSim() : null;
       window.SIM_BY_LEAGUE = {};
@@ -3774,9 +4112,13 @@
           const score = (p.ros || 0) * (1 + Math.max(0, add) / 10);
           return { p, bar, add, score };
         });
-        const byScore = (a, b) => b.score - a.score || b.p.value - a.p.value;
+        const byScore = (a, b) => b.score - a.score || dispVal(b.p) - dispVal(a.p);
         const startable = pool.filter(m => m.add > 0).sort(byScore);
-        const stash = pool.filter(m => m.add <= 0 && wvIsStash(m.p)).sort((a, b) => b.p.value - a.p.value);
+        /* The stash list is a dynasty idea (young players held for next
+           year). In redraft there is no next year: no stash section,
+           and would-be stashes compete in "Best of the rest" on this
+           season's projection alone. */
+        const stash = (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? [] : pool.filter(m => m.add <= 0 && wvIsStash(m.p)).sort((a, b) => dispVal(b.p) - dispVal(a.p));
         const stashIds = new Set(stash.map(m => m.p.id));
         const rest = pool.filter(m => m.add <= 0 && !stashIds.has(m.p.id)).sort(byScore);
         const filt = list => waiverState.pos === "ALL" ? list : list.filter(m => m.p.pos === waiverState.pos);
@@ -3787,13 +4129,15 @@
         }).join(" · ");
         const lineupIds = new Set(opt.lineup.map(l => l.p.id));
         const drop = team.playerIds.map(id => PBY[id]).filter(Boolean)
-          .filter(x => !lineupIds.has(x.id)).sort((a, b) => a.value - b.value)[0];
+          .filter(x => !lineupIds.has(x.id)).sort((a, b) => dispVal(a) - dispVal(b))[0];
         let html = `<div class="diag"><h3>${esc(team.name)} — the bar a pickup has to clear</h3>
           <p>By rest-of-season projection, a pickup starts for this team only if he beats: ${barTxt} pts/wk.</p>
           <p>${startable.length
             ? `<strong>${startable.length} player${startable.length === 1 ? "" : "s"}</strong> on the wire clear${startable.length === 1 ? "s" : ""} that bar right now — they're the must-adds below.`
-            : `Nobody on the wire clears that bar for this team this week — the wire's value here is stash value, not starts, and the stash list below is ranked accordingly.`}</p>
-          ${drop ? `<p>Easiest roster spot to open: <strong>${esc(drop.name)}</strong> (${drop.pos}, dynasty value ${fmt(drop.value)}) — this team's lowest-value bench player.</p>` : ""}
+            : (typeof VALMODE !== "undefined" && VALMODE === "redraft")
+              ? `Nobody on the wire clears that bar for this team this week — the wire's value here is depth, not starts, and the list below is ranked accordingly.`
+              : `Nobody on the wire clears that bar for this team this week — the wire's value here is stash value, not starts, and the stash list below is ranked accordingly.`}</p>
+          ${drop ? `<p>Easiest roster spot to open: <strong>${esc(drop.name)}</strong> (${drop.pos}, ${typeof VALMODE !== "undefined" && VALMODE === "redraft" ? "redraft" : "dynasty"} value ${fmt(dispVal(drop))}) — this team's lowest-value bench player.</p>` : ""}
         </div>`;
 
         const row = (m, bid) => {
@@ -3809,7 +4153,7 @@
           return `<div class="wv-row">
             <div class="wv-main">
               <span class="who">${esc(p.name)}</span> <span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${p.posRank}</span>${injChip(p)}${p.flag && WV_SIG[p.flag] ? ` <span class="sig ${WV_SIG[p.flag][0]}">${WV_SIG[p.flag][1]}</span>` : ""}
-              <div class="wv-meta">${esc(p.team)} · Age ${p.age ?? "—"} · Dynasty value ${fmt(p.value)} · <span class="trnd ${trCls}">${trArrow} ${tr > 0 ? "+" : ""}${tr}% 3-wk trend</span></div>
+              <div class="wv-meta">${esc(p.team)} · Age ${p.age ?? "—"} · ${typeof VALMODE !== "undefined" && VALMODE === "redraft" ? "Redraft" : "Dynasty"} value ${fmt(dispVal(p))} · <span class="trnd ${trCls}">${trArrow} ${tr > 0 ? "+" : ""}${tr}% 3-wk trend</span></div>
               <p class="wv-why">${wvWhy(p)}</p>
             </div>
             <div class="wv-nums">
@@ -3936,7 +4280,7 @@
         // points-allowed ratio for the position, capped at ±12%).
         if (B3.bye[p.id] === LU_WEEK) return { pts: 0, tag: "Bye — " + p.team, cls: "bye" };
         const inj = p.inj;
-        if (inj === "IR" || inj === "PUP" || inj === "Out") return { pts: 0, tag: inj, cls: "out" };
+        if (inj === "IR" || inj === "PUP" || inj === "Out" || inj === "Suspended") return { pts: 0, tag: inj, cls: "out" };
         const s = window.SOS ? window.SOS[p.id] : null;
         const sf = s && s[1] != null ? s[1] : 1;
         const sos = s && s[1] != null && Math.abs(s[1] - 1) >= 0.02
@@ -3979,6 +4323,11 @@
         const rid = Number(sel.value || USER_RID);
         const team = TBY[rid];
         if (!team) { const lo = document.getElementById("lineup-out"); if (lo) lo.innerHTML = ""; return; }
+        /* Opening the optimizer with a league connected is a freshness
+           checkpoint: if the live injury check is absent or older than
+           ~30 minutes, re-pull Sleeper's players DB (cached otherwise,
+           so tab switches never refetch). */
+        if (typeof window.slpEnsureFreshInjuries === "function") window.slpEnsureFreshInjuries(false);
         const opt = wkOptimal(team.playerIds);
         /* Filter BEFORE projecting: a connected league's starters can
            include players outside the tracked value pool (PBY), and
@@ -3998,7 +4347,7 @@
 
         const tagHtml = pr => pr.tag ? ` <span class="sig ${pr.cls}">${esc(pr.tag)}</span>` : "";
         const rowHtml = r => `<tr><td><span class="slot-tag">${r.slot}</span></td>
-          <td><span class="p-name">${esc(r.p.name)}</span>${tagHtml(r.proj)}<div class="p-sub">${esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}</div></td>
+          <td><span class="p-name">${esc(r.p.name)}</span>${tagHtml(r.proj)}<div class="p-sub">${esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}${r.p.unpriced ? " · Unpriced — no consensus value" : ""}</div></td>
           <td class="num">${f1(r.proj.pts)}</td></tr>`;
         const tbl = (title, rows, total) => `<div class="mv-card"><h3>${title}</h3>
           <table class="mini"><thead><tr><th>Slot</th><th>Player</th><th class="num">Proj</th></tr></thead>
@@ -4011,7 +4360,7 @@
         } else {
           const pairs = ins.map((inn, i) => ({ inn, out: outs[i] })).filter(x => x.out);
           movesHtml = `<div class="wv-card"><h3>Make these moves — +${f1(gain)} projected points</h3>
-            <p class="wv-sub">Start the left player over the right one. A starter projecting zero is auto-benched: bye weeks and Out / IR / PUP designations score nothing this week, and the reason rides on his name.</p>
+            <p class="wv-sub">Start the left player over the right one. A starter projecting zero is auto-benched: bye weeks and Out / IR / PUP / Suspended designations score nothing this week, and the reason rides on his name.</p>
             ${pairs.map(({ inn, out }) => `<div class="mv-row">
               <div><span class="who">Start ${esc(inn.p.name)}</span> <span class="sub">${inn.slot} · ${esc(inn.p.team)}${sosTxt(inn.proj)}</span>
                 <div class="sub">over ${esc(out.p.name)} (${out.slot})${out.proj.tag ? ` — <strong>${esc(out.proj.tag)}</strong>` : ""}</div></div>
@@ -4236,6 +4585,9 @@
          to its empty state. applyMode(true) runs right after and puts
          the guest chrome on top. */
       function restoreBaseLeague() {
+        /* Connected-league roster stubs leave PBY with the league. */
+        (window.CONN_STUB_IDS || []).forEach(id => { if (PBY[id] && PBY[id].unpriced) delete PBY[id]; });
+        window.CONN_STUB_IDS = [];
         DATA = DATA_D74;
         DATA.players.forEach(p => { p.owner = null; });
         Object.keys(TBY).forEach(k => delete TBY[k]);
@@ -4280,6 +4632,10 @@
         window.CURRENT_LEAGUE = "d74";
         restoreBaseLeague();
         applyMode(true);
+        /* Guest browsing is dynasty-first: dropping a connected league
+           also drops its redraft mode. (setValMode is defined by the
+           next script — at first load this is a no-op guard.) */
+        if (typeof setValMode === "function") setValMode("dynasty");
       }
 
       /* The site opens in guest mode: Dynasty Standard prices, the
@@ -4372,8 +4728,19 @@
           if (bi && window.GUEST_MODE) bi.innerHTML = guestText.boardIntro;
           if (ci && window.GUEST_MODE) ci.innerHTML = guestText.calcIntro;
         }
+        /* League-type chrome (detection note, redraft intros, dynasty
+           methodology filtering, the Improve Your Odds panel) lives in
+           the final script; it re-runs on every mode transition because
+           every transition funnels through here. */
+        if (typeof window.applyLeagueModeChrome === "function") window.applyLeagueModeChrome(rd);
       }
       function setValMode(m) {
+        /* A manual flip while a league is connected is that league's
+           override: it wins over the auto-detected type for as long as
+           the league stays connected. setConnectedLeague's own apply
+           call is not a manual flip (it sets __applyingLeagueMode), so
+           typeOverride only ever holds a genuine user divergence. */
+        if (!window.__applyingLeagueMode && window.CURRENT_LEAGUE === "conn" && window.CONN_LEAGUE) window.CONN_LEAGUE.typeOverride = m;
         if (VALMODE === m) { syncModeChrome(); return; }
         VALMODE = m;
         if (m === "redraft") {
@@ -4492,6 +4859,105 @@
         3: [[3969, 3197, 2776], [2321, 2103, 1967], [1619, 1498, 1413]],
       };
 
+      /* League-type detection — dynasty vs redraft, from each platform's
+         own signals. Sleeper publishes an explicit league type
+         (settings.type: 0 = redraft, 1 = keeper, 2 = dynasty) and only
+         dynasty leagues carry TAXI slots in roster_positions; either is
+         decisive. A Sleeper keeper league (type 1) plays its season as
+         redraft — a handful of keepers don't change in-season math — so
+         it lands on redraft unless it also carries a taxi squad. ESPN
+         has no dynasty product at all: its keeper leagues keep a few
+         players, and only a keeper count covering essentially the whole
+         roster (a de-facto dynasty) reads as dynasty. Detection is a
+         default, never a lock — the header toggle overrides it per
+         league (see setValMode / CONN_LEAGUE.typeOverride). */
+      function slpLeagueType(league) {
+        const st = (league && league.settings) || {};
+        const rp = (league && league.roster_positions) || [];
+        if (rp.includes("TAXI")) return "dynasty";
+        if (Number(st.type) === 2) return "dynasty";
+        return "redraft";
+      }
+      function espnLeagueType(settings) {
+        const ds = (settings && settings.draftSettings) || {};
+        const keepers = Number(ds.keeperCount != null ? ds.keeperCount : (settings && settings.keeperCount) || 0) || 0;
+        return keepers >= 15 ? "dynasty" : "redraft";
+      }
+      /* ================= Live players DB: injury freshness + stub identities =================
+         The baked snapshot's injury designations go stale the moment a
+         player is ruled out after the morning sync — on game day that's
+         hours. So while a league is connected, the site pulls Sleeper's
+         full players DB (the same feed the snapshot was baked from)
+         and overrides every player's designation with the live one
+         before the lineup optimizer and the odds tools re-run. The
+         fetch is cached for the session: tab switches never refetch,
+         a check older than ~30 minutes (or the Lineup tab's manual
+         Refresh button) does. Any failure leaves the baked data in
+         place — the page never breaks over a freshness check. The same
+         payload fills in the roster stubs' names/positions/teams. */
+      const INJ_TTL = 30 * 60 * 1000;
+      let slpDbPromise = null, slpDbData = null, slpDbAt = 0;
+      window.INJ_STATE = { status: "none", at: 0 };
+      function slpPlayersDb(force) {
+        if (!force && slpDbData && Date.now() - slpDbAt < INJ_TTL) return Promise.resolve(slpDbData);
+        if (slpDbPromise && !force) return slpDbPromise;
+        slpDbPromise = (async () => {
+          const r = await slpFetch("/players/nfl");
+          if (!r.ok) throw new Error("players db " + r.status);
+          const db = await r.json();
+          slpDbData = db; slpDbAt = Date.now();
+          return db;
+        })();
+        return slpDbPromise.then(v => { slpDbPromise = null; return v; },
+          e => { slpDbPromise = null; throw e; });
+      }
+      function slpApplyPlayersDb(db) {
+        if (!db) return;
+        DATA_D74.players.forEach(p => {
+          const rec = db[p.id];
+          if (!rec) return;
+          p.inj = rec.injury_status || null;
+          p.ibp = rec.injury_body_part || null;
+          p.inote = rec.injury_notes || null;
+        });
+        const C = window.CONN_LEAGUE;
+        if (C && C.stubs) C.stubs.forEach(s => {
+          const rec = db[s.id];
+          if (!rec) return;
+          s.name = rec.full_name || ((rec.first_name || "") + " " + (rec.last_name || "")).trim() || s.name;
+          if (rec.position) s.pos = rec.position;
+          if (rec.team) s.team = rec.team;
+          if (rec.age != null) s.age = rec.age;
+          s.inj = rec.injury_status || null;
+          s.ibp = rec.injury_body_part || null;
+          s.inote = rec.injury_notes || null;
+        });
+      }
+      window.slpEnsureFreshInjuries = function (force) {
+        if (window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn") return;
+        if (window.__injFetching) return;
+        if (!force && window.INJ_STATE.status === "live" && Date.now() - window.INJ_STATE.at < INJ_TTL) return;
+        window.__injFetching = true;
+        window.INJ_STATE = { status: "loading", at: window.INJ_STATE.at || 0 };
+        if (typeof window.renderInjFresh === "function") window.renderInjFresh();
+        slpPlayersDb(force).then(db => {
+          window.__injFetching = false;
+          if (window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn") return;
+          slpApplyPlayersDb(db);
+          window.INJ_STATE = { status: "live", at: Date.now() };
+          if (typeof window.renderInjFresh === "function") window.renderInjFresh();
+          /* Re-run everything that reads designations: values (the
+             redraft IR/PUP zero reads p.inj), the optimizer, the
+             finder, waivers, and the odds panel. */
+          refreshAll();
+          if (typeof renderLineup === "function") renderLineup();
+          if (typeof window.renderOddsPanel === "function") window.renderOddsPanel();
+        }).catch(() => {
+          window.__injFetching = false;
+          window.INJ_STATE = { status: "failed", at: window.INJ_STATE.at || 0 };
+          if (typeof window.renderInjFresh === "function") window.renderInjFresh();
+        });
+      };
       function slpFormatOf(league) {
         const sc = league.scoring_settings || {};
         return {
@@ -4636,7 +5102,37 @@
           ],
           lineup: lineupStr,
         };
-        return { league: meta, teams, opp6, format: fmt, wireItems: slpWireItems(b.transactions || [], byRid, week), username: user.username, today };
+        /* Roster completeness: a rostered player who sits outside the
+           valued pool (no consensus value — a veteran the market no
+           longer prices, a kicker, a deep stash) still gets a stub, so
+           every display that renders this roster renders HIM, labeled
+           Unpriced, instead of silently dropping him. Identity fields
+           start as placeholders and are upgraded from Sleeper's live
+           players DB when it lands (slpApplyPlayersDb). Stubs never
+           join DATA.players: the values board stays the priced pool,
+           and a stub's zero value/projection keeps him out of every
+           lineup, waiver, and trade computation. */
+        const ownerOf = {};
+        teams.forEach(t => t.playerIds.forEach(pid => { ownerOf[pid] = t.rid; }));
+        const stubs = [];
+        /* The priced-pool test must be the baked valued pool, NOT the
+           live PBY: when leagues are switched back to back, PBY still
+           holds the PREVIOUS league's stubs at build time, and a player
+           rostered in both leagues (Brandin Cooks was the live case)
+           would test as "already priced", get no stub here, and then
+           have the old league's stub deleted out from under him by
+           setConnectedLeague's cleanup — vanishing from this roster. */
+        const valuedIds = new Set(DATA_D74.players.map(p => p.id));
+        Object.keys(ownerOf).forEach(pid => {
+          if (valuedIds.has(pid)) return;
+          stubs.push({
+            id: pid, name: "Player " + pid, pos: "—", posRank: "", team: "—",
+            age: null, owner: ownerOf[pid], inj: null, ibp: null, inote: null,
+            value: 0, snapValue: 0, rdValue: 0, rdSnap: 0, ros: 0, ppg: null, gp: 0,
+            unpriced: true, tier: "Unpriced", why: "",
+          });
+        });
+        return { league: meta, teams, opp6, format: fmt, wireItems: slpWireItems(b.transactions || [], byRid, week), username: user.username, today, leagueType: slpLeagueType(league), stubs };
       }
 
       function slpWireItems(txns, byRid, week) {
@@ -4715,6 +5211,20 @@
       function setConnectedLeague() {
         const C = window.CONN_LEAGUE;
         if (!C) return;
+        /* Roster stubs (players outside the valued pool) join PBY for
+           the life of the connection so every roster display renders
+           them; the previous league's stubs come back out first. They
+           never enter DATA.players, so the board, waivers, and movers
+           stay priced-pool only. */
+        (window.CONN_STUB_IDS || []).forEach(id => { if (PBY[id] && PBY[id].unpriced) delete PBY[id]; });
+        window.CONN_STUB_IDS = (C.stubs || []).map(s => s.id);
+        (C.stubs || []).forEach(s => { PBY[s.id] = s; });
+        /* If the session already pulled Sleeper's players DB for an
+           earlier league, fill this league's stub identities from it
+           right away — the freshness check below would otherwise skip
+           its apply step as still-fresh and leave "Player 2197"
+           placeholders standing until the cache aged out. */
+        try { if (typeof slpDbData !== "undefined" && slpDbData && typeof slpApplyPlayersDb === "function") slpApplyPlayersDb(slpDbData); } catch (e) { /* the ensure call below covers it */ }
         DATA = { league: C.league, players: DATA_D74.players, teams: C.teams, algorithm: DATA_D74.algorithm };
         const om = {};
         DATA.teams.forEach(t => t.playerIds.forEach(pid => { om[pid] = t.rid; }));
@@ -4745,6 +5255,7 @@
                 renderTeamStrip();
                 renderFinder();
                 renderVerdict();
+                if (typeof window.renderOddsPanel === "function") window.renderOddsPanel();
               } catch (e) {
                 const so2 = document.getElementById("season-out");
                 if (so2) so2.innerHTML = `<div class="diag"><h3>Season sim couldn't be built for this league</h3><p>Everything else on this page is fully live on ${esc(C.league.name)}.</p></div>`;
@@ -4784,9 +5295,23 @@
         const disc = document.getElementById("slp-disconnect");
         if (disc) disc.hidden = false;
         if (typeof window.renderWire === "function") window.renderWire();
+        /* League type drives the value mode for the whole site: the
+           auto-detected type, unless the user has overridden it for
+           this league from the header toggle. setValMode re-renders
+           everything in the new mode; the apply flag keeps this call
+           from being mistaken for a manual override. */
+        window.__applyingLeagueMode = true;
+        if (typeof setValMode === "function") setValMode((C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "redraft" : "dynasty");
+        window.__applyingLeagueMode = false;
         refreshAll();
         if (typeof renderLineup === "function") renderLineup();
         syncModeChrome();
+        /* Freshness: pull Sleeper's live players DB (session-cached) to
+           override the baked injury designations and fill in the
+           roster stubs' identities. Fire-and-forget — the page is
+           already fully rendered on snapshot data, and the refresh
+           re-renders when it lands. */
+        if (typeof window.slpEnsureFreshInjuries === "function") window.slpEnsureFreshInjuries(false);
       }
 
       function slpDisconnect() {
@@ -4911,7 +5436,7 @@
         list.innerHTML = slpState.leagues.map((lg, i) => `
           <button type="button" class="slp-league" data-slp-league="${i}">
             <span class="slp-league-name">${esc(lg.name)}</span>
-            <span class="slp-league-meta">${lg.season} season · ${lg.total_rosters} teams · ${esc(statusLabel(lg.status))}${names[i] ? ` · your team: ${esc(names[i])}` : ""}</span>
+            <span class="slp-league-meta">${lg.season} season · ${lg.total_rosters} teams · ${esc(statusLabel(lg.status))} · ${slpLeagueType(lg) === "dynasty" ? "Dynasty" : "Redraft"}${names[i] ? ` · your team: ${esc(names[i])}` : ""}</span>
           </button>`).join("");
         list.querySelectorAll("[data-slp-league]").forEach(btn =>
           btn.addEventListener("click", () => slpLoadLeague(slpState.leagues[Number(btn.dataset.slpLeague)])));
@@ -5145,13 +5670,35 @@
         const slotCounts = (settings.rosterSettings && settings.rosterSettings.lineupSlotCounts) || {};
         const KEEP_SLOTS = ["QB", "RB", "WR", "TE", "FLEX", "SF"];
         const proj = {};
+        const espnStubMap = {};
+        const espnStubs = [];
         const teams = (raw.teams || []).map(t => {
           const rec = (t.record && t.record.overall) || {};
           const playerIds = [], lineup = [];
           ((t.roster && t.roster.entries) || []).forEach(e => {
             const pl = (e.playerPoolEntry && e.playerPoolEntry.player) || {};
-            const sid = espnMapPlayer(pl);
-            if (!sid) return;
+            let sid = espnMapPlayer(pl);
+            if (!sid) {
+              /* Unmapped is not invisible: a rostered ESPN player the
+                 crosswalk can't price still renders on his team as an
+                 Unpriced stub (namespaced id — ESPN's id space is not
+                 Sleeper's), exactly like an unpriced Sleeper roster. */
+              const rawId = pl.id != null ? pl.id : (e.playerPoolEntry && e.playerPoolEntry.id);
+              if (rawId == null) return;
+              sid = "espn-" + rawId;
+              if (!espnStubMap[sid]) {
+                const injMap = { OUT: "Out", QUESTIONABLE: "Questionable", DOUBTFUL: "Doubtful", INJURY_RESERVE: "IR", SUSPENSION: "Suspended" };
+                espnStubMap[sid] = {
+                  id: sid, name: pl.fullName || "ESPN player " + rawId,
+                  pos: ESPN_POS[pl.defaultPositionId] || "—", posRank: "",
+                  team: ESPN_PRO[pl.proTeamId] || "—", age: null, owner: t.id,
+                  inj: injMap[pl.injuryStatus] || null, ibp: null, inote: null,
+                  value: 0, snapValue: 0, rdValue: 0, rdSnap: 0, ros: 0, ppg: null, gp: 0,
+                  unpriced: true, tier: "Unpriced", why: "",
+                };
+                espnStubs.push(espnStubMap[sid]);
+              }
+            }
             playerIds.push(sid);
             const pr = espnProjOf(pl, season, week);
             if (pr) proj[sid] = pr;
@@ -5240,7 +5787,7 @@
         return {
           league: meta, teams, opp6: espnOppMap(raw, week), format: fmt,
           wireItems: [], username: null, today,
-          platform: "espn", leagueId: String(leagueId), proj,
+          platform: "espn", leagueId: String(leagueId), proj, leagueType: espnLeagueType(settings), stubs: espnStubs,
           degraded: ["transactions", "picks"],
         };
       }
@@ -5459,9 +6006,9 @@
           const score = (p.ros || 0) * (1 + Math.max(0, add) / 10);
           return { p, bar, add, score };
         });
-        const byScore = (a, b) => b.score - a.score || b.p.value - a.p.value;
+        const byScore = (a, b) => b.score - a.score || dispVal(b.p) - dispVal(a.p);
         const startable = pool.filter(m => m.add > 0).sort(byScore);
-        const stash = pool.filter(m => m.add <= 0 && wvIsStash(m.p)).sort((a, b) => b.p.value - a.p.value);
+        const stash = (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? [] : pool.filter(m => m.add <= 0 && wvIsStash(m.p)).sort((a, b) => dispVal(b.p) - dispVal(a.p));
         const stashIds = new Set(stash.map(m => m.p.id));
         const rest = pool.filter(m => m.add <= 0 && !stashIds.has(m.p.id)).sort(byScore);
         const tag = (m, kind, lo, hi) => ({ p: m.p, bar: m.bar, add: m.add, kind, bid: bidRange(lo, hi).split(" · ")[0] });
@@ -5583,7 +6130,7 @@
             <button type="button" class="mt-open" data-mt-go="${lg.id}:teams">Open league →</button>
           </div>
           <div class="mt-stats">
-            <button type="button" class="mt-stat" data-mt-go="${lg.id}:teams"><span class="mt-lbl">Power rank</span><span class="mt-big">#${s.powerRank} <small>of ${s.total}</small></span><span class="mt-sub2">${s.power} power score${me.arch ? ` · ${esc(me.arch)}` : ""}</span></button>
+            <button type="button" class="mt-stat" data-mt-go="${lg.id}:teams"><span class="mt-lbl">Power rank</span><span class="mt-big">#${s.powerRank} <small>of ${s.total}</small></span><span class="mt-sub2">${s.power} power score${me.arch && !(typeof VALMODE !== "undefined" && VALMODE === "redraft") ? ` · ${esc(me.arch)}` : ""}</span></button>
             ${odds}
             ${match}
           </div>
@@ -5684,7 +6231,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         }
         function ourVal(pid) {
           const p = (typeof PBY !== "undefined") ? PBY[pid] : null;
-          if (!p) return null;
+          if (!p || p.unpriced) return null;
           const v = dispVal(p);
           return (v == null || isNaN(v)) ? null : v;
         }
@@ -5753,19 +6300,22 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           const lines = side.p.map(pid => assetLinePlayer(pid, hlPid)).join("") +
             side.k.map(([ss, rr]) => assetLinePick(ss, rr)).join("");
           const tot = sideTotal(side);
+          const eff = (typeof qualityWeight === "function") ? sideEffRT(side) : null;
           return `<div class="rt-side">
             <div class="rt-side-h"><strong>${esc(side.t)}</strong> got</div>
             ${lines || `<div class="rt-empty-side">No players or picks recorded</div>`}
             ${tot != null ? `<div class="rt-side-total">Our value of this side today: <strong>${fmt(tot)}</strong></div>` : ""}
+            ${eff != null ? `<div class="rt-side-total adj">Consolidation adj.: <strong>${fmt(Math.round(eff))}</strong></div>` : ""}
           </div>`;
         }
         /* ---------- our grade on each real trade ----------
            Both sides priced on today's board with the calculator's own
-           consolidation math (qualityWeight), then called the way the
-           calculator calls it: within 4% is a fair deal, 4–10% is an
-           edge, past 10% the side that received less overpaid. A side
-           with nothing priceable on today's board gets no grade —
-           never a guessed one. */
+           consolidation math (qualityWeight) — the same effective values
+           printed on the card's "Consolidation adj." line — then called
+           the way the calculator calls it: within 4% is a fair deal,
+           4–10% is an edge, past 10% the side that received less
+           overpaid. A side with nothing priceable on today's board gets
+           no grade — never a guessed one. */
         function sideEffRT(side) {
           let sum = 0, any = false;
           const add = v => { if (v != null) { sum += v * qualityWeight(v); any = true; } };
@@ -6728,6 +7278,196 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
       document.querySelector('nav.mainnav button[data-nav="insights"]').addEventListener("click", () => { showFeed(false); if (location.hash.indexOf("#/insights") === 0) history.pushState(null, "", "#/insights"); });
       window.addEventListener("hashchange", syncInsightsFromHash);
       syncInsightsFromHash();
+    </script>
+    <script>
+      "use strict";
+      /* ================= League-type chrome + Improve Your Odds =================
+         Everything the Dynasty/Redraft switch changes beyond the board
+         and the calculator (which syncModeChrome owns): the detection
+         note on the toggle, the redraft intros, dynasty-only
+         methodology filtering, the injury-freshness line, and the
+         redraft-only Improve Your Odds panel. syncModeChrome calls
+         window.applyLeagueModeChrome at the end of every mode
+         transition, so none of this can drift from the toggle. */
+      const RD_FINDER_INTRO = `Pick a team and the finder hunts <strong>production</strong>. This is a redraft league — there is no next year — so every idea is a <strong>win-now buy</strong>: bench depth goes out, a player who raises the optimal lineup's projected points per week comes in, and a deal that lowers projected points per week <strong>never appears</strong>, however the values balance. <strong>No draft picks change hands</strong> — picks don't exist here. Targets are priced on rest-of-season production alone, and every other roster is a potential partner.`;
+      const RD_TEAMS_INTRO = `Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 10,000-sim Season Outlook, this week's <strong>matchup</strong>, and your <strong>top waiver targets</strong>. Below it, the <strong>Improve Your Odds</strong> panel prices the moves that most raise your title odds. Every roster below is graded on <strong>starting-lineup strength, total roster value, and points scored</strong> — in <strong>redraft prices</strong> throughout: rest of season only, no picks, no age curves. In a redraft league every team is a contender or a spoiler; there are no rebuilders. Tap a team to see its full roster.`;
+      const RD_WAIVER_INTRO = `Every unrostered player in the snapshot, ranked for the team you pick — not by name value, but by <strong>what he would do for that lineup</strong>. The bar is set by the <strong>rest-of-season projection engine</strong> (the same one behind Season Outlook): a target's value-add is his projected points per week minus the weakest starter he'd have to beat at his position, flex and superflex slots included. In redraft there is no stash list — a pickup either helps this season or he isn't worth the roster spot. Where the league runs FAAB, every target carries a suggested bid.`;
+
+      window.applyLeagueModeChrome = function (rd) {
+        const C = window.CONN_LEAGUE;
+        const conn = !window.GUEST_MODE && window.CURRENT_LEAGUE === "conn" && C;
+        const fn = document.getElementById("format-note");
+        if (fn) {
+          if (conn) {
+            const det = C.leagueType || "dynasty";
+            const eff = rd ? "redraft" : "dynasty";
+            const over = C.typeOverride && C.typeOverride !== det;
+            fn.textContent = (eff === "redraft" ? "Redraft" : "Dynasty")
+              + (over ? ` — your switch (league detected as ${det === "redraft" ? "Redraft" : "Dynasty"})` : " — detected from your league")
+              + (eff === "redraft" ? " · rest-of-season prices, no picks" : " · long-term value, picks count");
+          } else {
+            fn.textContent = rd ? "Redraft prices — rest of season only, no picks" : "Dynasty prices — long-term value, picks count";
+          }
+        }
+        const fl = document.getElementById("format-label");
+        if (fl) fl.textContent = conn ? "League type" : "Format";
+        const badge = document.getElementById("mode-badge");
+        if (badge && conn) badge.textContent = (C.platform === "espn" ? "Your ESPN league" : "Your league") + " · " + (rd ? "Redraft" : "Dynasty");
+        const fi = document.getElementById("finder-intro");
+        if (fi) {
+          if (window.__fiDyn == null) window.__fiDyn = fi.innerHTML;
+          fi.innerHTML = rd ? RD_FINDER_INTRO : window.__fiDyn;
+        }
+        const ti = document.getElementById("teams-intro");
+        if (ti) {
+          if (window.__tiDyn == null) window.__tiDyn = ti.innerHTML;
+          if (rd) ti.innerHTML = RD_TEAMS_INTRO + (conn && C.platform === "espn" && typeof ESPN_TEAMS_NOTE !== "undefined" ? ESPN_TEAMS_NOTE : "");
+          else if (window.GUEST_MODE) ti.innerHTML = window.__tiDyn;
+        }
+        const wi = document.getElementById("waiver-intro");
+        if (wi) {
+          if (window.__wiDyn == null) window.__wiDyn = wi.innerHTML;
+          if (rd) wi.innerHTML = RD_WAIVER_INTRO + (conn && C.platform === "espn" && typeof ESPN_WAIVER_NOTE !== "undefined" ? ESPN_WAIVER_NOTE : "");
+          else if (window.GUEST_MODE) wi.innerHTML = window.__wiDyn;
+        }
+        /* Dynasty-only methodology (the dynasty engine, age curves,
+           the pick ladder, the window tags) leaves the How Values Work
+           block in redraft mode; the season-projection, waiver,
+           redraft-value, and history sections stay — they describe
+           engines a redraft manager actually uses. */
+        const mb = document.getElementById("method-body");
+        if (mb) {
+          const KEEP = { "Season projections — a separate engine, on purpose": true, "Waiver targets": true, "Redraft mode — rest-of-season values": true, "Value history charts": true };
+          let show = !rd;
+          Array.prototype.forEach.call(mb.children, el => {
+            if (el.tagName === "H2") show = !rd || !!KEEP[el.textContent.trim()];
+            el.style.display = show ? "" : "none";
+          });
+        }
+        if (typeof window.renderOddsPanel === "function") window.renderOddsPanel();
+        if (typeof window.renderInjFresh === "function") window.renderInjFresh();
+      };
+
+      /* ---------- Improve Your Odds (redraft mode, connected league) ----------
+         The three moves that most raise the user's title odds, each
+         priced by the Season Outlook sim itself: trades and waiver
+         adds through the sim's paired-delta impact(), the lineup fix
+         by re-simming at the set lineup's rest-of-season strength.
+         Nothing here invents a number the engines don't already own. */
+      window.renderOddsPanel = function () {
+        const el = document.getElementById("odds-panel");
+        if (!el) return;
+        const rd = typeof VALMODE !== "undefined" && VALMODE === "redraft";
+        const me = (!window.GUEST_MODE && window.CURRENT_LEAGUE === "conn" && typeof DATA !== "undefined" && DATA.teams)
+          ? DATA.teams.find(t => t.isUser) : null;
+        const sim = window.SeasonSim;
+        if (!rd || !me || !sim || !sim.results || !sim.results[me.rid] || !sim.impact) { el.innerHTML = ""; return; }
+        const rid = me.rid;
+        const base = sim.results[rid];
+        const moves = [];
+        try {
+          if (typeof wkOptimal === "function" && typeof sosRos === "function" && sim.oddsWithMeans && me.lineup && me.lineup.length >= 8) {
+            const opt = wkOptimal(me.playerIds);
+            const cur = me.lineup.map(l => ({ p: PBY[l.id], slot: l.slot })).filter(r => r.p)
+              .map(r => ({ p: r.p, slot: r.slot, proj: wkProj(r.p) }));
+            const curIds = new Set(cur.map(r => r.p.id));
+            const optIds = new Set(opt.lineup.map(l => l.p.id));
+            const ins = opt.lineup.filter(l => !curIds.has(l.p.id)).sort((a, b) => b.proj.pts - a.proj.pts);
+            const outs = cur.filter(r => !optIds.has(r.p.id)).sort((a, b) => b.proj.pts - a.proj.pts);
+            const curRos = cur.reduce((s2, r) => s2 + sosRos(r.p), 0);
+            if (ins.length && outs.length && curRos < sim.means[rid] - 0.3) {
+              const mn = Object.assign({}, sim.means); mn[rid] = curRos;
+              const adj = sim.oddsWithMeans(mn);
+              const d = base.champ - adj[rid].champ;
+              if (d > 0.001) moves.push({
+                kind: "Lineup", dChamp: d,
+                title: `Start ${ins[0].p.name} over ${outs[0].p.name}`,
+                sub: `Your set lineup projects ${curRos.toFixed(1)} rest-of-season pts/wk against ${sim.means[rid].toFixed(1)} for the optimal lineup — ${(sim.means[rid] - curRos).toFixed(1)} pts/wk sitting on your bench${ins.length > 1 ? `, with ${ins.length - 1} more swap${ins.length > 2 ? "s" : ""} waiting in the Lineup tab` : ""}.`,
+              });
+            }
+          }
+        } catch (e) { /* one missing engine never sinks the other moves */ }
+        try {
+          if (typeof findTrades === "function") {
+            const { suggestions } = findTrades(rid);
+            suggestions.filter(s => s.dir === "buy").slice(0, 4).forEach(s => {
+              const giveIds = s.pkg.filter(a => a.kind === "player").map(a => a.p.id);
+              const myNew = me.playerIds.filter(id => !giveIds.includes(id)).concat([s.target.id]);
+              const pNew = s.partner.playerIds.filter(id => id !== s.target.id).concat(giveIds);
+              const imp = sim.impact(rid, myNew, s.partner.rid, pNew);
+              const d = imp.after[rid].champ - imp.before[rid].champ;
+              if (d > 0.001) moves.push({
+                kind: "Trade", dChamp: d,
+                title: `Trade ${s.pkg.filter(a => a.kind === "player").map(a => a.p.name).join(" + ")} to ${s.partner.name} for ${s.target.name}`,
+                sub: `Raises your optimal lineup +${s.dPpg.toFixed(1)} projected pts/wk — the full breakdown, price and their side of it included, is in the Trade Finder.`,
+              });
+            });
+          }
+        } catch (e) { /* ditto */ }
+        try {
+          if (typeof wvOptimal === "function" && typeof wvBar === "function") {
+            const opt = wvOptimal(me.playerIds);
+            const cands = DATA.players.filter(p => !p.owner).map(p => {
+              const bar = wvBar(opt.lineup, p.pos);
+              return { p, bar, add: (p.ros || 0) - (bar ? (bar.p.ros || 0) : 0) };
+            }).filter(x => x.add > 0.3).sort((a, b) => b.add - a.add).slice(0, 3);
+            cands.forEach(x => {
+              const imp = sim.impact(rid, me.playerIds.concat([x.p.id]), null, null);
+              const d = imp.after[rid].champ - imp.before[rid].champ;
+              if (d > 0.001) moves.push({
+                kind: "Waivers", dChamp: d,
+                title: `Add ${x.p.name} (${x.p.pos}) off waivers`,
+                sub: `Projects ${(x.p.ros || 0).toFixed(1)} pts/wk — +${x.add.toFixed(1)} over your weakest starting ${x.p.pos}${x.bar ? ` (${x.bar.p.name})` : ""}. Suggested bids live in More → Waiver Targets.`,
+              });
+            });
+          }
+        } catch (e) { /* ditto */ }
+        moves.sort((a, b) => b.dChamp - a.dChamp);
+        const top = moves.slice(0, 3);
+        el.innerHTML = `<h2 class="block-title">Improve Your Odds</h2>
+          <div class="odds-card">
+            <p class="odds-intro">For <strong>${esc(me.name)}</strong> — currently <strong>${oddsPct(base.champ)}</strong> to win the title, <strong>${oddsPct(base.playoff)}</strong> to make the playoffs. These are the moves that raise the title number, each priced by the same 10,000-sim engine as Season Outlook. In a redraft league this season is the whole game, so every move here is a win-now move.</p>
+            ${top.length ? top.map((m, i) => `<div class="odds-row">
+                <div class="odds-rank">${i + 1}</div>
+                <div class="odds-main"><div class="odds-title"><span class="odds-kind">${m.kind}</span>${esc(m.title)}</div><div class="odds-sub">${esc(m.sub)}</div></div>
+                <div class="odds-delta">+${(m.dChamp * 100).toFixed(1)}%<small>title odds</small></div>
+              </div>`).join("") : `<p class="odds-none">No move on the board raises this team's title odds right now — the set lineup is already the optimal one, nobody on the wire clears the bar, and no trade that helps this season prices fairly. Standing pat is the move.</p>`}
+          </div>`;
+      };
+
+      /* ---------- injury freshness line ---------- */
+      window.renderInjFresh = function () {
+        const wrap = document.getElementById("inj-fresh");
+        const txt = document.getElementById("inj-fresh-txt");
+        const btn = document.getElementById("inj-refresh");
+        if (!wrap || !txt) return;
+        const conn = !window.GUEST_MODE && window.CURRENT_LEAGUE === "conn";
+        if (!conn) { wrap.hidden = true; return; }
+        wrap.hidden = false;
+        const st = window.INJ_STATE || { status: "none", at: 0 };
+        wrap.classList.toggle("stale", st.status === "failed");
+        if (btn) { btn.disabled = st.status === "loading"; btn.textContent = st.status === "failed" ? "Retry injury check" : "Refresh injuries"; }
+        if (st.status === "live") {
+          txt.innerHTML = `<span class="inj-dot"></span>Injury data as of ${new Date(st.at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — live from Sleeper, overriding the baked snapshot`;
+        } else if (st.status === "loading") {
+          txt.innerHTML = `<span class="inj-dot"></span>Checking Sleeper for the latest injury designations…`;
+        } else if (st.status === "failed") {
+          txt.innerHTML = `<span class="inj-dot"></span>Live injury check didn't go through — showing the baked snapshot (${esc(DATA.league.snapshot)}) designations instead`;
+        } else {
+          txt.innerHTML = `<span class="inj-dot"></span>Injury designations from the baked snapshot (${esc(DATA.league.snapshot)}) — live check pending`;
+        }
+      };
+      const injRefreshBtn = document.getElementById("inj-refresh");
+      if (injRefreshBtn) injRefreshBtn.addEventListener("click", () => { if (typeof window.slpEnsureFreshInjuries === "function") window.slpEnsureFreshInjuries(true); });
+      const lineupNavBtn = document.querySelector('nav.mainnav button[data-nav="lineup"]');
+      if (lineupNavBtn) lineupNavBtn.addEventListener("click", () => {
+        if (typeof window.slpEnsureFreshInjuries === "function") window.slpEnsureFreshInjuries(false);
+        window.renderInjFresh();
+      });
+      window.addEventListener("modechange", () => window.renderInjFresh());
+
+      /* Settle the chrome for the initial (guest, dynasty) state. */
+      window.applyLeagueModeChrome(typeof VALMODE !== "undefined" && VALMODE === "redraft");
     </script>
   </body>
 </html>
