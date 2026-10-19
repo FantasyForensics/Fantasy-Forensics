@@ -917,6 +917,12 @@
       .bye-grid th.wk-now, .bye-grid td.wk-now { background: rgba(0, 229, 255, .07); }
       .bye-grid td.bye-cell { background: var(--gold); color: #0A0A1A; font-weight: 700; }
       .bye-grid td.bye-cell.bye-past { background: rgba(255, 176, 32, .22); color: var(--ink-2); }
+      .bye-grid tr.bye-div td {
+        text-align: left; padding: 7px 2px 5px; border-bottom: 1px solid var(--line);
+        font-family: "Space Grotesk", sans-serif; font-size: 10.5px; font-weight: 700;
+        letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3);
+        background: rgba(255, 255, 255, .03);
+      }
       .bye-grid .bye-name { text-align: left; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 126px; }
       .bye-grid .bye-name .p-sub { white-space: nowrap; }
       /* ---------- share-as-image ---------- */
@@ -1863,7 +1869,7 @@
         <div id="lineup-out"></div>
         <details class="how-box inseason">
           <summary>How this works</summary>
-          <p class="tab-intro">The weekly question: <strong>who do I start Sunday?</strong> For the team you pick, this builds the <strong>optimal lineup for the current week</strong> from the same rest-of-season projections behind Season Outlook — with a one-week availability adjustment on top: a player on <strong>bye</strong> or listed <strong>Out / IR / PUP / Suspended</strong> projects for zero and is auto-benched, Doubtful is halved, Questionable is trimmed 10%. Below it, the current <strong>real Sleeper matchup</strong>: both teams' optimal lineups, a win probability, and the decisions the game swings on. Same separation rule as everything else here — <strong>projections never touch dynasty values</strong>, and nothing in this tab moves a price on the board.</p>
+          <p class="tab-intro">The weekly question: <strong>who do I start Sunday?</strong> For the team you pick, this builds the <strong>optimal lineup for the current week</strong> from the same rest-of-season projections behind Season Outlook — with a one-week availability adjustment on top: a player on <strong>bye</strong> or listed <strong>Out / IR / PUP / Suspended</strong> projects for zero and is auto-benched, Doubtful is halved, Questionable is trimmed 10%. A player with <strong>no NFL team</strong> — unsigned, per the same live Sleeper players feed that carries the injury designations — projects for zero, is labeled Unsigned, and is <strong>excluded from the optimal lineup entirely</strong>, whatever his dynasty value says. A signed player outside the priced pool shows <strong>Unpriced</strong> rather than a fake zero: his projection is unknown, and he starts only when no priced option exists. Below it, the current <strong>real Sleeper matchup</strong>: both teams' optimal lineups, a win probability, and the decisions the game swings on. Same separation rule as everything else here — <strong>projections never touch dynasty values</strong>, and nothing in this tab moves a price on the board.</p>
         </details>
 
       </section>
@@ -4535,8 +4541,27 @@ ${rdP ? "" : `
       const LU_WEEK = DATA.league.week;
       const LU_SIGMA = 30; // weekly team-score sd, calibrated by the season simulator
 
+      /* NFL roster status: a player with no NFL team cannot score this
+         week, whatever his dynasty value or residual projection says.
+         The live players-DB pull stamps p._nflTeam from the same
+         endpoint (and the same record) as the injury designations —
+         team: null there means unsigned, and it overrides the baked
+         snapshot. Until that pull lands, the snapshot's own team field
+         is the fallback: "FA" (or blank) is its unsigned marker. An
+         unknown identity (a stub's placeholder) is NOT unsigned — only
+         a confirmed no-team is. */
+      function isUnsigned(p) {
+        if (!p) return false;
+        if (p._nflTeam !== undefined) return !p._nflTeam;
+        const t = p.team;
+        return !t || t === "FA";
+      }
       function wkProj(p) {
         if (!p) return { pts: 0, tag: null, cls: "", sos: null };
+        // Unsigned first: no NFL team means no game this week — the
+        // weekly projection is a hard zero, labeled, never a number
+        // inherited from dynasty value.
+        if (isUnsigned(p)) return { pts: 0, tag: "Unsigned", cls: "out", sos: null, unsigned: true };
         // One-week availability adjustment on top of ROS PPG, then this week's
         // strength-of-schedule factor (window.SOS: the opponent's
         // points-allowed ratio for the position, capped at ±12%).
@@ -4547,9 +4572,12 @@ ${rdP ? "" : `
         const sf = s && s[1] != null ? s[1] : 1;
         const sos = s && s[1] != null && Math.abs(s[1] - 1) >= 0.02
           ? { pct: Math.round((s[1] - 1) * 100), opp: s[2] } : null;
-        if (inj === "Doubtful") return { pts: (p.ros || 0) * 0.5 * sf, tag: "Doubtful", cls: "out", sos };
-        if (inj === "Questionable") return { pts: (p.ros || 0) * 0.9 * sf, tag: "Questionable", cls: "q", sos };
-        return { pts: (p.ros || 0) * sf, tag: null, cls: "", sos };
+        /* Signed but outside the priced pool: the projection is
+           unknown, not zero — the unpriced flag rides along so every
+           display can say "Unpriced" instead of printing a fake 0. */
+        if (inj === "Doubtful") return { pts: (p.ros || 0) * 0.5 * sf, tag: "Doubtful", cls: "out", sos, unpriced: !!p.unpriced };
+        if (inj === "Questionable") return { pts: (p.ros || 0) * 0.9 * sf, tag: "Questionable", cls: "q", sos, unpriced: !!p.unpriced };
+        return { pts: (p.ros || 0) * sf, tag: null, cls: "", sos, unpriced: !!p.unpriced };
       }
       function sosTxt(pr) {
         if (!pr || !pr.sos) return "";
@@ -4558,7 +4586,13 @@ ${rdP ? "" : `
       function wkOptimal(ids) {
         const pool = ids.map(id => PBY[id]).filter(Boolean)
           .map(p => ({ p, proj: wkProj(p) }))
-          .sort((a, b) => b.proj.pts - a.proj.pts);
+          /* Unsigned players are excluded outright — never a starter,
+             whatever the projection residue says. Unpriced players
+             (signed, but outside the priced pool) sort below every
+             priced player: one fills a slot only when no priced option
+             exists, and his projection reads unknown, never zero. */
+          .filter(e => !e.proj.unsigned)
+          .sort((a, b) => ((a.proj.unpriced ? 1 : 0) - (b.proj.unpriced ? 1 : 0)) || b.proj.pts - a.proj.pts);
         const used = new Set(); const lineup = []; let total = 0;
         function take(cands, n, slot) {
           let c = 0;
@@ -4608,9 +4642,12 @@ ${rdP ? "" : `
         const f1 = x => (Math.round(x * 10) / 10).toFixed(1);
 
         const tagHtml = pr => pr.tag ? ` <span class="sig ${pr.cls}">${esc(pr.tag)}</span>` : "";
+        /* An unpriced player's projection is unknown — print the word,
+           never a 0 that claims knowledge nobody has. */
+        const projTxt = pr => pr.unpriced ? "Unpriced" : f1(pr.pts);
         const rowHtml = r => `<tr><td><span class="slot-tag">${r.slot}</span></td>
-          <td><span class="p-name">${esc(r.p.name)}</span>${tagHtml(r.proj)}<div class="p-sub">${esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}${r.p.unpriced ? " · Unpriced — no consensus value" : ""}</div></td>
-          <td class="num">${f1(r.proj.pts)}</td></tr>`;
+          <td><span class="p-name">${esc(r.p.name)}</span>${tagHtml(r.proj)}<div class="p-sub">${r.proj.unsigned ? "No NFL team" : esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}${r.p.unpriced ? " · Unpriced — no consensus value" : ""}</div></td>
+          <td class="num">${projTxt(r.proj)}</td></tr>`;
         const tbl = (title, rows, total) => `<div class="mv-card"><h3>${title}</h3>
           <table class="mini"><thead><tr><th>Slot</th><th>Player</th><th class="num">Proj</th></tr></thead>
           <tbody>${rows.map(rowHtml).join("")}<tr class="lu-total"><td></td><td>Projected total</td><td class="num">${f1(total)}</td></tr></tbody></table></div>`;
@@ -4622,11 +4659,11 @@ ${rdP ? "" : `
         } else {
           const pairs = ins.map((inn, i) => ({ inn, out: outs[i] })).filter(x => x.out);
           movesHtml = `<div class="wv-card"><h3>Make these moves — +${f1(gain)} projected points</h3>
-            <p class="wv-sub">Start the left player over the right one. A starter projecting zero is auto-benched: bye weeks and Out / IR / PUP / Suspended designations score nothing this week, and the reason rides on his name.</p>
+            <p class="wv-sub">Start the left player over the right one. A starter projecting zero is auto-benched: bye weeks and Out / IR / PUP / Suspended designations score nothing this week, a player with no NFL team is excluded entirely, and the reason rides on his name.</p>
             ${pairs.map(({ inn, out }) => `<div class="mv-row">
-              <div><span class="who">Start ${esc(inn.p.name)}</span> <span class="sub">${inn.slot} · ${esc(inn.p.team)}${sosTxt(inn.proj)}</span>
+              <div><span class="who">Start ${esc(inn.p.name)}</span> <span class="sub">${inn.slot} · ${inn.proj.unsigned ? "No NFL team" : esc(inn.p.team)}${sosTxt(inn.proj)}</span>
                 <div class="sub">over ${esc(out.p.name)} (${out.slot})${out.proj.tag ? ` — <strong>${esc(out.proj.tag)}</strong>` : ""}</div></div>
-              <div class="delta"><span class="lu-delta up">+${f1(inn.proj.pts - out.proj.pts)}</span><div class="sub">${f1(inn.proj.pts)} vs ${f1(out.proj.pts)}</div></div>
+              <div class="delta">${(inn.proj.unpriced || out.proj.unpriced) ? `<span class="lu-delta flat">Unpriced</span>` : `<span class="lu-delta up">+${f1(inn.proj.pts - out.proj.pts)}</span>`}<div class="sub">${projTxt(inn.proj)} vs ${projTxt(out.proj)}</div></div>
             </div>`).join("")}</div>`;
         }
 
@@ -4645,7 +4682,7 @@ ${rdP ? "" : `
             swings = ins.map((inn, i) => ({ inn, out: outs[i] })).filter(x => x.out)
               .sort((a, b) => (b.inn.proj.pts - b.out.proj.pts) - (a.inn.proj.pts - a.out.proj.pts))
               .slice(0, 3).map(({ inn, out }) =>
-                `<div class="mv-row"><div><span class="who">${esc(inn.p.name)}</span> <span class="sub">in for ${esc(out.p.name)}</span></div><div class="delta"><span class="lu-delta up">+${f1(inn.proj.pts - out.proj.pts)} pts</span></div></div>`);
+                `<div class="mv-row"><div><span class="who">${esc(inn.p.name)}</span> <span class="sub">in for ${esc(out.p.name)}</span></div><div class="delta"><span class="lu-delta up">${(inn.proj.unpriced || out.proj.unpriced) ? "Unpriced" : "+" + f1(inn.proj.pts - out.proj.pts) + " pts"}</span></div></div>`);
           } else {
             const bench = team.playerIds.map(id => PBY[id]).filter(Boolean).filter(p => !optIds.has(p.id))
               .map(p => ({ p, proj: wkProj(p) }));
@@ -4654,7 +4691,7 @@ ${rdP ? "" : `
               return alt ? { l, alt, margin: l.proj.pts - alt.proj.pts } : null;
             }).filter(Boolean).sort((a, b) => a.margin - b.margin).slice(0, 3)
               .map(({ l, alt, margin }) =>
-                `<div class="mv-row"><div><span class="who">${esc(l.p.name)}</span> <span class="sub">${l.slot} · holds off ${esc(alt.p.name)} (${f1(alt.proj.pts)})</span></div><div class="delta"><span class="lu-delta ${margin < 2 ? "dn" : "flat"}">margin ${f1(margin)}</span></div></div>`);
+                `<div class="mv-row"><div><span class="who">${esc(l.p.name)}</span> <span class="sub">${l.slot} · holds off ${esc(alt.p.name)} (${projTxt(alt.proj)})</span></div><div class="delta"><span class="lu-delta ${margin < 2 ? "dn" : "flat"}">${alt.proj.unpriced || l.proj.unpriced ? "Unpriced" : "margin " + f1(margin)}</span></div></div>`);
           }
           matchHtml = `<article class="team-card">
             <div class="vs-names"><div class="team-name">Week ${LU_WEEK} matchup — ${esc(team.name)}</div><div class="team-name" style="color:var(--ink-2)">vs ${esc(opp.name)}</div></div>
@@ -4673,33 +4710,49 @@ ${rdP ? "" : `
           matchHtml = `<div class="diag"><h3>Week ${LU_WEEK} matchup</h3><p>No opponent pairing is published for this team in the snapshot, so there is no honest preview to show — the optimizer above still applies.</p></div>`;
         }
 
-        /* Bye-week planner: the selected team's starters (the set
-           lineup, or the optimal eleven when none is set) against the
-           full 2026 bye calendar (window.NFLBYE, baked from the NFL
-           schedule). Future multi-starter bye weeks are the October
-           planning problem — they're called out under the grid. */
+        /* Bye-week planner: the FULL roster against the 2026 bye
+           calendar (window.NFLBYE, baked from the NFL schedule) —
+           ordered by the best lineup, not the set one: the optimizer's
+           optimal starters first (the site's peak-team rule), then
+           every bench player by weekly projection. A planner that
+           hides the bench hides exactly the cover you'd plan with.
+           Crunch weeks are counted on the best lineup's starters —
+           that's the hole a bye actually blows in the scoring eleven.
+           Players with no NFL team have no bye and no row. */
         let byeHtml = "";
         {
           const BYE = window.NFLBYE;
-          const starters = (cur.length ? cur : opt.lineup).filter(r => r.p && BYE && BYE[r.p.team]);
-          if (BYE && starters.length) {
-            const wks = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
-            const rows = starters.map(r => {
-              const bw = BYE[r.p.team];
-              const cells = wks.map(w => w === bw
-                ? `<td class="bye-cell${w < LU_WEEK ? " bye-past" : ""}${w === LU_WEEK ? " wk-now" : ""}" title="${esc(r.p.team)} bye — Week ${bw}">BYE</td>`
-                : `<td${w === LU_WEEK ? ' class="wk-now"' : ""}>·</td>`).join("");
-              return `<tr><td class="bye-name"><span class="slot-tag">${r.slot}</span> ${esc(r.p.name)}<div class="p-sub">${esc(r.p.team)} · bye Week ${bw}</div></td>${cells}</tr>`;
-            }).join("");
-            const crunch = wks.filter(w => w >= LU_WEEK).map(w => {
-              const out = starters.filter(r => BYE[r.p.team] === w);
-              return out.length >= 2 ? { w, out } : null;
-            }).filter(Boolean);
-            byeHtml = `<div class="mv-card"><h3>Bye-week planner — ${esc(team.name)} starters</h3>
-              <p class="wv-sub">Every starter's NFL bye at a glance. Gold cells are future byes to plan around${LU_WEEK >= 5 && LU_WEEK <= 14 ? "; the highlighted column is this week" : ""}; a faded BYE is already behind you.</p>
-              <table class="bye-grid"><thead><tr><th class="bye-name">Starter</th>${wks.map(w => `<th${w === LU_WEEK ? ' class="wk-now"' : ""}>${w}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table>
-              ${crunch.length ? `<p class="expl" style="margin-top:10px">${crunch.map(c => `<strong>Week ${c.w} crunch:</strong> ${c.out.length} starters on bye — ${c.out.map(r => esc(r.p.name)).join(", ")}. Line up cover before the wire gets picked over.`).join("<br>")}</p>` : `<p class="expl" style="margin-top:10px">No future week takes out more than one starter — this roster's byes are spread kindly.</p>`}
-            </div>`;
+          if (BYE) {
+            const optIdSet = new Set(opt.lineup.map(l => l.p.id));
+            const bench = team.playerIds.map(id => PBY[id]).filter(Boolean)
+              .filter(p => !optIdSet.has(p.id))
+              .map(p => ({ p, slot: "BN", proj: wkProj(p) }))
+              .sort((a, b) => b.proj.pts - a.proj.pts || (b.p.ros || 0) - (a.p.ros || 0));
+            const roster = opt.lineup.concat(bench).filter(r => r.p && BYE[r.p.team]);
+            if (roster.length) {
+              const wks = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
+              const rowHtml2 = r => {
+                const bw = BYE[r.p.team];
+                const cells = wks.map(w => w === bw
+                  ? `<td class="bye-cell${w < LU_WEEK ? " bye-past" : ""}${w === LU_WEEK ? " wk-now" : ""}" title="${esc(r.p.team)} bye — Week ${bw}">BYE</td>`
+                  : `<td${w === LU_WEEK ? ' class="wk-now"' : ""}>·</td>`).join("");
+                return `<tr><td class="bye-name"><span class="slot-tag">${r.slot}</span> ${esc(r.p.name)}<div class="p-sub">${esc(r.p.team)} · bye Week ${bw}</div></td>${cells}</tr>`;
+              };
+              const nStart = roster.filter(r => r.slot !== "BN").length;
+              const rows = roster.map((r, i) =>
+                (i === nStart && nStart > 0 && nStart < roster.length
+                  ? `<tr class="bye-div"><td colspan="${wks.length + 1}">Bench — cover and stashes</td></tr>` : "") + rowHtml2(r)
+              ).join("");
+              const crunch = wks.filter(w => w >= LU_WEEK).map(w => {
+                const out = opt.lineup.filter(r => BYE[r.p.team] === w);
+                return out.length >= 2 ? { w, out } : null;
+              }).filter(Boolean);
+              byeHtml = `<div class="mv-card"><h3>Bye-week planner — ${esc(team.name)} full roster</h3>
+                <p class="wv-sub">Every rostered player's NFL bye at a glance — the best lineup first, then the bench you'd cover with. Gold cells are future byes to plan around${LU_WEEK >= 5 && LU_WEEK <= 14 ? "; the highlighted column is this week" : ""}; a faded BYE is already behind you.</p>
+                <table class="bye-grid"><thead><tr><th class="bye-name">Player</th>${wks.map(w => `<th${w === LU_WEEK ? ' class="wk-now"' : ""}>${w}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table>
+                ${crunch.length ? `<p class="expl" style="margin-top:10px">${crunch.map(c => `<strong>Week ${c.w} crunch:</strong> ${c.out.length} starters on bye — ${c.out.map(r => esc(r.p.name)).join(", ")}. Line up cover before the wire gets picked over.`).join("<br>")}</p>` : `<p class="expl" style="margin-top:10px">No future week takes out more than one starter from the best lineup — this roster's byes are spread kindly.</p>`}
+              </div>`;
+            }
           }
         }
 
@@ -5176,7 +5229,7 @@ ${rdP ? "" : `
         const keepers = Number(ds.keeperCount != null ? ds.keeperCount : (settings && settings.keeperCount) || 0) || 0;
         return keepers >= 15 ? "dynasty" : "redraft";
       }
-      /* ================= Live players DB: injury freshness + stub identities =================
+      /* ================= Live players DB: injury freshness, NFL roster status + stub identities =================
          The baked snapshot's injury designations go stale the moment a
          player is ruled out after the morning sync — on game day that's
          hours. So while a league is connected, the site pulls Sleeper's
@@ -5212,6 +5265,12 @@ ${rdP ? "" : `
           p.inj = rec.injury_status || null;
           p.ibp = rec.injury_body_part || null;
           p.inote = rec.injury_notes || null;
+          /* NFL roster status rides the same record: team null means
+             the player is unsigned — no team, no game, no weekly
+             projection, whatever his dynasty value says (see
+             isUnsigned in the lineup engine). */
+          p._nflTeam = rec.team || null;
+          p.team = rec.team || "FA";
         });
         const C = window.CONN_LEAGUE;
         if (C && C.stubs) C.stubs.forEach(s => {
@@ -5220,6 +5279,7 @@ ${rdP ? "" : `
           s.name = rec.full_name || ((rec.first_name || "") + " " + (rec.last_name || "")).trim() || s.name;
           if (rec.position) s.pos = rec.position;
           if (rec.team) s.team = rec.team;
+          s._nflTeam = rec.team || null;
           if (rec.age != null) s.age = rec.age;
           s.inj = rec.injury_status || null;
           s.ibp = rec.injury_body_part || null;
