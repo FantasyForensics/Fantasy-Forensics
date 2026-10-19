@@ -481,6 +481,20 @@
       .verdict .diffbar .b { background: var(--ink-3); }
       .verdict .adj-row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; color: var(--ink-2); font-size: 14px; font-weight: 600; margin-top: 3px; }
       .verdict .consol-note { color: var(--ink-2); font-size: 13.5px; margin: 8px 0 0; }
+      /* Fairness meter: visual scale showing trade balance vs acceptable margin */
+      .fairness-meter { margin: 16px 0 6px; padding: 14px 16px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; }
+      .fm-scale { position: relative; height: 22px; border-radius: 11px; overflow: visible; display: flex; margin: 6px 0 10px; }
+      .fm-zone { height: 100%; }
+      .fm-red-l { flex: 20; background: rgba(255,59,92,.25); border-radius: 11px 0 0 11px; }
+      .fm-yellow-l { flex: 13.33; background: rgba(255,184,0,.22); }
+      .fm-green { flex: 33.33; background: rgba(198,255,0,.22); }
+      .fm-yellow-r { flex: 13.33; background: rgba(255,184,0,.22); }
+      .fm-red-r { flex: 20; background: rgba(255,59,92,.25); border-radius: 0 11px 11px 0; }
+      .fm-marker { position: absolute; top: -4px; width: 4px; height: 30px; background: #fff; border-radius: 2px; transform: translateX(-50%); box-shadow: 0 0 8px rgba(255,255,255,.6); border: 1px solid; }
+      .fm-center { position: absolute; left: 50%; top: -2px; width: 2px; height: 26px; background: rgba(255,255,255,.4); transform: translateX(-50%); }
+      .fm-labels { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--ink-2); font-weight: 600; }
+      .fm-zone-text { font-weight: 700; }
+      .fm-hint { text-align: center; font-size: 12px; color: var(--ink-3); margin-top: 6px; }
       .fit-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
       @media (max-width: 760px) { .fit-notes { grid-template-columns: 1fr; } }
       .fit-notes h4 { margin: 0 0 6px; font-size: 16px; font-family: "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 0.02em; }
@@ -3032,7 +3046,7 @@ ${rdP ? "" : `
         // Trade Finder's "You give"). The side sending less comes out ahead.
         const favored = ea > eb ? nameB : nameA;
         let headline;
-        if (pct <= 0.04) headline = "Fair trade — values are within 4%";
+        if (pct <= 0.05) headline = "Fair trade — values are within 5%";
         else if (pct <= 0.10) headline = `Slight edge to ${favored} (receives ${fmt(Math.round(diff))} more)`;
         else headline = `Favors ${favored} by ${fmt(Math.round(diff))} value`;
         const shareA = ea + eb ? Math.round(100 * ea / (ea + eb)) : 50;
@@ -3040,7 +3054,7 @@ ${rdP ? "" : `
         // best closes the gap — judged on raw value, like everything else
         // in this verdict (the consolidation bonus recalculates when added)
         let balance = "";
-        if (!guest && VALMODE !== "redraft" && diff >= 300 && pct > 0.04) {
+        if (!guest && VALMODE !== "redraft" && diff >= 300 && pct > 0.05) {
           const lighter = ea < eb ? "A" : "B";
           const lt = calc[lighter].team;
           if (lt !== "FA") {
@@ -3056,6 +3070,34 @@ ${rdP ? "" : `
           <h3>${esc(headline)}</h3>
           ${VALMODE === "redraft" ? `<p style="color:var(--ink-2);margin:8px 0 0">Redraft values · rest of season — this verdict prices only the rest of this year. No picks, no future seasons.</p>` : ""}
           <div class="diffbar"><div class="a" style="width:${shareA}%"></div><div class="b" style="width:${100 - shareA}%"></div></div>
+          ${(() => {
+            // Fairness meter: shows where the trade sits on the acceptable-margin scale
+            // Green ±5% = fair (KTC's acceptable variance), yellow 5-10% = close, red >10% = lopsided
+            const dir = ea > eb ? 1 : (eb > ea ? -1 : 0); // +1 favors B, -1 favors A
+            const posPct = Math.min(pct * 100, 30); // cap display at 30%
+            const markerLeft = 50 + (dir * posPct * (50/30)); // map to 0-100% of bar
+            const zone = pct <= 0.05 ? 'fair' : (pct <= 0.10 ? 'close' : 'lop');
+            const zoneLabel = zone === 'fair' ? 'Fair — within 5%' : (zone === 'close' ? 'Close — 5-10% off' : 'Lopsided — over 10% off');
+            const zoneColor = zone === 'fair' ? 'var(--lime)' : (zone === 'close' ? '#FFB800' : '#FF3B5C');
+            return `
+          <div class="fairness-meter">
+            <div class="fm-scale">
+              <div class="fm-zone fm-red-l"></div>
+              <div class="fm-zone fm-yellow-l"></div>
+              <div class="fm-zone fm-green"></div>
+              <div class="fm-zone fm-yellow-r"></div>
+              <div class="fm-zone fm-red-r"></div>
+              <div class="fm-marker" style="left:${markerLeft}%;border-color:${zoneColor}"></div>
+              <div class="fm-center"></div>
+            </div>
+            <div class="fm-labels">
+              <span>Favors ${esc(nameA)}</span>
+              <span class="fm-zone-text" style="color:${zoneColor}">${zoneLabel}</span>
+              <span>Favors ${esc(nameB)}</span>
+            </div>
+            <div class="fm-hint">Add or remove players to move the marker — green is the target zone.</div>
+          </div>`;
+          })()}
           <div style="display:flex;justify-content:space-between;font-weight:600">
             <span>${esc(nameA)} sends ${fmt(a)}</span><span>${esc(nameB)} sends ${fmt(b)}</span>
           </div>
