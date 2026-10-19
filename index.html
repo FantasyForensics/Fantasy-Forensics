@@ -3405,11 +3405,15 @@ ${rdP ? "" : `
             .forEach(target => {
               const pkg = buildPackage(payPool, target.value, 0.85, 1.22);
               if (!pkg) return;
+              // Consolidation bonus: target (1 asset) gets bonus vs package (N assets)
+              const nPkg = pkg.length;
+              const bonusT = (nPkg > 1) ? (nPkg - 1) * 750 * (1 + 0.5 * (target.value / 10000)) : 0;
+              const adjTarget = target.value + bonusT;
               const outIds = pkgPlayerIds(pkg);
               const newIds = myIds.filter(id => !outIds.includes(id)).concat([target.id]);
               const dPpg = optimalLineup(newIds).total - base;
               if (dPpg < 0.15) return; // HARD GUARDRAIL — a buy must add points, never subtract them
-              const gapPct = Math.abs(pkgValue(pkg) - target.value) / target.value;
+              const gapPct = Math.abs(pkgValue(pkg) - adjTarget) / adjTarget;
               const score = dPpg * 6 + windowBonus + Math.max(0, 8 - gapPct * 20) + Math.min(3, target.value / 3000);
               out.push({ dir: "buy", partner, target, pkg, dPpg, score, basePpg: base });
             });
@@ -3449,7 +3453,10 @@ ${rdP ? "" : `
             }
             if (!pkg) return;
             const getsVal = pkgValue(pkg);
-            if (getsVal < vet.value) return; // a sell never loses dynasty value
+            // Consolidation bonus: my side (1 vet) gets bonus vs package (N assets)
+            const nPkg = pkg.length;
+            const bonusVet = (nPkg > 1) ? (nPkg - 1) * 750 * (1 + 0.5 * (vet.value / 10000)) : 0;
+            if (getsVal < vet.value + bonusVet) return; // a sell never loses dynasty value (adjusted)
             const pOut = pkgPlayerIds(pkg);
             const pNew = partner.playerIds.filter(id => !pOut.includes(id)).concat([vet.id]);
             const pD = optimalLineup(pNew).total - optimalLineup(partner.playerIds).total;
