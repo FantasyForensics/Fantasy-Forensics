@@ -2902,8 +2902,8 @@ ${rdP ? "" : `
           ${picks.length ? `<div class="pick-add"><div class="lbl">Add a pick owned by ${esc(teamName(st.team))}</div>
             ${picks.map(pk => `<button data-pick="${pk.key}">${esc(pk.label)} · ${fmt(pk.value)}</button>`).join("")}</div>` : ""}
           <div class="assets" id="assets-${side}"></div>
-          <div class="side-total"><span>Total value</span><span class="t" id="total-${side}">0</span></div>
-          <div class="side-total adj"><span>Consolidation bonus</span><span class="t" id="efftotal-${side}">0</span></div>`;
+          <div class="side-total"><span>Trade value</span><span class="t" id="efftotal-${side}">0</span></div>
+          <div class="side-total adj"><span>Raw sum</span><span class="t" id="total-${side}">0</span></div>`;
         const teamSel = document.getElementById("team-" + side);
         if (teamSel) teamSel.addEventListener("change", e => {
           st.team = e.target.value === "FA" ? "FA" : Number(e.target.value);
@@ -3033,6 +3033,15 @@ ${rdP ? "" : `
         // The verdict judges raw sums plus the consolidation bonus (see
         // consolBonusFor above), not raw sums alone. Thresholds unchanged.
         const ea = sideEffTotal("A"), eb = sideEffTotal("B");
+        // Sync side panels (they don't re-render when the OTHER side changes)
+        const effA = document.getElementById("efftotal-A");
+        const effB = document.getElementById("efftotal-B");
+        if (effA) effA.textContent = fmt(Math.round(ea));
+        if (effB) effB.textContent = fmt(Math.round(eb));
+        const totA = document.getElementById("total-A");
+        const totB = document.getElementById("total-B");
+        if (totA) totA.textContent = fmt(sideTotal("A"));
+        if (totB) totB.textContent = fmt(sideTotal("B"));
         const guest = !!window.GUEST_MODE;
         const nameA = guest ? "Side A" : teamName(calc.A.team), nameB = guest ? "Side B" : teamName(calc.B.team);
         if (!a && !b) {
@@ -8263,6 +8272,15 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         const a = sideTotal("A"), b = sideTotal("B");
         if (!a && !b) return;
         const ea = sideEffTotal("A"), eb = sideEffTotal("B");
+        // Sync side panels (they don't re-render when the OTHER side changes)
+        const effA = document.getElementById("efftotal-A");
+        const effB = document.getElementById("efftotal-B");
+        if (effA) effA.textContent = fmt(Math.round(ea));
+        if (effB) effB.textContent = fmt(Math.round(eb));
+        const totA = document.getElementById("total-A");
+        const totB = document.getElementById("total-B");
+        if (totA) totA.textContent = fmt(sideTotal("A"));
+        if (totB) totB.textContent = fmt(sideTotal("B"));
         const guest = !!window.GUEST_MODE;
         const nameA = guest ? "Side A" : teamName(calc.A.team), nameB = guest ? "Side B" : teamName(calc.B.team);
         const diff = Math.abs(ea - eb), pct = diff / Math.max(ea, eb, 1);
