@@ -267,6 +267,8 @@
       .hc-alt { margin-top: 13px; background: none; border: none; padding: 2px 0; color: var(--cyan); font-size: 14.5px; font-weight: 600; cursor: pointer; }
       .hc-alt:hover { text-decoration: underline; }
       .hc-note { margin: 8px 0 0; color: var(--ink-3); font-size: 13px; }
+      .hc-browse { display: inline-block; margin-top: 14px; background: none; border: none; padding: 2px 0; color: var(--ink-2); font-size: 14px; font-weight: 600; cursor: pointer; }
+      .hc-browse:hover { color: var(--ink); text-decoration: underline; }
 
       /* ---------- this week's movers strip (below the values board) ---------- */
       .movers-strip { margin: 16px 0 4px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 15px 18px 9px; }
@@ -594,6 +596,51 @@
         padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px;
         background: rgba(0,0,0,.35); color: var(--ink); font-weight: 600;
       }
+      /* The "I want" position target: a sticky, high-contrast panel —
+         the one control in the finder that must be impossible to
+         scroll past. It pins under the main nav while the results
+         run below it, in both value modes. */
+      .want-panel {
+        position: sticky; top: 58px; z-index: 24;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
+        margin: 0 0 18px; padding: 14px 16px;
+        background: rgba(12, 12, 28, .94);
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border: 1.5px solid rgba(198, 255, 0, .55); border-radius: var(--radius);
+        box-shadow: 0 0 0 1px rgba(198, 255, 0, .14), 0 12px 34px rgba(0, 0, 0, .5), 0 0 28px rgba(198, 255, 0, .10);
+      }
+      .want-label {
+        font-family: "Space Grotesk", sans-serif; font-size: 22px; font-weight: 700;
+        letter-spacing: .03em; text-transform: uppercase; color: var(--accent);
+        text-shadow: 0 0 16px rgba(198, 255, 0, .35); white-space: nowrap; line-height: 1.1;
+      }
+      .want-hint { display: block; font-family: "Inter", sans-serif; font-size: 12.5px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--ink-2); text-shadow: none; margin-top: 2px; }
+      .want-btns { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 420px; }
+      .want-btns button {
+        flex: 1 1 auto; min-height: 52px; padding: 10px 18px;
+        border-radius: 999px; border: 1.5px solid rgba(255, 255, 255, .24);
+        background: rgba(255, 255, 255, .05); color: var(--ink);
+        font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 16.5px; letter-spacing: .02em;
+        white-space: nowrap;
+      }
+      .want-btns button:hover { border-color: rgba(198, 255, 0, .65); background: rgba(198, 255, 0, .06); }
+      .want-btns button[aria-pressed="true"] {
+        background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+        box-shadow: 0 0 20px rgba(198, 255, 0, .45);
+      }
+      .want-btns .want-sub { font-size: 11.5px; font-weight: 600; opacity: .65; letter-spacing: .04em; }
+      @media (max-width: 560px) {
+        .want-panel { top: 56px; padding: 12px 13px; gap: 8px 12px; }
+        .want-label { font-size: 19px; }
+        .want-btns { flex-basis: 100%; }
+        .want-btns button { flex: 1 1 30%; min-height: 50px; padding: 9px 8px; font-size: 15.5px; }
+      }
+      /* The plain-language positional-fix line on a redraft swap card. */
+      .need-line {
+        margin-top: 12px; padding: 11px 13px; border-radius: 10px; font-size: 15px; line-height: 1.55;
+        background: rgba(0, 229, 255, .07); border: 1px solid rgba(0, 229, 255, .42); color: var(--ink);
+      }
+      .dir-tag.fix { background: var(--cyan); color: #04121A; }
       .diag {
         background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
         padding: 18px 20px; margin-bottom: 16px;
@@ -979,14 +1026,27 @@
         white-space: nowrap; margin-left: auto;
       }
       a.xlink:hover { border-color: var(--cyan); background: rgba(0,229,255,.07); }
-      .mode-row label {
+      /* ---------- connected-league switcher (post-connect only) ---------- */
+      .league-switcher { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin-top: 14px; }
+      .league-switcher[hidden] { display: none; }
+      .ls-label {
         font-family: "Space Grotesk", sans-serif; font-size: 12px; font-weight: 700;
         letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);
       }
-      #mode-switch {
-        padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px;
-        background: rgba(0,0,0,.35); color: var(--ink); font-weight: 600; max-width: 100%;
+      .ls-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+      .ls-pill {
+        display: inline-flex; align-items: center; gap: 8px; min-height: 38px;
+        padding: 7px 14px; border-radius: 999px; cursor: pointer;
+        background: var(--surface); border: 1px solid var(--line); color: var(--ink-2);
+        font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px;
       }
+      .ls-pill:hover { color: var(--ink); border-color: rgba(255,255,255,.28); }
+      .ls-pill.active {
+        background: var(--accent); color: var(--accent-ink); border-color: transparent;
+        box-shadow: 0 0 14px rgba(198,255,0,.30); cursor: default;
+      }
+      .ls-pill .ls-meta { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .75; }
+      .ls-pill[disabled] { opacity: .55; cursor: wait; }
       .mode-badge {
         font-family: "Space Grotesk", sans-serif; font-size: 12px; font-weight: 700;
         letter-spacing: 0.08em; text-transform: uppercase; border-radius: 999px; padding: 3px 10px;
@@ -1016,29 +1076,24 @@
         border: 1px solid rgba(0,229,255,.40); border-radius: 999px; padding: 5px 12px;
       }
 
-      /* ---------- format bar: the Dynasty / Redraft switch, front and center ---------- */
-      .format-bar {
-        display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center;
-        margin-top: 14px; padding: 10px 12px;
-        background: rgba(198,255,0,.05);
-        border: 1px solid rgba(198,255,0,.30); border-radius: 14px;
-      }
+      /* ---------- format control: the Dynasty / Redraft switch, kept
+         small in the header's meta row — the connect flow is the hero,
+         this is a secondary setting. ---------- */
+      .mode-ctl { display: inline-flex; align-items: center; gap: 8px; }
       .format-label {
-        font-family: "Space Grotesk", sans-serif; font-size: 12px; font-weight: 700;
-        letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent);
+        font-family: "Space Grotesk", sans-serif; font-size: 11.5px; font-weight: 700;
+        letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3);
       }
-      .seg.seg-big { margin-left: 0; padding: 4px; border-color: rgba(198,255,0,.35); }
-      .seg.seg-big button { padding: 9px 26px; font-size: 15.5px; min-height: 44px; }
-      .format-note { color: var(--ink-2); font-size: 13.5px; font-weight: 600; }
+      .mode-ctl .seg { margin-left: 0; }
+      .mode-ctl .seg button { padding: 5px 13px; font-size: 13px; }
+      .format-note { color: var(--ink-3); font-size: 12.5px; font-weight: 600; }
       body.redraft .format-note { color: var(--cyan); }
       /* Redraft prices carry no age information: the board's Age column
          (4th cell) leaves with the age curves. */
       body.redraft .board-table th:nth-child(4),
       body.redraft .board-table td:nth-child(4) { display: none; }
       @media (max-width: 640px) {
-        .format-bar { padding: 10px; gap: 8px 10px; }
-        .seg.seg-big button { padding: 9px 20px; }
-        .format-bar a.xlink { margin-left: 0; }
+        .mode-row a.xlink { margin-left: 0; }
       }
 
       /* ---------- value history chart (board row expand) ---------- */
@@ -1140,7 +1195,8 @@
         .pos-filter button, .inj-toggle, .fp-presets button { min-height: 44px; padding-top: 9px; padding-bottom: 9px; }
         .fmt-link { min-height: 44px; display: inline-flex; align-items: center; }
         .board-controls select, .board-controls input[type="search"],
-        .finder-controls select, #mode-switch { min-height: 44px; }
+        .finder-controls select { min-height: 44px; }
+        .ls-pill { min-height: 44px; }
         .seg button { min-height: 44px; padding-top: 9px; padding-bottom: 9px; }
         .why-btn { min-height: 44px; padding: 8px 13px; }
         .expand-btn { min-height: 44px; display: inline-flex; align-items: center; }
@@ -1687,23 +1743,22 @@
         <div class="league-kicker">Fantasy Forensics</div>
         <h1 id="league-name">Fantasy Player Values</h1>
         <p class="league-sub" id="league-sub"></p>
-        <div class="format-bar">
-          <span class="format-label" id="format-label">Format</span>
-          <div class="seg seg-big" role="group" aria-label="League format — dynasty or redraft" aria-describedby="format-note">
-            <button type="button" id="vm-dynasty" aria-pressed="true">Dynasty</button>
-            <button type="button" id="vm-redraft" aria-pressed="false">Redraft</button>
-          </div>
-          <span class="format-note" id="format-note">Dynasty prices — long-term value, picks count</span>
-          <a class="xlink" id="xlink-draft" href="../draft-room/">Draft Room · Rookie draft ↗</a>
+        <div class="league-switcher" id="league-switcher" hidden>
+          <span class="ls-label">Your leagues</span>
+          <div class="ls-pills" id="ls-pills" role="group" aria-label="Switch connected league"></div>
         </div>
         <div class="mode-row">
-          <label for="mode-switch">League</label>
-          <select id="mode-switch" aria-label="Choose a league or browse as guest">
-            <option value="guest">Browse as guest (no league)</option>
-            <option value="connect">Connect your league (Sleeper or ESPN)…</option>
-          </select>
           <span class="mode-badge" id="mode-badge">Guest — no league</span>
+          <span class="mode-ctl">
+            <span class="format-label" id="format-label">Format</span>
+            <span class="seg" role="group" aria-label="League format — dynasty or redraft" aria-describedby="format-note">
+              <button type="button" id="vm-dynasty" aria-pressed="true">Dynasty</button>
+              <button type="button" id="vm-redraft" aria-pressed="false">Redraft</button>
+            </span>
+          </span>
+          <span class="format-note" id="format-note">Dynasty prices — long-term value, picks count</span>
           <button type="button" class="slp-disconnect" id="slp-disconnect" hidden>Disconnect</button>
+          <a class="xlink" id="xlink-draft" href="../draft-room/">Draft Room · Rookie draft ↗</a>
         </div>
       </header>
 
@@ -1738,6 +1793,7 @@
             </form>
             <button type="button" class="hc-alt" id="hero-espn">On ESPN instead? Connect with your league URL →</button>
             <p class="hc-note">No password — Sleeper's public API only ever sees your username.</p>
+            <button type="button" class="hc-browse" id="hero-browse">Browse without a league →</button>
           </div>
         </div>
         <div class="ticker" id="ticker" aria-label="The Wire — league transactions, injury designations, engine movers and NFL headlines">
@@ -1901,15 +1957,17 @@
         <div class="finder-controls finder-part">
           <label for="finder-team"><strong>Find trades for:</strong></label>
           <select id="finder-team"></select>
-          <label for="finder-want"><strong>I want:</strong></label>
-          <select id="finder-want">
-            <option value="">Any position</option>
-            <option value="QB">QB</option>
-            <option value="RB">RB</option>
-            <option value="WR">WR</option>
-            <option value="TE">TE</option>
-            <option value="FLEX">Flex (RB / WR / TE)</option>
-          </select>
+        </div>
+        <div class="want-panel finder-part" role="group" aria-label="Position to target">
+          <span class="want-label">I want<span class="want-hint">aims every trade idea below</span></span>
+          <div class="want-btns" id="finder-want">
+            <button type="button" data-want="" aria-pressed="true">Any position</button>
+            <button type="button" data-want="QB" aria-pressed="false">QB</button>
+            <button type="button" data-want="RB" aria-pressed="false">RB</button>
+            <button type="button" data-want="WR" aria-pressed="false">WR</button>
+            <button type="button" data-want="TE" aria-pressed="false">TE</button>
+            <button type="button" data-want="FLEX" aria-pressed="false">Flex <span class="want-sub">RB/WR/TE</span></button>
+          </div>
         </div>
         <div id="finder-out" class="finder-part"></div>
         <div class="locked-state" data-locked="finder">
@@ -3351,16 +3409,124 @@ ${rdP ? "" : `
         return out;
       }
 
+      /* ---------- Redraft positional-need engine ----------
+         Redraft rosters go lopsided: stacked at one position, thin at
+         another. This read prices every team's projected strength at
+         each position — the sum of its top-N rest-of-season projected
+         pts/week, N = the starters plus one (QB2 / RB3 / WR4 / TE2) —
+         and ranks the user against the league. A position is SURPLUS
+         when the user ranks in the league's top third and projects at
+         least 5% above the league average; NEED when bottom third and
+         at least 5% below. Swaps then flip one surplus player for a
+         comparable player at a need position: one-for-one, redraft
+         values inside a ±20% band, and the incoming player has to
+         actually crack the post-trade optimal lineup without the swap
+         costing the lineup more than a tenth of a point a week. A
+         balanced roster produces no swaps and an honest note, and the
+         standard win-now buys carry the tab. */
+      const POS_PROJ_DEPTH = { QB: 2, RB: 3, WR: 4, TE: 2 };
+      function ordinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+      function projStrength(rid, pos) {
+        return teamPlayers(rid).filter(p => p.pos === pos)
+          .map(rosProj).sort((a, b) => b - a).slice(0, POS_PROJ_DEPTH[pos])
+          .reduce((x, y) => x + y, 0);
+      }
+      function positionalRead(rid) {
+        const n = DATA.teams.length;
+        const out = { ranks: {}, surplus: [], needs: [] };
+        ["QB", "RB", "WR", "TE"].forEach(pos => {
+          const all = DATA.teams.map(t => ({ rid: t.rid, s: projStrength(t.rid, pos) })).sort((a, b) => b.s - a.s);
+          const avg = all.reduce((x, t) => x + t.s, 0) / Math.max(all.length, 1);
+          const idx = all.findIndex(t => t.rid === rid);
+          const rank = idx + 1;
+          const ratio = avg > 0 ? all[idx].s / avg : 1;
+          out.ranks[pos] = { strength: all[idx].s, rank, avg, ratio, n };
+          const third = Math.max(1, Math.ceil(n / 3));
+          if (rank <= third && ratio >= 1.05) out.surplus.push(pos);
+          if (rank >= n - third + 1 && ratio <= 0.95) out.needs.push(pos);
+        });
+        out.surplus.sort((a, b) => out.ranks[b].ratio - out.ranks[a].ratio);
+        out.needs.sort((a, b) => out.ranks[a].ratio - out.ranks[b].ratio);
+        return out;
+      }
+      function positionalSwaps(rid, mine, read) {
+        const myIds = mine.playerIds;
+        const base = optimalLineup(myIds).total;
+        const want = finderState.want;
+        const out = [];
+        read.surplus.forEach(sp => {
+          const myAtPos = teamPlayers(rid).filter(p => p.pos === sp).sort((a, b) => dispVal(b) - dispVal(a));
+          read.needs.forEach(np => {
+            if (want && !wantMatch(np)) return;
+            myAtPos.forEach((send, sIdx) => {
+              if (sIdx < 1) return; // the #1 at a position is never the flip piece
+              const sv = dispVal(send);
+              if (sv < 700 || (send.ros || 0) <= 0) return;
+              if (myAtPos.length - 1 < (STARTER_SLOTS[sp] || 1)) return; // still field the starters after he goes
+              DATA.teams.filter(t => t.rid !== rid).forEach(partner => {
+                const theirAtPos = teamPlayers(partner.rid).filter(p => p.pos === np).sort((a, b) => dispVal(b) - dispVal(a));
+                if (theirAtPos.length - 1 < (STARTER_SLOTS[np] || 1)) return; // they keep their own starters
+                /* Two-way fit pays best: the partner is thin where the
+                   user is deep, or deep where the user is thin. */
+                const pSpRatio = read.ranks[sp].avg > 0 ? projStrength(partner.rid, sp) / read.ranks[sp].avg : 1;
+                const pNpRatio = read.ranks[np].avg > 0 ? projStrength(partner.rid, np) / read.ranks[np].avg : 1;
+                const mutual = (pSpRatio <= 0.97 ? 3 : 0) + (pNpRatio >= 1.05 ? 2 : 0);
+                theirAtPos.forEach((target, tIdx) => {
+                  const tv = dispVal(target);
+                  if (tv < sv * 0.8 || tv > sv * 1.2) return; // the ±20% value band
+                  if ((target.ros || 0) <= 0) return;
+                  const newIds = myIds.filter(id => id !== send.id).concat([target.id]);
+                  const newOpt = optimalLineup(newIds);
+                  const dPpg = newOpt.total - base;
+                  if (dPpg < -0.1) return; // a balance fix never guts the lineup to make itself
+                  if (!newOpt.lineup.some(p => p.id === target.id)) return; // he has to actually fix the hole
+                  const closeness = 1 - Math.abs(tv - sv) / sv;
+                  const score = 16 + dPpg * 6 + closeness * 4 + mutual + Math.min(2, sIdx * 0.5);
+                  out.push({
+                    dir: "buy", partner, target, pkg: [playerAsset(send)], dPpg, score, basePpg: base,
+                    swapFrom: sp, swapTo: np,
+                    needLine: `You're stacked at ${sp} (${ordinal(read.ranks[sp].rank)} in the league) but thin at ${np} (${ordinal(read.ranks[np].rank)} in the league) — flip ${esc(send.name)}, your ${sp}${sIdx + 1}, for ${esc(target.name)}, a comparable ${np}${tIdx + 1}, and the hole gets filled without giving up value.`,
+                  });
+                });
+              });
+            });
+          });
+        });
+        return out;
+      }
+      function positionalNote(read, swapCount) {
+        const n = DATA.teams.length;
+        const tag = pos => `<strong>${pos}</strong> (${ordinal(read.ranks[pos].rank)} of ${n})`;
+        const list = arr => arr.slice(0, 2).map(tag).join(" and ");
+        if (read.surplus.length && read.needs.length) {
+          return swapCount
+            ? `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> but <strong>thin at ${list(read.needs)}</strong> by projected starter points. The <strong>positional swaps</strong> up top flip surplus depth into the thin spot — one-for-one, value-matched within ±20% — and the standard win-now buys follow below.`
+            : `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> but <strong>thin at ${list(read.needs)}</strong> by projected starter points — but no one-for-one swap inside the ±20% value band also cleared the lineup check, so the ideas below are the standard win-now buys.`;
+        }
+        if (read.surplus.length) return `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> by projected starter points, but no position is thin enough to demand a fix — so the ideas below are the standard win-now buys, not forced swaps.`;
+        if (read.needs.length) return `Positional read: this roster is <strong>thin at ${list(read.needs)}</strong> by projected starter points, but no position is deep enough to pay for the fix out of surplus — the ideas below are the standard win-now buys.`;
+        return `Positional read: this roster is <strong>balanced</strong> — no position sits clearly above or below the league in projected starter points, so there's no surplus to flip. The ideas below are the standard win-now buys.`;
+      }
+
       function findTrades(rid) {
         const mine = TBY[rid];
         const myNeeds = ["QB", "RB", "WR", "TE"].filter(pos => needScore(rid, pos) > 400)
           .sort((a, b) => needScore(rid, b) - needScore(rid, a));
         let all = [];
+        let posNote = null;
         /* Redraft: every team is effectively win-now — there is no
            future to build for — so every team gets buys under the
            win-now rules (raise projected pts/wk or the deal doesn't
-           exist), whatever its dynasty tag says. No sells, ever. */
-        if (VALMODE === "redraft") all = buySuggestions(rid, mine);
+           exist), whatever its dynasty tag says. No sells, ever. A
+           lopsided roster leads with positional swaps — surplus depth
+           flipped one-for-one into the thin spot — and the plain win-
+           now buys follow behind them. */
+        if (VALMODE === "redraft") {
+          const read = positionalRead(rid);
+          const swaps = (read.surplus.length && read.needs.length) ? positionalSwaps(rid, mine, read) : [];
+          all = [...swaps, ...buySuggestions(rid, mine)];
+          posNote = positionalNote(read, swaps.length);
+        }
         else if (mine.arch === "Win-Now") all = buySuggestions(rid, mine);
         else if (mine.arch === "Rebuilder") all = sellSuggestions(rid, mine);
         else all = [...buySuggestions(rid, mine), ...sellSuggestions(rid, mine)];
@@ -3376,13 +3542,13 @@ ${rdP ? "" : `
           out.push(s);
           if (out.length >= 8) break;
         }
-        return { myNeeds, suggestions: out, mine };
+        return { myNeeds, suggestions: out, mine, posNote };
       }
 
       function renderFinder() {
         const rid = Number(document.getElementById("finder-team").value);
         if (window.GUEST_MODE || !TBY[rid]) { const el = document.getElementById("finder-out"); if (el) el.innerHTML = ""; return; }
-        const { suggestions, mine } = findTrades(rid);
+        const { suggestions, mine, posNote } = findTrades(rid);
         const el = document.getElementById("finder-out");
         const basePpg = optimalLineup(mine.playerIds).total;
         const want = finderState.want;
@@ -3394,7 +3560,7 @@ ${rdP ? "" : `
             : `Window strategy: <strong>either direction</strong>. This roster sits between windows at a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, so buys and sells both appear below — each one labeled with the window it serves, and each held to that window's rules.`;
         if (VALMODE === "redraft") strat = `Window strategy: <strong>win now — the only window there is</strong>. This is a redraft league, so every idea below is a buy: bench depth goes out, a producer comes in, and each was checked against the rest-of-season projection engine — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown. No draft picks change hands; picks don't exist in redraft.`;
         let html = `<div class="diag"><h3>${esc(mine.name)} — diagnosis</h3>
-          <p>${VALMODE === "redraft" ? "" : `Tagged <strong>${esc(mine.arch)}</strong>. `}${strat}${want ? ` Targeting: <strong>${esc(wantName)}</strong>.` : ""}</p></div>`;
+          <p>${VALMODE === "redraft" ? "" : `Tagged <strong>${esc(mine.arch)}</strong>. `}${strat}${want ? ` Targeting: <strong>${esc(wantName)}</strong>.` : ""}</p>${posNote ? `<p>${posNote}</p>` : ""}</div>`;
         if (!suggestions.length) {
           const why = VALMODE === "redraft"
             ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every producer who would raise this lineup either can't be priced fairly with this team's bench depth, or the deal would cost a starter to make the values balance. Try another position, or build the deal by hand in the calculator.`
@@ -3424,7 +3590,9 @@ ${rdP ? "" : `
             const t = s.target;
             const payDesc = s.pkg.every(a => a.kind === "pick") ? "draft capital" : s.pkg.some(a => a.kind === "pick") ? "picks and bench depth" : "bench depth";
             windowLine = VALMODE === "redraft"
-              ? `<span class="dir-tag">Win-now buy</span>Redraft rules: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, never a starter. There is no next season to save for.`
+              ? s.needLine
+                ? `<span class="dir-tag">Positional swap</span>One-for-one, value-matched: your ${s.swapFrom} depth covers the outgoing piece, your ${s.swapTo} hole gets a starter-caliber fix, and your optimal lineup moves <strong>${dTxt} projected pts/week</strong>.`
+                : `<span class="dir-tag">Win-now buy</span>Redraft rules: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, never a starter. There is no next season to save for.`
               : mine.arch === "Win-Now"
               ? `<span class="dir-tag">Win-now buy</span>You're win-now: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, not a starter.`
               : `<span class="dir-tag">Win-now move</span>Buys production now: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc} — future capital spent on this season.`;
@@ -3456,6 +3624,7 @@ ${rdP ? "" : `
               <div class="arrow">⇄</div>
               <div class="col"><div class="lbl">You get · ${fmt(tot(getAssets))}</div>${assetHtml(getAssets)}</div>
             </div>
+            ${s.needLine ? `<div class="need-line"><span class="dir-tag fix">Positional fix</span>${s.needLine}</div>` : ""}
             <div class="window-line${isBuy ? "" : " sell"}">${windowLine}</div>
             <ul class="why-list">${why.map(w => `<li>${w}</li>`).join("")}</ul>
             ${impact}
@@ -3467,8 +3636,14 @@ ${rdP ? "" : `
       finderSel.innerHTML = DATA.teams.map(t =>
         `<option value="${t.rid}" ${t.rid === USER_RID ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("");
       finderSel.addEventListener("change", renderFinder);
-      const finderWantSel = document.getElementById("finder-want");
-      if (finderWantSel) finderWantSel.addEventListener("change", e => { finderState.want = e.target.value; renderFinder(); });
+      const finderWantEl = document.getElementById("finder-want");
+      if (finderWantEl) finderWantEl.querySelectorAll("button[data-want]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          finderState.want = btn.dataset.want;
+          finderWantEl.querySelectorAll("button[data-want]").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+          renderFinder();
+        });
+      });
       renderFinder();
 
       /* ================= Player values board ================= */
@@ -4896,7 +5071,7 @@ ${rdP ? "" : `
         }
         Object.assign(SETTINGS, guest ? PRESETS.standard : LEAGUE_FORMATS[window.CURRENT_LEAGUE || "d74"]);
         document.getElementById("mode-badge").textContent = guest ? "Guest — no league" : "Your league";
-        document.getElementById("mode-switch").value = guest ? "guest" : "conn";
+        if (typeof window.renderLeagueSwitcher === "function") window.renderLeagueSwitcher();
         if (guest) {
           const bo = document.getElementById("board-owner");
           if (bo && bo.value !== "ALL") { bo.value = "ALL"; bo.dispatchEvent(new Event("change")); }
@@ -4908,7 +5083,6 @@ ${rdP ? "" : `
            it restores the selected league's wire. */
         if (typeof window.renderWire === "function") window.renderWire();
       }
-      document.getElementById("mode-switch").addEventListener("change", e => routeMode(e.target.value));
       document.querySelectorAll(".locked-cta").forEach(b => b.addEventListener("click", () => {
         if (typeof window.openSleeperConnect === "function") { window.openSleeperConnect(); return; }
         const note = b.closest(".locked-body").querySelector(".locked-note");
@@ -4972,9 +5146,7 @@ ${rdP ? "" : `
 
       function routeMode(v) {
         if (v === "connect") {
-          /* Not a league — an action. Restore the switcher to the mode
-             actually in effect and open the Sleeper connect dialog. */
-          document.getElementById("mode-switch").value = window.GUEST_MODE ? "guest" : "conn";
+          /* Not a league — an action: open the connect dialog. */
           if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
           return;
         }
@@ -5027,6 +5199,13 @@ ${rdP ? "" : `
       if (heroEspn) heroEspn.addEventListener("click", () => {
         if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
         if (typeof slpSetPlatform === "function") slpSetPlatform("espn");
+      });
+      /* Guest browse: the visitor is already in guest mode — this just
+         waves off the connect panel and drops them on the board. */
+      const heroBrowse = document.getElementById("hero-browse");
+      if (heroBrowse) heroBrowse.addEventListener("click", () => {
+        const b = document.querySelector(".board");
+        if (b) b.scrollIntoView({ block: "start" });
       });
       const msAll = document.getElementById("ms-all");
       if (msAll) msAll.addEventListener("click", () => {
@@ -5571,6 +5750,61 @@ ${rdP ? "" : `
 
       /* Mirror of setLeague() for the connected league: same owner remap,
          same deferred sim build, same select/calculator resets. */
+      /* ================= Connected-league switcher =================
+         Once a Sleeper lookup has run, every league it pulled stays
+         one tap away in the header: a pill per league, the active one
+         lit. Tapping a pill runs the exact dialog load path
+         (slpLoadLeague), so the roster swap, the sim-cache
+         invalidation in setConnectedLeague, and league-type detection
+         behave identically to picking the league in the dialog. An
+         ESPN connection contributes its single league. The switcher
+         renders only while a league is connected — guests never see
+         it. Manual Dynasty/Redraft overrides are remembered per
+         league (in-memory) across switches within the session. */
+      const typeOverrideByLeague = {};
+      let connLeagueKey = null;
+      function stashConnOverride() {
+        const C = window.CONN_LEAGUE;
+        if (!C || !connLeagueKey) return;
+        if (C.typeOverride) typeOverrideByLeague[connLeagueKey] = C.typeOverride;
+        else delete typeOverrideByLeague[connLeagueKey];
+      }
+      function renderLeagueSwitcher() {
+        const wrap = slpEl("league-switcher");
+        const pills = slpEl("ls-pills");
+        if (!wrap || !pills) return;
+        const C = window.CONN_LEAGUE;
+        const connected = !!C && window.CURRENT_LEAGUE === "conn" && !window.GUEST_MODE;
+        const items = [];
+        if (connected) {
+          (slpState.leagues || []).forEach(lg => {
+            items.push({
+              key: "sleeper:" + lg.league_id,
+              name: lg.name || "Sleeper league",
+              meta: slpLeagueType(lg) === "dynasty" ? "Dynasty" : "Redraft",
+              league: lg,
+            });
+          });
+          if (C.platform === "espn") {
+            items.push({ key: "espn:" + C.leagueId, name: C.league.name, meta: "ESPN", league: null });
+          }
+        }
+        if (!items.length) { wrap.hidden = true; pills.innerHTML = ""; return; }
+        wrap.hidden = false;
+        pills.innerHTML = items.map((it, i) => {
+          const active = it.key === connLeagueKey;
+          return `<button type="button" class="ls-pill${active ? " active" : ""}" data-ls="${i}" aria-pressed="${active}"${active ? ' aria-current="true"' : ""}>${esc(it.name)}<span class="ls-meta">${esc(it.meta)}</span></button>`;
+        }).join("");
+        pills.querySelectorAll("[data-ls]").forEach(btn => btn.addEventListener("click", () => {
+          const it = items[Number(btn.dataset.ls)];
+          if (!it || !it.league || it.key === connLeagueKey) return;
+          pills.querySelectorAll(".ls-pill").forEach(p => { p.disabled = true; });
+          btn.textContent = "Loading " + it.name + "…";
+          slpLoadLeague(it.league);
+        }));
+      }
+      window.renderLeagueSwitcher = renderLeagueSwitcher;
+
       function setConnectedLeague() {
         const C = window.CONN_LEAGUE;
         if (!C) return;
@@ -5659,7 +5893,7 @@ ${rdP ? "" : `
           ? `Fantasy Forensics · Values are computed by our proprietary Dynasty Value Algorithm (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, scoring and matchups are live from ESPN (league ${C.leagueId}), pulled ${C.today}. ESPN doesn't publish full transaction history or traded future picks, so the waiver wire runs on rosters + projections and pick capital assumes each team holds its own picks.`
           : `Fantasy Forensics · Values are computed by our proprietary Dynasty Value Algorithm (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, picks and matchups are live from Sleeper for @${C.username}, pulled ${C.today}.`;
         document.getElementById("mode-badge").textContent = isEspn ? "Your ESPN league" : "Your league";
-        document.getElementById("mode-switch").value = "conn";
+        renderLeagueSwitcher();
         const disc = document.getElementById("slp-disconnect");
         if (disc) disc.hidden = false;
         if (typeof window.renderWire === "function") window.renderWire();
@@ -5692,12 +5926,11 @@ ${rdP ? "" : `
       function slpDisconnect() {
         window.CONN_LEAGUE = null;
         window.CONN_PROJ = null;
+        connLeagueKey = null;
         if (window.SIM_BY_LEAGUE) delete window.SIM_BY_LEAGUE.conn;
         try { delete LEAGUE_FORMATS.conn; } catch (e) { LEAGUE_FORMATS.conn = undefined; }
         try { delete WIRE_LEAGUE_ITEMS.conn; } catch (e) { /* noop */ }
-        const sel = document.getElementById("mode-switch");
-        const opt = sel && sel.querySelector('option[value="conn"]');
-        if (opt) opt.remove();
+        renderLeagueSwitcher();
         const disc = document.getElementById("slp-disconnect");
         if (disc) disc.hidden = true;
         routeMode("guest");
@@ -5853,24 +6086,19 @@ ${rdP ? "" : `
             user: slpState.user, league, rosters, users,
             tradedPicks: traded || [], matchups, week, transactions: txns,
           });
+          stashConnOverride();
+          connLeagueKey = "sleeper:" + lg.league_id;
+          if (typeOverrideByLeague[connLeagueKey]) built.typeOverride = typeOverrideByLeague[connLeagueKey];
           window.CONN_LEAGUE = built;
           window.CONN_PROJ = null;
           LEAGUE_FORMATS.conn = built.format;
           WIRE_LEAGUE_ITEMS.conn = built.wireItems;
-          const sel = slpEl("mode-switch");
-          let opt = sel.querySelector('option[value="conn"]');
-          if (!opt) {
-            opt = document.createElement("option");
-            opt.value = "conn";
-            sel.insertBefore(opt, sel.firstChild);
-          }
-          opt.textContent = "Your league — " + built.league.name;
           window.CURRENT_LEAGUE = "conn";
           staged = true;
           applyMode(false);
           setConnectedLeague();
           slpClose();
-          activateNav((built.leagueType || "dynasty") === "redraft" ? "values" : "teams");
+          activateNav((built.leagueType || "dynasty") === "redraft" ? "season" : "teams");
           window.scrollTo({ top: 0 });
         } catch (e) {
           /* Never leave a half-applied connection behind: roll back to
@@ -5879,6 +6107,7 @@ ${rdP ? "" : `
           if (staged) { try { slpDisconnect(); } catch (e2) { /* best effort */ } }
           const ov = slpEl("slp-overlay");
           if (ov && ov.hidden) { ov.hidden = false; document.body.style.overflow = "hidden"; }
+          renderLeagueSwitcher();
           slpShowStep("leagues");
           slpError(staged
             ? "That league loaded from Sleeper but couldn't be applied — try again; if it keeps failing, this league's format may not be supported yet."
@@ -6229,24 +6458,19 @@ ${rdP ? "" : `
         let staged = false;
         try {
           const built = buildEspnLeague(espnState.raw, espnState.leagueId, yourRid);
+          stashConnOverride();
+          connLeagueKey = "espn:" + espnState.leagueId;
+          if (typeOverrideByLeague[connLeagueKey]) built.typeOverride = typeOverrideByLeague[connLeagueKey];
           window.CONN_LEAGUE = built;
           window.CONN_PROJ = built.proj;
           LEAGUE_FORMATS.conn = built.format;
           WIRE_LEAGUE_ITEMS.conn = built.wireItems;
-          const sel = slpEl("mode-switch");
-          let opt = sel.querySelector('option[value="conn"]');
-          if (!opt) {
-            opt = document.createElement("option");
-            opt.value = "conn";
-            sel.insertBefore(opt, sel.firstChild);
-          }
-          opt.textContent = "Your ESPN league — " + built.league.name;
           window.CURRENT_LEAGUE = "conn";
           staged = true;
           applyMode(false);
           setConnectedLeague();
           slpClose();
-          activateNav((built.leagueType || "dynasty") === "redraft" ? "values" : "teams");
+          activateNav((built.leagueType || "dynasty") === "redraft" ? "season" : "teams");
           window.scrollTo({ top: 0 });
         } catch (e) {
           if (staged) { try { slpDisconnect(); } catch (e2) { /* best effort */ } }
@@ -7672,7 +7896,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
          redraft-only Improve Your Odds panel. syncModeChrome calls
          window.applyLeagueModeChrome at the end of every mode
          transition, so none of this can drift from the toggle. */
-      const RD_FINDER_INTRO = `Pick a team and the finder hunts <strong>production</strong>. This is a redraft league — there is no next year — so every idea is a <strong>win-now buy</strong>: bench depth goes out, a player who raises the optimal lineup's projected points per week comes in, and a deal that lowers projected points per week <strong>never appears</strong>, however the values balance. <strong>No draft picks change hands</strong> — picks don't exist here. Targets are priced on rest-of-season production alone, and every other roster is a potential partner.`;
+      const RD_FINDER_INTRO = `Pick a team and the finder hunts <strong>production</strong>. This is a redraft league — there is no next year — so every idea is a <strong>win-now buy</strong>: bench depth goes out, a player who raises the optimal lineup's projected points per week comes in, and a deal that lowers projected points per week <strong>never appears</strong>, however the values balance. <strong>No draft picks change hands</strong> — picks don't exist here. Targets are priced on rest-of-season production alone, and every other roster is a potential partner. Where a roster is <strong>lopsided</strong> — stacked at one position, thin at another, by projected starter points against the league — the finder leads with <strong>positional swaps</strong>: one surplus player flipped one-for-one for a comparable player at the thin position, value-matched within ±20%, each with the reasoning spelled out on the card.`;
       const RD_TEAMS_INTRO = `Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 10,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong>. Below it, the <strong>Improve Your Odds</strong> panel prices the moves that most raise your title odds. Every roster below is graded on <strong>starting-lineup strength, total roster value, and points scored</strong> — in <strong>redraft prices</strong> throughout: rest of season only, no picks, no age curves. In a redraft league every team is a contender or a spoiler; there are no rebuilders. Tap a team to see its full roster.`;
       const RD_WAIVER_INTRO = `Every unrostered player in the snapshot, ranked for the team you pick — not by name value, but by <strong>what he would do for that lineup</strong>. The bar is set by the <strong>rest-of-season projection engine</strong> (the same one behind Season Outlook): a target's value-add is his projected points per week minus the weakest starter he'd have to beat at his position, flex and superflex slots included. In redraft there is no stash list — a pickup either helps this season or he isn't worth the roster spot. Where the league runs FAAB, every target carries a suggested bid.`;
 
