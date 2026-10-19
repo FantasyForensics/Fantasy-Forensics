@@ -2844,23 +2844,27 @@ ${rdP ? "" : `
       }
       function sideTotal(side) { return assetsOf(side).reduce((s, a) => s + assetValue(a), 0); }
 
-      /* Consolidation adjustment: roster spots are scarce, so a pile of
-         lesser players is worth less than its raw sum against one stud.
-         Every asset in a deal (players and picks alike) counts at its raw
-         value × quality weight w(v) = 0.65 + 0.35 × min(v / V_ref, 1),
-         where V_ref is the #1 overall player's value in the active format
-         (dynasty or redraft). The best asset counts at ~100% of its price,
-         an asset worth half as much ~82%, deep throw-ins ~65%. The verdict
-         below is computed on these effective values; raw sums stay visible
-         with a labeled "Consolidation adj." line per side. */
-      function vRef() {
-        let m = 0;
-        for (const p of DATA.players) { const v = dispVal(p); if (v > m) m = v; }
-        return m || 1;
+      /* Consolidation bonus (additive): the side with FEWER assets gets a
+         lump-sum bonus for the freed roster spots. Bonus = (extra spots)
+         × 750 × (1 + 0.5 × stud_factor), where stud_factor = best asset
+         value on the bonus side ÷ 10,000. Interpolated from KTC's
+         consolidation premium and FantasyCalc's waiver adjustment.
+         No bonus for even trades. The verdict below is computed on
+         raw sums plus this bonus; raw sums stay visible with a labeled
+         "Consolidation bonus" line per side. */
+      function consolBonusFor(nThis, nOther, maxValThis) {
+        if (nThis >= nOther) return 0;
+        const extra = nOther - nThis;
+        return extra * 750 * (1 + 0.5 * (maxValThis / 10000));
       }
-      function qualityWeight(v) { return 0.65 + 0.35 * Math.min(v / vRef(), 1); }
-      function effAssetValue(a) { const v = assetValue(a); return v * qualityWeight(v); }
-      function sideEffTotal(side) { return assetsOf(side).reduce((s, x) => s + effAssetValue(x), 0); }
+      function sideEffTotal(side) {
+        const assets = assetsOf(side);
+        const raw = assets.reduce((s, a) => s + assetValue(a), 0);
+        const other = side === "A" ? "B" : "A";
+        const nOther = assetsOf(other).length;
+        const maxV = assets.reduce((m, a) => Math.max(m, assetValue(a)), 0);
+        return raw + consolBonusFor(assets.length, nOther, maxV);
+      }
 
       function renderSide(side) {
         const st = calc[side];
@@ -2885,7 +2889,7 @@ ${rdP ? "" : `
             ${picks.map(pk => `<button data-pick="${pk.key}">${esc(pk.label)} · ${fmt(pk.value)}</button>`).join("")}</div>` : ""}
           <div class="assets" id="assets-${side}"></div>
           <div class="side-total"><span>Total value</span><span class="t" id="total-${side}">0</span></div>
-          <div class="side-total adj"><span>Consolidation adj.</span><span class="t" id="efftotal-${side}">0</span></div>`;
+          <div class="side-total adj"><span>Consolidation bonus</span><span class="t" id="efftotal-${side}">0</span></div>`;
         const teamSel = document.getElementById("team-" + side);
         if (teamSel) teamSel.addEventListener("change", e => {
           st.team = e.target.value === "FA" ? "FA" : Number(e.target.value);
@@ -3012,8 +3016,8 @@ ${rdP ? "" : `
       function renderVerdict() {
         const el = document.getElementById("verdict");
         const a = sideTotal("A"), b = sideTotal("B");
-        // The verdict judges effective (consolidation-adjusted) values, not
-        // raw sums — see qualityWeight above. Thresholds unchanged.
+        // The verdict judges raw sums plus the consolidation bonus (see
+        // consolBonusFor above), not raw sums alone. Thresholds unchanged.
         const ea = sideEffTotal("A"), eb = sideEffTotal("B");
         const guest = !!window.GUEST_MODE;
         const nameA = guest ? "Side A" : teamName(calc.A.team), nameB = guest ? "Side B" : teamName(calc.B.team);
@@ -3033,14 +3037,14 @@ ${rdP ? "" : `
         else headline = `Favors ${favored} by ${fmt(Math.round(diff))} value`;
         const shareA = ea + eb ? Math.round(100 * ea / (ea + eb)) : 50;
         // balancing suggestion: a pick owned by the side receiving less that
-        // best closes the gap — judged on its consolidation-adjusted value,
-        // like everything else in this verdict
+        // best closes the gap — judged on raw value, like everything else
+        // in this verdict (the consolidation bonus recalculates when added)
         let balance = "";
         if (!guest && VALMODE !== "redraft" && diff >= 300 && pct > 0.04) {
           const lighter = ea < eb ? "A" : "B";
           const lt = calc[lighter].team;
           if (lt !== "FA") {
-            const effPick = pk => pk.value * qualityWeight(pk.value);
+            const effPick = pk => pk.value;
             const cands = TBY[lt].picks.filter(pk => pk.value >= 150)
               .sort((x, y) => Math.abs(effPick(x) - diff) - Math.abs(effPick(y) - diff));
             if (cands.length) balance = `<div class="balance-note"><strong>Balance it:</strong> ${esc(teamName(lt))} adding the <strong>${esc(cands[0].label)}</strong> (${fmt(cands[0].value)}) brings the adjusted gap to ${fmt(Math.round(Math.abs(diff - effPick(cands[0]))))}.</div>`;
@@ -3056,9 +3060,9 @@ ${rdP ? "" : `
             <span>${esc(nameA)} sends ${fmt(a)}</span><span>${esc(nameB)} sends ${fmt(b)}</span>
           </div>
           <div class="adj-row">
-            <span>Consolidation adj. ${fmt(Math.round(ea))}</span><span>Consolidation adj. ${fmt(Math.round(eb))}</span>
+            <span>Consolidation bonus ${fmt(Math.round(ea))}</span><span>Consolidation bonus ${fmt(Math.round(eb))}</span>
           </div>
-          <p class="consol-note">Verdict uses the adjusted values: roster spots are scarce, so each asset counts at 65–100% of its price based on quality — a stud counts in full, lesser pieces at a discount, so three good players don't automatically outweigh one great one.</p>
+          <p class="consol-note">Verdict uses raw sums plus a consolidation bonus: the side receiving fewer players gets credit for the freed roster spots — so three good players don't automatically outweigh one great one.</p>
           ${balance}
           <div class="fit-notes">
             <div><h4>Fit for ${esc(nameA)}</h4><ul>${notesA.map(noteHtml).join("")}</ul></div>
@@ -4000,7 +4004,7 @@ ${rdP ? "" : `
         <h2>Draft picks — algorithm-priced, not estimated</h2>
         <p>Pick values are computed by the algorithm itself, off the same proprietary model baseline as player prices: a <strong>2027 1st is worth 6,008 (early) / 4,537 (mid) / 3,892 (late)</strong>; a 2027 2nd 3,024 / 2,569 / 2,339; a 2028 1st 4,627 / 3,596 / 3,114 and a 2029 1st 3,969 / 3,197 / 2,776. Projected slots come from the original team's current points-for pace. The year-out discount is empirical, not a rule of thumb: the model's ladder applies ×0.79–0.90 for the first year out and ×0.89–0.91 for each year after — a shallower discount than production value alone would set, because the market prices future picks hot, especially with the stacked 2027 class in view. A mid 2027 1st prices like a low-end WR3/RB3 veteran — that is the algorithm's calibrated exchange rate between picks and players.</p>
         <h2>Trade verdicts — the consolidation adjustment</h2>
-        <p>Adding up raw prices lies about uneven trades. Three players worth 3,000 each sum to 9,000, but they do not beat one 8,500 stud: starting roster spots are scarce, and only so many of the three can ever take the field in the stud's place. So the trade calculator never judges a deal on raw sums. Every asset in the deal — players and draft picks alike — is first converted to an <strong>effective value</strong>: its raw value multiplied by a <strong>quality weight</strong>. The weight is 65% plus 35% of the asset's value measured against the #1 overall player in the active format (dynasty or redraft), capped at 100% — so the very best asset in the game counts at ~100% of its price, an asset worth half as much counts at ~82%, and a deep-bench throw-in counts at ~65%. Picks are weighted by their slot value the same way, which is why four late 2nds don't add up to one early 1st here. The verdict, the fair/favors thresholds, and the balancing-pick suggestion are all computed on effective values; the calculator still prints the raw sums, with a labeled <strong>“Consolidation adj.”</strong> line per side, so the correction is never hidden. The adjustment tempers fair deals rather than reversing them: two good starters still beat one great player, just by less than the raw numbers claim — and a 1-for-1 of near-equals barely moves at all, because both sides earn nearly the same weight.</p>
+        <p>Adding up raw prices lies about uneven trades. Three players worth 3,000 each sum to 9,000, but they do not beat one 8,500 stud: starting roster spots are scarce, and only so many of the three can ever take the field in the stud's place. So the trade calculator never judges a deal on raw sums alone. The side receiving <strong>fewer players</strong> gets a <strong>consolidation bonus</strong>: credit for each freed roster spot, worth roughly what a waiver-wire replacement costs, scaled up slightly when the best player on that side is an elite stud. The bonus is (extra roster spots) × 750 × (1 + half the stud factor), where the stud factor is the best asset's value ÷ 10,000 — so a 3-for-1 for a true stud earns a bigger bonus than a 3-for-1 for a mid-tier player. Even trades (1-for-1, 2-for-2) get no bonus. The verdict, the fair/favors thresholds, and the balancing-pick suggestion are all computed on raw sums plus the bonus; the calculator still prints the raw sums, with a labeled <strong>"Consolidation bonus"</strong> line per side, so the correction is never hidden.</p>
         <h2>The injury feed — what it shows, and what it won't</h2>
         <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The honesty rule: <strong>no free source publishes a reliable expected-return date</strong>, so the board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
         <h2>Power rankings &amp; the Win-Now / Rebuilder tags</h2>
@@ -6903,38 +6907,47 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           side.k.forEach(([ss, rr]) => { const v = pickVal(ss, rr); if (v != null) { sum += v; any = true; } });
           return any ? sum : null;
         }
-        function sideHtml(side, hlPid) {
+        function sideHtml(side, hlPid, allSides) {
           const lines = side.p.map(pid => assetLinePlayer(pid, hlPid)).join("") +
             side.k.map(([ss, rr]) => assetLinePick(ss, rr)).join("");
           const tot = sideTotal(side);
-          const eff = (typeof qualityWeight === "function") ? sideEffRT(side) : null;
+          const eff = (typeof consolBonusFor === "function" && allSides) ? sideEffRT(side, allSides) : null;
           return `<div class="rt-side">
             <div class="rt-side-h"><strong>${esc(side.t)}</strong> got</div>
             ${lines || `<div class="rt-empty-side">No players or picks recorded</div>`}
             ${tot != null ? `<div class="rt-side-total">Our value of this side today: <strong>${fmt(tot)}</strong></div>` : ""}
-            ${eff != null ? `<div class="rt-side-total adj">Consolidation adj.: <strong>${fmt(Math.round(eff))}</strong></div>` : ""}
+            ${eff != null ? `<div class="rt-side-total adj">Consolidation bonus: <strong>${fmt(Math.round(eff))}</strong></div>` : ""}
           </div>`;
         }
         /* ---------- our grade on each real trade ----------
            Both sides priced on today's board with the calculator's own
-           consolidation math (qualityWeight) — the same effective values
-           printed on the card's "Consolidation adj." line — then called
+           consolidation math (consolBonusFor) — the same adjusted values
+           printed on the card's "Consolidation bonus" line — then called
            the way the calculator calls it: within 4% is a fair deal,
            4–10% is an edge, past 10% the side that received less
            overpaid. A side with nothing priceable on today's board gets
            no grade — never a guessed one. */
-        function sideEffRT(side) {
-          let sum = 0, any = false;
-          const add = v => { if (v != null) { sum += v * qualityWeight(v); any = true; } };
+        function sideRawRT(side) {
+          let sum = 0, any = false, n = 0, maxV = 0;
+          const add = v => { if (v != null) { sum += v; any = true; n++; if (v > maxV) maxV = v; } };
           side.p.forEach(pid => add(ourVal(pid)));
           side.k.forEach(([ss, rr]) => add(pickVal(ss, rr)));
-          return any ? sum : null;
+          return any ? {sum, n, maxV} : null;
+        }
+        function sideEffRT(side, allSides) {
+          const r = sideRawRT(side);
+          if (!r) return null;
+          // Consolidation bonus: side with fewer assets gets credit for freed spots
+          const counts = allSides.map(s => { const rr = sideRawRT(s); return rr ? rr.n : 0; });
+          const maxN = Math.max(...counts);
+          const bonus = (maxN > r.n) ? (maxN - r.n) * 750 * (1 + 0.5 * (r.maxV / 10000)) : 0;
+          return r.sum + bonus;
         }
         function pctTxt(pct) { const p = pct * 100; return p < 1 ? "<1" : String(Math.round(p)); }
         function tradeTake(t) {
           try {
-            if (typeof qualityWeight !== "function") return null;
-            const effs = t.s.map(sd => sideEffRT(sd));
+            if (typeof consolBonusFor !== "function") return null;
+            const effs = t.s.map(sd => sideEffRT(sd, t.s));
             if (effs.some(e => e == null)) return null;
             if (t.s.length === 2) {
               const e0 = effs[0], e1 = effs[1];
@@ -6959,7 +6972,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           const badge = t.f === "d"
             ? `<span class="rt-badge rt-badge-dyn">Dynasty</span>`
             : `<span class="rt-badge rt-badge-red">Redraft</span>`;
-          const sides = t.s.map(sd => sideHtml(sd, hlPid)).join(`<div class="rt-swap" aria-hidden="true">⇄</div>`);
+          const sides = t.s.map(sd => sideHtml(sd, hlPid, t.s)).join(`<div class="rt-swap" aria-hidden="true">⇄</div>`);
           const take = tradeTake(t);
           return `<div class="rt-card">
             <div class="rt-card-top"><span class="rt-date">${fmtDate(t.d)}</span>${badge}<span class="rt-league">${esc(t.lg)} · ${t.nt} teams</span></div>
@@ -7315,7 +7328,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         }
         function translateOffer(rid, headPid, headV, arch, offerSide, headName) {
           const team = (typeof TBY !== "undefined") ? TBY[rid] : null;
-          if (!team || typeof qualityWeight !== "function") return null;
+          if (!team || typeof consolBonusFor !== "function") return null;
           const roster = (team.playerIds || []).map(id => PBY[id]).filter(Boolean).filter(p => p.id !== headPid);
           const topAtPos = {};
           roster.forEach(p => { if (!topAtPos[p.pos] || dispVal(p) > dispVal(topAtPos[p.pos])) topAtPos[p.pos] = p; });
@@ -7360,8 +7373,11 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           });
           if (!chosen.length) return null;
           const raw = chosen.reduce((s, a) => s + a.v, 0);
-          const eff = chosen.reduce((s, a) => s + a.v * qualityWeight(a.v), 0);
-          const effHead = headV * qualityWeight(headV);
+          // Consolidation bonus: head (1 asset) gets bonus vs offer package (N assets)
+          const nOffer = chosen.length;
+          const bonusHead = (nOffer > 1) ? (nOffer - 1) * 750 * (1 + 0.5 * (headV / 10000)) : 0;
+          const eff = raw;
+          const effHead = headV + bonusHead;
           const pct = Math.abs(eff - effHead) / Math.max(eff, effHead, 1);
           let vkind, verdict;
           if (pct <= 0.04) {
@@ -7379,12 +7395,12 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             let bestC = null, bestD = Infinity;
             roster.forEach(p => {
               if (used.has(p.id)) return;
-              const ev = dispVal(p) * qualityWeight(dispVal(p)), d = Math.abs(gap - ev);
+              const ev = dispVal(p), d = Math.abs(gap - ev);
               if (d < bestD) { bestD = d; bestC = { label: `${p.name} (${p.pos}${p.posRank})`, v: dispVal(p), ev }; }
             });
             (team.picks || []).forEach(pk => {
               if (chosen.some(c => c.kind === "pick" && c.key === pk.key)) return;
-              const ev = pk.value * qualityWeight(pk.value), d = Math.abs(gap - ev);
+              const ev = pk.value, d = Math.abs(gap - ev);
               if (d < bestD) { bestD = d; bestC = { label: pk.label, v: pk.value, ev }; }
             });
             let closer = "";
@@ -7721,7 +7737,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             { h: "Roster spots are the currency" },
             { p: "The logic is roster math. This league starts eleven players a week. Gibbs occupies one slot and produces like it: 30.7 points per game through Week 5, a 77% snap share, the No. 2 usage rank among all running backs, receivers and tight ends. Brown and Collins occupy two slots — and the second slot is never free, because Collins' points come <em>instead of</em> your next bench option's, not in addition to them. So before judging any deal, the calculator converts each asset to an <strong>effective value</strong>: the best asset in the game counts at essentially 100% of its price, an asset worth about half as much counts near 82%, and a deep throw-in near 65%. Gibbs converts at about 97% — 9,644 effective. Brown and Collins convert lower, and their side lands at 8,064. The 1,580-point gap, roughly 16% of Gibbs' price, is what consolidation is actually worth in this deal." },
             { h: "It tempers deals; it doesn't crown studs" },
-            { p: "The adjustment cuts both ways, deliberately. Two genuinely strong starters still beat one great player when their combined talent is higher — the weights shrink lopsided piles, they don't hand the win to the single biggest name. And a 1-for-1 of near-equals barely moves, because both sides earn nearly the same weight. Picks are weighted by slot value the same way, which is why four late 2nds don't add up to one early 1st in our calculator even when the raw sums insist they should. The raw totals never disappear, either: every verdict prints them alongside a labeled “Consolidation adj.” line per side, so the correction is always visible — never a hidden thumb on the scale." },
+            { p: "The bonus is deliberately modest. Two genuinely strong starters still beat one great player when their combined talent is higher — the bonus rewards concentration, it doesn't hand the win to the single biggest name. And even trades (1-for-1, 2-for-2) get no bonus at all. The raw totals never disappear, either: every verdict prints them alongside a labeled "Consolidation bonus" line per side, so the correction is always visible — never a hidden thumb on the scale." },
             { jump: { label: "Try it in the calculator →", nav: "trades" } }
           ]
         },
@@ -8246,7 +8262,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         drawSide(xA, nameA, listA, a, ea);
         drawSide(xB, nameB, listB, b, eb);
         ctx.fillStyle = SH.ink2; ctx.font = shFont(500, 23);
-        ctx.fillText("Verdict on consolidation-adjusted values — roster spots are scarce, so a stud counts in full and lesser pieces at a discount.", 56, H - 128);
+        ctx.fillText("Verdict includes consolidation bonus — the side with fewer players gets credit for freed roster spots.", 56, H - 128);
         shDeliver(cv, "fantasy-forensics-trade-verdict.png");
       };
 
