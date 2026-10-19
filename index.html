@@ -2441,16 +2441,17 @@
          projection. Runs inside recomputeValues, so every league the page
          loads (both demos, any future league) gets the same treatment. */
       function bestBallLineup(ids) {
+        const valOf = p => VALMODE === "redraft" ? (p.rdValue ?? p.value) : p.value;
         const pool = ids.map(id => PBY[id]).filter(Boolean)
           .filter(p => p.inj !== "IR" && p.inj !== "PUP" && p.inj !== "Out" && p.inj !== "Suspended")
-          .sort((a, b) => b.value - a.value);
+          .sort((a, b) => valOf(b) - valOf(a));
         const used = new Set(); const lineup = []; let total = 0;
         function take(cands, n, slot) {
           let c = 0;
           for (const p of pool) {
             if (c >= n) break;
             if (used.has(p.id) || !cands.includes(p.pos)) continue;
-            used.add(p.id); lineup.push({ p, slot }); total += p.value; c++;
+            used.add(p.id); lineup.push({ p, slot }); total += valOf(p); c++;
           }
         }
         take(["QB"], 1, "QB"); take(["RB"], 2, "RB"); take(["WR"], 3, "WR"); take(["TE"], 1, "TE");
@@ -2478,13 +2479,14 @@
              Sleeper/ESPN connect). */
           if (!t.strengths) t.strengths = {};
           if (!t.grades) t.grades = {};
-          const pls = t.playerIds.map(id => PBY[id]).filter(Boolean).sort((a, b) => b.value - a.value);
-          t.totalVal = pls.reduce((s, p) => s + p.value, 0);
+          const valOf = p => VALMODE === "redraft" ? (p.rdValue ?? p.value) : p.value;
+          const pls = t.playerIds.map(id => PBY[id]).filter(Boolean).sort((a, b) => valOf(b) - valOf(a));
+          t.totalVal = pls.reduce((s, p) => s + valOf(p), 0);
           const bb = bestBallLineup(t.playerIds);
           t.bestLineup = bb.lineup;
           t.starterVal = bb.total;
           ["QB", "RB", "WR", "TE"].forEach(pos => {
-            t.strengths[pos] = pls.filter(p => p.pos === pos).slice(0, depth[pos]).reduce((s, p) => s + p.value, 0);
+            t.strengths[pos] = pls.filter(p => p.pos === pos).slice(0, depth[pos]).reduce((s, p) => s + valOf(p), 0);
           });
           const top10 = pls.slice(0, 10);
           t.avgAgeTop = Math.round(top10.reduce((s, p) => s + (p.age ?? 0), 0) / Math.max(top10.length, 1) * 10) / 10;
@@ -5596,6 +5598,11 @@ ${rdP ? "" : `
         window.OPP6 = C.opp6 || null;
         recomputeValues();
         DATA.teams.forEach(t => { t.arch = slpArch(t, DATA.teams); t.expl = slpExpl(t, t.arch); });
+        const simKey = "conn:" + (C.league.id || C.league.name);
+        if (window.SIM_BY_LEAGUE && window.SIM_BY_LEAGUE._key !== simKey) {
+          delete window.SIM_BY_LEAGUE.conn;
+          window.SIM_BY_LEAGUE._key = simKey;
+        }
         if (window.SIM_BY_LEAGUE.conn) {
           window.SeasonSim = window.SIM_BY_LEAGUE.conn;
           window.SeasonSim.renderSeason();
@@ -5863,7 +5870,7 @@ ${rdP ? "" : `
           applyMode(false);
           setConnectedLeague();
           slpClose();
-          activateNav("teams");
+          activateNav((built.leagueType || "dynasty") === "redraft" ? "values" : "teams");
           window.scrollTo({ top: 0 });
         } catch (e) {
           /* Never leave a half-applied connection behind: roll back to
@@ -6239,7 +6246,7 @@ ${rdP ? "" : `
           applyMode(false);
           setConnectedLeague();
           slpClose();
-          activateNav("teams");
+          activateNav((built.leagueType || "dynasty") === "redraft" ? "values" : "teams");
           window.scrollTo({ top: 0 });
         } catch (e) {
           if (staged) { try { slpDisconnect(); } catch (e2) { /* best effort */ } }
@@ -7672,6 +7679,8 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
       window.applyLeagueModeChrome = function (rd) {
         const C = window.CONN_LEAGUE;
         const conn = !window.GUEST_MODE && window.CURRENT_LEAGUE === "conn" && C;
+        const rtBtn = document.querySelector('nav.mainnav button[data-nav="realtrades"]');
+        if (rtBtn) rtBtn.style.display = rd ? "none" : "";
         const fn = document.getElementById("format-note");
         if (fn) {
           if (conn) {
