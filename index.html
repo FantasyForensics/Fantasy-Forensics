@@ -1268,7 +1268,7 @@
         table.mini td, table.mini th { padding: 5px 4px; }
       }
 
-      /* ---------- my teams dashboard ---------- */
+      /* ---------- teams tab: your-team spotlight ---------- */
       .mt-card {
         background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
         padding: 18px 20px; margin-bottom: 14px;
@@ -1327,13 +1327,6 @@
       .mt-wv-ros { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 19px; line-height: 1.05; }
       .mt-wv-ros small { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; color: var(--ink-3); }
       .mt-empty { color: var(--ink-2); font-size: 14px; padding: 6px 0 2px; }
-      .mt-connect {
-        background: var(--surface); border: 1px solid rgba(0,229,255,.35); border-radius: var(--radius);
-        padding: 20px; margin-bottom: 14px;
-      }
-      .mt-connect h3 { font-size: 20px; text-transform: uppercase; letter-spacing: -0.01em; }
-      .mt-connect p { color: var(--ink-2); margin: 8px 0 16px; max-width: 62ch; }
-      .mt-connect p strong { color: var(--ink); }
       @media (max-width: 560px) {
         .mt-card { padding: 16px; }
         .mt-stats { grid-template-columns: 1fr 1fr; }
@@ -1587,7 +1580,6 @@
 
       <nav class="mainnav" role="tablist" aria-label="Fantasy Forensics sections">
         <button role="tab" aria-selected="true" data-nav="values">Values</button>
-        <button role="tab" aria-selected="false" data-nav="myteams">My Teams</button>
         <button role="tab" aria-selected="false" data-nav="teams">Teams<span class="nav-lock" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2" fill="currentColor" stroke="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
         <button role="tab" aria-selected="false" data-nav="season">Season<span class="nav-lock" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2" fill="currentColor" stroke="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
         <button role="tab" aria-selected="false" data-nav="lineup">Lineup<span class="nav-lock" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2" fill="currentColor" stroke="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
@@ -1688,17 +1680,20 @@
       </section>
 
       <section class="tab" id="tab-power" role="tabpanel">
-        <p class="tab-intro" id="teams-intro">The values are the daily habit — this is what they’re for. Every roster graded on the same algorithm-driven engine: <strong>starting-lineup strength, total roster value, draft-pick capital, and points scored</strong> through Week 5. Each team is tagged Win-Now, Tweener, or Rebuilder from its age curve, pick share, and record — tap a team to see its full roster and picks, and exactly where yours stacks up.</p>
+        <p class="tab-intro" id="teams-intro">Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 10,000-sim Season Outlook, this week's <strong>matchup</strong>, and your <strong>top waiver targets</strong> — tap any number and that league opens in the matching tool. Below it, every roster is graded on the same algorithm-driven engine: <strong>starting-lineup strength, total roster value, draft-pick capital, and points scored</strong> through Week 5, each tagged Win-Now, Tweener, or Rebuilder from its age curve, pick share, and record — tap a team to see its full roster and picks, and exactly where yours stacks up.</p>
         <div class="locked-state" data-locked="teams">
           <div class="locked-body">
-            <h2>Team comparison lives here</h2>
-            <p>Power rankings grade <strong>every roster in a league</strong> on the same engine — starting-lineup strength, total roster value, draft-pick capital, and points scored — and tag each team Win-Now, Tweener, or Rebuilder. You’re browsing as a guest, so there are no rosters to grade yet.</p>
+            <h2>Your team &amp; the league live here</h2>
+            <p>Connect a league and this page opens with <strong>your team</strong> — power rank, playoff odds, this week's matchup, and top waiver targets — followed by <strong>power rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now, Tweener, or Rebuilder. You’re browsing as a guest, so there’s no league to show yet.</p>
             <div class="locked-actions">
               <button type="button" class="locked-cta">Connect your league</button>
             </div>
             <p class="locked-note" hidden>Connect your league and this page loads it instead — your rosters, your standings, your matchups, priced by the same algorithm.</p>
           </div>
         </div>
+        <h2 class="block-title">Your Team</h2>
+        <div id="myteams-out"></div>
+        <h2 class="block-title">Power Rankings</h2>
         <div id="power-list"></div>
       </section>
 
@@ -1869,12 +1864,7 @@
         <div class="method" id="method-body"></div>
       </section>
 
-      <section class="tab" id="tab-myteams" role="tabpanel">
-        <p class="tab-intro">Every team you play with, on one screen. Each card is the same engines you already use, scoped to that league: <strong>power rank</strong> from the Teams engine, <strong>playoff odds</strong> from the 10,000-sim Season Outlook, this week's <strong>matchup</strong>, and the <strong>top of your waiver wire</strong>. Tap any number and that league opens in the matching tool.</p>
-        <div id="myteams-out"></div>
-      </section>
 
-      
 
       
 
@@ -2298,6 +2288,12 @@
         });
         const depth = { QB: 2, RB: 4, WR: 5, TE: 2 };
         DATA.teams.forEach(t => {
+          /* Strengths/grades are written below; a team source that
+             doesn't pre-create them must not crash the recompute (that
+             throw is what silently emptied every league tool after a
+             Sleeper/ESPN connect). */
+          if (!t.strengths) t.strengths = {};
+          if (!t.grades) t.grades = {};
           const pls = t.playerIds.map(id => PBY[id]).filter(Boolean).sort((a, b) => b.value - a.value);
           t.totalVal = pls.reduce((s, p) => s + p.value, 0);
           const bb = bestBallLineup(t.playerIds);
@@ -2311,7 +2307,7 @@
         });
         ["QB", "RB", "WR", "TE"].forEach(pos => {
           [...DATA.teams].sort((a, b) => b.strengths[pos] - a.strengths[pos])
-            .forEach((t, i) => { t.grades[pos] = GRADE_LADDER[i]; });
+            .forEach((t, i) => { t.grades[pos] = GRADE_LADDER[i] || "F"; });
         });
         const pctile = (vals, x) => 100 * vals.filter(v => v <= x).length / vals.length;
         const svs = DATA.teams.map(t => t.starterVal), tvs = DATA.teams.map(t => t.totalVal), pfs = DATA.teams.map(t => t.pf);
@@ -2416,7 +2412,7 @@
         "Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot; injuries and news after that date are not priced in.";
 
       /* ---------- tabs ---------- */
-      const NAVMAP = { values: "tab-values", myteams: "tab-myteams", teams: "tab-power", season: "tab-season", lineup: "tab-lineup", trades: "tab-trades", realtrades: "tab-realtrades", insights: "tab-insights", more: "tab-more" };
+      const NAVMAP = { values: "tab-values", teams: "tab-power", season: "tab-season", lineup: "tab-lineup", trades: "tab-trades", realtrades: "tab-realtrades", insights: "tab-insights", more: "tab-more" };
       function activateNav(key) {
         document.querySelectorAll("nav.mainnav button").forEach(b => b.setAttribute("aria-selected", b.dataset.nav === key ? "true" : "false"));
         document.querySelectorAll("section.tab").forEach(s => s.classList.toggle("active", s.id === NAVMAP[key]));
@@ -2434,7 +2430,7 @@
       });
 
       /* ---------- power rankings ---------- */
-      function gradeClass(g) { return (g.startsWith("A") || g === "B+") ? "good" : (g.startsWith("D") || g === "F") ? "bad" : ""; }
+      function gradeClass(g) { if (!g) return ""; return (g.startsWith("A") || g === "B+") ? "good" : (g.startsWith("D") || g === "F") ? "bad" : ""; }
       function renderPower() {
         const el = document.getElementById("power-list");
         el.innerHTML = DATA.teams.map(t => {
@@ -3934,6 +3930,7 @@
       const LU_SIGMA = 30; // weekly team-score sd, calibrated by the season simulator
 
       function wkProj(p) {
+        if (!p) return { pts: 0, tag: null, cls: "", sos: null };
         // One-week availability adjustment on top of ROS PPG, then this week's
         // strength-of-schedule factor (window.SOS: the opponent's
         // points-allowed ratio for the position, capped at ±12%).
@@ -3983,8 +3980,14 @@
         const team = TBY[rid];
         if (!team) { const lo = document.getElementById("lineup-out"); if (lo) lo.innerHTML = ""; return; }
         const opt = wkOptimal(team.playerIds);
-        const cur = team.lineup.map(l => { const p = PBY[l.id]; return { p, slot: l.slot, proj: wkProj(p) }; })
-          .filter(r => r.p);
+        /* Filter BEFORE projecting: a connected league's starters can
+           include players outside the tracked value pool (PBY), and
+           wkProj(undefined) throws — that throw is what killed the
+           lineup render (and, via setConnectedLeague, the whole
+           connect) for real leagues with deep starters. */
+        const cur = team.lineup.map(l => ({ p: PBY[l.id], slot: l.slot }))
+          .filter(r => r.p)
+          .map(r => ({ p: r.p, slot: r.slot, proj: wkProj(r.p) }));
         const curTotal = cur.reduce((s, r) => s + r.proj.pts, 0);
         const optIds = new Set(opt.lineup.map(l => l.p.id));
         const curIds = new Set(cur.map(r => r.p.id));
@@ -4550,6 +4553,11 @@
             picksVal: 0,
             arch: "Tweener",
             expl: "",
+            /* recomputeValues() writes per-position strengths and grades
+               onto every team; they must exist before it runs or the
+               whole connect throws and the league never populates. */
+            strengths: {},
+            grades: {},
           };
         });
         /* ---- future picks: default ownership + traded_picks overrides ---- */
@@ -4916,6 +4924,12 @@
         if (skName) skName.textContent = lg.name;
         const skSub = slpEl("slp-loading-sub");
         if (skSub) skSub.textContent = "Pulling rosters, standings, picks and matchups from Sleeper.";
+        /* staged flips true once the fetched bundle starts being applied
+           to the page; the dialog closes only after the apply succeeds,
+           so a failure can always surface its error in the open dialog
+           (previously the dialog closed first and the catch wrote the
+           error into a hidden element — a silent half-connected page). */
+        let staged = false;
         try {
           const seasonNum = Number(lg.season);
           const week = seasonNum === slpState.season
@@ -4951,15 +4965,24 @@
             sel.insertBefore(opt, sel.firstChild);
           }
           opt.textContent = "Your league — " + built.league.name;
-          slpClose();
           window.CURRENT_LEAGUE = "conn";
+          staged = true;
           applyMode(false);
           setConnectedLeague();
+          slpClose();
           activateNav("teams");
           window.scrollTo({ top: 0 });
         } catch (e) {
+          /* Never leave a half-applied connection behind: roll back to
+             the clean guest state, then show the failure here in the
+             dialog rather than as silently empty tabs. */
+          if (staged) { try { slpDisconnect(); } catch (e2) { /* best effort */ } }
+          const ov = slpEl("slp-overlay");
+          if (ov && ov.hidden) { ov.hidden = false; document.body.style.overflow = "hidden"; }
           slpShowStep("leagues");
-          slpError("Sleeper isn't responding — try again in a minute.");
+          slpError(staged
+            ? "That league loaded from Sleeper but couldn't be applied — try again; if it keeps failing, this league's format may not be supported yet."
+            : "Sleeper isn't responding — try again in a minute.");
         }
       }
 
@@ -5151,6 +5174,7 @@
             pf: Math.round((Number(rec.pointsFor) || 0) * 100) / 100,
             pa: Math.round((Number(rec.pointsAgainst) || 0) * 100) / 100,
             playerIds, lineup, picks: [], picksVal: 0, arch: "Tweener", expl: "",
+            strengths: {}, grades: {},
           };
         });
         /* Future picks: ESPN doesn't expose traded picks (redraft-
@@ -5277,6 +5301,10 @@
       }
 
       function espnConnect(yourRid) {
+        /* Same contract as the Sleeper loader: the dialog closes only
+           after the league is fully applied; a failure rolls back to the
+           clean guest state and surfaces its error in the open dialog. */
+        let staged = false;
         try {
           const built = buildEspnLeague(espnState.raw, espnState.leagueId, yourRid);
           window.CONN_LEAGUE = built;
@@ -5291,13 +5319,17 @@
             sel.insertBefore(opt, sel.firstChild);
           }
           opt.textContent = "Your ESPN league — " + built.league.name;
-          slpClose();
           window.CURRENT_LEAGUE = "conn";
+          staged = true;
           applyMode(false);
           setConnectedLeague();
+          slpClose();
           activateNav("teams");
           window.scrollTo({ top: 0 });
         } catch (e) {
+          if (staged) { try { slpDisconnect(); } catch (e2) { /* best effort */ } }
+          const ov = slpEl("slp-overlay");
+          if (ov && ov.hidden) { ov.hidden = false; document.body.style.overflow = "hidden"; }
           slpShowStep("espn");
           slpError("That league loaded but couldn't be read — try again; if it keeps failing, this league's format may not be supported yet.");
         }
@@ -5335,7 +5367,8 @@
     </script>
     <script>
       "use strict";
-      /* ================= My Teams — the all-my-teams dashboard =================
+      /* ================= Teams tab — your-team spotlight =================
+         Renders at the top of the Teams tab, above the power rankings.
          One card per league the page can currently run: the connected
          Sleeper / ESPN league while one is connected this session. Every number is produced by the
          existing engines, scoped per league — power rank from the Teams
@@ -5503,7 +5536,7 @@
           }
           try { mtRestoreActive(cap); } catch (e) { /* restore is best-effort; the page's own renders follow the active league */ }
           mtBuilding = false;
-          const sec = document.getElementById("tab-myteams");
+          const sec = document.getElementById("tab-power");
           if (sec && sec.classList.contains("active")) mtRender();
           mtDrainSims();
         }, 30);
@@ -5564,11 +5597,9 @@
       function mtRender() {
         if (!mtOut) return;
         if (!window.CONN_LEAGUE) {
-          mtOut.innerHTML = `<div class="mt-connect">
-            <h3>Your teams live here</h3>
-            <p>Connect your leagues to see <strong>all your teams here</strong> — your real power rank, playoff odds, this week's matchup, and top waiver targets for every league you play in, all on one screen.</p>
-            <button type="button" class="cta-lime" id="mt-connect-btn">Connect your league</button>
-          </div>`;
+          /* No league connected: the Teams tab's locked state is the
+             single guest empty state for this tab — render nothing here. */
+          mtOut.innerHTML = "";
           return;
         }
         const leagues = mtLeagues();
@@ -5598,12 +5629,11 @@
             mtGo(parts[0], parts[1]);
             return;
           }
-          if (e.target.closest("#mt-connect-btn") && typeof window.openSleeperConnect === "function") window.openSleeperConnect();
         });
-        const mtBtn = document.querySelector('nav.mainnav button[data-nav="myteams"]');
+        const mtBtn = document.querySelector('nav.mainnav button[data-nav="teams"]');
         if (mtBtn) mtBtn.addEventListener("click", () => mtRender());
         window.addEventListener("modechange", () => {
-          const sec = document.getElementById("tab-myteams");
+          const sec = document.getElementById("tab-power");
           if (sec && sec.classList.contains("active")) mtRender();
         });
       }
