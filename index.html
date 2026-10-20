@@ -5445,7 +5445,15 @@ ${rdP ? "" : `
            the old per-player map only knew Weeks 5-6). */
         if (wkIsBye(p, VW)) return { pts: 0, tag: "Bye — " + p.team, cls: "bye" };
         const inj = p.inj;
-        if (inj === "IR" || inj === "PUP" || inj === "Out" || inj === "Suspended") return { pts: 0, tag: inj, cls: "out" };
+        /* Hard-zero designations (IR / PUP / Out / Suspended) stand
+           UNLESS a trusted weekly projection says the player is expected
+           to score: a stale designation — a returning player still
+           flagged Out in the feed — must not erase real analyst
+           projections (Rashee Rice, Week 7 2026). The designation check
+           therefore happens below, AFTER the projection base is built.
+           Bye and Unsigned keep their unconditional zeros above — no
+           source projects a player who has no game at all. */
+        const hardOut = inj === "IR" || inj === "PUP" || inj === "Out" || inj === "Suspended";
         /* No SOS nudge in the plan-ahead view: the matchup-factor bake
            describes this week's opponents, not next week's. */
         const s = isNext ? null : (window.SOS ? window.SOS[p.id] : null);
@@ -5516,10 +5524,19 @@ ${rdP ? "" : `
              ROS estimate below applies. */
         }
         if (base !== null) {
+          /* Bug A: a POSITIVE projection outranks the designation. The
+             conflict is flagged, never silent — tag + a verify note in
+             sosTxt (statusConflict carries the raw designation). */
+          if (base > 0 && hardOut) return { pts: base, tag: "Status conflict", cls: "q", sos, unpriced: !!p.unpriced, dis, conflict: inj };
+          /* A zero (or no) projection: the designation rules. */
+          if (hardOut) return { pts: 0, tag: inj, cls: "out" };
           if (inj === "Doubtful") return { pts: base * 0.5, tag: "Doubtful", cls: "out", sos, unpriced: !!p.unpriced, dis };
           if (inj === "Questionable") return { pts: base * 0.9, tag: "Questionable", cls: "q", sos, unpriced: !!p.unpriced, dis };
           return { pts: base, tag: null, cls: "", sos, unpriced: !!p.unpriced, dis };
         }
+        /* No weekly data anywhere: an Out/IR/PUP/Suspended player falls
+           back to nothing, never to the ROS estimate. */
+        if (hardOut) return { pts: 0, tag: inj, cls: "out" };
         if (inj === "Doubtful") return { pts: (p.ros || 0) * 0.5 * sf, tag: "Doubtful", cls: "out", sos, unpriced: !!p.unpriced };
         if (inj === "Questionable") return { pts: (p.ros || 0) * 0.9 * sf, tag: "Questionable", cls: "q", sos, unpriced: !!p.unpriced };
         return { pts: (p.ros || 0) * sf, tag: null, cls: "", sos, unpriced: !!p.unpriced };
@@ -5531,6 +5548,10 @@ ${rdP ? "" : `
         /* Rotowire cross-check flag: the sources disagreed by >30%, so the
            projection shown is the ESPN/Rotowire average. */
         if (pr.dis) t += " · projections disagree — ESPN vs Rotowire averaged";
+        /* Bug A — status conflict: the designation said he wouldn't play,
+           but a weekly projection exists. Say both, and tell the manager
+           to verify before Sunday — never show the number silently. */
+        if (pr.conflict) t += ` · listed ${pr.conflict} per Sleeper — projected to play; verify before Sunday`;
         return t;
       }
       function wkOptimal(ids, wkView) {
@@ -5605,12 +5626,26 @@ ${rdP ? "" : `
            figure shows nothing — no empty label, no "0%", no layout
            change. Projection math is untouched. */
         const startedPct = p => (window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].s === "number") ? window.ESPN_OWN[p.id].s : null;
-        const crowdStart = p => { const s = startedPct(p); return (s != null && s >= 1) ? ` · <span class="own" title="per ESPN">${Math.round(s)}% started</span>` : ""; };
+        /* Bug B — when the crowd number is a lie: a projection hard-zero
+           means the player cannot score in the viewed week (bye, injury
+           designation, unsigned) — percent-started can't describe this
+           week for him. Crowd data is also current-week behavior only,
+           so the plan-ahead view suppresses it entirely. */
+        const noCrowd = pr => !pr || pr.pts !== 0 ? false
+          : !!pr.unsigned || pr.tag === "IR" || pr.tag === "PUP" || pr.tag === "Out" || pr.tag === "Suspended"
+          || (typeof pr.tag === "string" && pr.tag.indexOf("Bye") === 0);
+        const crowdStart = (p, pr) => {
+          if (isNext || noCrowd(pr)) return "";
+          const s = startedPct(p);
+          return (s != null && s >= 1) ? ` · <span class="own" title="per ESPN">${Math.round(s)}% started</span>` : "";
+        };
         /* When a recommended swap runs against the crowd — starting a
            player few ESPN leagues start, or benching one most start —
            say so, as context only. The recommendation itself is never
-           changed on account of it. */
+           changed on account of it. Only when both players are actually
+           playing: a crowd note about a bye/injured player is fiction. */
         const contraNote = (inn, out) => {
+          if (isNext || noCrowd(inn.proj) || noCrowd(out.proj)) return "";
           const si = startedPct(inn.p), so = startedPct(out.p);
           const notes = [];
           if (si != null && si < 25) notes.push(`going against the crowd — only ${Math.round(si)}% of ESPN leagues start him`);
@@ -5618,7 +5653,7 @@ ${rdP ? "" : `
           return notes.length ? `<div class="sub contra">${notes.join("; ")} (per ESPN)</div>` : "";
         };
         const rowHtml = r => `<tr><td><span class="slot-tag">${r.slot}</span></td>
-          <td>${hsImg(r.p)}<span class="p-name">${esc(r.p.name)}</span>${tagHtml(r.proj)}<div class="p-sub">${r.proj.unsigned ? "No NFL team" : logoImg(r.p.team) + esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}${r.p.unpriced ? " · Unpriced — no consensus value" : ""}${crowdStart(r.p)}</div></td>
+          <td>${hsImg(r.p)}<span class="p-name">${esc(r.p.name)}</span>${tagHtml(r.proj)}<div class="p-sub">${r.proj.unsigned ? "No NFL team" : logoImg(r.p.team) + esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}${r.p.unpriced ? " · Unpriced — no consensus value" : ""}${crowdStart(r.p, r.proj)}</div></td>
           <td class="num">${projTxt(r.proj)}</td></tr>`;
         /* K / DEF starter slots (connected leagues only): starterSlots()
            drops them — there is no priced pool and no weekly projection
@@ -5653,17 +5688,30 @@ ${rdP ? "" : `
           <table class="mini"><thead><tr><th>Slot</th><th>Player</th><th class="num">Proj</th></tr></thead>
           <tbody>${rows.map(rowHtml).join("")}${extra ? extra.rows : ""}<tr class="lu-total"><td></td><td>Projected total${extra && extra.totNote ? `<div class="p-sub">Total excludes K/DEF</div>` : ""}</td><td class="num">${f1(total)}</td></tr></tbody></table></div>`;
 
+        /* Swap pairing, slot-aware: each incoming player is matched to the
+           outgoing player holding his slot (fallback: the best remaining
+           projection), so "Start X over Y" is always a plausible move.
+           Bug C: a pair with no real gain (gain must exceed 0.05 pts) is
+           not a recommendation and drops. The headline below is the sum
+           of the SHOWN pairs, by construction. */
+        const _usedOut = new Set();
+        const pairs = ins.map(inn => {
+          const cand = outs.find(o => !_usedOut.has(o) && o.slot === inn.slot)
+            || outs.find(o => !_usedOut.has(o));
+          if (cand) _usedOut.add(cand);
+          return cand ? { inn, out: cand } : null;
+        }).filter(x => x && (x.inn.proj.pts - x.out.proj.pts) > 0.05);
+        const shownGain = pairs.reduce((s, x) => s + (x.inn.proj.pts - x.out.proj.pts), 0);
         let movesHtml = "";
-        if (!ins.length) {
-          movesHtml = `<div class="diag"><h3>No changes — this lineup is already optimal</h3>
-            <p>Every starter set in the snapshot is also the starter the projections pick. The close calls are in the matchup preview below.</p></div>`;
+        if (!pairs.length) {
+          movesHtml = `<div class="diag"><h3>No changes - this lineup is already optimal</h3>
+            <p>${ins.length ? "The optimal lineup edges yours by less than a tenth of a point - no move is worth making." : "Every starter set in the snapshot is also the starter the projections pick."} The close calls are in the matchup preview below.</p></div>`;
         } else {
-          const pairs = ins.map((inn, i) => ({ inn, out: outs[i] })).filter(x => x.out);
-          movesHtml = `<div class="wv-card"><h3>Make these moves — +${f1(gain)} projected points</h3>
-            <p class="wv-sub">Start the left player over the right one. A starter projecting zero is auto-benched: bye weeks and Out / IR / PUP / Suspended designations score nothing in Week ${VW}, a player with no NFL team is excluded entirely, and the reason rides on his name.</p>
+          movesHtml = `<div class="wv-card"><h3>Make these moves — +${f1(shownGain)} projected points</h3>
+            <p class="wv-sub">Start the left player over the right one. A starter projecting zero is auto-benched: bye weeks and Out / IR / PUP / Suspended designations score nothing in Week ${VW}, a player with no NFL team is excluded entirely, and the reason rides on his name. A designation that contradicts a real weekly projection is flagged as a status conflict instead of a zero - verify before Sunday.</p>
             ${pairs.map(({ inn, out }) => `<div class="mv-row">
-              <div>${hsImg(inn.p, "phs-sm")}<span class="who">Start ${esc(inn.p.name)}</span> <span class="sub">${inn.slot} · ${inn.proj.unsigned ? "No NFL team" : logoImg(inn.p.team) + esc(inn.p.team)}${sosTxt(inn.proj)}${crowdStart(inn.p)}</span>
-                <div class="sub">over ${esc(out.p.name)} (${out.slot})${out.proj.tag ? ` — <strong>${esc(out.proj.tag)}</strong>` : ""}${crowdStart(out.p)}</div>${contraNote(inn, out)}</div>
+              <div>${hsImg(inn.p, "phs-sm")}<span class="who">Start ${esc(inn.p.name)}</span> <span class="sub">${inn.slot} · ${inn.proj.unsigned ? "No NFL team" : logoImg(inn.p.team) + esc(inn.p.team)}${sosTxt(inn.proj)}${crowdStart(inn.p, inn.proj)}</span>
+                <div class="sub">over ${esc(out.p.name)} (${out.slot})${out.proj.tag ? ` — <strong>${esc(out.proj.tag)}</strong>` : ""}${crowdStart(out.p, out.proj)}</div>${contraNote(inn, out)}</div>
               <div class="delta">${(inn.proj.unpriced || out.proj.unpriced) ? `<span class="lu-delta flat">Unpriced</span>` : `<span class="lu-delta up">+${f1(inn.proj.pts - out.proj.pts)}</span>`}<div class="sub">${projTxt(inn.proj)} vs ${projTxt(out.proj)}</div></div>
             </div>`).join("")}</div>`;
         }
@@ -5686,8 +5734,8 @@ ${rdP ? "" : `
           // swing players: this team's biggest move deltas; if the lineup is
           // already optimal, the tightest starter-vs-bench margins by slot.
           let swings = [];
-          if (ins.length) {
-            swings = ins.map((inn, i) => ({ inn, out: outs[i] })).filter(x => x.out)
+          if (pairs.length) {
+            swings = pairs.slice()
               .sort((a, b) => (b.inn.proj.pts - b.out.proj.pts) - (a.inn.proj.pts - a.out.proj.pts))
               .slice(0, 3).map(({ inn, out }) =>
                 `<div class="mv-row"><div>${hsImg(inn.p, "phs-sm")}<span class="who">${esc(inn.p.name)}</span> <span class="sub">in for ${esc(out.p.name)}</span></div><div class="delta"><span class="lu-delta up">${(inn.proj.unpriced || out.proj.unpriced) ? "Unpriced" : "+" + f1(inn.proj.pts - out.proj.pts) + " pts"}</span></div></div>`);
