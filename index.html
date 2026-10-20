@@ -2572,13 +2572,13 @@
             if (p.rtrend != null && p.rtrend >= 10) return `role climbing — usage +${p.rtrend}% over his last 3`;
             if (p.ptrend != null && p.ptrend >= 25) return "production surge";
             if (p.flag === "rise") return "role and production climbing together";
-            return "Week " + DATA.league.week + " recompute";
+            return "Priced up in this week's update";
           }
           if (p.inj === "Out" || p.inj === "IR") return `sidelined — ${p.inj}${p.ibp ? " · " + p.ibp : ""}`;
           if (p.rtrend != null && p.rtrend <= -15) return `role shrinking — usage ${p.rtrend}% over his last 3`;
           if (p.ptrend != null && p.ptrend <= -15) return "production sliding";
           if (p.flag === "fall") return "role and production falling together";
-          return "Week " + DATA.league.week + " recompute";
+          return "Priced down in this week's update";
         };
         /* Movers floor: active-mode value via dispVal once the main
            script has defined it; on this script's first render the
@@ -2588,9 +2588,9 @@
         const pool = DATA.players.filter(p => wireVal(p) >= MOVER_MIN && p.hist && p.hist.length >= 2);
         const movers = [
           ...[...pool].sort((a, b) => wkPct(b) - wkPct(a)).slice(0, 3)
-            .map(p => ({ cat: "RISER", head: `${p.name} +${wkPct(p).toFixed(1)}% — ${reason(p, 1)}`, when: "Wk " + DATA.league.week + " recompute" })),
+            .map(p => ({ cat: "RISER", head: `${p.name} +${wkPct(p).toFixed(1)}% — ${reason(p, 1)}`, when: "Priced up in this week's update" })),
           ...[...pool].sort((a, b) => wkPct(a) - wkPct(b)).slice(0, 3)
-            .map(p => ({ cat: "FALLER", head: `${p.name} −${Math.abs(wkPct(p)).toFixed(1)}% — ${reason(p, -1)}`, when: "Wk " + DATA.league.week + " recompute" }))
+            .map(p => ({ cat: "FALLER", head: `${p.name} −${Math.abs(wkPct(p)).toFixed(1)}% — ${reason(p, -1)}`, when: "Priced down in this week's update" }))
         ];
 
         /* (2b) Sleeper trending adds — national 24h data, so this group
@@ -4873,8 +4873,8 @@ ${rdP ? "" : `
           </div>`;
         el.innerHTML = `
           <div class="mv-grid">
-            <div class="mv-card"><h3>Biggest risers this week</h3><p class="mv-sub">Largest value gains on the Week ${DATA.league.week - 1} → Week ${DATA.league.week} recompute (players worth ${MOVER_MIN}+).</p>${risers.map(mvRow).join("")}</div>
-            <div class="mv-card"><h3>Biggest fallers this week</h3><p class="mv-sub">Largest value drops on the Week ${DATA.league.week - 1} → Week ${DATA.league.week} recompute (players worth ${MOVER_MIN}+).</p>${fallers.map(mvRow).join("")}</div>
+            <div class="mv-card"><h3>Biggest risers this week</h3><p class="mv-sub">Largest value gains in this week's update (players worth ${MOVER_MIN}+).</p>${risers.map(mvRow).join("")}</div>
+            <div class="mv-card"><h3>Biggest fallers this week</h3><p class="mv-sub">Largest value drops in this week's update (players worth ${MOVER_MIN}+).</p>${fallers.map(mvRow).join("")}</div>
           </div>
           <div class="mv-grid">
             <div class="mv-card"><h3>Buy low <span class="sig buy">Role ↑ · Points lagging</span></h3><p class="mv-sub">Usage is expanding faster than production — the points usually follow the snaps. ${buys.length} flagged.</p>${buys.length ? buys.map(sigRow).join("") : '<p class="mv-note">No buy-low signals this week.</p>'}</div>
@@ -4910,13 +4910,13 @@ ${rdP ? "" : `
             if (p.rtrend != null && p.rtrend >= 10) return `role climbing — usage +${p.rtrend}% over his last 3`;
             if (p.ptrend != null && p.ptrend >= 25) return "production surge";
             if (p.flag === "rise") return "role and production climbing together";
-            return "Week " + DATA.league.week + " recompute";
+            return "Priced up in this week's update";
           }
           if (p.inj === "Out" || p.inj === "IR") return `sidelined — ${p.inj}${p.ibp ? " · " + p.ibp : ""}`;
           if (p.rtrend != null && p.rtrend <= -15) return `role shrinking — usage ${p.rtrend}% over his last 3`;
           if (p.ptrend != null && p.ptrend <= -15) return "production sliding";
           if (p.flag === "fall") return "role and production falling together";
-          return "Week " + DATA.league.week + " recompute";
+          return "Priced down in this week's update";
         };
         const pool = DATA.players.filter(p => dispVal(p) >= MOVER_MIN && p.hist && p.hist.length >= 2);
         const row = (p, dir) => {
@@ -5479,7 +5479,7 @@ ${rdP ? "" : `
           <h2>Season projections — a separate engine, on purpose</h2>
           <p>The Season Outlook tab prices players a completely different way from the dynasty board, and the two never mix: <strong>dynasty value is never an input to a projection, and a projection never moves a dynasty value or the trade calculator’s verdict.</strong> The only place the engines meet is trade advice, where a suggestion shows its dynasty fairness and its title-odds swing side by side.</p>
           <ul>
-            <li><strong>Rest-of-season PPG.</strong> Each player’s actual points per game through Week ${DATA.league.week - 1}, recomputed from Sleeper’s weekly stats in this league’s exact scoring, is combined with a prior — the algorithm’s <em>single-season</em> value, its rest-of-season price — with the preseason expectation as the fallback where no single-season price exists. The prior steadies the small samples early in the season; by Week ${DATA.league.week}, a player’s own games carry most of the weight.</li>
+            <li><strong>Rest-of-season PPG.</strong> Each player’s actual points per game through Week ${DATA.league.week - 1}, calculated from Sleeper’s weekly stats in this league’s exact scoring, is combined with a prior — the algorithm’s <em>single-season</em> value, its rest-of-season price — with the preseason expectation as the fallback where no single-season price exists. The prior steadies the small samples early in the season; by Week ${DATA.league.week}, a player’s own games carry most of the weight.</li>
             <li><strong>Strength of schedule.</strong> Each NFL defense's fantasy points allowed per game to each position was computed from Weeks 1–${DATA.league.week - 1} in this league's scoring: Detroit has allowed 68% more points to quarterbacks than the league average, Green Bay 46% fewer; against tight ends the spread runs from Detroit +96% to the Rams −69%. Short samples are noisy, so the adjustment stays modest: a player's ROS projection reflects the average points-allowed of his remaining opponents (Weeks ${DATA.league.week}–14, bye weeks skipped), and his start/sit projection reflects this week's opponent alone — the note rides on his line in the Lineup tab ("soft matchup: +8% vs MIA"). Schedule lives only in this engine; it never touches a dynasty value.</li>
             <li><strong>Availability &amp; role.</strong> The projection accounts for expected availability — a player set to miss time projects for fewer games — and leans toward his role where role and production disagree: when a projection and the prior disagree wildly, usage leads points. Players who haven’t appeared in a game yet are discounted heavily: a backup’s projection is mostly the chance he plays.</li>
             <li><strong>Team projection.</strong> Each week, a team fields its optimal lineup under this league’s own starter slots, by rest-of-season PPG. That sum is the team’s projected score — typically a little above its actual scoring pace, because real managers don’t set a perfect lineup every week.</li>
@@ -7044,7 +7044,7 @@ ${rdP ? "" : `
       const rdMethodEl = document.getElementById("method-body");
       if (rdMethodEl) rdMethodEl.innerHTML += `
         <h2>Redraft mode — rest-of-season values</h2>
-        <p>The <strong>Format toggle (Dynasty / Redraft)</strong> at the top of the page re-prices the values board and the trade calculator for a redraft lens: <strong>this season only</strong>. A redraft value starts from the market's rest-of-season price for the player, re-based for the format set in the League Format block the same way the dynasty board is. Our own lean comes from the <strong>Season Outlook projections</strong>: a player projected to outscore his market price sits above it, and a player projected for less sits below — by a bounded lean, never a doubling, the identical discipline to the dynasty board. <strong>No age curves</strong> are applied — a redraft price has no future seasons to discount — and <strong>draft picks carry no value in this mode</strong>: the calculator drops them entirely. Players without a market price are priced from their projection alone, the same treatment as the dynasty board's players outside the core board. Team grades, Player Targets, and waiver targets follow whichever mode is live — redraft prices in redraft mode. Only the risers &amp; fallers board keeps dynasty prices in both modes: it tracks the dynasty board's weekly recompute, which has no redraft equivalent.</p>
+        <p>The <strong>Format toggle (Dynasty / Redraft)</strong> at the top of the page re-prices the values board and the trade calculator for a redraft lens: <strong>this season only</strong>. A redraft value starts from the market's rest-of-season price for the player, re-based for the format set in the League Format block the same way the dynasty board is. Our own lean comes from the <strong>Season Outlook projections</strong>: a player projected to outscore his market price sits above it, and a player projected for less sits below — by a bounded lean, never a doubling, the identical discipline to the dynasty board. <strong>No age curves</strong> are applied — a redraft price has no future seasons to discount — and <strong>draft picks carry no value in this mode</strong>: the calculator drops them entirely. Players without a market price are priced from their projection alone, the same treatment as the dynasty board's players outside the core board. Team grades, Player Targets, and waiver targets follow whichever mode is live — redraft prices in redraft mode. Only the risers &amp; fallers board keeps dynasty prices in both modes: it tracks the dynasty board's weekly update, which has no redraft equivalent.</p>
         <h2>Value history charts</h2>
         <p>Every row on the values board expands (“Why?”) to a chart of the player's <strong>stored weekly dynasty values</strong> — one point per week, shown at the format set in the League Format block so the line always ends at the price on the board. In redraft mode the chart stays up, labeled as dynasty history — a player's rest-of-season price has no past to chart yet, and his dynasty trend is the honest context. Where the current snapshot carries an <strong>injury or designation status</strong>, it is marked on the current point; dated injury history isn't published by any free source, so earlier weeks are never marked retroactively.</p>`;
     </script>
