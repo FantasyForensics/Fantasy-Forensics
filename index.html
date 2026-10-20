@@ -4135,7 +4135,7 @@ ${rdP ? "" : `
           return `
           <tr>
             <td class="num">${i + 1}</td>
-            <td>${hsImg(p)}<span class="p-name">${esc(p.name)}</span>${injChip(p)}${p.flag ? ` <span class="sig ${SIG[p.flag][0]}">${SIG[p.flag][1]}</span>` : ""}${p.trendDir === "up" ? ` <span class="sig lead">Leads algorithm</span>` : p.trendDir === "dn" ? ` <span class="sig lag">Lags algorithm</span>` : ""}
+            <td>${hsImg(p)}<span class="p-name">${esc(p.name)}</span>${injChip(p)}${p.flag ? ` <span class="sig ${SIG[p.flag][0]}">${SIG[p.flag][1]}</span>` : ""}${(boardState.owner !== "ALL" && boardState.owner !== "FA" && window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].o === "number" && window.ESPN_OWN[p.id].o < 10) ? ` <span class="sig fall" title="Owned in only ${window.ESPN_OWN[p.id].o}% of ESPN leagues — low risk to drop">safely droppable</span>` : ""}${p.trendDir === "up" ? ` <span class="sig lead">Leads algorithm</span>` : p.trendDir === "dn" ? ` <span class="sig lag">Lags algorithm</span>` : ""}
               <div class="p-sub">${esc(ownerLabel(p))} · ${esc(p.tier)}${window.ESPN_OWN && window.ESPN_OWN[p.id] ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned${window.ESPN_OWN[p.id].t >= 10 ? ' <span class="trending">🔥 trending</span>' : ""}</span>` : ""}</div>${formEdgeHtml(p)}</td>
             <td><span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${p.posRank}</span></td>
             <td class="num hide-sm">${p.age ?? "—"}</td>
@@ -7428,7 +7428,7 @@ ${rdP ? "" : `
               return `<div class="mt-wv-row">
                 <div class="mt-wv-main">
                   ${(typeof window.hsImg === "function") ? window.hsImg(p, "phs-sm") : ""}<span class="mt-wv-name">${esc(p.name)}</span><span class="mt-wv-kind ${kindCls}">${w.kind}</span>
-                  <div class="mt-wv-meta">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team)} · ${p.pos}${p.posRank} · Age ${p.age != null ? p.age : "—"} · Bid ${esc(w.bid)}</div>
+                  <div class="mt-wv-meta">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team)} · ${p.pos}${p.posRank} · Age ${p.age != null ? p.age : "—"} · Bid ${esc(w.bid)}${(window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].o === "number") ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned</span>` : ""}</div>
                   ${gap}
                 </div>
                 <div class="mt-wv-nums"><div class="mt-wv-ros">${(p.ros || 0).toFixed(1)}<small>ROS pts/wk</small></div></div>
