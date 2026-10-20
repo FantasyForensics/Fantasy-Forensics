@@ -2678,19 +2678,30 @@
       function factorRatio(pos) { return posFactor(pos, SETTINGS) / (SNAPSHOT_FACTOR[pos] ?? posFactor(pos, LEAGUE_DEFAULT)); }
       /* ================= Draft-pick format adjustment =================
          Player prices re-scale with the league's scoring format — pick
-         prices now do too, off the same measured move, never a rule of
-         thumb. A pick's format scalar is the value ratio of the segment
-         of the priced pool that round/tier draws from, re-priced at the
-         active SETTINGS vs the Dynasty Standard default the ladder is
-         anchored to (superflex on, 1 PPR, TE +0.5, 4-pt pass TD): the
-         priced pool is ranked by snapshot dynasty value and cut into 12
-         consecutive blocks (round 1 early draws the top block, and so
-         on). The early-1st block is ~39% QB value, so it carries the
-         superflex swing; late-round blocks barely move. Scalars clamp to
-         [0.75, 1.15] — measured formats land in 0.80–1.05, so the clamp
-         is a guardrail against future pool compositions, not a value
-         anyone has hit. At the default preset every scalar is exactly 1
-         and every pick price stays byte-identical to the ladder.
+         prices now do too, off measured moves, never a rule of thumb.
+         A pick's format scalar combines two measured axes:
+         (1) Every axis except superflex comes from the pool blocks: the
+             priced pool is ranked by snapshot dynasty value and cut into
+             12 consecutive blocks (round 1 early draws the top block,
+             and so on), and the scalar is the block's value ratio
+             re-priced at the active SETTINGS vs the Dynasty Standard
+             default the ladder is anchored to (superflex on, 1 PPR,
+             TE +0.5, 4-pt pass TD) — with superflex pinned ON for this
+             evaluation so axis (2) is never double-counted.
+         (2) The superflex<->1QB axis is priced by the crowd consensus
+             (PICK_KTC_1QB, baked weekly by bake_pick_ratios.py): a
+             pick's 1QB value tracks the best player you'd actually
+             draft with it, while the early blocks are ~39% QB value and
+             would over-discount the pick if the pool priced this axis.
+             The consensus move is measured as within-format value
+             ratios against a stable WR anchor — absolute cross-format
+             values are never used (the source renormalizes each
+             format's scale).
+         When the league is superflex the consensus factor is 1 and the
+         scalar is exactly the pool ratio, as before. Scalars clamp to
+         [0.75, 1.15] — a guardrail against future pool compositions.
+         At the default preset every scalar is exactly 1 and every pick
+         price stays byte-identical to the ladder.
          League size does not enter: the format engine prices the pool
          off scoring only, and picks follow the pool. */
       const PICK_SCALAR_MIN = 0.75, PICK_SCALAR_MAX = 1.15;
@@ -2710,12 +2721,19 @@
         return cells;
       })();
       /* round: 1-4, tierIdx: 0=Early, 1=Mid, 2=Late. */
+      /* Pick 1QB consensus axis (baked from KTC snapshot 2026-10-17) */ const PICK_KTC_1QB = [1.0006,1.0251,1.0344,1.1158,1.1254,1.1011,1.0834,1.0892,1.0969,1.0855,1.0999,1.0941];
       function pickScalar(round, tierIdx) {
-        const cell = PICK_CELLS[(Math.min(Math.max(Math.round(round) || 1, 1), 4) - 1) * 3 + (tierIdx == null ? 1 : tierIdx)];
+        const ci = (Math.min(Math.max(Math.round(round) || 1, 1), 4) - 1) * 3 + (tierIdx == null ? 1 : tierIdx);
+        const cell = PICK_CELLS[ci];
         if (!cell || !cell.den) return 1;
         const base = p => ((p.snapValue != null ? p.snapValue : p.value) || 0);
-        const num = cell.seg.reduce((a, p) => a + base(p) * factorRatioAt(p.pos, SETTINGS), 0);
-        const v = num / cell.den;
+        /* Pool axes with superflex pinned to the ladder's anchor (ON):
+           the SF<->1QB move itself is the consensus factor below, so the
+           pool must not price it a second time via the QB block share. */
+        const sPool = SETTINGS.sf === FORMAT_DEFAULT.sf ? SETTINGS : Object.assign({}, SETTINGS, { sf: FORMAT_DEFAULT.sf });
+        const num = cell.seg.reduce((a, p) => a + base(p) * factorRatioAt(p.pos, sPool), 0);
+        let v = num / cell.den;
+        if (SETTINGS.sf !== FORMAT_DEFAULT.sf && typeof PICK_KTC_1QB !== "undefined" && PICK_KTC_1QB[ci]) v *= PICK_KTC_1QB[ci];
         return Math.min(PICK_SCALAR_MAX, Math.max(PICK_SCALAR_MIN, v));
       }
       function whyText(p) {
