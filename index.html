@@ -2673,10 +2673,11 @@
         return f % 2 === 0 ? f : f + 1;
       }
       /* Starters value = each team's BEST possible lineup (best-ball), not
-         the lineup the manager happens to have set on Sleeper. Same slot
-         structure and greedy best-available fill as the Lineup tab's
-         optimizer (QB · 2 RB · 3 WR · TE · FLEX × this league's flex count ·
-         SUPER_FLEX), ranked by dynasty value — with the roster-strength
+         the lineup the manager happens to have set on Sleeper. Slot
+         structure comes from starterSlots() — the connected league's real
+         starter slots (Sleeper roster_positions / ESPN lineupSlotCounts) —
+         with the same greedy best-available fill as the Lineup tab's
+         optimizer, ranked by dynasty value — with the roster-strength
          rules the brief calls for: bye weeks are ignored entirely (a star
          on bye still counts at full value; B3.bye is never consulted here),
          while the players the weekly optimizer treats as unavailable —
@@ -2684,6 +2685,45 @@
          count at full value: this is roster strength, not a one-week
          projection. Runs inside recomputeValues, so every league the page
          loads (both demos, any future league) gets the same treatment. */
+      /* ================= League starter slots — single source of truth =================
+         Every lineup builder in the app (Lineup tab optimizer, Teams power
+         ranking, Season simulator, Trade Finder guardrails, Waiver Wire bar,
+         bye-week planner) fills its slots from starterSlots(). A connected
+         league's meta carries its real starter slots (Sleeper roster_positions
+         or ESPN lineupSlotCounts, bench/IR/TAXI slots removed) in
+         DATA.league.slots; guest mode carries none and gets the Dynasty
+         Standard default (1 QB · 2 RB · 3 WR · TE · FLEX × flex · SUPER_FLEX).
+         Supported: QB, RB, WR, TE, FLEX (RB/WR/TE), SUPER_FLEX (QB/RB/WR/TE),
+         WRRB_FLEX (WR/RB), REC_FLEX (WR/TE). Slots with no player pool
+         (K, DEF, IDP) are dropped silently; a slot the league doesn't have
+         is never invented — leftover eligible players stay on the bench,
+         which is correct. Slots fill in the league's listed order (specific
+         slots before flex slots), the standard greedy optimal-starters
+         construction. */
+      const SLOT_CANDS = {
+        QB: ["QB"], RB: ["RB"], WR: ["WR"], TE: ["TE"],
+        FLEX: ["RB", "WR", "TE"],
+        SUPER_FLEX: ["QB", "RB", "WR", "TE"],
+        WRRB_FLEX: ["WR", "RB"], REC_FLEX: ["WR", "TE"],
+      };
+      const SLOT_LABEL = { SUPER_FLEX: "SF" };
+      function starterSlots() {
+        const raw = DATA && DATA.league && DATA.league.slots;
+        if (Array.isArray(raw) && raw.length) {
+          const out = [];
+          raw.forEach(s => { if (SLOT_CANDS[s]) out.push({ key: s, cands: SLOT_CANDS[s], label: SLOT_LABEL[s] || s }); });
+          if (out.length) return out;
+        }
+        /* Guest default: Dynasty Standard shape. */
+        const nF = (DATA && DATA.league && DATA.league.flex) || 3;
+        const out = [{ key: "QB", cands: SLOT_CANDS.QB, label: "QB" }];
+        for (let i = 0; i < 2; i++) out.push({ key: "RB", cands: SLOT_CANDS.RB, label: "RB" });
+        for (let i = 0; i < 3; i++) out.push({ key: "WR", cands: SLOT_CANDS.WR, label: "WR" });
+        out.push({ key: "TE", cands: SLOT_CANDS.TE, label: "TE" });
+        for (let i = 0; i < nF; i++) out.push({ key: "FLEX", cands: SLOT_CANDS.FLEX, label: "FLEX" });
+        out.push({ key: "SUPER_FLEX", cands: SLOT_CANDS.SUPER_FLEX, label: "SF" });
+        return out;
+      }
       function bestBallLineup(ids) {
         const valOf = p => VALMODE === "redraft" ? (p.rdValue ?? p.value) : p.value;
         const pool = ids.map(id => PBY[id]).filter(Boolean)
@@ -2698,8 +2738,7 @@
             used.add(p.id); lineup.push({ p, slot }); total += valOf(p); c++;
           }
         }
-        take(["QB"], 1, "QB"); take(["RB"], 2, "RB"); take(["WR"], 3, "WR"); take(["TE"], 1, "TE");
-        take(["RB", "WR", "TE"], (DATA.league && DATA.league.flex) || 3, "FLEX"); take(["QB", "RB", "WR", "TE"], 1, "SF");
+        starterSlots().forEach(s => take(s.cands, 1, s.label));
         return { total, lineup };
       }
       function recomputeValues() {
@@ -3552,9 +3591,7 @@ ${rdP ? "" : `
             used.add(p.id); lineup.push(p); total += rosProj(p); c++;
           }
         }
-        take(["QB"], 1); take(["RB"], 2); take(["WR"], 3); take(["TE"], 1);
-        take(["RB", "WR", "TE"], (DATA.league && DATA.league.flex) || 3);
-        take(["QB", "RB", "WR", "TE"], 1);
+        starterSlots().forEach(s => take(s.cands, 1));
         return { total, lineup };
       }
       function lineupSet(rid) { return new Set(optimalLineup(TBY[rid].playerIds).lineup.map(p => p.id)); }
@@ -4394,8 +4431,7 @@ ${rdP ? "" : `
               used.add(p.id); lineup.push({ p, slot }); total += sosRos(p); c++;
             }
           }
-          take(["QB"], 1, "QB"); take(["RB"], 2, "RB"); take(["WR"], 3, "WR"); take(["TE"], 1, "TE");
-          take(["RB", "WR", "TE"], (DATA.league && DATA.league.flex) || 3, "FLEX"); take(["QB", "RB", "WR", "TE"], 1, "SF");
+          starterSlots().forEach(s => take(s.cands, 1, s.label));
           return { total, lineup };
         }
 
@@ -5028,8 +5064,7 @@ ${rdP ? "" : `
             used.add(p.id); lineup.push({ p, slot }); total += (p.ros || 0); c++;
           }
         }
-        take(["QB"], 1, "QB"); take(["RB"], 2, "RB"); take(["WR"], 3, "WR"); take(["TE"], 1, "TE");
-        take(["RB", "WR", "TE"], (DATA.league && DATA.league.flex) || 3, "FLEX"); take(["QB", "RB", "WR", "TE"], 1, "SF");
+        starterSlots().forEach(s => take(s.cands, 1, s.label));
         return { total, lineup };
       }
       function wvBar(lineup, pos) {
@@ -5517,8 +5552,7 @@ ${rdP ? "" : `
             used.add(e.p.id); lineup.push({ p: e.p, slot, proj: e.proj }); total += e.proj.pts; c++;
           }
         }
-        take(["QB"], 1, "QB"); take(["RB"], 2, "RB"); take(["WR"], 3, "WR"); take(["TE"], 1, "TE");
-        take(["RB", "WR", "TE"], (DATA.league && DATA.league.flex) || 3, "FLEX"); take(["QB", "RB", "WR", "TE"], 1, "SF");
+        starterSlots().forEach(s => take(s.cands, 1, s.label));
         return { total, lineup };
       }
       function normCdf(x) {
@@ -5527,7 +5561,7 @@ ${rdP ? "" : `
         const poly = d * t * (0.31938153 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
         return x >= 0 ? 1 - poly : poly;
       }
-      const SLOT_ELIG = { QB: ["QB"], RB: ["RB"], WR: ["WR"], TE: ["TE"], FLEX: ["RB", "WR", "TE"], SF: ["QB", "RB", "WR", "TE"] };
+      const SLOT_ELIG = { QB: ["QB"], RB: ["RB"], WR: ["WR"], TE: ["TE"], FLEX: ["RB", "WR", "TE"], SF: ["QB", "RB", "WR", "TE"], WRRB_FLEX: ["WR", "RB"], REC_FLEX: ["WR", "TE"] };
 
       function renderLineup() {
         const sel = document.getElementById("lineup-team");
@@ -5703,7 +5737,7 @@ ${rdP ? "" : `
 
         document.getElementById("lineup-out").innerHTML = `
           <div class="diag"><h3>${esc(team.name)} — Week ${VW} lineup check</h3>
-            <p>Starters as set in the ${DATA.league.snapshot} snapshot project for <strong>${f1(curTotal)}</strong>. The optimal eleven projects for <strong>${f1(opt.total)}</strong> — ${gain > 0.05 ? `<strong>${f1(gain)} points are sitting on the bench.</strong>` : `<strong>nothing is being left on the table.</strong>`} ${isNext ? `Week ${VW} projections carry no strength-of-schedule nudge (matchup factors publish with the current week) and use injury statuses as of today — plan accordingly.` : `Every projection includes a strength-of-schedule adjustment for this week's NFL opponent (points allowed to the position, capped at ±12%), noted on each player's line.`}</p>
+            <p>Starters as set in the ${DATA.league.snapshot} snapshot project for <strong>${f1(curTotal)}</strong>. The optimal lineup — this league's ${opt.lineup.length} starter slots — projects for <strong>${f1(opt.total)}</strong> — ${gain > 0.05 ? `<strong>${f1(gain)} points are sitting on the bench.</strong>` : `<strong>nothing is being left on the table.</strong>`} ${isNext ? `Week ${VW} projections carry no strength-of-schedule nudge (matchup factors publish with the current week) and use injury statuses as of today — plan accordingly.` : `Every projection includes a strength-of-schedule adjustment for this week's NFL opponent (points allowed to the position, capped at ±12%), noted on each player's line.`}</p>
           </div>
           ${movesHtml}
           <div class="mv-grid">${tbl("Current starters (snapshot)", cur, curTotal)}${tbl("Optimal Week " + VW, opt.lineup, opt.total)}</div>
@@ -6387,7 +6421,7 @@ ${rdP ? "" : `
         const startSlots = (league.roster_positions || [])
           .filter(x => !["BN", "IR", "RES", "TAXI"].includes(x));
         const slotLabel = x => x === "SUPER_FLEX" ? "SF" : x;
-        const KEEP_SLOTS = ["QB", "RB", "WR", "TE", "FLEX", "SF"];
+        const KEEP_SLOTS = ["QB", "RB", "WR", "TE", "FLEX", "SF", "WRRB_FLEX", "REC_FLEX"];
         const n = rosters.length;
         const teams = rosters.map(r => {
           const s = r.settings || {};
@@ -6510,6 +6544,7 @@ ${rdP ? "" : `
             "-1 INT",
           ],
           lineup: lineupStr,
+          slots: startSlots.slice(),
         };
         /* Roster completeness: a rostered player who sits outside the
            valued pool (no consensus value — a veteran the market no
@@ -7271,6 +7306,7 @@ ${rdP ? "" : `
             ...(sm[72] ? [sm[72] + " fumble lost"] : []),
           ],
           lineup: lineupParts.join(" · "),
+          slots: rawLabels.slice(),
         };
         return {
           league: meta, teams, opp6: espnOppMap(raw, week), format: fmt,
