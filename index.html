@@ -38,13 +38,12 @@
       "@context": "https://schema.org",
       "@type": "Blog",
       "name": "Fantasy Forensics Insights",
-      "description": "Data-first dynasty fantasy football analysis: weekly risers and fallers, form edges, rookie pick prices, and trade-market movement from the Fantasy Forensics value model.",
+      "description": "Data-first dynasty fantasy football analysis: weekly risers and fallers, rookie pick prices, and trade-market movement from the Fantasy Forensics value model.",
       "url": "https://muse.ai/s/dynasty-analyzer-xgxk6zgavxnxris#/insights",
       "publisher": { "@type": "Organization", "name": "Fantasy Forensics" },
       "blogPost": [
         { "@type": "BlogPosting", "headline": "Week 6 Risers & Fallers: Daniels and Goff Surge, Lamb Slides", "datePublished": "2026-10-18", "url": "https://muse.ai/s/dynasty-analyzer-xgxk6zgavxnxris#/insights/week-6-risers-fallers", "description": "The Week 6 dynasty value update repriced 323 of 401 players. Jayden Daniels (+720) and Jared Goff (+563) headline the risers; CeeDee Lamb (−728) leads the fallers." },
         { "@type": "BlogPosting", "headline": "Trade Market Movers: What the Week 6 Repricing Did to Real Asking Prices", "datePublished": "2026-10-17", "url": "https://muse.ai/s/dynasty-analyzer-xgxk6zgavxnxris#/insights/trade-market-movers-week-6", "description": "Every point of value movement is a point on a real asking price. The Week 6 movers that changed acquisition costs — plus what Jahmyr Gibbs actually fetched in real completed trades." },
-        { "@type": "BlogPosting", "headline": "Form-Edge Spotlight: Where Our Model Leans Hardest Against the Market", "datePublished": "2026-10-16", "url": "https://muse.ai/s/dynasty-analyzer-xgxk6zgavxnxris#/insights/form-edge-spotlight-week-6", "description": "189 players currently sit at least 8% from their market consensus baseline in our model. The biggest leans both ways — Kyle Williams +13.8%, Roman Wilson −13.0% — and what drives them." },
         { "@type": "BlogPosting", "headline": "The 2027 Rookie Pick Ladder: What Every Slot Is Actually Worth", "datePublished": "2026-10-15", "url": "https://muse.ai/s/dynasty-analyzer-xgxk6zgavxnxris#/insights/2027-rookie-pick-ladder", "description": "Every 2027 rookie pick slot priced on the same model as the player board — early 1st 5,916, mid 1st 4,448, late 1st 3,877 — translated into the players those prices actually buy." },
         { "@type": "BlogPosting", "headline": "Why 9,973 Doesn't Beat 9,985: The Roster Bonus, Explained", "datePublished": "2026-10-14", "url": "https://muse.ai/s/dynasty-analyzer-xgxk6zgavxnxris#/insights/roster-bonus-explained", "description": "Chase Brown plus Nico Collins sums to 9,973 — within 12 points of Jahmyr Gibbs alone. Our trade calculator still scores it for Gibbs: the roster bonus for taking back one player instead of two stretches the gap to 1,136. Here's why." },
         { "@type": "BlogPosting", "headline": "Same Points, Opposite Prices: Why Dynasty and Redraft Values Diverge", "datePublished": "2026-10-13", "url": "https://muse.ai/s/dynasty-analyzer-xgxk6zgavxnxris#/insights/dynasty-vs-redraft-henry-love", "description": "Derrick Henry and Jordan Love average nearly identical points (22.4 vs 22.6 per game), yet redraft prices Henry 54% higher and dynasty prices Love 39% higher. The two questions behind the flip." }
@@ -489,8 +488,9 @@
         white-space: nowrap; border: 1px solid var(--line); color: var(--ink-2);
       }
       .arch.win { background: var(--accent-soft); color: var(--accent); border-color: rgba(198,255,0,.4); }
+      .arch.dyn { background: rgba(255,196,0,.10); color: #FFC94D; border-color: rgba(255,196,0,.35); }
+      .arch.crx { background: var(--surface-2); color: var(--ink-2); }
       .arch.reb { background: rgba(0,229,255,.08); color: var(--cyan); border-color: rgba(0,229,255,.3); }
-      .arch.twn { background: var(--surface-2); color: var(--ink-2); }
       .power-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
       .power-bar { flex: 1; height: 10px; background: var(--bar-track); border-radius: 5px; overflow: hidden; }
       .power-fill { height: 100%; background: var(--accent); border-radius: 5px; box-shadow: 0 0 12px rgba(198,255,0,.45); }
@@ -887,21 +887,6 @@
       .sig.fall { background: var(--red-soft); color: var(--red); }
       .sig.lead { background: var(--accent-soft); color: var(--accent); }
       .sig.lag { background: var(--surface-2); color: var(--ink-2); }
-
-      /* ---------- form edge (two-clock tilt vs market consensus) ---------- */
-      .form-edge { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; margin-top: 6px;
-        font-family: "Space Grotesk", sans-serif; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
-      .form-edge .fe-tag { font-size: 10.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
-        border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
-      .form-edge.up .fe-tag { background: var(--accent-soft); color: var(--accent); }
-      .form-edge.dn .fe-tag { background: rgba(0,229,255,.12); color: var(--cyan); }
-      .form-edge .fe-pct { font-weight: 700; font-variant-numeric: tabular-nums; }
-      .form-edge.up .fe-pct { color: var(--accent); }
-      .form-edge.dn .fe-pct { color: var(--cyan); }
-      .form-edge.panel { margin: 0 0 12px; padding: 10px 13px; font-size: 13.5px;
-        border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); }
-      .form-edge.up.panel { border-color: rgba(198,255,0,.35); }
-      .form-edge.dn.panel { border-color: rgba(0,229,255,.35); }
 
       /* ---------- injury feed ---------- */
       .inj-chip {
@@ -1458,8 +1443,8 @@
         .board-controls select { flex: 1 1 42%; min-width: 0; }
 
         /* compact dense-list board: the wide table becomes one tight row
-           per player — rank and the name block (owner · tier sub-line,
-           compact Form edge line) on line one with the value and the Why?
+           per player — rank and the name block (owner · tier sub-line)
+           on line one with the value and the Why?
            toggle on the right, then a single meta line underneath:
            position badge · team · age on the left, trend/ROS right-aligned
            under the value. Every field from the desktop table is still
@@ -1505,14 +1490,6 @@
         #board-body > tr:not(.why-row) > td:nth-child(7) { grid-area: trend; text-align: right; align-self: center; }
         #board-body > tr > td[colspan] { grid-column: 1 / -1; }
         #board-body > tr > td[colspan]::before { content: none; }
-        /* Form edge stays on the row, compressed to one short line that
-           runs the row's full width (absolutely placed under the meta
-           line; rows carrying one reserve the space via :has) */
-        #board-body > tr:not(.why-row) { position: relative; }
-        #board-body > tr:not(.why-row):has(.form-edge) { padding-bottom: 27px; }
-        #board-body > tr:not(.why-row) .form-edge { position: absolute; left: 11px; right: 11px; bottom: 8px; flex-wrap: nowrap; margin-top: 0; font-size: 11px; gap: 5px; }
-        #board-body > tr:not(.why-row) .form-edge .fe-tag { font-size: 9.5px; padding: 1px 6px; }
-        #board-body > tr:not(.why-row) .form-edge .fe-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
         /* the Why? expansion becomes a panel tucked under its row */
         #tab-values .why-row.open { display: block; margin: -2px 0 6px; }
         #tab-values .why-row > td {
@@ -2350,7 +2327,7 @@
         <div id="ins-article" hidden></div>
         <details class="how-box">
           <summary>How this works</summary>
-          <p class="tab-intro">Data-first dynasty breakdowns drafted from the same numbers as the board — <strong>weekly value movement, form edges, rookie pick prices, and plain-English explainers for how the site scores trades</strong>. Every figure comes from the current snapshot of our proprietary Dynasty Value Algorithm.</p>
+          <p class="tab-intro">Data-first dynasty breakdowns drafted from the same numbers as the board — <strong>weekly value movement, rookie pick prices, and plain-English explainers for how the site scores trades</strong>. Every figure comes from the current snapshot of our proprietary Dynasty Value Algorithm.</p>
         </details>
       </section>
 
@@ -2358,7 +2335,7 @@
         <div class="locked-state" data-locked="league">
           <div class="locked-body">
             <h2>Your league, analyzed</h2>
-            <p>Connect a league and this page opens with <strong>your team</strong> — power rank, playoff odds, this week's matchup, and top waiver targets — followed by <strong>power rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now, Tweener, or Rebuilder — plus the <strong>season outlook</strong>: the rest of the season simulated 10,000 times for every team. You're browsing as a guest, so there's no league to show yet.</p>
+            <p>Connect a league and this page opens with <strong>your team</strong> — power rank, playoff odds, this week's matchup, and top waiver targets — followed by <strong>power rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨 — plus the <strong>season outlook</strong>: the rest of the season simulated 10,000 times for every team. You're browsing as a guest, so there's no league to show yet.</p>
             <div class="locked-actions">
               <button type="button" class="locked-cta">Connect your league</button>
             </div>
@@ -2380,7 +2357,7 @@
         <div id="power-list"></div>
         <details class="how-box">
           <summary>How this works</summary>
-          <p class="tab-intro" id="teams-intro">Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 10,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong> — tap any number and that league opens in the matching tool. Below it, every roster is graded on the same algorithm-driven engine: <strong>starting-lineup strength, total roster value, draft-pick capital, and points scored</strong> so far this season, each tagged Win-Now, Tweener, or Rebuilder from its age curve, pick share, and record — tap a team to see its full roster and picks, and exactly where yours stacks up.</p>
+          <p class="tab-intro" id="teams-intro">Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 10,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong> — tap any number and that league opens in the matching tool. Below it, every roster is graded on the same algorithm-driven engine: <strong>starting-lineup strength, total roster value, draft-pick capital, and points scored</strong> so far this season, each tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨 from its age curve, pick share, and record — tap a team to see its full roster and picks, and exactly where yours stacks up.</p>
         </details>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
@@ -2489,7 +2466,7 @@
         </div>
 <details class="how-box finder-part">
           <summary>How Personalized Player Targets work</summary>
-          <p class="tab-intro finder-part" id="finder-intro">Pick a team and Player Targets works <strong>your window</strong>, not just your needs. A <strong>Win-Now</strong> team only sees buys: picks, prospects and depth go out, production comes in — and every idea is checked against the rest-of-season projections, so a deal that lowers your optimal lineup’s projected points per week <strong>never appears</strong>, however the values balance. A <strong>Rebuilder</strong> only sees sells: veteran starters converted into picks and young players, each one graded by the calculator’s fairness meter — roster bonus included — and only <strong>Fair</strong> or <strong>Close</strong> offers are shown. <strong>Tweeners</strong> choose a direction: two labeled paths, <em>Pivot to WIN-NOW</em> and <em>Pivot to REBUILD</em>, each held to its own window’s rules.</p>
+          <p class="tab-intro finder-part" id="finder-intro">Pick a team and Player Targets works <strong>your window</strong>, not just your needs. A <strong>Win-Now ⏳</strong> team only sees buys: picks, prospects and depth go out, production comes in — and every idea is checked against the rest-of-season projections, so a deal that lowers your optimal lineup’s projected points per week <strong>never appears</strong>, however the values balance. A <strong>Dynasty 👑</strong> team sees buys too, but pickier ones: only clear upgrades, paid for with draft capital, so the young core stays intact. A <strong>Rebuilder 🔨</strong> only sees sells: veteran starters converted into picks and young players, each one graded by the calculator’s fairness meter — roster bonus included — and only <strong>Fair</strong> or <strong>Close</strong> offers are shown. <strong>Crossroads 🔀</strong> teams choose a direction: two labeled paths, <em>Go Win-Now ⏳</em> and <em>Go Rebuilder 🔨</em>, each held to its own window’s rules.</p>
         </details>
       </section>
 
@@ -3704,6 +3681,23 @@
     </script>
     <script>
       "use strict";
+      /* Team archetypes — ONE key → {label, icon, chip class} mapping.
+         Every renderer that prints a team's tag (League chips, the
+         spotlight strip, Player Targets banner/cards, share cards)
+         reads from here, so a label or icon can never drift between
+         surfaces. t.arch stores the KEY; the classifier (slpArch, in
+         the Sleeper script) assigns it. Dynasty only — redraft
+         renders no archetype UI anywhere. */
+      const ARCHETYPES = {
+        "win-now": { label: "Win-Now", icon: "⏳", cls: "win" },
+        "dynasty": { label: "Dynasty", icon: "👑", cls: "dyn" },
+        "crossroads": { label: "Crossroads", icon: "🔀", cls: "crx" },
+        "rebuilder": { label: "Rebuilder", icon: "🔨", cls: "reb" },
+      };
+      const archMeta = a => ARCHETYPES[a] || ARCHETYPES["crossroads"];
+      const archLabel = a => archMeta(a).label;
+      const archTag = a => `${archMeta(a).icon} ${archMeta(a).label}`;
+      const archCls = a => archMeta(a).cls;
       const PBY = {};
       DATA.players.forEach(p => { PBY[p.id] = p; });
       /* Player headshots + NFL team logos via Sleeper's static CDN (no
@@ -4018,7 +4012,7 @@
           const pickChips = t.picks.filter(pk => pk.value >= 300)
             .sort((a, b) => b.value - a.value)
             .map(pk => `<span class="pick-chip">${esc(pk.label)} · <b>${fmt(pk.value)}</b></span>`).join("");
-          const archClass = t.arch === "Win-Now" ? "win" : t.arch === "Rebuilder" ? "reb" : "twn";
+          const archClass = archCls(t.arch);
           const ss = window.SeasonSim ? window.SeasonSim.results[t.rid] : null;
           return `<article class="team-card${t.isUser ? " mine" : ""}">
             <div class="team-head">
@@ -4028,7 +4022,7 @@
                 <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div>
               </div>
 ${rdP ? "" : `
-              <div class="arch ${archClass}">${esc(t.arch)}</div>`}
+              <div class="arch ${archClass}">${archTag(t.arch)}</div>`}
             </div>
             <div class="power-row">
               <div class="power-bar"><div class="power-fill" style="width:${t.power}%"></div></div>
@@ -4402,13 +4396,13 @@ ${rdP ? "" : `
         });
         /* Window fit notes are dynasty logic; redraft has no windows
            and no picks, so none of them can fire in redraft mode. */
-        if (VALMODE !== "redraft" && t.arch === "Win-Now" && inPicks.length && !inPlayers.length)
+        if (VALMODE !== "redraft" && t.arch === "win-now" && inPicks.length && !inPlayers.length)
           notes.push({ cls: "warn", txt: `${t.name} is tagged Win-Now — taking only picks back trades this year's run for future capital.` });
-        if (VALMODE !== "redraft" && t.arch === "Win-Now" && outPicks.length)
+        if (VALMODE !== "redraft" && t.arch === "win-now" && outPicks.length)
           notes.push({ cls: "good", txt: `Spending picks fits a Win-Now window.` });
-        if (VALMODE !== "redraft" && t.arch === "Rebuilder" && inPlayers.some(p => (p.age ?? 0) >= 28 && p.pos === "RB"))
+        if (VALMODE !== "redraft" && t.arch === "rebuilder" && inPlayers.some(p => (p.age ?? 0) >= 28 && p.pos === "RB"))
           notes.push({ cls: "warn", txt: `A rebuilding roster taking on a 28+ RB is buying the decline phase of the age curve.` });
-        if (VALMODE !== "redraft" && t.arch === "Rebuilder" && inPicks.length)
+        if (VALMODE !== "redraft" && t.arch === "rebuilder" && inPicks.length)
           notes.push({ cls: "good", txt: `Extra picks fit the rebuild timeline.` });
         if (!notes.length) notes.push({ cls: "", txt: "No strong fit signals either way — this one is close to a pure value swap for this roster." });
         return notes;
@@ -4816,13 +4810,22 @@ ${rdP ? "" : `
         return best ? best.pkg : null;
       }
       const pkgValue = pkg => pkg.reduce((x, a) => x + a.value, 0);
+      /* Dynasty-buyer selectivity (Eric, Oct 20): projected pts/week a
+         deal must add before a Dynasty 👑 team may make it at all
+         (DYNASTY_MIN_GAIN), and the clear-upgrade bar that waives the
+         pick-led / keep-the-young-core rules (DYNASTY_CLEAR_GAIN).
+         Positional peak ages match the sell engine's SELL_AGE. */
+      const DYNASTY_MIN_GAIN = 3.0;
+      const DYNASTY_CLEAR_GAIN = 6.0;
+      const ARCH_PEAK_AGE = { QB: 31, RB: 26, WR: 28, TE: 28 };
       const pkgPlayerIds = pkg => pkg.filter(a => a.kind === "player").map(a => a.p.id);
 
       /* BUY: the user sends picks / prospects / bench depth and receives
          one producer — any age, priced on the youth+production curve.
-         Partners are rebuilders first, then tweeners; fellow contenders
-         are never shopped. The guardrail is absolute: unless the deal
-         raises the user's optimal-lineup projection, it does not exist. */
+         Partners are rebuilders first, then crossroads teams; fellow
+         contenders (Win-Now and Dynasty alike) are never shopped. The
+         guardrail is absolute: unless the deal raises the user's
+         optimal-lineup projection, it does not exist. */
       function buySuggestions(rid, mine) {
         const myIds = mine.playerIds;
         const base = optimalLineup(myIds).total;
@@ -4834,11 +4837,12 @@ ${rdP ? "" : `
         if (!payPool.length) return [];
         const out = [];
         /* Dynasty matches buyers with mirror windows (rebuilders and
-           tweeners sell production; fellow contenders are never shopped).
+           crossroads teams sell production; fellow contenders are
+           never shopped).
            Redraft has no windows: every team is playing for this season,
            so every other roster is a potential partner. */
-        DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || t.arch !== "Win-Now")).forEach(partner => {
-          const windowBonus = VALMODE === "redraft" ? 2 : partner.arch === "Rebuilder" ? 5 : 1.5;
+        DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty"))).forEach(partner => {
+          const windowBonus = VALMODE === "redraft" ? 2 : partner.arch === "rebuilder" ? 5 : 1.5;
           teamPlayers(partner.rid)
             .filter(p => dispVal(p) >= tradeFloors().target && (p.ros || 0) > 0 && wantMatch(p.pos))
             .forEach(target => {
@@ -4848,6 +4852,24 @@ ${rdP ? "" : `
               const newIds = myIds.filter(id => !outIds.includes(id)).concat([target.id]);
               const dPpg = optimalLineup(newIds).total - base;
               if (dPpg < 0.15) return; // HARD GUARDRAIL — a buy must add points, never subtract them
+              /* DYNASTY SELECTIVITY: a Dynasty buyer is a young
+                 contender, held to a materially higher bar than a
+                 Win-Now buyer (whose floor is the +0.15 guardrail
+                 above). (1) The deal must add at least
+                 DYNASTY_MIN_GAIN (+3.0) projected pts/week. (2) Below
+                 DYNASTY_CLEAR_GAIN (+6.0), the price must be pick-led
+                 — picks are at least half the package value — and no
+                 young core player (below his position's peak age) may
+                 go out. At +6.0 or better the gain is a clear upgrade
+                 and either rule may bend. */
+              if (VALMODE !== "redraft" && mine.arch === "dynasty") {
+                if (dPpg < DYNASTY_MIN_GAIN) return;
+                if (dPpg < DYNASTY_CLEAR_GAIN) {
+                  const pickShare = pkg.filter(a => a.kind === "pick").reduce((s2, a) => s2 + a.value, 0) / Math.max(pkgValue(pkg), 1);
+                  const youngOut = pkg.some(a => a.kind === "player" && (a.p.age ?? 99) < (ARCH_PEAK_AGE[a.p.pos] ?? 28));
+                  if (pickShare < 0.5 || youngOut) return;
+                }
+              }
               const adjTarget = target.value + consolBonusFor([target.value], pkg.length);
               const gapPct = Math.abs(pkgValue(pkg) - adjTarget) / adjTarget;
               const score = dPpg * 6 + windowBonus + Math.max(0, 8 - gapPct * 20) + Math.min(3, target.value / 3000);
@@ -4859,7 +4881,8 @@ ${rdP ? "" : `
 
       /* SELL: the user sends one veteran starter and receives picks and
          players 24 or younger at full value or better. Partners are
-         contenders first, then tweeners — and the veteran has to actually
+         contenders (Win-Now and Dynasty) first, then crossroads
+         teams — and the veteran has to actually
          help them this season, or there is no deal. The weekly-points
          cost is computed and printed on the suggestion, not hidden. */
       function sellSuggestions(rid, mine) {
@@ -4878,8 +4901,8 @@ ${rdP ? "" : `
           .slice(0, 6);
         const out = [];
         vets.forEach(vet => {
-          DATA.teams.filter(t => t.rid !== rid && t.arch !== "Rebuilder").forEach(partner => {
-            const windowBonus = partner.arch === "Win-Now" ? 5 : 1.5;
+          DATA.teams.filter(t => t.rid !== rid && t.arch !== "rebuilder").forEach(partner => {
+            const windowBonus = (partner.arch === "win-now" || partner.arch === "dynasty") ? 5 : 1.5;
             const pLineup = lineupSet(partner.rid);
             const young = teamPlayers(partner.rid).filter(p => (p.age ?? 99) <= 24 && !pLineup.has(p.id) && p.value >= 500);
             const pool = [...pickAssets(partner), ...young.map(playerAsset)];
@@ -5048,8 +5071,8 @@ ${rdP ? "" : `
           all = [...swaps, ...buySuggestions(rid, mine)];
           posNote = positionalNote(read, swaps.length);
         }
-        else if (mine.arch === "Win-Now") all = buySuggestions(rid, mine);
-        else if (mine.arch === "Rebuilder") all = sellSuggestions(rid, mine);
+        else if (mine.arch === "win-now" || mine.arch === "dynasty") all = buySuggestions(rid, mine);
+        else if (mine.arch === "rebuilder") all = sellSuggestions(rid, mine);
         else all = [...buySuggestions(rid, mine), ...sellSuggestions(rid, mine)];
         // dedupe by direction+partner+headline asset, diversify partners
         const seen = new Set(); const out = []; const perPartner = {}; const perDir = {};
@@ -5061,7 +5084,7 @@ ${rdP ? "" : `
           if ((perPartner[s.partner.rid] || 0) >= 3) continue;
           /* Dynasty: reserve candidate room per direction — buy
              scores run hotter than sell scores, so an uncapped pool
-             lets buys crowd a Tweener's sells out before grading. */
+             lets buys crowd a Crossroads team's sells out before grading. */
           if (VALMODE !== "redraft") {
             const d = s.dir || "buy";
             if ((perDir[d] || 0) >= 16) continue;
@@ -5088,7 +5111,7 @@ ${rdP ? "" : `
            superstar's market can't crowd the whole page — a
            rebuilder's page covers each of her veterans, a contender's
            more than one target. The 8-card total still applies.
-           Tweeners first reserve up to 4 slots per direction, so both
+           Crossroads teams first reserve up to 4 slots per direction, so both
            pivot paths always show their best deals; leftover slots
            then fill from either direction. */
         const perHead = {}; const picked = [];
@@ -5099,7 +5122,7 @@ ${rdP ? "" : `
           picked.push(s);
           return true;
         };
-        if (mine.arch === "Tweener") {
+        if (mine.arch === "crossroads") {
           let nb = 0, ns = 0;
           for (const s of graded) {
             if (picked.length >= 8) break;
@@ -5122,11 +5145,13 @@ ${rdP ? "" : `
         const basePpg = optimalLineup(mine.playerIds).total;
         const want = finderState.want;
         const wantName = want === "FLEX" ? "flex (RB/WR/TE)" : want;
-        let strat = mine.arch === "Win-Now"
+        let strat = mine.arch === "win-now"
           ? `Window strategy: <strong>buy production</strong>. Every idea below sends picks, prospects or bench depth out and brings a player in — and each was checked against the rest-of-season projections: from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown. You never take a pick back, and you never send out a starter.`
-          : mine.arch === "Rebuilder"
+          : mine.arch === "dynasty"
+            ? `Window strategy: <strong>buy only clear upgrades</strong>. This core is young and already contending, so the bar sits higher than a win-now team's: a deal must add at least <strong>+3.0 projected pts/week</strong> to your optimal lineup — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline — and the price stays pick-led, so the young starters who make this a dynasty never get stripped for a marginal gain. If nothing clears that bar, nothing shows.`
+          : mine.arch === "rebuilder"
             ? `Window strategy: <strong>sell veterans</strong>. Every idea below converts a veteran starter into picks and players 24 or younger at full value or better, with contenders shopped first. The cost in this season's projected pts/week — from a <strong>${Math.round(basePpg)}</strong> baseline — is printed on each deal, because that's the trade being made on purpose.`
-            : `Window strategy: <strong>your call</strong>. This roster sits between windows at a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline — close enough to contend, old enough to reset. So you get a <strong>choice, not a blend</strong>: two labeled paths below, <em>Pivot to WIN-NOW</em> and <em>Pivot to REBUILD</em>. Pick a direction, and every deal on that path is held to that window's rules.`;
+            : `Window strategy: <strong>your call</strong>. This roster sits between windows at a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline — close enough to contend, old enough to reset. So you get a <strong>choice, not a blend</strong>: two labeled paths below, <em>Go Win-Now ⏳</em> and <em>Go Rebuilder 🔨</em>. Pick a direction, and every deal on that path is held to that window's rules.`;
         if (VALMODE === "redraft") strat = `Window strategy: <strong>win now — the only window there is</strong>. This is a redraft league, so every idea below is a buy: bench depth goes out, a producer comes in, and each was checked against the rest-of-season projections — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown. No draft picks change hands; picks don't exist in redraft.`;
         const standing = (() => {
           if (VALMODE === "redraft") return "";
@@ -5139,14 +5164,16 @@ ${rdP ? "" : `
           return `<p>${bits.join(" · ")}.</p>`;
         })();
         let html = `<div class="diag"><h3>${esc(mine.name)} — diagnosis</h3>
-          <p>${VALMODE === "redraft" ? "" : `Tagged <strong>${esc(mine.arch)}</strong>. `}${strat}${want ? ` Targeting: <strong>${esc(wantName)}</strong>.` : ""}</p>${standing}${posNote ? `<p>${posNote}</p>` : ""}</div>`;
+          <p>${VALMODE === "redraft" ? "" : `Tagged <strong>${archTag(mine.arch)}</strong>. `}${strat}${want ? ` Targeting: <strong>${esc(wantName)}</strong>.` : ""}</p>${standing}${posNote ? `<p>${posNote}</p>` : ""}</div>`;
         if (!suggestions.length) {
           const why = VALMODE === "redraft"
             ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every producer who would raise this lineup either can't be priced fairly with this team's bench depth, or the deal would cost a starter to make the values balance. Try another position, or build the deal by hand in the calculator.`
-            : mine.arch === "Win-Now"
+            : mine.arch === "win-now"
             ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every available producer who would raise this lineup either plays for another contender — not a window fit — or can't be priced fairly with this team's picks and depth. Try another position, or build the deal by hand in the calculator.`
-            : mine.arch === "Rebuilder"
-              ? `No sell cleared the bar${want ? ` with a young ${esc(wantName)} player headlining the return` : ""}: a veteran only appears here when a contender or tweener can pay full value in picks and youth <em>and</em> the veteran genuinely helps them this season. Try another position, or the calculator for one-sided ideas.`
+            : mine.arch === "dynasty"
+              ? `No buy cleared the Dynasty bar${want ? ` at ${esc(wantName)}` : ""}: this core only trades for clear upgrades — at least +3.0 projected pts/week, paid for with draft capital — and no available producer met it at a fair price today. That is the strategy working as designed; build the deal by hand in the calculator if you see one we don't.`
+            : mine.arch === "rebuilder"
+              ? `No sell cleared the bar${want ? ` with a young ${esc(wantName)} player headlining the return` : ""}: a veteran only appears here when a contender or a Crossroads team can pay full value in picks and youth <em>and</em> the veteran genuinely helps them this season. Try another position, or the calculator for one-sided ideas.`
               : `No deal in either direction cleared its bar${want ? ` for ${esc(wantName)}` : ""} — buys must raise the projected lineup, sells must return full future value. Try another position, or the calculator for one-sided ideas.`;
           html += `<div class="diag"><p>${why}</p></div>`;
         }
@@ -5214,12 +5241,14 @@ ${rdP ? "" : `
               ? s.needLine
                 ? `<span class="dir-tag">Positional swap</span>One-for-one, value-matched: your ${s.swapFrom} depth covers the outgoing piece, your ${s.swapTo} hole gets a starter-caliber fix, and your optimal lineup moves <strong>${dTxt} projected pts/week</strong>.`
                 : `<span class="dir-tag">Win-now buy</span>Redraft rules: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, never a starter. There is no next season to save for.`
-              : mine.arch === "Win-Now"
+              : mine.arch === "win-now"
               ? `<span class="dir-tag">Win-now buy</span>You're win-now: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, not a starter.`
+              : mine.arch === "dynasty"
+              ? `<span class="dir-tag">Dynasty buy</span>A clear upgrade — the only kind a Dynasty 👑 core makes: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc}. Your young starters stay home.`
               : `<span class="dir-tag">Win-now move</span>Buys production now: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc} — future capital spent on this season.`;
             why.push(VALMODE === "redraft"
               ? `${esc(t.name)} ${lineupSet(s.partner.rid).has(t.id) ? "starts for" : "is depth on"} ${esc(s.partner.name)} — in redraft there are no windows to match, only lineups to raise.`
-              : `${esc(s.partner.name)} is tagged ${esc(s.partner.arch)} — the mirror window: the team that should be trading production for future capital.`);
+              : `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be trading production for future capital.`);
             why.push(`${esc(t.name)} projects <strong>${rosProj(t).toFixed(1)} pts/wk</strong> the rest of the way and lifts your optimal lineup ${Math.round(s.basePpg)} → ${Math.round(s.basePpg + s.dPpg)} projected pts/week.`);
             if (VALMODE === "redraft") why.push(`Priced on rest-of-season production alone: the ${rosProj(t).toFixed(1)} projected pts/wk is the whole price — no age curve, no youth premium, no future seasons.`);
             else if ((t.age ?? 99) <= 24) why.push(`Premium price: at ${t.age}, ${esc(t.name)} is young <em>and</em> producing — the most expensive profile in dynasty, so the offer stacks ${s.pkg.length} asset${s.pkg.length > 1 ? "s" : ""} to reach his price.`);
@@ -5228,10 +5257,10 @@ ${rdP ? "" : `
             why.push(`${VALMODE === "redraft" ? "Redraft math" : "Dynasty math"}: you send ${fmt(tot(giveAssets))} for ${fmt(tot(getAssets))}.`);
           } else {
             const v = s.vet;
-            windowLine = mine.arch === "Rebuilder"
+            windowLine = mine.arch === "rebuilder"
               ? `<span class="dir-tag sell">Rebuilder sell</span>Rebuilder move: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season — production this roster isn't contending with, converted into picks and youth.`
               : `<span class="dir-tag sell">Rebuild move</span>Sells a veteran for the future: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season.`;
-            why.push(`${esc(s.partner.name)} is tagged ${esc(s.partner.arch)} — the mirror window: the team that should be paying future capital for production now.`);
+            why.push(`${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be paying future capital for production now.`);
             why.push(`${esc(v.name)} (age ${v.age ?? "—"}) still produces — ${rosProj(v).toFixed(1)} projected pts/wk — but his value peaks before this roster's window opens. The return is all picks and players 24 or younger.`);
             why.push(s.dPpg >= -0.05
               ? `It barely touches this season: your optimal lineup holds at ~${Math.round(s.basePpg + s.dPpg)} projected pts/week without him.`
@@ -5239,7 +5268,7 @@ ${rdP ? "" : `
             why.push(`Dynasty math: you send ${fmt(tot(giveAssets))} for ${fmt(tot(getAssets))} — full value or better, all of it future assets.`);
           }
           return `<article class="suggestion">
-            <h3>With ${esc(s.partner.name)}${VALMODE === "redraft" ? "" : ` <span class="p-sub">(${esc(s.partner.arch)})</span>`} · <span class="fit-score">match index ${fitIdx}/100</span></h3>
+            <h3>With ${esc(s.partner.name)}${VALMODE === "redraft" ? "" : ` <span class="p-sub">(${archTag(s.partner.arch)})</span>`} · <span class="fit-score">match index ${fitIdx}/100</span></h3>
             <div class="swap">
               <div class="col"><div class="lbl">You give · ${fmt(tot(giveAssets))}</div>${assetHtml(giveAssets)}</div>
               <div class="arrow">⇄</div>
@@ -5253,14 +5282,15 @@ ${rdP ? "" : `
             ${gradeHtml}
           </article>`;
         };
-        /* Tweener teams get a CHOICE, not a blend: their cards split
-           under two labeled pivot paths. Everyone else gets one list. */
-        if (VALMODE !== "redraft" && mine.arch === "Tweener" && suggestions.length) {
+        /* Crossroads teams get a CHOICE, not a blend: their cards
+           split under two labeled pivot paths. Everyone else gets
+           one list. */
+        if (VALMODE !== "redraft" && mine.arch === "crossroads" && suggestions.length) {
           const buys = suggestions.filter(s => s.dir === "buy");
           const sells = suggestions.filter(s => s.dir === "sell");
-          html += `<h3 class="path-head">Pivot to WIN-NOW</h3><p class="path-desc">Chase this season: production comes in, picks and youth go out — every deal below raises your projected points per week.</p>`;
+          html += `<h3 class="path-head">Go Win-Now ⏳</h3><p class="path-desc">Chase this season: production comes in, picks and youth go out — every deal below raises your projected points per week.</p>`;
           html += buys.length ? buys.map(cardFor).join("") : `<div class="diag"><p>No win-now buy cleared the bar right now — every producer who would raise this lineup either plays for another contender, or can't be priced fairly with this team's picks and depth.</p></div>`;
-          html += `<h3 class="path-head">Pivot to REBUILD</h3><p class="path-desc">Play for next year: your aging veterans go to contenders, and picks and young players come back — this season gets worse on purpose.</p>`;
+          html += `<h3 class="path-head">Go Rebuilder 🔨</h3><p class="path-desc">Play for next year: your aging veterans go to contenders, and picks and young players come back — this season gets worse on purpose.</p>`;
           html += sells.length ? sells.map(cardFor).join("") : `<div class="diag"><p>No rebuild sell cleared the bar right now — no contender can pay full value for your veterans in picks and youth today.</p></div>`;
         } else {
           html += suggestions.map(cardFor).join("");
@@ -5340,52 +5370,6 @@ ${rdP ? "" : `
         if (!p.rdfc) return null;
         return p.rdfc * posFactor(p.pos, SETTINGS);
       }
-      /* Form edge — the two-clock tilt, surfaced. Computed at render time
-         from the live displayed value and the model's current baseline price
-         (consAdj / rdConsAdj above), never baked, so a weekly refresh or
-         an anchor change re-derives it. Shown only where the tilt is
-         material (|tilt| >= 8%); the engine's ±15% cap bounds the number.
-         The driving clock is read off the player's own clock data: ptrend
-         is the production clock's recent movement, rtrend the role clock's.
-         Quarterbacks — and players with under 2 games, whose role clock
-         isn't active yet — run on the production clock alone. */
-      function formEdge(p) {
-        const anchor = VALMODE === "redraft" ? rdConsAdj(p) : consAdj(p);
-        const v = dispVal(p);
-        if (!anchor || !v) return null;
-        let tilt = (v / anchor - 1) * 100;
-        if (Math.abs(tilt) < 8) return null;
-        tilt = Math.max(-15, Math.min(15, tilt));
-        const up = tilt > 0, sgn = up ? 1 : -1;
-        let reason;
-        if (p.pos === "QB" || /role clock is not active yet/.test(p.why || "")) {
-          reason = up ? "production surging ahead of price" : "production cooling — price hasn't caught down";
-        } else if (p.ptrend != null && p.rtrend != null) {
-          const ps = p.ptrend * sgn, rs = p.rtrend * sgn;
-          if (ps < 0 && rs < 0) reason = up ? "production and role both priced above the market" : "production and role both running below the market price";
-          else if (ps >= rs) reason = p.ptrend * sgn > 0
-            ? (up ? "production surging ahead of price" : "production cooling — price hasn't caught down")
-            : (up ? "production priced above the market" : "production running below the market price");
-          else reason = p.rtrend * sgn > 0
-            ? (up ? "role and usage climbing ahead of price" : "role shrinking — price hasn't caught down")
-            : (up ? "role and usage priced above the market" : "role and usage running below the market price");
-        } else {
-          const m = String(p.why || "").match(/production clock ([\d,]+) combined with a role clock of ([\d,]+)/);
-          if (m) {
-            const prod = Number(m[1].replace(/,/g, "")), role = Number(m[2].replace(/,/g, ""));
-            const prodDriver = up ? prod >= role : prod <= role;
-            reason = prodDriver
-              ? (up ? "production priced above the market" : "production running below the market price")
-              : (up ? "role and usage priced above the market" : "role and usage running below the market price");
-          } else reason = up ? "form running ahead of the market price" : "market price still ahead of current form";
-        }
-        return { up, pct: `${up ? "+" : "−"}${Math.abs(Math.round(tilt))}%`, reason };
-      }
-      function formEdgeHtml(p, panel) {
-        const fe = formEdge(p);
-        if (!fe) return "";
-        return `<div class="form-edge${panel ? " panel" : ""} ${fe.up ? "up" : "dn"}"><span class="fe-tag">Form edge</span><span class="fe-line"><span class="fe-pct">${fe.pct} vs market</span> — ${fe.reason}.</span></div>`;
-      }
       /* Value history chart: the player's stored weekly dynasty values
          (p.hist — one point per weekly recompute, re-priced to the format
          set in the League Format block, exactly like the movers table).
@@ -5450,7 +5434,7 @@ ${rdP ? "" : `
         el.innerHTML = `<div class="strip-card">
           <div class="strip-main">
             <div class="strip-title">Your team — ${esc(t.name)}</div>
-            <div class="strip-sub">Power rank <strong>#${t.powerRank} of ${DATA.teams.length}</strong>${rdStrip ? "" : ` · ${esc(t.arch)}`} · ${esc(t.record)} · Roster value <strong>${fmt(rdStrip ? totDispS : t.totalVal)}</strong> (#${valRank} in the league) · Starters <strong>${fmt(rdStrip ? stDispS : t.starterVal)}</strong>${rdStrip ? "" : ` · Pick capital <strong>${fmt(t.picksVal)}</strong>`}${ss ? ` · This season: <strong>${oddsPct(ss.playoff)}</strong> playoffs · <strong>${oddsPct(ss.champ)}</strong> title` : ""}</div>
+            <div class="strip-sub">Power rank <strong>#${t.powerRank} of ${DATA.teams.length}</strong>${rdStrip ? "" : ` · ${archTag(t.arch)}`} · ${esc(t.record)} · Roster value <strong>${fmt(rdStrip ? totDispS : t.totalVal)}</strong> (#${valRank} in the league) · Starters <strong>${fmt(rdStrip ? stDispS : t.starterVal)}</strong>${rdStrip ? "" : ` · Pick capital <strong>${fmt(t.picksVal)}</strong>`}${ss ? ` · This season: <strong>${oddsPct(ss.playoff)}</strong> playoffs · <strong>${oddsPct(ss.champ)}</strong> title` : ""}</div>
           </div>
           <button class="strip-btn" id="strip-go" type="button">See your team vs the league →</button>
         </div>`;
@@ -5476,7 +5460,7 @@ ${rdP ? "" : `
           <tr>
             <td class="num">${i + 1}</td>
             <td>${hsImg(p)}<span class="p-name">${esc(p.name)}</span>${injChip(p)}${p.flag ? ` <span class="sig ${SIG[p.flag][0]}">${SIG[p.flag][1]}</span>` : ""}${(boardState.owner !== "ALL" && boardState.owner !== "FA" && window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].o === "number" && window.ESPN_OWN[p.id].o < 10) ? ` <span class="sig fall" title="Owned in only ${window.ESPN_OWN[p.id].o}% of ESPN leagues — low risk to drop">safely droppable</span>` : ""}${p.trendDir === "up" ? ` <span class="sig lead">Leads algorithm</span>` : p.trendDir === "dn" ? ` <span class="sig lag">Lags algorithm</span>` : ""}
-              <div class="p-sub">${esc(ownerLabel(p))} · ${esc(p.tier)}${window.ESPN_OWN && window.ESPN_OWN[p.id] ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned${window.ESPN_OWN[p.id].t >= 10 ? ' <span class="trending">🔥 trending</span>' : ""}</span>` : ""}</div>${formEdgeHtml(p)}</td>
+              <div class="p-sub">${esc(ownerLabel(p))} · ${esc(p.tier)}${window.ESPN_OWN && window.ESPN_OWN[p.id] ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned${window.ESPN_OWN[p.id].t >= 10 ? ' <span class="trending">🔥 trending</span>' : ""}</span>` : ""}</div></td>
             <td><span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${p.posRank}</span></td>
             <td class="num hide-sm">${p.age ?? "—"}</td>
             <td class="hide-sm">${logoImg(p.team)}${esc(p.team)}</td>
@@ -5651,8 +5635,8 @@ ${rdP ? "" : `
         <p>When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and an open roster spot is worth something, because it can be filled from the waiver wire. The roster bonus is the value the calculator credits to that side for its freed spots. Freed roster spots are worth waiver-fill value — roughly what a replacement-level pickup contributes — and the credit scales up when a stud concentrates production into a single spot: one great player plus an open roster spot is worth more than the same production spread across extra bodies you have to roster. It only ever goes to the side receiving fewer players, and when a trade sends the same number of players each way, there is no bonus at all.</p>
         <h2>The injury feed — what it shows, and what it won't</h2>
         <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The honesty rule: <strong>no free source publishes a reliable expected-return date</strong>, so the board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
-        <h2>Power rankings &amp; the Win-Now / Rebuilder tags</h2>
-        <p>Power score combines starters value (50%) and rest-of-season projected points (50%), each as a league percentile. Points scored so far don't enter it — a September box score isn't a forecast. In redraft mode the score is projected points alone: this season is all there is, so there is no future to price. <strong>Starters value is best-ball:</strong> the value of each team's best possible lineup under its league's slots, filled by dynasty value the way the Lineup Analyzer's optimizer fills its slots — never the lineup the manager happens to have set on Sleeper. Bye weeks are ignored (a star on bye counts at full value — this measures roster strength, not one week), while players on IR / PUP or listed Out stay excluded, exactly as the optimizer treats them. The <strong>projected-points half</strong> is the Season Outlook engine's number: the same best-possible lineup construction, scored by rest-of-season projected points per week — the identical optimal-lineup total that drives the playoff odds, so the ranking and the odds can never disagree about how strong a lineup projects.</p> The archetype tag combines that with roster construction: contenders pair a top starting lineup with a veteran core and little pick capital; rebuilders are young and pick-heavy; tweeners get called tweeners.</p>
+        <h2>Power rankings &amp; the team tags</h2>
+        <p>Power score combines starters value (50%) and rest-of-season projected points (50%), each as a league percentile. Points scored so far don't enter it — a September box score isn't a forecast. In redraft mode the score is projected points alone: this season is all there is, so there is no future to price. <strong>Starters value is best-ball:</strong> the value of each team's best possible lineup under its league's slots, filled by dynasty value the way the Lineup Analyzer's optimizer fills its slots — never the lineup the manager happens to have set on Sleeper. Bye weeks are ignored (a star on bye counts at full value — this measures roster strength, not one week), while players on IR / PUP or listed Out stay excluded, exactly as the optimizer treats them. The <strong>projected-points half</strong> is the Season Outlook engine's number: the same best-possible lineup construction, scored by rest-of-season projected points per week — the identical optimal-lineup total that drives the playoff odds, so the ranking and the odds can never disagree about how strong a lineup projects.</p> The team tag reads that ranking together with the age of each team's starting core. The top third splits by core age: a veteran core is tagged <strong>Win-Now ⏳</strong> — its window is this season — and a young core <strong>Dynasty 👑</strong>, built to contend now and for years. The middle third is <strong>Crossroads 🔀</strong>: close enough to contend, one decision from either direction. The bottom third is <strong>Rebuilder 🔨</strong>, playing for next year. The tags drive Player Targets: contenders see buys, rebuilders see sells, and Crossroads teams pick a path.</p>
         <h2>Honest limits</h2>
         <ul>
           <li><strong>It's a snapshot.</strong> Rosters, standings, algorithm prices, and ranks are as of ${DATA.league.snapshot} (NFL Week ${DATA.league.week}). Later news is not priced in.</li>
@@ -5961,13 +5945,13 @@ ${rdP ? "" : `
           const rdF = typeof VALMODE !== "undefined" && VALMODE === "redraft";
           const lines = [];
           lines.push(`<p><strong>This season:</strong> your title odds ${titleMove(meB, meA)} (${pp(dChamp)} overall), playoff odds <strong>${playoffLabel(meB)} → ${playoffLabel(meA)}</strong>. ${esc(partner.name)}’s title odds move ${titleMove(thB, thA)}. Your projected lineup: <strong>${Math.round(means[rid])} → ${Math.round(imp.meansAfter[rid])} pts/wk</strong> ROS${hasWkData ? ` — and <strong>${Math.round(meansWk[rid])} → ${Math.round(imp.meansWkAfter[rid])}</strong> this week` : ""}.</p>`);
-          if ((rdF || mine.arch !== "Rebuilder") && dChamp >= 0.03 && overpay >= 150)
+          if ((rdF || mine.arch !== "rebuilder") && dChamp >= 0.03 && overpay >= 150)
             lines.push(`<p class="good">Worth the overpay: you’d pay ${fmt(overpay)} extra ${rdF ? "rest-of-season value" : "dynasty value"} for ${pp(dChamp)} of title odds — ${rdF ? "in redraft, this season is exactly when that trade makes sense" : "a contending window is exactly when that trade makes sense"}.</p>`);
-          else if ((rdF || mine.arch !== "Rebuilder") && dChamp >= 0.03 && overpay <= -150)
+          else if ((rdF || mine.arch !== "rebuilder") && dChamp >= 0.03 && overpay <= -150)
             lines.push(`<p class="good">A double win: your title odds rise ${pp(dChamp)} and the ${rdF ? "value math" : "dynasty math"} favors you too.</p>`);
-          else if ((rdF || mine.arch !== "Rebuilder") && dChamp >= 0.03)
+          else if ((rdF || mine.arch !== "rebuilder") && dChamp >= 0.03)
             lines.push(`<p class="good">Fair on value and a clear win this season: title odds ${pp(dChamp)} for essentially even ${rdF ? "value math" : "dynasty math"}.</p>`);
-          if (!rdF && mine.arch === "Rebuilder" && dThem - dChamp >= 0.03)
+          if (!rdF && mine.arch === "rebuilder" && dThem - dChamp >= 0.03)
             lines.push(`<p class="warn">Helps them more than you: their title odds gain ${pp(dThem)} against your ${pp(dChamp)}, and you’re rebuilding — this season’s points shouldn’t be what you’re buying.</p>`);
           if (dChamp <= -0.03)
             lines.push(`<p class="warn">It costs you this season: your title odds fall ${Math.round(Math.abs(dChamp) * 100)} pp even though the ${rdF ? "value math" : "dynasty math"} is close — the production you’re sending out matters more in 2026 than the value gap suggests.</p>`);
@@ -6119,7 +6103,7 @@ ${rdP ? "" : `
                 <div class="rank-num">${i + 1}</div>
                 <div class="team-main">
                   <div class="team-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div>
-                  <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for${rdS ? "" : ` · Dynasty tag: ${esc(t.arch)}`}</div>
+                  <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for${rdS ? "" : ` · Tag: ${archTag(t.arch)}`}</div>
                 </div>
               </div>
               <div class="prob-row"><span class="lbl">Playoffs</span><div class="prob-bar"><div class="prob-fill" style="width:${Math.round(r.playoff * 100)}%"></div></div><span class="prob-val">${playoffLabel(r)}</span></div>
@@ -6610,7 +6594,7 @@ ${rdP ? "" : `
         if (fq) fq.textContent = `${s.sf ? "Superflex" : "1QB"} · ${s.ppr === 1 ? "PPR" : s.ppr === 0.5 ? "Half PPR" : s.ppr === 0 ? "Standard" : fd(s.ppr) + " PPR"} · TE +${fd(s.tep)} · ${s.ptd}-pt TD`;
         const f = pos => posFactor(pos, SETTINGS).toFixed(2);
         document.getElementById("fp-factors").innerHTML =
-          `Every value on the page is priced for the format set above — draft-pick prices re-price with the format too, and in 1QB they drop to that market's levels; the Win-Now / Rebuilder tags stay as the snapshot had them; starters value re-derives each team's best-ball lineup from the re-priced values.`;
+          `Every value on the page is priced for the format set above — draft-pick prices re-price with the format too, and in 1QB they drop to that market's levels; the team tags stay as the snapshot had them; starters value re-derives each team's best-ball lineup from the re-priced values.`;
         document.querySelectorAll("#fp-presets button").forEach(btn => {
           const pr = PRESETS[btn.dataset.preset];
           const match = pr && pr.sf === s.sf && pr.ppr === s.ppr && pr.tep === s.tep && pr.ptd === s.ptd;
@@ -8000,7 +7984,7 @@ ${rdP ? "" : `
             lineup,
             picks: [],
             picksVal: 0,
-            arch: "Tweener",
+            arch: "crossroads",
             expl: "",
             /* recomputeValues() writes per-position strengths and grades
                onto every team; they must exist before it runs or the
@@ -8192,27 +8176,54 @@ ${rdP ? "" : `
         return items.slice(0, 8);
       }
 
-      /* Archetype + explanation, assigned after recomputeValues() has run
-         (same rules the methodology states: contenders pair a top lineup
-         with a veteran core and little pick capital; rebuilders are young
-         and pick-heavy). */
+      /* Archetypes (Eric, Oct 20, 2026) — dynasty only; redraft
+         renders no archetype UI. Assigned after recomputeValues() has
+         run, so powerRank and player values/ages are final. The
+         classifier: power thirds first (top / middle / bottom third
+         by powerRank), and the top third splits on CORE AGE.
+         Core = the team's optimal starters (the rosOptimalLineup set).
+         coreAgeDelta = (value-weighted average age of the core) minus
+         (the value-weighted positional peak-age expectation for those
+         same players), with peaks QB 31 / RB 26 / WR 28 / TE 28 — the
+         same peaks the sell engine uses. Delta >= 0: the core sits at
+         or past its peak profile → "win-now". Delta < 0: the core is
+         younger than its peak profile → "dynasty". Middle third →
+         "crossroads"; bottom third → "rebuilder". Keys only — labels
+         and icons live in the ARCHETYPES map (main script). */
+      const SLP_PEAK_AGE = { QB: 31, RB: 26, WR: 28, TE: 28 };
+      function slpCoreAge(t) {
+        try {
+          const lu = rosOptimalLineup(t.playerIds).lineup || [];
+          let wsum = 0, ageW = 0, peakW = 0;
+          lu.forEach(({ p }) => {
+            const w = Math.max(p.value || 0, 1);
+            wsum += w;
+            ageW += w * (p.age ?? 0);
+            peakW += w * (SLP_PEAK_AGE[p.pos] ?? 28);
+          });
+          if (!wsum) return null;
+          return { coreAge: ageW / wsum, corePeak: peakW / wsum, delta: (ageW - peakW) / wsum };
+        } catch (e) { return null; }
+      }
       function slpArch(t, all) {
-        const med = key => all.map(x => x[key]).sort((a, b) => a - b)[Math.floor(all.length / 2)];
-        const wins = Number(String(t.record).split("-")[0]) || 0;
-        const losses = Number(String(t.record).split("-")[1]) || 0;
-        const winPct = wins + losses ? wins / (wins + losses) : 0.5;
-        if (t.powerRank <= 3 && t.avgAgeTop >= 25 && t.picksVal <= med("picksVal") * 1.1) return "Win-Now";
-        if (t.avgAgeTop <= 24.5 && t.picksVal >= med("picksVal")) return "Rebuilder";
-        if (t.powerRank >= all.length - 2 && winPct <= 0.4) return "Rebuilder";
-        if (t.powerRank <= 4 && winPct >= 0.5) return "Win-Now";
-        return "Tweener";
+        const n = all.length;
+        const third = Math.max(1, Math.ceil(n / 3));
+        const ca = slpCoreAge(t);
+        t.coreAge = ca ? Math.round(ca.coreAge * 10) / 10 : null;
+        t.corePeak = ca ? Math.round(ca.corePeak * 10) / 10 : null;
+        t.coreAgeDelta = ca ? Math.round(ca.delta * 100) / 100 : null;
+        if (t.powerRank > n - third) return "rebuilder";
+        if (t.powerRank > third) return "crossroads";
+        return ca && ca.delta < 0 ? "dynasty" : "win-now";
       }
       function slpExpl(t, arch, user) {
-        const line = arch === "Win-Now"
-          ? "the standings and the roster agree this team is built to win now."
-          : arch === "Rebuilder"
-            ? "the standings and the roster agree this is a build-for-next-year team."
-            : "caught between timelines — good enough to matter, not quite built to finish it.";
+        const line = arch === "win-now"
+          ? "a top lineup with a veteran core — built to win now, because the window is this one."
+          : arch === "dynasty"
+            ? "a top lineup with a young core — built to win now and keep winning."
+            : arch === "rebuilder"
+              ? "the standings and the roster agree this is a build-for-next-year team."
+              : "caught between timelines — good enough to matter, not quite built to finish it.";
         let s = `${t.record} start and power rank #${t.powerRank} — ${line}`;
         if (t.isUser && t.coOwned) s += ` You co-own this roster with ${t.owner}.`;
         else if (t.isUser) s += " This is your roster.";
@@ -8827,7 +8838,7 @@ ${rdP ? "" : `
             record: (rec.wins || 0) + "-" + (rec.losses || 0) + (rec.ties ? "-" + rec.ties : ""),
             pf: Math.round((Number(rec.pointsFor) || 0) * 100) / 100,
             pa: Math.round((Number(rec.pointsAgainst) || 0) * 100) / 100,
-            playerIds, lineup, picks: [], picksVal: 0, arch: "Tweener", expl: "",
+            playerIds, lineup, picks: [], picksVal: 0, arch: "crossroads", expl: "",
             strengths: {}, grades: {},
           };
         });
@@ -10029,7 +10040,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
          while open, and a matching entry in the JSON-LD block in <head>.
 
          TEMPLATE SPEC — for the Tuesday refresh pipeline.
-         Four reusable article types. On each refresh, regenerate the types
+         Three reusable article types. On each refresh, regenerate the types
          marked [weekly] from the NEW snapshot and prepend them to ARTICLES
          (newest first), keeping the evergreen explainers. Update the
          JSON-LD blogPost list to match (headline, datePublished, url,
@@ -10060,19 +10071,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             Was · Now · Move) → "The fallers": mirror copy + table →
             one-line takeaway + jumps to Values and Trades.
 
-         2. form-edge-spotlight  [weekly]  slug: form-edge-spotlight-week-<N>
-            Data: p.dev (our price vs the scoring-adjusted consensus
-            baseline, in %) with p.value and the baseline from p.why.
-            Take all players with |dev| ≥ 8% (the count goes in the intro);
-            table the 6–8 most relevant names each way, preferring starters
-            and recognizable names over deep-bench entries riding one big percentage swing.
-            Structure: how the edge works (2–3 sentences, proprietary
-            framing only) → "Priced above the market" copy + table (Player ·
-            Our price · Consensus · Edge) → "Priced below the market" copy
-            + table → callout: a lean is bounded and expires within four
-            refreshes if unconfirmed → jump to Values.
-
-         3. trade-market-movers  [weekly]  slug: trade-market-movers-week-<N>
+         2. trade-market-movers  [weekly]  slug: trade-market-movers-week-<N>
             Data: top 8 by |dwk| among players valued ≥ 2,500 (p.hist for
             last-week price), plus REAL_TRADES lookups for 1–2 top assets
             (count of trades + most recent completed deal, priced on the
@@ -10082,7 +10081,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             from role falls using snap/rtrend) → "What studs actually cost"
             (real-trades anchor) → close with jumps to Real Trades + Trades.
 
-         4. pick-ladder-update  [on ladder change]  slug: <YYYY>-rookie-pick-ladder
+         3. pick-ladder-update  [on ladder change]  slug: <YYYY>-rookie-pick-ladder
             Data: the pick ladder (GUEST_PICKS values for 2027–2029) and
             player equivalents from DATA.players (nearest value to each key
             slot). Structure: intro → full ladder table (Round · Early ·
@@ -10177,52 +10176,6 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             { p: "The lesson of the week cuts both ways: mid-tier prices are negotiable and moving weekly, while true studs hold their freight. Run any offer through the calculator before you send it — it prices both sides on today's numbers, roster bonus included — and check Real Trades for what your target actually fetched the last time he moved." },
             { jump: { label: "Search real completed trades →", nav: "realtrades" } },
             { jump: { label: "Price a deal in the calculator →", nav: "trades" } }
-          ]
-        },
-        {
-          slug: "form-edge-spotlight-week-6",
-          type: "Form Edge",
-          title: "Form-Edge Spotlight: Where Our Model Leans Hardest Against the Market",
-          meta: "189 players currently sit at least 8% from their market consensus baseline in our model. The biggest leans both ways — Kyle Williams +13.8%, Roman Wilson −13.0% — and what drives them.",
-          dek: "Our algorithm is anchored to market consensus — but its form signals lean prices off that anchor, and the leans are where the edge lives. 189 players currently sit at least 8% away. These are the biggest.",
-          dateISO: "2026-10-16",
-          dateLabel: "Friday, October 16, 2026",
-          body: [
-            { p: "Most weeks, our proprietary Dynasty Value Algorithm and the broader market agree — by design. The algorithm is generated from deep analytics and calibrated to market consensus, and our in-season form signals are only allowed to lean a price so far off that anchor. But the leans are where the edge lives. Right now, <strong>189 of 401 players</strong> sit at least 8% away from their consensus baseline. These are the leans big enough to act on." },
-            { h: "Priced above the market" },
-            { p: "The model's favorite discount is <strong>Malik Washington</strong>, priced the maximum <span class=\"up\">+15.0%</span> above consensus (2,384 vs. a 2,073 baseline) on an 85% snap share the market hasn't fully priced in. <strong>Kyle Williams</strong> is the purest form signal on the board: <span class=\"up\">+13.8%</span> (1,459 vs. 1,283), his role up 22% over his last three games while the points — 4.9 per game — still lag. That gap between usage and production is exactly what the model watches for early. The bigger names follow: <strong>Josh Jacobs</strong> <span class=\"up\">+12.7%</span> (3,226 vs. 2,861), <strong>DK Metcalf</strong> <span class=\"up\">+12.5%</span> on a 95% snap share, <strong>DeVonta Smith</strong> <span class=\"up\">+11.8%</span> (4,661 vs. 4,169), <strong>Daniel Jones</strong> <span class=\"up\">+8.2%</span>, and <strong>Brenton Strange</strong> <span class=\"up\">+8.0%</span>, whose role keeps climbing in a heavy TE-premium format." },
-            { table: {
-              caption: "Above the market — our price vs. consensus baseline",
-              head: ["Player", "Our price", "Consensus", "Edge"],
-              numFrom: 1,
-              rows: [
-                ["Malik Washington · WR47, MIA", "2,384", "2,073", { t: "+15.0%", c: "delta-up" }],
-                ["Kyle Williams · WR90, NE", "1,459", "1,283", { t: "+13.8%", c: "delta-up" }],
-                ["Josh Jacobs · RB23, GB", "3,226", "2,861", { t: "+12.7%", c: "delta-up" }],
-                ["DK Metcalf · WR37, PIT", "2,762", "2,455", { t: "+12.5%", c: "delta-up" }],
-                ["DeVonta Smith · WR17, PHI", "4,661", "4,169", { t: "+11.8%", c: "delta-up" }],
-                ["Daniel Jones · QB27, IND", "3,254", "3,008", { t: "+8.2%", c: "delta-up" }],
-                ["Brenton Strange · TE12, JAX", "3,142", "2,910", { t: "+8.0%", c: "delta-up" }]
-              ]
-            } },
-            { h: "Priced below the market" },
-            { p: "On the other side, the model is fading names the market still prices on reputation. <strong>De'Von Achane</strong> sits the full <span class=\"down\">−15.0%</span> below consensus (4,099 vs. 4,826). <strong>Derrick Henry</strong> (<span class=\"down\">−13.0%</span>, 3,994 vs. 4,593) is an age-curve call — at 32, our measured running back curves say the decline should be priced harder than the market prices it. <strong>Roman Wilson</strong> (<span class=\"down\">−13.0%</span>) pairs a role down 22% over three weeks with an Out designation. And the most interesting name here is <strong>Malik Nabers</strong>: even after his +414 week, our price (5,807) sits <span class=\"down\">−12.5%</span> below consensus (6,638), because he started the season further behind. When model and market disagree about a 23-year-old whose role is rising, that gap is the one to watch over the next two updates." },
-            { table: {
-              caption: "Below the market — our price vs. consensus baseline",
-              head: ["Player", "Our price", "Consensus", "Edge"],
-              numFrom: 1,
-              rows: [
-                ["De'Von Achane · RB15, MIA", "4,099", "4,826", { t: "−15.0%", c: "delta-dn" }],
-                ["Derrick Henry · RB17, BAL", "3,994", "4,593", { t: "−13.0%", c: "delta-dn" }],
-                ["Roman Wilson · WR78, PIT", "1,748", "2,009", { t: "−13.0%", c: "delta-dn" }],
-                ["Jeremiyah Love · RB7, ARI", "5,305", "6,101", { t: "−13.0%", c: "delta-dn" }],
-                ["Malik Nabers · WR8, NYG", "5,807", "6,638", { t: "−12.5%", c: "delta-dn" }],
-                ["Saquon Barkley · RB24, PHI", "3,166", "3,529", { t: "−10.3%", c: "delta-dn" }],
-                ["Justin Jefferson · WR6, MIN", "6,159", "6,733", { t: "−8.5%", c: "delta-dn" }]
-              ]
-            } },
-            { callout: "A form edge is a lean, not a guarantee. The model sizes these moves so that being wrong costs a few percent, and every lean expires within four weekly updates if the results don't confirm it. Tap “Why?” on any row of the Values board to see a player's exact lean and the math behind it." },
-            { jump: { label: "See every lean on the board →", nav: "values" } }
           ]
         },
         {
@@ -10759,7 +10712,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           while (ctx.measureText(name).width > 560 && name.length > 4) name = name.slice(0, -2);
           ctx.fillText(name, 140, y + 42);
           ctx.fillStyle = SH.ink3; ctx.font = shFont(500, 23);
-          ctx.fillText(`${t.record} · ${t.pf.toLocaleString("en-US")} pts for${rd ? "" : " · " + t.arch}`, 140, y + 70);
+          ctx.fillText(`${t.record} · ${t.pf.toLocaleString("en-US")} pts for${rd ? "" : " · " + archTag(t.arch)}`, 140, y + 70);
           // power bar + score
           const bx = 730, bw = 210;
           ctx.fillStyle = "rgba(255,255,255,.10)"; ctx.beginPath(); ctx.roundRect(bx, y + 26, bw, 16, 8); ctx.fill();
