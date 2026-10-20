@@ -2588,9 +2588,9 @@
         const pool = DATA.players.filter(p => wireVal(p) >= MOVER_MIN && p.hist && p.hist.length >= 2);
         const movers = [
           ...[...pool].sort((a, b) => wkPct(b) - wkPct(a)).slice(0, 3)
-            .map(p => ({ cat: "RISER", head: `${p.name} +${wkPct(p).toFixed(1)}% — ${reason(p, 1)}`, when: "Priced up in this week's update" })),
+            .map(p => ({ cat: "RISER", head: `${p.name} +${wkPct(p).toFixed(1)}% — ${reason(p, 1)}`, when: "" })),
           ...[...pool].sort((a, b) => wkPct(a) - wkPct(b)).slice(0, 3)
-            .map(p => ({ cat: "FALLER", head: `${p.name} −${Math.abs(wkPct(p)).toFixed(1)}% — ${reason(p, -1)}`, when: "Priced down in this week's update" }))
+            .map(p => ({ cat: "FALLER", head: `${p.name} −${Math.abs(wkPct(p)).toFixed(1)}% — ${reason(p, -1)}`, when: "" }))
         ];
 
         /* (2b) Sleeper trending adds — national 24h data, so this group
@@ -2643,7 +2643,7 @@
         if (!items.length) { document.getElementById("ticker").style.display = "none"; return; }
         const CHIP = { TRADE: "trade", WAIVER: "waiver", INJURY: "inj", NEWS: "news", RISER: "rise", FALLER: "fall", TRENDING: "trend" };
         const itemHTML = it => {
-          const inner = `<span class="tk-chip ${CHIP[it.cat]}">${it.cat}</span><span class="tk-head">${wEsc(it.head)}</span><span class="tk-when">${wEsc(it.when)}</span>`;
+          const inner = `<span class="tk-chip ${CHIP[it.cat]}">${it.cat}</span><span class="tk-head">${wEsc(it.head)}</span>${it.when ? `<span class="tk-when">${wEsc(it.when)}</span>` : ""}`;
           return it.url
             ? `<a class="tk-item" href="${wEsc(it.url)}" target="_blank" rel="noopener">${inner}</a>`
             : `<span class="tk-item">${inner}</span>`;
