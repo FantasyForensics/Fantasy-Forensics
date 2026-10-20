@@ -5620,9 +5620,38 @@ ${rdP ? "" : `
         const rowHtml = r => `<tr><td><span class="slot-tag">${r.slot}</span></td>
           <td>${hsImg(r.p)}<span class="p-name">${esc(r.p.name)}</span>${tagHtml(r.proj)}<div class="p-sub">${r.proj.unsigned ? "No NFL team" : logoImg(r.p.team) + esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}${r.p.unpriced ? " · Unpriced — no consensus value" : ""}${crowdStart(r.p)}</div></td>
           <td class="num">${projTxt(r.proj)}</td></tr>`;
-        const tbl = (title, rows, total) => `<div class="mv-card"><h3>${title}</h3>
+        /* K / DEF starter slots (connected leagues only): starterSlots()
+           drops them — there is no priced pool and no weekly projection
+           for either — but the league DOES start them, so the optimal
+           lineup table lists them honestly: the rostered player when he
+           can be identified on this roster (PBY, stubs included), no
+           projection, and the totals carry the qualifier. Guest mode
+           carries no DATA.league.slots, so nothing changes there.
+           Display only — wkOptimal, the sim, and every projected total
+           are untouched. */
+        const kdSlots = (() => {
+          const raw = DATA && DATA.league && DATA.league.slots;
+          if (!Array.isArray(raw)) return [];
+          const used = new Set();
+          const out = [];
+          raw.forEach(s => {
+            if (s !== "K" && s !== "DEF") return;
+            let nm = null;
+            for (const id of team.playerIds) {
+              if (used.has(id)) continue;
+              const p = PBY[id];
+              if (p && p.pos === s) { used.add(id); nm = p.name; break; }
+            }
+            out.push({ slot: s, name: nm });
+          });
+          return out;
+        })();
+        const kdRowHtml = k => `<tr><td><span class="slot-tag">${k.slot}</span></td>
+          <td><span class="p-name">${k.name ? esc(k.name) : "—"}</span><div class="p-sub">Not projected — start your rostered ${k.slot === "K" ? "kicker" : "defense"}</div></td>
+          <td class="num">—</td></tr>`;
+        const tbl = (title, rows, total, extra) => `<div class="mv-card"><h3>${title}</h3>
           <table class="mini"><thead><tr><th>Slot</th><th>Player</th><th class="num">Proj</th></tr></thead>
-          <tbody>${rows.map(rowHtml).join("")}<tr class="lu-total"><td></td><td>Projected total</td><td class="num">${f1(total)}</td></tr></tbody></table></div>`;
+          <tbody>${rows.map(rowHtml).join("")}${extra ? extra.rows : ""}<tr class="lu-total"><td></td><td>Projected total${extra && extra.totNote ? `<div class="p-sub">Total excludes K/DEF</div>` : ""}</td><td class="num">${f1(total)}</td></tr></tbody></table></div>`;
 
         let movesHtml = "";
         if (!ins.length) {
@@ -5737,10 +5766,10 @@ ${rdP ? "" : `
 
         document.getElementById("lineup-out").innerHTML = `
           <div class="diag"><h3>${esc(team.name)} — Week ${VW} lineup check</h3>
-            <p>Starters as set in the ${DATA.league.snapshot} snapshot project for <strong>${f1(curTotal)}</strong>. The optimal lineup — this league's ${opt.lineup.length} starter slots — projects for <strong>${f1(opt.total)}</strong> — ${gain > 0.05 ? `<strong>${f1(gain)} points are sitting on the bench.</strong>` : `<strong>nothing is being left on the table.</strong>`} ${isNext ? `Week ${VW} projections carry no strength-of-schedule nudge (matchup factors publish with the current week) and use injury statuses as of today — plan accordingly.` : `Every projection includes a strength-of-schedule adjustment for this week's NFL opponent (points allowed to the position, capped at ±12%), noted on each player's line.`}</p>
+            <p>Starters as set in the ${DATA.league.snapshot} snapshot project for <strong>${f1(curTotal)}</strong>. The optimal lineup — this league's ${opt.lineup.length + kdSlots.length} starter slots — projects for <strong>${f1(opt.total)}</strong>${kdSlots.length ? " — total excludes K/DEF" : ""} — ${gain > 0.05 ? `<strong>${f1(gain)} points are sitting on the bench.</strong>` : `<strong>nothing is being left on the table.</strong>`} ${isNext ? `Week ${VW} projections carry no strength-of-schedule nudge (matchup factors publish with the current week) and use injury statuses as of today — plan accordingly.` : `Every projection includes a strength-of-schedule adjustment for this week's NFL opponent (points allowed to the position, capped at ±12%), noted on each player's line.`}</p>
           </div>
           ${movesHtml}
-          <div class="mv-grid">${tbl("Current starters (snapshot)", cur, curTotal)}${tbl("Optimal Week " + VW, opt.lineup, opt.total)}</div>
+          <div class="mv-grid">${tbl("Current starters (snapshot)", cur, curTotal, kdSlots.length ? { rows: "", totNote: true } : null)}${tbl("Optimal Week " + VW, opt.lineup, opt.total, kdSlots.length ? { rows: kdSlots.map(kdRowHtml).join(""), totNote: true } : null)}</div>
           ${byeHtml}
           ${matchHtml}`;
       }
