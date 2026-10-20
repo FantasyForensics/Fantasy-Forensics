@@ -2696,7 +2696,10 @@
              The consensus move is measured as within-format value
              ratios against a stable WR anchor — absolute cross-format
              values are never used (the source renormalizes each
-             format's scale).
+             format's scale). The axis is baked PER DRAFT YEAR: each
+             pick is priced off its own year's curve, never a cross-year
+             average (a 2027 1st and a 2029 1st do not carry the same
+             1QB move).
          When the league is superflex the consensus factor is 1 and the
          scalar is exactly the pool ratio, as before. Scalars clamp to
          [0.75, 1.15] — a guardrail against future pool compositions.
@@ -2720,9 +2723,25 @@
         }
         return cells;
       })();
-      /* round: 1-4, tierIdx: 0=Early, 1=Mid, 2=Late. */
-      /* Pick 1QB consensus axis (baked from KTC snapshot 2026-10-17) */ const PICK_KTC_1QB = [1.0006,1.0251,1.0344,1.1158,1.1254,1.1011,1.0834,1.0892,1.0969,1.0855,1.0999,1.0941];
-      function pickScalar(round, tierIdx) {
+      /* round: 1-4, tierIdx: 0=Early, 1=Mid, 2=Late; year = the pick's
+         own draft year (the consensus axis is keyed by it). */
+      /* Pick 1QB consensus axis per year (baked from KTC snapshot 2026-10-17) */ const PICK_KTC_1QB = {2027:[0.9544,0.9905,1.0008,1.064,1.1332,1.1404,1.096,1.0664,1.0936,1.0734,1.0601,1.0726],2028:[1.0009,1.0371,1.0477,1.1308,1.1291,1.1083,1.0752,1.083,1.1121,1.087,1.1004,1.0611],2029:[1.0466,1.0478,1.0547,1.1524,1.1139,1.0546,1.079,1.1182,1.085,1.0961,1.1392,1.1484]};
+      /* PICK_KTC_1QB is baked per draft year ({2027: [...12 cells], ...}):
+         a pick is priced off its own year's curve. A year with no baked
+         row (a season the snapshot predates) falls back to the nearest
+         baked year; no usable year falls back to the earliest row. */
+      function ktcRowForYear(year) {
+        if (typeof PICK_KTC_1QB === "undefined" || !PICK_KTC_1QB) return null;
+        if (Array.isArray(PICK_KTC_1QB[year])) return PICK_KTC_1QB[year];
+        const yrs = Object.keys(PICK_KTC_1QB).map(Number).filter(n => !isNaN(n) && Array.isArray(PICK_KTC_1QB[n])).sort((a, b) => a - b);
+        if (!yrs.length) return null;
+        const y = Number(year);
+        if (isNaN(y)) return PICK_KTC_1QB[yrs[0]];
+        let best = yrs[0];
+        yrs.forEach(k => { const d = Math.abs(k - y), bd = Math.abs(best - y); if (d < bd || (d === bd && k > best)) best = k; });
+        return PICK_KTC_1QB[best];
+      }
+      function pickScalar(round, tierIdx, year) {
         const ci = (Math.min(Math.max(Math.round(round) || 1, 1), 4) - 1) * 3 + (tierIdx == null ? 1 : tierIdx);
         const cell = PICK_CELLS[ci];
         if (!cell || !cell.den) return 1;
@@ -2733,7 +2752,7 @@
         const sPool = SETTINGS.sf === FORMAT_DEFAULT.sf ? SETTINGS : Object.assign({}, SETTINGS, { sf: FORMAT_DEFAULT.sf });
         const num = cell.seg.reduce((a, p) => a + base(p) * factorRatioAt(p.pos, sPool), 0);
         let v = num / cell.den;
-        if (SETTINGS.sf !== FORMAT_DEFAULT.sf && typeof PICK_KTC_1QB !== "undefined" && PICK_KTC_1QB[ci]) v *= PICK_KTC_1QB[ci];
+        if (SETTINGS.sf !== FORMAT_DEFAULT.sf) { const row = ktcRowForYear(year); if (row && row[ci]) v *= row[ci]; }
         return Math.min(PICK_SCALAR_MAX, Math.max(PICK_SCALAR_MIN, v));
       }
       function whyText(p) {
@@ -2916,7 +2935,7 @@
         if (typeof window.rederiveGuestPickValues === "function") window.rederiveGuestPickValues();
         DATA.teams.forEach(t => {
           if (!Array.isArray(t.picks)) return;
-          t.picks.forEach(pk => { if (pk.baseValue != null) pk.value = Math.round(pk.baseValue * pickScalar(pk.round, pk.tierIdx)); });
+          t.picks.forEach(pk => { if (pk.baseValue != null) pk.value = Math.round(pk.baseValue * pickScalar(pk.round, pk.tierIdx, pk.season)); });
           t.picksVal = t.picks.reduce((s2, pk) => s2 + (pk.value || 0), 0);
         });
         const depth = { QB: 2, RB: 4, WR: 5, TE: 2 };
@@ -3269,13 +3288,13 @@ ${rdP ? "" : `
             /* baseValue is the ladder anchor (Dynasty Standard); value is
                re-derived from it at the active format scalar by
                recomputeValues() via the window hook below. */
-            const pk = { key: `${yr}-${ri + 1}-${tierCodes[ti]}`, label: `${yr} ${roundNames[ri]} (${tierNames[ti]})`, value: v, baseValue: v, roundNum: ri + 1, tierIdx: ti };
+            const pk = { key: `${yr}-${ri + 1}-${tierCodes[ti]}`, label: `${yr} ${roundNames[ri]} (${tierNames[ti]})`, value: v, baseValue: v, roundNum: ri + 1, tierIdx: ti, year: yr };
             GUEST_PICKS.push(pk); GPBY[pk.key] = pk;
           });
         });
       });
       window.rederiveGuestPickValues = function () {
-        GUEST_PICKS.forEach(pk => { pk.value = Math.round(pk.baseValue * pickScalar(pk.roundNum, pk.tierIdx)); });
+        GUEST_PICKS.forEach(pk => { pk.value = Math.round(pk.baseValue * pickScalar(pk.roundNum, pk.tierIdx, pk.year)); });
       };
 
       function assetsOf(side) { return calc[side].assets; }
