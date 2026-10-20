@@ -332,9 +332,11 @@
       .tool-name { display: block; font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15px; color: var(--ink); }
       .tool-desc { display: block; color: var(--ink-2); font-size: 13px; margin-top: 2px; line-height: 1.35; font-weight: 400; }
       .tools-div { border-top: 1px solid var(--line); margin: 6px 4px; }
+      /* Static in-flow bar (was sticky): a floating translucent chip bar
+         rode over the spotlight card and rankings while scrolling. In
+         normal flow it can never overlap or hide content. */
       .lg-chips {
-        display: flex; gap: 8px; flex-wrap: wrap; position: sticky; top: 58px; z-index: 20;
-        background: rgba(21, 8, 38, .88); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+        display: flex; gap: 8px; flex-wrap: wrap;
         padding: 8px 0; margin-bottom: 8px;
       }
       .lg-chip {
@@ -343,6 +345,15 @@
         font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 13.5px;
       }
       .lg-chip:hover { color: var(--ink); border-color: var(--accent); }
+      /* Anchor jumps (League chips, section deep-links) must land clear
+         of the sticky top nav on desktop/tablet; on phones the nav is a
+         bottom bar, so only a small breathing margin is needed. */
+      #lg-power, #power-list, #lg-outlook, #odds-panel, #season-out,
+      #risk-panel, #movers-out, #format-block { scroll-margin-top: 76px; }
+      @media (max-width: 640px) {
+        #lg-power, #power-list, #lg-outlook, #odds-panel, #season-out,
+        #risk-panel, #movers-out, #format-block { scroll-margin-top: 14px; }
+      }
       .xlink {
         display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
         border: 1px solid rgba(198,255,0,.35); background: rgba(198,255,0,.05);
@@ -1390,22 +1401,29 @@
 
       /* ---------- phone (≤640px) ---------- */
       @media (max-width: 640px) {
-        .wrap { padding: 0 14px 118px; }
+        .wrap { padding: 0 14px 128px; }
 
-        /* bottom tab bar replaces the top strip */
+        /* bottom tab bar replaces the top strip — the five full labels
+           keep their natural width and never wrap; the bar scrolls
+           sideways instead of crushing them together (scrollbar hidden;
+           activateNav keeps the active tab scrolled into view). The
+           backdrop blur comes off at this width so the fixed Fantasy
+           Tools sheet is never clipped by the bar's own scroll box. */
         nav.mainnav {
           position: fixed; top: auto; left: 0; right: 0; bottom: 0; z-index: 60;
-          flex-wrap: nowrap; overflow: visible;
+          flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+          scrollbar-width: none;
+          backdrop-filter: none; -webkit-backdrop-filter: none;
           padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 0px));
           border-bottom: none; border-top: 1px solid var(--line);
           background: rgba(8, 8, 22, .94);
           box-shadow: 0 -10px 30px rgba(0, 0, 0, .45);
         }
-        nav.mainnav { gap: 3px; }
-        nav.mainnav button {
-          flex: 1 1 0; min-width: 0; min-height: 50px;
+        nav.mainnav { gap: 4px; }
+        nav.mainnav > button, nav.mainnav .tools-btn {
+          flex: 0 0 auto; min-width: auto; min-height: 50px;
           display: flex; align-items: center; justify-content: center; gap: 3px;
-          padding: 6px 0; font-size: 10.5px; letter-spacing: 0;
+          padding: 6px 11px; font-size: 12px; letter-spacing: 0;
           border-radius: 12px; white-space: nowrap;
         }
         .nav-lock { margin-left: 2px; }
@@ -1757,11 +1775,9 @@
       .rt-offer-note { color: var(--ink-3); font-size: 12.5px; margin-top: 8px; line-height: 1.5; }
       .rt-offer-load { margin-top: 11px; background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(198,255,0,.4); font: inherit; font-size: 13px; font-weight: 700; border-radius: 8px; padding: 7px 12px; cursor: pointer; }
       .rt-offer-load:hover { background: rgba(198,255,0,.22); }
-      /* phone bottom bar: tabs share slim slots — let the two-word
-         "Player Targets" label wrap to two centered lines instead of clipping */
-      @media (max-width: 640px) {
-        nav.mainnav button[data-nav="targets"] { white-space: normal; line-height: 1.12; font-size: 10.5px; text-align: center; }
-      }
+      /* phone bottom bar: every label — "Player Targets" included —
+         stays on one line at natural width; the bar scrolls sideways
+         (see the phone nav block) rather than wrapping or clipping. */
 
       /* ---------- Insights (editorial) ---------- */
       #ins-feed[hidden], #ins-article[hidden] { display: none; }
@@ -3232,6 +3248,15 @@
         if (key === "bye" && typeof window.renderByeView === "function") window.renderByeView();
         const anchorEl = key === "risk" ? document.getElementById("risk-panel") : (arg ? document.querySelector(arg) : null);
         if (anchorEl) setTimeout(() => anchorEl.scrollIntoView({ block: "start" }), 30);
+        /* Where the nav itself scrolls sideways (phone bottom bar,
+           narrow tablets), keep the active item fully inside it —
+           adjusts only the nav's own scrollLeft, never the page. */
+        const navEl = document.querySelector("nav.mainnav");
+        const actBtn = navEl ? navEl.querySelector('[aria-selected="true"]') : null;
+        if (navEl && actBtn && navEl.scrollWidth > navEl.clientWidth) {
+          const nr = navEl.getBoundingClientRect(), br = actBtn.getBoundingClientRect();
+          navEl.scrollLeft += (br.left - nr.left) - (navEl.clientWidth - br.width) / 2;
+        }
       }
       window.activateNav = activateNav;
       document.querySelectorAll("nav.mainnav > button[data-nav]").forEach(btn => {
@@ -3248,12 +3273,23 @@
       function closeTools() { if (toolsMenu) toolsMenu.hidden = true; if (toolsBtn) toolsBtn.setAttribute("aria-expanded", "false"); }
       function openTools() {
         if (!toolsBtn || !toolsMenu) return;
+        /* The menu must overlay the page, not ride inside the nav: as a
+           fixed child of the sticky, blurred nav it positioned (and
+           stacked) relative to the bar — displaced hundreds of px at
+           some scroll positions, and buried under section content at
+           others. As a body child it is a true viewport overlay at
+           every width. The entries' listeners live on the buttons
+           themselves, so the move is transparent. */
+        if (toolsMenu.parentElement !== document.body) document.body.appendChild(toolsMenu);
         const r = toolsBtn.getBoundingClientRect();
         toolsMenu.hidden = false;
         if (window.innerWidth <= 760) { toolsMenu.classList.add("sheet"); }
         else {
           toolsMenu.classList.remove("sheet");
-          toolsMenu.style.top = (r.bottom + 8) + "px";
+          let top = r.bottom + 8;
+          const mh = toolsMenu.offsetHeight;
+          if (top + mh > window.innerHeight - 8) top = Math.max(8, window.innerHeight - mh - 8);
+          toolsMenu.style.top = top + "px";
           toolsMenu.style.left = Math.max(10, Math.min(r.right - 348, window.innerWidth - 358)) + "px";
         }
         toolsBtn.setAttribute("aria-expanded", "true");
@@ -7863,7 +7899,11 @@ ${rdP ? "" : `
           applyMode(false);
           setConnectedLeague();
           slpClose();
-          activateNav("league", (built.leagueType || "dynasty") === "redraft" ? "#lg-outlook" : undefined);
+          /* Land at the TOP of the League Analyzer — the Your Team
+             spotlight first. No section anchor here: activateNav's
+             deferred anchor jump used to fire after this scroll-to-top
+             and strand redraft landings mid-page at Season Outlook. */
+          activateNav("league");
           window.scrollTo({ top: 0 });
         } catch (e) {
           /* Never leave a half-applied connection behind: roll back to
@@ -8246,7 +8286,11 @@ ${rdP ? "" : `
           applyMode(false);
           setConnectedLeague();
           slpClose();
-          activateNav("league", (built.leagueType || "dynasty") === "redraft" ? "#lg-outlook" : undefined);
+          /* Land at the TOP of the League Analyzer — the Your Team
+             spotlight first. No section anchor here: activateNav's
+             deferred anchor jump used to fire after this scroll-to-top
+             and strand redraft landings mid-page at Season Outlook. */
+          activateNav("league");
           window.scrollTo({ top: 0 });
         } catch (e) {
           if (staged) { try { slpDisconnect(); } catch (e2) { /* best effort */ } }
