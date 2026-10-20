@@ -2051,7 +2051,7 @@
         <div id="season-out"></div>
         <details class="how-box inseason">
           <summary>How this works</summary>
-          <p class="tab-intro">A <strong>separate engine</strong> that answers a different question: not what your players are worth, but what your team does <strong>this season</strong>. Every player is re-priced as a <strong>rest-of-season projection</strong> — a redraft lens: this year’s points only, no age curves, no dynasty value. Each team’s best lineup is projected, then the rest of the season is <strong>simulated 10,000 times</strong> (the remaining regular-season weeks, plus the six-team playoffs). Nothing here feeds the dynasty values, the power score, or the trade calculator’s verdict — those stay exactly as they were. What it does feed is <strong>trade advice</strong>: the Trade Finder and the calculator show each deal’s title-odds swing next to its dynasty math, because a deal can be fair on value and still wrong for your window. Projections use <strong>this league’s actual scoring</strong> and do not move with the League format explorer.</p>
+          <p class="tab-intro">A <strong>separate engine</strong> that answers a different question: not what your players are worth, but what your team does <strong>this season</strong>. Every player is re-priced as a <strong>rest-of-season projection</strong> — a redraft lens: this year’s points only, no age curves, no dynasty value. Each team’s best lineup is projected, then the rest of the season is <strong>simulated 10,000 times</strong> (the remaining regular-season weeks, plus the playoffs). Nothing here feeds the dynasty values, the power score, or the trade calculator’s verdict — those stay exactly as they were. What it does feed is <strong>trade advice</strong>: the Trade Finder and the calculator show each deal’s title-odds swing next to its dynasty math, because a deal can be fair on value and still wrong for your window. Projections adjust for <strong>injuries, byes, matchups, and recent form</strong>, use <strong>this league’s actual scoring</strong>, and do not move with the League format explorer. The full projection methodology — priors, availability adjustments, schedule factors — lives in the FAQ in More.</p>
         </details>
       </section>
 
@@ -2082,7 +2082,7 @@
         <div id="lineup-out"></div>
         <details class="how-box inseason">
           <summary>How this works</summary>
-          <p class="tab-intro">The weekly question: <strong>who do I start Sunday?</strong> For the team you pick, this builds the <strong>optimal lineup for the current week</strong> from the same rest-of-season projections behind Season Outlook — with a one-week availability adjustment on top: a player on <strong>bye</strong> or listed <strong>Out / IR / PUP / Suspended</strong> projects for zero and is auto-benched, Doubtful is halved, Questionable is trimmed 10%. A player with <strong>no NFL team</strong> — unsigned, per the same live Sleeper players feed that carries the injury designations — projects for zero, is labeled Unsigned, and is <strong>excluded from the optimal lineup entirely</strong>, whatever his dynasty value says. A signed player outside the priced pool shows <strong>Unpriced</strong> rather than a fake zero: his projection is unknown, and he starts only when no priced option exists. Below it, the current <strong>real Sleeper matchup</strong>: both teams' optimal lineups, a win probability, and the decisions the game swings on. Same separation rule as everything else here — <strong>projections never touch dynasty values</strong>, and nothing in this tab moves a price on the board.</p>
+          <p class="tab-intro">The weekly question: <strong>who do I start Sunday?</strong> For the team you pick, this builds the <strong>optimal lineup for the current week</strong> from the same rest-of-season projections behind Season Outlook — with a one-week availability adjustment on top: a player on <strong>bye</strong> or listed <strong>Out / IR / PUP / Suspended</strong> projects for zero and is auto-benched, Doubtful is heavily trimmed and Questionable trimmed lightly; a player whose status disagrees with his projection gets flagged (see the FAQ in More). A player with <strong>no NFL team</strong> — unsigned, per the same live Sleeper players feed that carries the injury designations — projects for zero, is labeled Unsigned, and is <strong>excluded from the optimal lineup entirely</strong>, whatever his dynasty value says. A signed player outside the priced pool shows <strong>Unpriced</strong> rather than a fake zero: his projection is unknown, and he starts only when no priced option exists. Below it, the current <strong>real Sleeper matchup</strong>: both teams' optimal lineups, a win probability, and the decisions the game swings on. Same separation rule as everything else here — <strong>projections never touch dynasty values</strong>, and nothing in this tab moves a price on the board.</p>
         </details>
 
       </section>
@@ -2190,7 +2190,7 @@
         <div class="locked-state" data-locked="waivers">
           <div class="locked-body">
             <h2>Waiver targets live here</h2>
-            <p>Every unrostered player, ranked by <strong>what he would do for your lineup</strong> — his projected points per week against the weakest starter he’d have to beat — with a suggested FAAB bid on each. The ranking is relative to a roster, and a guest doesn’t have one yet.</p>
+            <p>Every unrostered player, ranked by <strong>what he would do for your lineup</strong> — his projected points per week against the weakest starter he’d have to beat — with pickup guidance on each. The ranking is relative to a roster, and a guest doesn’t have one yet.</p>
             <div class="locked-actions">
               <button type="button" class="locked-cta">Connect your league</button>
             </div>
@@ -2199,7 +2199,7 @@
         </div>
         <details class="how-box waiver-part">
           <summary>How waiver targets work</summary>
-          <p class="tab-intro waiver-part" id="waiver-intro">Every unrostered player in the snapshot, ranked for the team you pick — not by dynasty value, but by <strong>what he would do for that lineup</strong>. The bar is set by the <strong>rest-of-season projection engine</strong> (the same one behind Season Outlook, and kept separate from dynasty value): a target’s value-add is his projected points per week minus the weakest starter he’d have to beat at his position, flex and superflex slots included. Young players with a <strong>rising role clock</strong> get their own stash list — in dynasty, that’s usually where the wire pays. This league runs <strong>FAAB with a $300 budget</strong>, so every target carries a suggested bid. One honest note: with 32-man rosters, most weeks this wire is thin, and this page says so instead of dressing up a name.</p>
+          <p class="tab-intro waiver-part" id="waiver-intro">Every unrostered player in the snapshot, ranked for the team you pick — not by dynasty value, but by <strong>what he would do for that lineup</strong>. The bar is set by the <strong>rest-of-season projection engine</strong> (the same one behind Season Outlook, and kept separate from dynasty value): a target’s value-add is his projected points per week minus the weakest starter he’d have to beat at his position, flex and superflex slots included. Young players with a <strong>rising role clock</strong> get their own stash list — in dynasty, that’s usually where the wire pays. Connect a league and every target carries pickup guidance matched to that league’s waiver system. One honest note: with 32-man rosters, most weeks this wire is thin, and this page says so instead of dressing up a name.</p>
         </details>
         <h2 class="block-title">Risers &amp; Fallers</h2>
         <div id="movers-out"></div>
@@ -2246,6 +2246,25 @@
       </section>
         <h2 class="block-title">How Values Work</h2>
         <div class="method" id="method-body"></div>
+        <h2 class="block-title">Frequently Asked Questions</h2>
+        <div class="method" id="faq-body">
+          <h2>How do the weekly projections work?</h2>
+          <p>For each game week, analyst projections (per ESPN and Rotowire) are pulled in as raw stat lines, then converted into your league's scoring at display time. Rest-of-season projections blend a player's actual points per game with a prior: the prior counts as K games of evidence (QB 10, TE 8, RB/WR 6), so early in the season the prior dominates and actual form takes over as games accumulate. Expected availability scales the rest-of-season output — IR/PUP ≈ half the remaining games, Out ≈ 70%, Doubtful ≈ 85%, Questionable ≈ 95%. For a single week: a player on bye, or listed Out / IR / PUP / Suspended, projects for zero — unless an analyst still projects him real points, in which case the projection wins and his line carries a "Status conflict" flag. Doubtful is halved and Questionable trimmed 10% on the weekly line. Strength of schedule comes from each defense's fantasy points allowed per game to each position, capped at ±12%. When the two projection sources disagree substantially, their stat lines are averaged before scoring.</p>
+          <h2>How are projections converted to my league's scoring?</h2>
+          <p>Nothing is converted once for everybody. The raw stat lines (pass yards, touchdowns, receptions, and so on) are scored at render time using your connected league's actual settings — so the same player projects differently in a 4-point and a 6-point passing-TD league, and tight ends get your league's exact premium. Guests see the Dynasty Standard default format.</p>
+          <h2>How does the power score work?</h2>
+          <p>Teams are ranked by percentile within your league, not by absolute points. In dynasty mode the power score is 50% your optimal starters' dynasty value and 50% your optimal lineup's rest-of-season projected points. In redraft mode it's projected points only — there's no franchise to measure. Actual points scored so far are not an input; the projections already reflect form.</p>
+          <h2>How are playoff odds calculated?</h2>
+          <p>The rest of the season is simulated 10,000 times using your league's real settings — its scoring, its starter slots, and its playoff field size (read from your league's settings; 6 by default). Playoff odds are the share of finishes where the team makes the field; title odds decompose as playoff odds times the chance of winning the bracket once in. A team shows "Clinched" only when its berth is mathematically locked, and no percentage ever displays 100%.</p>
+          <h2>What is the consolidation bonus in the trade calculator?</h2>
+          <p>When one side receives fewer players, that side gets a small bonus for consolidating: (extra roster spots) × 750 × (1 + ½ × the best player's value ÷ 10,000). The bonus goes only to the side with fewer assets, scales up when the best player in the deal is a star, and is zero on even trades. It prices the real value of freeing a roster spot — the waiver player who replaces the bench man.</p>
+          <h2>What does "Unpriced" mean?</h2>
+          <p>The player sits outside the priced pool, so the site has no dynasty value for him — and it will not invent one. His weekly projection can still exist (and he'll still show up in lineups and waivers), but "Unpriced" tells you the price is unknown, not zero.</p>
+          <h2>Which waiver systems are supported?</h2>
+          <p>Both. FAAB leagues get suggested bids as a percentage of your league's actual total budget — never an assumed number. Rolling-priority leagues get claim guidance instead: who is worth spending priority on, who can wait for free agency. The system is read from your league's settings when you connect, on Sleeper and ESPN.</p>
+          <h2>How are player values calculated?</h2>
+          <p>Every dynasty value comes from our proprietary algorithm, built from deep analytics and market consensus, then adjusted for your league's scoring format, player age curves, role and usage trends, and availability. Redraft values are rest-of-season only — no age curves, no future seasons, no draft picks.</p>
+        </div>
       </section>
 
 
@@ -2657,6 +2676,48 @@
          keeping the old level and only fixing moves relative to it. */
       const SNAPSHOT_FACTOR = { TE: (1 + 0.2933333 * LEAGUE_DEFAULT.tep) * pprFactor("TE", LEAGUE_DEFAULT.ppr) };
       function factorRatio(pos) { return posFactor(pos, SETTINGS) / (SNAPSHOT_FACTOR[pos] ?? posFactor(pos, LEAGUE_DEFAULT)); }
+      /* ================= Draft-pick format adjustment =================
+         Player prices re-scale with the league's scoring format — pick
+         prices now do too, off the same measured move, never a rule of
+         thumb. A pick's format scalar is the value ratio of the segment
+         of the priced pool that round/tier draws from, re-priced at the
+         active SETTINGS vs the Dynasty Standard default the ladder is
+         anchored to (superflex on, 1 PPR, TE +0.5, 4-pt pass TD): the
+         priced pool is ranked by snapshot dynasty value and cut into 12
+         consecutive blocks (round 1 early draws the top block, and so
+         on). The early-1st block is ~39% QB value, so it carries the
+         superflex swing; late-round blocks barely move. Scalars clamp to
+         [0.75, 1.15] — measured formats land in 0.80–1.05, so the clamp
+         is a guardrail against future pool compositions, not a value
+         anyone has hit. At the default preset every scalar is exactly 1
+         and every pick price stays byte-identical to the ladder.
+         League size does not enter: the format engine prices the pool
+         off scoring only, and picks follow the pool. */
+      const PICK_SCALAR_MIN = 0.75, PICK_SCALAR_MAX = 1.15;
+      function factorRatioAt(pos, s) { return posFactor(pos, s) / (SNAPSHOT_FACTOR[pos] ?? posFactor(pos, LEAGUE_DEFAULT)); }
+      /* The Dynasty Standard default the pick ladder is anchored to —
+         identical to the Dynasty Standard guest preset. */
+      const FORMAT_DEFAULT = { sf: true, ppr: 1.0, tep: 0.5, ptd: 4 };
+      const PICK_CELLS = (() => {
+        const base = p => ((p.snapValue != null ? p.snapValue : p.value) || 0);
+        const pool = DATA.players.filter(p => !p.unpriced && base(p) > 0).sort((a, b) => base(b) - base(a));
+        const per = Math.max(1, Math.floor(pool.length / 12)), cells = [];
+        for (let c = 0; c < 12; c++) {
+          const seg = pool.slice(c * per, c === 11 ? pool.length : (c + 1) * per);
+          const den = seg.reduce((a, p) => a + base(p) * factorRatioAt(p.pos, FORMAT_DEFAULT), 0);
+          cells.push({ seg, den });
+        }
+        return cells;
+      })();
+      /* round: 1-4, tierIdx: 0=Early, 1=Mid, 2=Late. */
+      function pickScalar(round, tierIdx) {
+        const cell = PICK_CELLS[(Math.min(Math.max(Math.round(round) || 1, 1), 4) - 1) * 3 + (tierIdx == null ? 1 : tierIdx)];
+        if (!cell || !cell.den) return 1;
+        const base = p => ((p.snapValue != null ? p.snapValue : p.value) || 0);
+        const num = cell.seg.reduce((a, p) => a + base(p) * factorRatioAt(p.pos, SETTINGS), 0);
+        const v = num / cell.den;
+        return Math.min(PICK_SCALAR_MAX, Math.max(PICK_SCALAR_MIN, v));
+      }
       function whyText(p) {
         let w = p.why.replace(/ ?Bumped for[\s\S]*$/, "");
         // Single-value display: the baked snapshot text still carries an
@@ -2726,6 +2787,52 @@
         out.push({ key: "SUPER_FLEX", cands: SLOT_CANDS.SUPER_FLEX, label: "SF" });
         return out;
       }
+      /* ===== League waiver system — single source of truth =====
+         The connected league's meta (built by the Sleeper and ESPN
+         connect builders) records how its waivers actually work:
+         waiverSystem "faab" (with faab = the league's REAL total
+         budget) or "priority" (rolling waiver order, no budget at
+         all — a Sleeper league's waiver_budget field means nothing
+         when waiver_type is 0). Guest mode has no connected league,
+         so this returns null and every waiver surface uses neutral,
+         bid-free wording. No consumer may assume a budget: the old
+         `|| 300` fallback invented one for every league that wasn't
+         D74-shaped. */
+      function waiverSystem() {
+        if (window.GUEST_MODE) return null;
+        const lg = DATA && DATA.league;
+        if (!lg || !lg.waiverSystem) return null;
+        if (lg.waiverSystem === "faab" && Number(lg.faab) > 0)
+          return { type: "faab", budget: Number(lg.faab) };
+        return { type: "priority" };
+      }
+      /* The waiver-system sentence appended to the Waiver tab intro
+         when a league is connected: states the league's actual
+         system — its real budget for FAAB, rolling priority by name
+         otherwise. Empty string for guests. */
+      function waiverSystemSentence() {
+        const ws = waiverSystem();
+        if (!ws) return "";
+        if (ws.type === "faab")
+          return ` This league runs <strong>FAAB with a $${ws.budget} budget</strong>, so every target carries a suggested bid — a share of that budget.`;
+        return ` This league uses <strong>rolling waiver priority</strong> — so every target carries claim guidance instead of a price tag: who is worth spending priority on, and who can wait for free agency.`;
+      }
+      /* Playoff field size from the connected league's real setting
+         (Sleeper playoff_teams / ESPN playoff team count), stored on
+         the league meta as playoffTeams. Default 6 — the near-universal
+         setting, and the guest snapshot's behavior — when unknown. */
+      function playoffField() {
+        const n = DATA && DATA.league && Number(DATA.league.playoffTeams);
+        return (Number.isFinite(n) && n >= 2 && n <= 16) ? Math.round(n) : 6;
+      }
+      /* The connected league's fantasy playoff start week, if the
+         platform reported one (Sleeper playoff_week_start); null when
+         unknown. The sim assumes a Week 15 start; consumers flag
+         rather than guess when this says otherwise. */
+      function playoffStartWeek() {
+        const n = DATA && DATA.league && Number(DATA.league.playoffStart);
+        return (Number.isFinite(n) && n >= 12 && n <= 17) ? Math.round(n) : null;
+      }
       function bestBallLineup(ids) {
         const valOf = p => VALMODE === "redraft" ? (p.rdValue ?? p.value) : p.value;
         const pool = ids.map(id => PBY[id]).filter(Boolean)
@@ -2782,6 +2889,17 @@
              availability haircuts inside the ROS projection instead.)
              Dynasty prices are untouched: p.value never reads this. */
           if (p.inj === "IR" || p.inj === "PUP") p.rdValue = 0;
+        });
+        /* Pick prices follow the same format (see the pick-format block
+           by factorRatio): re-derive every priced pick from its ladder
+           base at the active scalar, then re-total pick capital. Guest
+           picks live in the calculator block and re-derive through its
+           window hook; team picks carry their own ladder base. */
+        if (typeof window.rederiveGuestPickValues === "function") window.rederiveGuestPickValues();
+        DATA.teams.forEach(t => {
+          if (!Array.isArray(t.picks)) return;
+          t.picks.forEach(pk => { if (pk.baseValue != null) pk.value = Math.round(pk.baseValue * pickScalar(pk.round, pk.tierIdx)); });
+          t.picksVal = t.picks.reduce((s2, pk) => s2 + (pk.value || 0), 0);
         });
         const depth = { QB: 2, RB: 4, WR: 5, TE: 2 };
         DATA.teams.forEach(t => {
@@ -3130,11 +3248,17 @@ ${rdP ? "" : `
         const roundNames = ["1st", "2nd", "3rd", "4th"];
         rounds.forEach((tiers, ri) => {
           tiers.forEach((v, ti) => {
-            const pk = { key: `${yr}-${ri + 1}-${tierCodes[ti]}`, label: `${yr} ${roundNames[ri]} (${tierNames[ti]})`, value: v };
+            /* baseValue is the ladder anchor (Dynasty Standard); value is
+               re-derived from it at the active format scalar by
+               recomputeValues() via the window hook below. */
+            const pk = { key: `${yr}-${ri + 1}-${tierCodes[ti]}`, label: `${yr} ${roundNames[ri]} (${tierNames[ti]})`, value: v, baseValue: v, roundNum: ri + 1, tierIdx: ti };
             GUEST_PICKS.push(pk); GPBY[pk.key] = pk;
           });
         });
       });
+      window.rederiveGuestPickValues = function () {
+        GUEST_PICKS.forEach(pk => { pk.value = Math.round(pk.baseValue * pickScalar(pk.roundNum, pk.tierIdx)); });
+      };
 
       function assetsOf(side) { return calc[side].assets; }
       function assetValue(a) {
@@ -3595,21 +3719,46 @@ ${rdP ? "" : `
       const MED = {};
       ["QB", "RB", "WR", "TE"].forEach(pos => { MED[pos] = median(DATA.teams.map(t => t.strengths[pos])); });
 
+      /* Tradable-value floors, derived from the ACTIVE mode's own
+         priced-pool distribution (percentile anchors over dispVal)
+         instead of fixed dynasty-scale absolutes. Redraft prices
+         compress differently (rest-of-season only, no age premium),
+         so dynasty-tuned absolutes (800 throw-in / 1,500 meaningful /
+         400 card / 900 target) sat above most of the redraft mid-tier
+         and silently starved the redraft Finder. The anchor
+         percentiles are calibrated so dynasty mode reproduces
+         ≈ today's absolutes on the standard pool: card ≈ 400 (p7),
+         throw-in ≈ 800 (p16), target ≈ 900 (p20), meaningful ≈ 1,500
+         (p42). Cached per mode + format; the distribution moves only
+         when the pool or the mode does. */
+      let _floorCache = null;
+      function tradeFloors() {
+        const key = (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + DATA.players.length
+          + "|" + (typeof SETTINGS !== "undefined" ? JSON.stringify(SETTINGS) : "");
+        if (_floorCache && _floorCache.key === key) return _floorCache.f;
+        const vs = DATA.players.map(p => dispVal(p)).filter(v => v > 0).sort((a, b) => a - b);
+        const at = q => vs.length ? vs[Math.min(vs.length - 1, Math.floor(q * vs.length))] : 0;
+        const f = { card: at(0.07), throwIn: at(0.16), target: at(0.20), meaningful: at(0.42) };
+        _floorCache = { key, f };
+        return f;
+      }
+
       function tradableAssets(rid) {
         /* Everything sorts and filters on the ACTIVE mode's price
            (dispVal) — the same currency the pools and the calculator
            use. Raw dynasty value here would rank an injured redraft
            corpse (rdValue 0, dynasty price intact) as a tradable asset. */
+        const FL = tradeFloors();
         const t = TBY[rid];
         const out = [];
         ["QB", "RB", "WR", "TE"].forEach(pos => {
           const lst = teamPlayers(rid).filter(p => p.pos === pos).sort((a, b) => dispVal(b) - dispVal(a));
           lst.forEach((p, i) => {
-            if (dispVal(p) < 800) return;
+            if (dispVal(p) < FL.throwIn) return;
             if (i >= POS_DEPTH[pos]) out.push(p);
             else {
               const rest = t.strengths[pos] - dispVal(p);
-              if (rest >= MED[pos] * 0.9 && dispVal(p) >= 1500) out.push(p);
+              if (rest >= MED[pos] * 0.9 && dispVal(p) >= FL.meaningful) out.push(p);
             }
           });
         });
@@ -3704,7 +3853,7 @@ ${rdP ? "" : `
         const myLineup = lineupSet(rid);
         const payPool = [
           ...pickAssets(mine),
-          ...tradableAssets(rid).filter(p => !myLineup.has(p.id) && dispVal(p) >= 400).map(playerAsset),
+          ...tradableAssets(rid).filter(p => !myLineup.has(p.id) && dispVal(p) >= tradeFloors().card).map(playerAsset),
         ];
         if (!payPool.length) return [];
         const out = [];
@@ -3715,7 +3864,7 @@ ${rdP ? "" : `
         DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || t.arch !== "Win-Now")).forEach(partner => {
           const windowBonus = VALMODE === "redraft" ? 2 : partner.arch === "Rebuilder" ? 5 : 1.5;
           teamPlayers(partner.rid)
-            .filter(p => dispVal(p) >= 900 && (p.ros || 0) > 0 && wantMatch(p.pos))
+            .filter(p => dispVal(p) >= tradeFloors().target && (p.ros || 0) > 0 && wantMatch(p.pos))
             .forEach(target => {
               /* The target prices in the ACTIVE mode's currency — the
                  same dispVal the pool, the board and the calculator use.
@@ -4412,7 +4561,7 @@ ${rdP ? "" : `
         <h2>Players outside the core board</h2>
         <p>Players outside the core board (deep benches, new call-ups) have no algorithm baseline price. Their values are extrapolated: production base × the algorithm's fitted age curve above, run through the same per-position calibration fit. They should be treated as less certain than a baseline-priced value.</p>
         <h2>Draft picks — algorithm-priced, not estimated</h2>
-        <p>Pick values are computed by the algorithm itself, off the same proprietary model baseline as player prices: a <strong>2027 1st is worth 6,008 (early) / 4,537 (mid) / 3,892 (late)</strong>; a 2027 2nd 3,024 / 2,569 / 2,339; a 2028 1st 4,627 / 3,596 / 3,114 and a 2029 1st 3,969 / 3,197 / 2,776. Projected slots come from the original team's current points-for pace. The year-out discount is empirical, not a rule of thumb: the model's ladder applies ×0.79–0.90 for the first year out and ×0.89–0.91 for each year after — a shallower discount than production value alone would set, because the market prices future picks hot, especially with the stacked 2027 class in view. A mid 2027 1st prices like a low-end WR3/RB3 veteran — that is the algorithm's calibrated exchange rate between picks and players.</p>
+        <p>Pick values are computed by the algorithm itself, off the same proprietary model baseline as player prices: a <strong>2027 1st is worth 6,008 (early) / 4,537 (mid) / 3,892 (late)</strong>; a 2027 2nd 3,024 / 2,569 / 2,339; a 2028 1st 4,627 / 3,596 / 3,114 and a 2029 1st 3,969 / 3,197 / 2,776. Projected slots come from the original team's current points-for pace. The year-out discount is empirical, not a rule of thumb: the model's ladder applies ×0.79–0.90 for the first year out and ×0.89–0.91 for each year after — a shallower discount than production value alone would set, because the market prices future picks hot, especially with the stacked 2027 class in view. A mid 2027 1st prices like a low-end WR3/RB3 veteran — that is the algorithm's calibrated exchange rate between picks and players. Those are the Dynasty Standard prices: like player prices, pick prices re-scale with the scoring format set in the League Format block — each slot follows how the slice of the player pool its round drafts from moves in that format, so early 1sts gain the most in superflex and lose the most in 1QB, and late rounds barely move.</p>
         <h2>Trade verdicts — the consolidation adjustment</h2>
         <p>Adding up raw prices lies about uneven trades. Three players worth 3,000 each sum to 9,000, but they do not beat one 8,500 stud: starting roster spots are scarce, and only so many of the three can ever take the field in the stud's place. So the trade calculator never judges a deal on raw sums alone. The side receiving <strong>fewer players</strong> gets a <strong>consolidation bonus</strong>: credit for each freed roster spot, worth roughly what a waiver-wire replacement costs, scaled up slightly when the best player on that side is an elite stud. The bonus is (extra roster spots) × 750 × (1 + half the stud factor), where the stud factor is the best asset's value ÷ 10,000 — so a 3-for-1 for a true stud earns a bigger bonus than a 3-for-1 for a mid-tier player. Even trades (1-for-1, 2-for-2) get no bonus. The verdict, the fair/favors thresholds, and the balancing-pick suggestion are all computed on raw sums plus the bonus; the calculator still prints the raw sums, with a labeled <strong>"Consolidation bonus"</strong> line per side, so the correction is never hidden.</p>
         <h2>The injury feed — what it shows, and what it won't</h2>
@@ -4477,6 +4626,11 @@ ${rdP ? "" : `
            week — derived from the league itself, never pinned to the
            snapshot's week (a Week 7 league has 8 games left, not 9). */
         const WEEKS_LEFT = Math.max(0, 15 - (typeof DATA.league.week === "number" ? DATA.league.week : 6));
+        /* Playoff field size from the connected league's real setting
+           (playoffField() reads league meta playoffTeams; default 6,
+           the guest snapshot's behavior). Every cut below — berths,
+           byes, elimination, clinch — keys off this, never a literal 6. */
+        const FIELD = playoffField();
         const DELTA_SEED = 777001;
 
         function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -4552,7 +4706,7 @@ ${rdP ? "" : `
             }
             const seeds = order.slice().sort((x, y) => (wins[y] - wins[x]) || (pf[y] - pf[x]));
             for (let i = 0; i < 12; i++) aggW[i] += wins[i];
-            seeds.slice(0, 6).forEach(i => { aggPO[i]++; });
+            seeds.slice(0, FIELD).forEach(i => { aggPO[i]++; });
             aggTop2[seeds[0]]++; aggTop2[seeds[1]]++;
           }
           const poArr = aggPO.map(c => c / sims);
@@ -4563,8 +4717,10 @@ ${rdP ? "" : `
              in), with the bracket term priced from team strength: the
              single-game win probability against the likely playoff field
              (rivals weighted by their own playoff odds, same scoring model
-             as the sims), raised over the 2 wins a bye team needs or the 3
-             everyone else needs. The bye share comes from the sims' top-2
+             as the sims), raised over the wins the bracket requires (in
+             the standard six-team field, the 2 a bye team needs or the 3
+             everyone else needs; other field sizes are a plain ladder).
+             The bye share comes from the sims' top-2
              finishes — a common event, so that estimate is stable. The
              product can never exceed the playoff number and is positive
              whenever the playoff number is. */
@@ -4576,32 +4732,38 @@ ${rdP ? "" : `
               wDen += poArr[j];
             }
             const w = wDen > 0 ? wNum / wDen : 0.5;
+            /* Wins needed to take the bracket: byes exist only in the
+               standard six-team field (top two seeds skip a round —
+               two wins instead of three). Every other field size runs
+               a plain single-elimination ladder, ceil(log2(field))
+               wins and no bye share. */
+            if (FIELD !== 6) return Math.pow(w, Math.max(1, Math.ceil(Math.log2(FIELD))));
             const byeShare = aggPO[i] > 0 ? aggTop2[i] / aggPO[i] : 0;
             return byeShare * w * w + (1 - byeShare) * w * w * w;
           }
-          /* Mathematical elimination: a team is out only when at least 6
-             rivals ALREADY own more wins than it can reach by winning out
+          /* Mathematical elimination: a team is out only when at least
+             FIELD rivals ALREADY own more wins than it can reach by winning out
              — every other result breaking its way and every tiebreak in its
              favor. Anything short of that, the path exists. */
           const elim = baseW.map((w, i) => {
             const maxW = w + WEEKS_LEFT;
-            return baseW.filter((ow, j) => j !== i && ow > maxW).length >= 6;
+            return baseW.filter((ow, j) => j !== i && ow > maxW).length >= FIELD;
           });
           /* Mathematical clinch — the mirror image of elimination.
              Team i has locked up a berth when, even if it loses out
              (finishing on exactly w wins) AND loses every points-for
-             tiebreak, at most 5 rivals can still finish ahead of it.
+             tiebreak, fewer than FIELD rivals can still finish ahead of it.
              A rival can pass a losing-out team i whenever its own best
              possible finish reaches w wins — a tie on wins counts as
              passing, because the tiebreak is assumed lost. The test is
              deliberately schedule-free, matching the sim (which pairs
-             teams at random): if fewer than 6 rivals can reach w wins
+             teams at random): if fewer than FIELD rivals can reach w wins
              at all, no combination of remaining results can push team
-             i out of the top 6. Only a team passing this test may
+             i out of the playoff field. Only a team passing this test may
              display "Clinched"; a perfect 10,000-for-10,000 sim run
              alone earns only the display layer's 99% cap. */
           const clinched = baseW.map((w, i) =>
-            baseW.filter((ow, j) => j !== i && ow + WEEKS_LEFT >= w).length < 6);
+            baseW.filter((ow, j) => j !== i && ow + WEEKS_LEFT >= w).length < FIELD);
           const out = {};
           rids.forEach((r, i) => {
             let po = poArr[i];
@@ -4826,6 +4988,7 @@ ${rdP ? "" : `
           </tr>`).join("");
           return `<div class="team-card playoff-card">
             <h3 style="font-size:20px">Playoff schedule difficulty — Weeks 15–17</h3>
+            ${(() => { const ps = playoffStartWeek(); return (ps && ps !== 15) ? `<p class="expl"><strong>Playoff-window note:</strong> this league's fantasy playoffs start in <strong>Week ${ps}</strong>, not Week 15 — so its real championship path runs ${ps < 15 ? "a week earlier" : "a week later"} than the window graded below. The grades use the Weeks 15–17 NFL schedule (the window the underlying data covers); read them as the December path, shifted by that week.</p>` : ""; })()}
             <p class="expl">The fantasy bracket isn't set yet, but the NFL half of it is. Every team's projected starters are graded against the defenses they'll actually face in Weeks 15–17 — defenses ranked by fantasy points allowed per game to each position (this season's results, in the snapshot's scoring). 100 is the softest possible path, 0 the hardest. A brutal path at your strongest position is a reason to deal before the deadline; a soft one argues for buying.</p>
             ${mine ? `<div class="playoff-mine">
               <div class="po-score"><div class="bs-num">${mine.score}</div><div class="bs-lbl">${label(mine.score)} — your playoff path</div></div>
@@ -4908,7 +5071,7 @@ ${rdP ? "" : `
             ${playoffSection()}
             <div class="diag"><h3>How to read this</h3>
               <p><strong>Dynasty value ≠ 2026 production.</strong> A 22-year-old stash can be a top-50 dynasty asset and project for almost nothing this year; a 30-year-old running back can be the exact reverse. This tab uses only the second number.</p>
-              <p><strong>Assumptions, stated plainly:</strong> ${15 - DATA.league.week} games remain (Weeks ${DATA.league.week}–14). Fantasy pairings are random — Sleeper does not publish this league's future schedule — but every player's projection is first adjusted for his real remaining NFL opponents (strength of schedule, detailed in How Values Work). Each team’s weekly score is drawn around its projected lineup total with a standard deviation of 30 points, calibrated from this league’s actual Weeks 1–${DATA.league.week - 1} scores. The top 6 seeds make the playoffs (Weeks 15–17; top two seeds get a bye; the bracket reseeds each round). Title odds are playoff odds times the chance of winning the bracket once in — that second term is priced from team strength, not counted from the sims — so an overall title number never exceeds its playoff number. The headline title number is that second term — “title odds if in playoffs” — because the overall product mostly re-prices the playoff odds already printed beside it; the overall figure runs as the smaller secondary number. A team shows 0% only when it is mathematically eliminated; any other sub-1% chance reads &lt;1%. The ceiling is just as strict: no percentage ever reads 100%. A team whose berth is mathematically locked in — it could lose out, lose every tiebreak, and still finish in the top 6 — shows “Clinched” instead of a number. Anything short of that proof caps at 99%, however many of the 10,000 sims it survived: the sim can’t price next week’s injuries, so it never claims a certainty it hasn’t proven. Title odds cap at 99% too — a championship can’t be clinched before it’s won.</p>
+              <p><strong>Assumptions, stated plainly:</strong> ${15 - DATA.league.week} games remain (Weeks ${DATA.league.week}–14). Fantasy pairings are random — Sleeper does not publish this league's future schedule — but every player's projection is first adjusted for his real remaining NFL opponents (strength of schedule, detailed in How Values Work). Each team’s weekly score is drawn around its projected lineup total with a standard deviation of 30 points, calibrated from this league’s actual Weeks 1–${DATA.league.week - 1} scores. The top ${FIELD} seeds make the playoffs (Weeks 15–17${FIELD === 6 ? "; top two seeds get a bye" : ""}; the bracket reseeds each round). Title odds are playoff odds times the chance of winning the bracket once in — that second term is priced from team strength, not counted from the sims — so an overall title number never exceeds its playoff number. The headline title number is that second term — “title odds if in playoffs” — because the overall product mostly re-prices the playoff odds already printed beside it; the overall figure runs as the smaller secondary number. A team shows 0% only when it is mathematically eliminated; any other sub-1% chance reads &lt;1%. The ceiling is just as strict: no percentage ever reads 100%. A team whose berth is mathematically locked in — it could lose out, lose every tiebreak, and still finish in the top ${FIELD} — shows “Clinched” instead of a number. Anything short of that proof caps at 99%, however many of the 10,000 sims it survived: the sim can’t price next week’s injuries, so it never claims a certainty it hasn’t proven. Title odds cap at 99% too — a championship can’t be clinched before it’s won.</p>
             </div>`;
           el.querySelectorAll("[data-sexpand]").forEach(btn => {
             btn.addEventListener("click", () => {
@@ -4934,8 +5097,8 @@ ${rdP ? "" : `
             <li><strong>Strength of schedule.</strong> Each NFL defense's fantasy points allowed per game to each position was computed from Weeks 1–${DATA.league.week - 1} in this league's scoring: Detroit has allowed 68% more points to quarterbacks than the league average, Green Bay 46% fewer; against tight ends the spread runs from Detroit +96% to the Rams −69%. Short samples are noisy, so the schedule factor is capped at ±12%: a player's ROS projection is multiplied by the average points-allowed ratio of his remaining opponents (Weeks ${DATA.league.week}–14, bye weeks skipped), and his start/sit projection by this week's opponent's ratio alone — the note rides on his line in the Lineup tab ("soft matchup: +8% vs MIA"). Schedule lives only in this engine; it never touches a dynasty value.</li>
             <li><strong>Availability &amp; role.</strong> The projection is scaled by expected availability (IR/PUP ×0.50 of the remaining games, Out ×0.70, Doubtful ×0.85, Questionable ×0.95) and nudged where the role clock disagrees with production (buy-low signal +8%, sell-high −7%) — per the standing rule that when a projection and the prior disagree wildly, usage leads points. Players who haven’t appeared in a game yet are discounted to 35% of their prior: a backup’s projection is mostly the chance he plays.</li>
             <li><strong>Team projection.</strong> Each week, a team fields its optimal lineup under this league’s own starter slots, by rest-of-season PPG. That sum is the team’s projected score — typically a little above its actual scoring pace, because real managers don’t set a perfect lineup every week.</li>
-            <li><strong>The simulation.</strong> 10,000 simulated finishes. Each remaining week (${DATA.league.week}–14), teams are paired at random — Sleeper does not publish the future schedule, so no specific opponent is assumed — and each score is drawn from a normal distribution around the team’s projection with a standard deviation of 30 points. The first of those weeks is priced from this week’s actual weekly projections — the same ESPN/Rotowire numbers behind the Lineup tab, bye weeks and all — while every later week uses the rest-of-season projection; if a week’s projections aren’t published yet, that week falls back to the rest-of-season number. That spread is calibrated, not guessed: the within-team standard deviation of weekly optimal-lineup scores across this league’s actual Weeks 1–${DATA.league.week - 1} was about 31 points. Standings seed by wins, then total points; the top 6 make the playoffs (Weeks 15–17, top two seeds bye, bracket reseeds).</li>
-            <li><strong>Title odds.</strong> Title odds are never counted directly from the sims — a longshot's true chance sits far below what 10,000 finishes can resolve by counting, so counting manufactures zeros. Instead they decompose: title odds = playoff odds × the probability of winning the bracket once in. That bracket term is priced from team strength — the single-game win probability against the likely playoff field under the same scoring model, over the two wins a bye team needs or the three everyone else needs (the bye share itself comes from the sims' top-2 finishes, a common event the sims estimate well). The product is coherent by construction: never above the playoff odds, and never zero while the playoff odds aren't. On screen the headline title number is the bracket term itself — the chance of winning it all if the team makes the playoffs — with the overall product shown as the secondary figure; the 99% display ceiling applies to both terms. A team is shown 0% only when it is mathematically eliminated — at least six rivals already own more wins than it can reach by winning out, with every other result and tiebreak breaking its way. Short of elimination, a sub-1% chance displays as &lt;1%. The mirror test runs at the top: a team has clinched when, even if it loses out and loses every points tiebreak, fewer than six rivals can still reach its win total — that team displays “Clinched” rather than a percentage. Nothing else displays above 99%, for playoff or title odds alike: a team that survives all 10,000 simulated finishes without being mathematically locked in is capped at 99%, because the sim prices games, not injuries or chaos.</li>
+            <li><strong>The simulation.</strong> 10,000 simulated finishes. Each remaining week (${DATA.league.week}–14), teams are paired at random — Sleeper does not publish the future schedule, so no specific opponent is assumed — and each score is drawn from a normal distribution around the team’s projection with a standard deviation of 30 points. The first of those weeks is priced from this week’s actual weekly projections — the same ESPN/Rotowire numbers behind the Lineup tab, bye weeks and all — while every later week uses the rest-of-season projection; if a week’s projections aren’t published yet, that week falls back to the rest-of-season number. That spread is calibrated, not guessed: the within-team standard deviation of weekly optimal-lineup scores across this league’s actual Weeks 1–${DATA.league.week - 1} was about 31 points. Standings seed by wins, then total points; the top ${FIELD} make the playoffs (Weeks 15–17${FIELD === 6 ? ", top two seeds bye" : ""}, bracket reseeds).</li>
+            <li><strong>Title odds.</strong> Title odds are never counted directly from the sims — a longshot's true chance sits far below what 10,000 finishes can resolve by counting, so counting manufactures zeros. Instead they decompose: title odds = playoff odds × the probability of winning the bracket once in. That bracket term is priced from team strength — the single-game win probability against the likely playoff field under the same scoring model, ${FIELD === 6 ? "over the two wins a bye team needs or the three everyone else needs (the bye share itself comes from the sims' top-2 finishes, a common event the sims estimate well)" : "over the wins a plain single-elimination bracket of this size requires"}. The product is coherent by construction: never above the playoff odds, and never zero while the playoff odds aren't. On screen the headline title number is the bracket term itself — the chance of winning it all if the team makes the playoffs — with the overall product shown as the secondary figure; the 99% display ceiling applies to both terms. A team is shown 0% only when it is mathematically eliminated — at least ${FIELD} rivals already own more wins than it can reach by winning out, with every other result and tiebreak breaking its way. Short of elimination, a sub-1% chance displays as &lt;1%. The mirror test runs at the top: a team has clinched when, even if it loses out and loses every points tiebreak, fewer than ${FIELD} rivals can still reach its win total — that team displays “Clinched” rather than a percentage. Nothing else displays above 99%, for playoff or title odds alike: a team that survives all 10,000 simulated finishes without being mathematically locked in is capped at 99%, because the sim prices games, not injuries or chaos.</li>
             <li><strong>Playoff schedule difficulty (Weeks 15–17).</strong> The fantasy bracket isn't set yet, but the NFL half of every playoff matchup already is. Each defense is graded by the fantasy points it has allowed per game to each position (this season's results, in the snapshot's scoring, from Sleeper's actual weekly stats against each player's real opponent that week — the same points-allowed computation behind the strength-of-schedule factors). Every team's projected starters are then matched against the defenses they'll face in Weeks 15, 16 and 17 of the real NFL schedule, and the rating is the mean softness of those starter-weeks (one per starter, Weeks 15–17; rank 1 = softest defense, 32 = stingiest). It grades the schedule, not the bracket: who you draw in the fantasy playoffs still depends on seeding, but the defenses your players run into don't.</li>
             <li><strong>Trade impact.</strong> Title-odds swings on the Trade Finder and in the calculator come from 3,000 paired simulations run before and after the deal with the same random stream, so the delta reflects the trade, not Monte Carlo noise. Draft picks don’t change 2026 odds — they change future seasons, which is the dynasty engine’s department.</li>
           </ul>`; }
@@ -5169,8 +5332,22 @@ ${rdP ? "" : `
         return bits.slice(0, 2).join(" ");
       }
       function bidRange(lo, hi) {
-        const fb = (DATA.league && DATA.league.faab) || 300;
-        return `$${Math.round(fb * lo)}–${Math.round(fb * hi)} · ${Math.round(lo * 100)}–${Math.round(hi * 100)}% FAAB`;
+        /* Pickup guidance in the connected league's own waiver
+           language. FAAB leagues: a bid as a share of the league's
+           ACTUAL total budget (waiverSystem reads it from the league
+           meta — no assumed $300 anywhere). Priority leagues (and
+           guests, who have no league): no bids exist, so the same
+           tiers become claim advice — spend priority, conditional
+           claim, or wait for free agency. Returns display-ready text;
+           render sites print it verbatim. */
+        const ws = waiverSystem();
+        if (ws && ws.type === "faab") {
+          const fb = ws.budget;
+          return `Bid $${Math.round(fb * lo)}–$${Math.round(fb * hi)} · ${Math.round(lo * 100)}–${Math.round(hi * 100)}% FAAB`;
+        }
+        if (lo >= 0.15) return "Worth a waiver claim — use your priority";
+        if (lo >= 0.05) return "Worth a claim if your priority is low";
+        return "Safe to wait for free agency";
       }
       function renderWaivers() {
         const sel = document.getElementById("waiver-team");
@@ -5247,7 +5424,7 @@ ${rdP ? "" : `
             <div class="wv-nums">
               <div class="wv-ros">${(p.ros || 0).toFixed(1)}<small>ROS pts/wk</small></div>
               ${gap}
-              <span class="wv-bid">Bid ${bid}</span>
+              <span class="wv-bid">${bid}</span>
             </div>
           </div>`;
         };
@@ -5298,7 +5475,7 @@ ${rdP ? "" : `
               </div>
               <div class="wv-nums">
                 <div class="wv-ros">${w.pts.toFixed(1)}<small>Week ${wk} proj</small></div>
-                <span class="wv-bid">Bid ${bidRange(0.01, 0.03)}</span>
+                <span class="wv-bid">${bidRange(0.01, 0.03)}</span>
               </div>
             </div>`;
           }).join("");
@@ -5322,7 +5499,7 @@ ${rdP ? "" : `
       const wvMethodEl = document.getElementById("method-body");
       if (wvMethodEl) wvMethodEl.innerHTML += `
         <h2>Waiver targets</h2>
-        <p>The pool is every tracked player not on one of the ${DATA.teams.length || 12} rosters — the same filter as the values board, so team-less and retired names never appear. A target's <strong>value-add</strong> is his rest-of-season PPG (the Season Outlook engine, in this league's scoring) minus the weakest starter at his position on the selected team, counting flex and superflex occupants — the player he'd actually have to beat. The rank score is forward PPG × (1 + value-add ÷ 10) when the value-add is positive, so a genuine lineup upgrade outranks a slightly bigger projection buried behind someone else's starters. Dynasty value is printed on every card for context but never drives this ranking. The <strong>stash list</strong> is age 24 or younger with a rising role clock, or with no 2026 snaps yet. <strong>Bids</strong> are shares of ${DATA.league.faab ? "this league's $" + DATA.league.faab : "your league's"} FAAB budget — startable now 15–25%, stashes 5–10%, the rest 1–3% — guidance, not gospel: your league-mates' habits matter more than any tier.</p>`;
+        <p>The pool is every tracked player not on one of the ${DATA.teams.length || 12} rosters — the same filter as the values board, so team-less and retired names never appear. A target's <strong>value-add</strong> is his rest-of-season PPG (the Season Outlook engine, in this league's scoring) minus the weakest starter at his position on the selected team, counting flex and superflex occupants — the player he'd actually have to beat. The rank score is forward PPG × (1 + value-add ÷ 10) when the value-add is positive, so a genuine lineup upgrade outranks a slightly bigger projection buried behind someone else's starters. Dynasty value is printed on every card for context but never drives this ranking. The <strong>stash list</strong> is age 24 or younger with a rising role clock, or with no 2026 snaps yet. <strong>Pickup guidance</strong> follows the connected league's waiver system: in a FAAB league, each target carries a suggested bid as a share of that league's actual budget — startable now 15–25%, stashes 5–10%, the rest 1–3%; in a rolling-priority league there are no bids to suggest, so the same tiers become claim advice — worth spending priority on, worth a claim if priority is cheap, or safe to wait for free agency. Guidance, not gospel: your league-mates' habits matter more than any tier.</p>`;
     </script>
     <script>
       "use strict";
@@ -5352,7 +5529,7 @@ ${rdP ? "" : `
         if (fq) fq.textContent = `${s.sf ? "Superflex" : "1QB"} · ${s.ppr === 1 ? "PPR" : s.ppr === 0.5 ? "Half PPR" : s.ppr === 0 ? "Standard" : fd(s.ppr) + " PPR"} · TE +${fd(s.tep)} · ${s.ptd}-pt TD`;
         const f = pos => posFactor(pos, SETTINGS).toFixed(2);
         document.getElementById("fp-factors").innerHTML =
-          `Scoring factors in play — <strong>QB ×${f("QB")}</strong> · <strong>RB ×${f("RB")}</strong> · <strong>WR ×${f("WR")}</strong> · <strong>TE ×${f("TE")}</strong> re-pricing the algorithm baseline to this format. Draft-pick values and the Win-Now / Rebuilder tags stay as the snapshot had them; starters value re-derives each team's best-ball lineup from the re-priced values.`;
+          `Scoring factors in play — <strong>QB ×${f("QB")}</strong> · <strong>RB ×${f("RB")}</strong> · <strong>WR ×${f("WR")}</strong> · <strong>TE ×${f("TE")}</strong> re-pricing the algorithm baseline to this format. Draft-pick values re-price with the format too: each rookie slot scales by how the slice of the player pool its round draws from moves between this format and Dynasty Standard — superflex makes early 1sts richer, 1QB makes them cheaper, late rounds barely move — so pick capital and the Win-Now / Rebuilder tags follow. Starters value re-derives each team's best-ball lineup from the re-priced values.`;
         document.querySelectorAll("#fp-presets button").forEach(btn => {
           const pr = PRESETS[btn.dataset.preset];
           const match = pr && pr.sf === s.sf && pr.ppr === s.ppr && pr.tep === s.tep && pr.ptd === s.ptd;
@@ -5880,7 +6057,7 @@ ${rdP ? "" : `
 
         document.getElementById("lineup-out").innerHTML = `
           <div class="diag"><h3>${esc(team.name)} — Week ${VW} lineup check</h3>
-            <p>Starters as set in the ${DATA.league.snapshot} snapshot project for <strong>${f1(curTotal)}</strong>. The optimal lineup — this league's ${opt.lineup.length + kdSlots.length} starter slots — projects for <strong>${f1(opt.total)}</strong>${kdSlots.length ? " — total excludes K/DEF" : ""} — ${gain > 0.05 ? `<strong>${f1(gain)} points are sitting on the bench.</strong>` : `<strong>nothing is being left on the table.</strong>`} ${isNext ? `Week ${VW} projections carry no strength-of-schedule nudge (matchup factors publish with the current week) and use injury statuses as of today — plan accordingly.` : `Every projection includes a strength-of-schedule adjustment for this week's NFL opponent (points allowed to the position, capped at ±12%), noted on each player's line.`}</p>
+            <p>Starters as set in the ${DATA.league.snapshot} snapshot project for <strong>${f1(curTotal)}</strong>. The optimal lineup — this league's ${opt.lineup.length + kdSlots.length} starter slots — projects for <strong>${f1(opt.total)}</strong>${kdSlots.length ? " — total excludes K/DEF" : ""} — ${gain > 0.05 ? `<strong>${f1(gain)} points are sitting on the bench.</strong>` : `<strong>nothing is being left on the table.</strong>`} ${isNext ? `Week ${VW} projections carry no strength-of-schedule nudge (matchup factors publish with the current week) and use injury statuses as of today — plan accordingly.` : `Every projection includes a strength-of-schedule adjustment for this week's NFL opponent (points allowed to the position), noted on each player's line.`}</p>
           </div>
           ${movesHtml}
           <div class="mv-grid">${tbl("Current starters (snapshot)", cur, curTotal, kdSlots.length ? { rows: "", totNote: true } : null)}${tbl("Optimal Week " + VW, opt.lineup, opt.total, kdSlots.length ? { rows: kdSlots.map(kdRowHtml).join(""), totNote: true } : null)}</div>
@@ -6644,7 +6821,7 @@ ${rdP ? "" : `
           const viaName = via[key] != null && holder ? holder.name : null;
           const pk = {
             key, season: yr, round: rd, orig, origName: byRid[orig] ? byRid[orig].name : "Team " + orig,
-            value,
+            value, baseValue: value, tierIdx: { Early: 0, Mid: 1, Late: 2 }[tier],
             label: viaName ? `${yr} ${RD_ORD[rd] || "Round " + rd} (via ${viaName})` : `${yr} Round ${rd}`,
             slotNote: viaName
               ? `owned by ${viaName} via trade; orig. team projects ${tier.toLowerCase()} (sits ${slpOrd(pfRank[orig] || 0)} of ${n} by points through Week ${week})`
@@ -6685,6 +6862,13 @@ ${rdP ? "" : `
           snapshot: today,
           teams: n,
           faab: (league.settings && league.settings.waiver_budget) || 0,
+          /* League waiver system: Sleeper waiver_type 0 = rolling
+             priority (no FAAB — the waiver_budget field is meaningless
+             there), 1 and 2 = FAAB. */
+          waiverSystem: (league.settings && (league.settings.waiver_type === 1 || league.settings.waiver_type === 2)) ? "faab" : "priority",
+          /* Playoff shape from the league's real settings, not assumed. */
+          playoffTeams: (league.settings && Number(league.settings.playoff_teams)) || 0,
+          playoffStart: (league.settings && Number(league.settings.playoff_week_start)) || 0,
           flex: (league.roster_positions || []).filter(x => x === "FLEX").length || 3,
           scoring: [
             slpFd(fmt.ppr) + " PPR",
@@ -6935,7 +7119,7 @@ ${rdP ? "" : `
         calc.B.assets = [];
         const isEspn = C.platform === "espn";
         document.getElementById("teams-intro").innerHTML = TEAMS_INTRO_DEMO + (isEspn ? ESPN_TEAMS_NOTE : "");
-        document.getElementById("waiver-intro").innerHTML = WAIVER_INTRO_DEMO + (isEspn ? ESPN_WAIVER_NOTE : "");
+        document.getElementById("waiver-intro").innerHTML = WAIVER_INTRO_DEMO + waiverSystemSentence() + (isEspn ? ESPN_WAIVER_NOTE : "");
         document.getElementById("calc-intro").innerHTML = CALC_INTRO_DEMO;
         document.getElementById("league-name").textContent = C.league.name;
         document.getElementById("league-sub").textContent = isEspn
@@ -7421,6 +7605,7 @@ ${rdP ? "" : `
             t.picks.push({
               key: `${yr}-${rd}-${t.rid}`, season: yr, round: rd, orig: t.rid, origName: t.name,
               value: SLP_LADDER[dy][rd - 1][{ Early: 0, Mid: 1, Late: 2 }[tier]],
+              baseValue: SLP_LADDER[dy][rd - 1][{ Early: 0, Mid: 1, Late: 2 }[tier]], tierIdx: { Early: 0, Mid: 1, Late: 2 }[tier],
               label: `${yr} Round ${rd}`,
               slotNote: `projects ${tier.toLowerCase()} (orig. team sits ${slpOrd(pfRank[t.rid] || 0)} of ${n} by points through Week ${week})`,
             });
@@ -7449,6 +7634,13 @@ ${rdP ? "" : `
           snapshot: today,
           teams: n,
           faab: (settings.acquisitionSettings && settings.acquisitionSettings.acquisitionBudget) || 0,
+          /* ESPN waiver system: acquisitionType "FAAB" = budget bidding;
+             anything else (plain "WAIVER") = waiver order, no budget. */
+          waiverSystem: (settings.acquisitionSettings && settings.acquisitionSettings.acquisitionType === "FAAB") ? "faab" : "priority",
+          /* ESPN playoff shape: scheduleSettings.playoffTeamCount when
+             present; 0 = unknown (consumers fall back honestly). */
+          playoffTeams: (settings.scheduleSettings && Number(settings.scheduleSettings.playoffTeamCount)) || 0,
+          playoffStart: 0,
           flex: (Number(slotCounts[23] || 0) + Number(slotCounts[3] || 0) + Number(slotCounts[5] || 0)) || 3,
           scoring: [
             slpFd(fmt.ppr) + " PPR",
@@ -7786,7 +7978,7 @@ ${rdP ? "" : `
               return `<div class="mt-wv-row">
                 <div class="mt-wv-main">
                   ${(typeof window.hsImg === "function") ? window.hsImg(p, "phs-sm") : ""}<span class="mt-wv-name">${esc(p.name)}</span><span class="mt-wv-kind ${kindCls}">${w.kind}</span>
-                  <div class="mt-wv-meta">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team)} · ${p.pos}${p.posRank} · Age ${p.age != null ? p.age : "—"} · Bid ${esc(w.bid)}${(window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].o === "number") ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned</span>` : ""}</div>
+                  <div class="mt-wv-meta">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team)} · ${p.pos}${p.posRank} · Age ${p.age != null ? p.age : "—"} · ${esc(w.bid)}${(window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].o === "number") ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned</span>` : ""}</div>
                   ${gap}
                 </div>
                 <div class="mt-wv-nums"><div class="mt-wv-ros">${(p.ros || 0).toFixed(1)}<small>ROS pts/wk</small></div></div>
@@ -8983,7 +9175,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
          transition, so none of this can drift from the toggle. */
       const RD_FINDER_INTRO = `Pick a team and the finder hunts <strong>production</strong>. This is a redraft league — there is no next year — so every idea is a <strong>win-now buy</strong>: bench depth goes out, a player who raises the optimal lineup's projected points per week comes in, and a deal that lowers projected points per week <strong>never appears</strong>, however the values balance. <strong>No draft picks change hands</strong> — picks don't exist here. Targets are priced on rest-of-season production alone, and every other roster is a potential partner. Where a roster is <strong>lopsided</strong> — stacked at one position, thin at another, by projected starter points against the league — the finder leads with <strong>positional swaps</strong>: one surplus player flipped one-for-one for a comparable player at the thin position, value-matched within ±20%, each with the reasoning spelled out on the card.`;
       const RD_TEAMS_INTRO = `Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 10,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong>. Below it, the <strong>Improve Your Odds</strong> panel prices the moves that most raise your title odds. Every roster below is graded on <strong>starting-lineup strength, total roster value, and points scored</strong> — in <strong>redraft prices</strong> throughout: rest of season only, no picks, no age curves. In a redraft league every team is a contender or a spoiler; there are no rebuilders. Tap a team to see its full roster.`;
-      const RD_WAIVER_INTRO = `Every unrostered player in the snapshot, ranked for the team you pick — not by name value, but by <strong>what he would do for that lineup</strong>. The bar is set by the <strong>rest-of-season projection engine</strong> (the same one behind Season Outlook): a target's value-add is his projected points per week minus the weakest starter he'd have to beat at his position, flex and superflex slots included. In redraft there is no stash list — a pickup either helps this season or he isn't worth the roster spot. Where the league runs FAAB, every target carries a suggested bid.`;
+      const RD_WAIVER_INTRO = `Every unrostered player in the snapshot, ranked for the team you pick — not by name value, but by <strong>what he would do for that lineup</strong>. The bar is set by the <strong>rest-of-season projection engine</strong> (the same one behind Season Outlook): a target's value-add is his projected points per week minus the weakest starter he'd have to beat at his position, flex and superflex slots included. In redraft there is no stash list — a pickup either helps this season or he isn't worth the roster spot.`;
 
       window.applyLeagueModeChrome = function (rd) {
         const C = window.CONN_LEAGUE;
@@ -9021,7 +9213,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         const wi = document.getElementById("waiver-intro");
         if (wi) {
           if (window.__wiDyn == null) window.__wiDyn = wi.innerHTML;
-          if (rd) wi.innerHTML = RD_WAIVER_INTRO + (conn && C.platform === "espn" && typeof ESPN_WAIVER_NOTE !== "undefined" ? ESPN_WAIVER_NOTE : "");
+          if (rd) wi.innerHTML = RD_WAIVER_INTRO + waiverSystemSentence() + (conn && C.platform === "espn" && typeof ESPN_WAIVER_NOTE !== "undefined" ? ESPN_WAIVER_NOTE : "");
           else if (window.GUEST_MODE) wi.innerHTML = window.__wiDyn;
         }
         /* Dynasty-only methodology (the dynasty engine, age curves,
@@ -9111,7 +9303,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
               if (d > 0.001) moves.push({
                 kind: "Waivers", dChamp: d,
                 title: `Add ${x.p.name} (${x.p.pos}) off waivers`,
-                sub: `Projects ${(x.p.ros || 0).toFixed(1)} pts/wk — +${x.add.toFixed(1)} over your weakest starting ${x.p.pos}${x.bar ? ` (${x.bar.p.name})` : ""}. Suggested bids live in More → Waiver Targets.`,
+                sub: `Projects ${(x.p.ros || 0).toFixed(1)} pts/wk — +${x.add.toFixed(1)} over your weakest starting ${x.p.pos}${x.bar ? ` (${x.bar.p.name})` : ""}. ${waiverSystem() && waiverSystem().type === "faab" ? "Suggested bids live in More → Waiver Targets." : "Pickup guidance lives in More → Waiver Targets."}`,
               });
             });
           }
