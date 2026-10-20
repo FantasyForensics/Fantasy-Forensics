@@ -2743,6 +2743,33 @@
         starterSlots().forEach(s => take(s.cands, 1, s.label));
         return { total, lineup };
       }
+      /* ROS optimal lineup — the projection twin of bestBallLineup: the
+         same league slots (starterSlots()) and the same greedy fill, but
+         ranked by rest-of-season projected points instead of value. This
+         is deliberately a line-for-line mirror of the Season sim's
+         optimal(): same pool (NO injury filter — availability lives in
+         the baked p.ros haircuts and the schedule factor, exactly as the
+         sim treats it), same per-player score — (p.ros || 0) × the
+         rest-of-season schedule factor from window.SOS — so this total
+         IS the sim's team mean for the team, and the power score below
+         can never disagree with the playoff odds about how strong a
+         lineup projects. Bye weeks are ignored here for the same reason
+         as in best-ball: a season-long projection, not a one-week read. */
+      function rosOptimalLineup(ids) {
+        const projOf = p => { const s = (window.SOS || {})[p.id]; return (p.ros || 0) * (s ? s[0] : 1); };
+        const pool = ids.map(id => PBY[id]).filter(Boolean).slice().sort((a, b) => projOf(b) - projOf(a));
+        const used = new Set(); const lineup = []; let total = 0;
+        function take(cands, n, slot) {
+          let c = 0;
+          for (const p of pool) {
+            if (c >= n) break;
+            if (used.has(p.id) || !cands.includes(p.pos)) continue;
+            used.add(p.id); lineup.push({ p, slot }); total += projOf(p); c++;
+          }
+        }
+        starterSlots().forEach(s => take(s.cands, 1, s.label));
+        return { total, lineup };
+      }
       function recomputeValues() {
         DATA.players.forEach(p => {
           p.value = Math.round(p.snapValue * factorRatio(p.pos));
@@ -2770,6 +2797,7 @@
           const bb = bestBallLineup(t.playerIds);
           t.bestLineup = bb.lineup;
           t.starterVal = bb.total;
+          t.rosOpt = rosOptimalLineup(t.playerIds).total;
           ["QB", "RB", "WR", "TE"].forEach(pos => {
             t.strengths[pos] = pls.filter(p => p.pos === pos).slice(0, depth[pos]).reduce((s, p) => s + valOf(p), 0);
           });
@@ -2781,11 +2809,19 @@
             .forEach((t, i) => { t.grades[pos] = GRADE_LADDER[i] || "F"; });
         });
         const pctile = (vals, x) => 100 * vals.filter(v => v <= x).length / vals.length;
-        const svs = DATA.teams.map(t => t.starterVal), tvs = DATA.teams.map(t => t.totalVal), pfs = DATA.teams.map(t => t.pf);
+        const svs = DATA.teams.map(t => t.starterVal), rps = DATA.teams.map(t => t.rosOpt);
+        /* Power score (Eric's rebuild, Oct 20): dynasty = half starters
+           value percentile, half rest-of-season projected-points
+           percentile; redraft = projected points alone (there is no
+           future season to price). Points scored so far no longer enter
+           the score — a past box score isn't a forecast — and actual PF
+           survives only as the last-resort tie-break. */
+        const rdPower = VALMODE === "redraft";
         DATA.teams.forEach(t => {
-          t.power = roundPower(0.5 * pctile(svs, t.starterVal) + 0.25 * pctile(tvs, t.totalVal) + 0.25 * pctile(pfs, t.pf));
+          t.power = roundPower(rdPower ? pctile(rps, t.rosOpt)
+            : 0.5 * pctile(svs, t.starterVal) + 0.5 * pctile(rps, t.rosOpt));
         });
-        DATA.teams.sort((a, b) => b.power - a.power || b.pf - a.pf);
+        DATA.teams.sort((a, b) => b.power - a.power || b.rosOpt - a.rosOpt || b.starterVal - a.starterVal || b.pf - a.pf);
         DATA.teams.forEach((t, i) => { t.powerRank = i + 1; });
       }
       function renderScoringChips() {
@@ -4382,7 +4418,7 @@ ${rdP ? "" : `
         <h2>The injury feed — what it shows, and what it won't</h2>
         <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The honesty rule: <strong>no free source publishes a reliable expected-return date</strong>, so the board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
         <h2>Power rankings &amp; the Win-Now / Rebuilder tags</h2>
-        <p>Power score combines starters value (50%), total roster value (25%), and points scored (25%), each as a league percentile — all computed from the same algorithm values as the board, so the team comparison can never drift away from the prices. <strong>Starters value is best-ball:</strong> the value of each team's best possible lineup under its league's slots, filled by dynasty value the way the Lineup tab's optimizer fills its slots — never the lineup the manager happens to have set on Sleeper. Bye weeks are ignored (a star on bye counts at full value — this measures roster strength, not one week), while players on IR / PUP or listed Out stay excluded, exactly as the optimizer treats them.</p> The archetype tag combines that with roster construction: contenders pair a top starting lineup with a veteran core and little pick capital; rebuilders are young and pick-heavy; tweeners get called tweeners.</p>
+        <p>Power score combines starters value (50%) and rest-of-season projected points (50%), each as a league percentile. Points scored so far don't enter it — a September box score isn't a forecast. In redraft mode the score is projected points alone: this season is all there is, so there is no future to price. <strong>Starters value is best-ball:</strong> the value of each team's best possible lineup under its league's slots, filled by dynasty value the way the Lineup tab's optimizer fills its slots — never the lineup the manager happens to have set on Sleeper. Bye weeks are ignored (a star on bye counts at full value — this measures roster strength, not one week), while players on IR / PUP or listed Out stay excluded, exactly as the optimizer treats them. The <strong>projected-points half</strong> is the Season Outlook engine's number: the same best-possible lineup construction, scored by rest-of-season projected points per week — the identical optimal-lineup total that drives the playoff odds, so the ranking and the odds can never disagree about how strong a lineup projects.</p> The archetype tag combines that with roster construction: contenders pair a top starting lineup with a veteran core and little pick capital; rebuilders are young and pick-heavy; tweeners get called tweeners.</p>
         <h2>Honest limits</h2>
         <ul>
           <li><strong>It's a snapshot.</strong> Rosters, standings, algorithm prices, and ranks are as of ${DATA.league.snapshot} (NFL Week ${DATA.league.week}). Later news is not priced in.</li>
