@@ -2549,7 +2549,7 @@
         <div class="locked-state" data-locked="waivers">
           <div class="locked-body">
             <h2>Waiver targets live here</h2>
-            <p>Every unrostered player, ranked by <strong>what he would do for your lineup</strong> — his projected points per week against the weakest starter he’d have to beat — with a suggested FAAB bid on each. The ranking is relative to a roster, and a guest doesn’t have one yet.</p>
+            <p>Every unrostered player, ranked by <strong>what he would do for your lineup</strong> — his projected points per week against the weakest starter he’d have to beat. The ranking is relative to a roster, and a guest doesn’t have one yet.</p>
             <div class="locked-actions">
               <button type="button" class="locked-cta">Connect your league</button>
             </div>
@@ -2558,7 +2558,7 @@
         </div>
         <details class="how-box waiver-part">
           <summary>How waiver targets work</summary>
-          <p class="tab-intro waiver-part" id="waiver-intro">Every unrostered player in the snapshot, ranked for the team you pick — not by dynasty value, but by <strong>what he would do for that lineup</strong>. Each target is ranked by what he would add over the weakest starter he’d have to beat at his position, flex and superflex slots included — his projected points per week against that starter’s. Young players with a <strong>rising role</strong> get their own stash list — in dynasty, that’s usually where the wire pays. This league runs <strong>FAAB with a $300 budget</strong>, so every target carries a suggested bid. One honest note: with 32-man rosters, most weeks this wire is thin, and this page says so instead of dressing up a name.</p>
+          <p class="tab-intro waiver-part" id="waiver-intro">Every unrostered player in the snapshot, ranked for the team you pick — not by dynasty value, but by <strong>what he would do for that lineup</strong>. Each target is ranked by what he would add over the weakest starter he’d have to beat at his position, flex and superflex slots included — his projected points per week against that starter’s. Young players with a <strong>rising role</strong> get their own stash list — in dynasty, that’s usually where the wire pays. This league runs <strong>FAAB with a $300 budget</strong>. One honest note: with 32-man rosters, most weeks this wire is thin, and this page says so instead of dressing up a name.</p>
         </details>
       </section>
 
@@ -3569,8 +3569,8 @@
         const ws = waiverSystem();
         if (!ws) return "";
         if (ws.type === "faab")
-          return ` This league runs <strong>FAAB with a $${ws.budget} budget</strong>, so every target carries a suggested bid — a share of that budget.`;
-        return ` This league uses <strong>rolling waiver priority</strong> — so every target carries claim guidance instead of a price tag: who is worth spending priority on, and who can wait for free agency.`;
+          return ` This league runs <strong>FAAB with a $${ws.budget} budget</strong>.`;
+        return ` This league uses <strong>rolling waiver priority</strong>.`;
       }
       /* Playoff field size from the connected league's real setting
          (Sleeper playoff_teams / ESPN playoff team count), stored on
