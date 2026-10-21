@@ -395,6 +395,9 @@
       .sugg-values { display: flex; gap: 8px 16px; flex-wrap: wrap; align-items: center; margin-top: 10px; font-size: 13.5px; color: var(--ink-2); }
       .sugg-values strong { color: var(--ink); }
       .path-head { font-family: "Space Grotesk", sans-serif; font-size: 19px; margin: 24px 0 2px; text-transform: uppercase; letter-spacing: .01em; }
+      .near-miss-strip { margin-top: 28px; border-top: 1px dashed var(--line); padding-top: 2px; }
+      .near-miss-strip .path-head { font-size: 15px; color: var(--ink-2); }
+      .near-miss-strip .suggestion { opacity: .85; }
       .path-desc { color: var(--ink-2); margin: 0 0 6px; max-width: 72ch; }
       .faq-list .how-box { margin: 12px 0; }
       section.tab { display: none; padding-top: 18px; }
@@ -4848,25 +4851,43 @@ ${rdP ? "" : `
         if (!pool.length && !anchor) return null;
         const effTarget = len => oppBest == null ? targetVal
           : targetVal + consolBonusFor([oppBest], len);
-        const orders = [
-          [...pool].sort((a, b) => b.value - a.value),
-          [...pool].sort((a, b) => (b.kind === "pick") - (a.kind === "pick") || b.value - a.value),
-          [...pool].sort((a, b) => a.value - b.value),
-        ];
+        /* Exhaustive bounded search (Oct 21 fix): every subset of the
+           pool up to 4 assets (~21 assets ⇒ ≤ ~7.5k subsets) is priced
+           against the same length-adjusted band the old walk used.
+           Ranking: fewest assets first (the roster bonus grows the
+           adjusted target with package length, so pure closeness
+           would stuff deals with extra assets the old walk never
+           sent — a one-pick McCaffrey price must stay one pick), then
+           closest to the adjusted target, then most pick value — a
+           deterministic order. The old code tried 3 fixed greedy
+           orderings with no backtracking and missed legal packages by
+           single digits — a 6-point miss killed a George Kittle deal
+           that had an in-band package all along. An anchor, when
+           given, is a mandatory first asset (the sell engine's
+           "player I want" mechanism). */
+        const rest = anchor ? pool.filter(a => a !== anchor) : pool;
         let best = null;
-        orders.forEach(ord => {
-          const pkg = anchor ? [anchor] : [];
-          let tot = anchor ? anchor.value : 0;
-          for (const a of ord) {
-            if (tot >= effTarget(pkg.length) * lo || pkg.length >= 4) break;
-            if (anchor && a === anchor) continue;
-            if (pkg.length && tot + a.value > effTarget(pkg.length + 1) * hi) continue;
-            pkg.push(a); tot += a.value;
-          }
-          if (pkg.length && tot >= effTarget(pkg.length) * lo && tot <= effTarget(pkg.length) * hi) {
-            if (!best || Math.abs(tot - effTarget(pkg.length)) < Math.abs(best.tot - effTarget(best.pkg.length))) best = { pkg, tot };
-          }
-        });
+        const consider = sub => {
+          const pkg = anchor ? [anchor, ...sub] : sub;
+          const len = pkg.length;
+          if (!len || len > 4) return;
+          const adj = effTarget(len);
+          let tot = 0, pickVal = 0;
+          for (const a of pkg) { tot += a.value; if (a.kind === "pick") pickVal += a.value; }
+          if (tot < adj * lo || tot > adj * hi) return;
+          const dist = Math.abs(tot - adj);
+          if (!best || len < best.pkg.length
+            || (len === best.pkg.length && (dist < best.dist - 1e-9
+              || (Math.abs(dist - best.dist) <= 1e-9 && pickVal > best.pickVal))))
+            best = { pkg, dist, pickVal };
+        };
+        const n = rest.length, maxK = Math.min(anchor ? 3 : 4, n);
+        const idx = [];
+        const walk = (start, left) => {
+          if (!left) { consider(idx.map(i => rest[i])); return; }
+          for (let i = start; i <= n - left; i++) { idx.push(i); walk(i + 1, left - 1); idx.pop(); }
+        };
+        for (let k = anchor ? 0 : 1; k <= maxK; k++) walk(0, k);
         return best ? best.pkg : null;
       }
       const pkgValue = pkg => pkg.reduce((x, a) => x + a.value, 0);
@@ -4879,6 +4900,52 @@ ${rdP ? "" : `
       const DYNASTY_CLEAR_GAIN = 6.0;
       const ARCH_PEAK_AGE = { QB: 31, RB: 26, WR: 28, TE: 28 };
       const pkgPlayerIds = pkg => pkg.filter(a => a.kind === "player").map(a => a.p.id);
+      /* Near-miss floor (Oct 21): a Dynasty buy that misses the
+         DYNASTY_MIN_GAIN bar but still adds at least this much is
+         collected for the subordinate "Near misses" strip instead of
+         vanishing silently at the cliff (an Ashton Jeanty deal at
+         +2.81 used to disappear without a trace). */
+      const NEAR_MISS_MIN_GAIN = 2.0;
+      /* Counterparty sanity for buys (Oct 21 fix): a partner is a
+         genuine firesale partner only if BOTH (a) their archetype is
+         rebuilder or crossroads, AND (b) their season is actually
+         gone — season-sim playoff odds under 35%, or (no sim yet) a
+         sub-.400 record. A partner failing (b) is plausibly
+         competitive whatever the power rank says (a 3–3 "rebuilder"
+         at #9 by power was offered two 1sts for her RB1 while sitting
+         at ~41% playoff odds), and a buy from them survives only if
+         the return includes a player who starts in THEIR post-trade
+         optimal lineup — the mirror of the check the sell engine has
+         always run on its partners. Picks-only strip-mining of a
+         competitive team's starter no longer renders. */
+      function genuineRebuildPartner(partner) {
+        if (!partner || (partner.arch !== "rebuilder" && partner.arch !== "crossroads")) return false;
+        const sim = (typeof window !== "undefined" && window.SeasonSim && window.SeasonSim.results)
+          ? window.SeasonSim.results[partner.rid] : null;
+        if (sim && typeof sim.playoff === "number") return sim.playoff < 0.35;
+        const m = /^(\d+)-(\d+)/.exec(partner.record || "");
+        if (m) { const w = +m[1], l = +m[2]; return (w + l) > 0 && (w / (w + l)) < 0.4; }
+        return true;
+      }
+      function pkgStartsForPartner(partner, target, pkg) {
+        const incoming = (pkg || []).filter(a => a.kind === "player");
+        if (!incoming.length) return false;
+        const ids = (partner.playerIds || []).filter(id => id !== target.id).concat(incoming.map(a => a.p.id));
+        const starters = new Set(optimalLineup(ids).lineup.map(p => p.id));
+        return incoming.some(a => starters.has(a.p.id));
+      }
+      function rebuildWithStarter(partner, target, payPool) {
+        /* Rebuild the package around each pay-pool player in turn
+           (buildPackage's anchor forces him in) and keep the first
+           package that gives the partner a starter back. Pool order
+           is value-descending, so this is deterministic. */
+        for (const a of payPool) {
+          if (a.kind !== "player") continue;
+          const pkg = buildPackage(payPool, target.value, 0.90, 1.12, a, target.value);
+          if (pkg && pkgStartsForPartner(partner, target, pkg)) return pkg;
+        }
+        return null;
+      }
 
       /* BUY: the user sends picks / prospects / bench depth and receives
          one producer — any age, priced on the youth+production curve.
@@ -4886,10 +4953,12 @@ ${rdP ? "" : `
          contenders (Win-Now and Dynasty alike) are never shopped. The
          guardrail is absolute: unless the deal raises the user's
          optimal-lineup projection, it does not exist. */
-      function buySuggestions(rid, mine) {
+      function buySuggestions(rid, mine, opts) {
         const myIds = mine.playerIds;
         const base = optimalLineup(myIds).total;
         const myLineup = lineupSet(rid);
+        const collectNear = !!(opts && opts.collectNear);
+        const nearOut = [];
         const payPool = [
           ...pickAssets(mine),
           ...tradableAssets(rid).filter(p => !myLineup.has(p.id) && dispVal(p) >= tradeFloors().card).map(playerAsset),
@@ -4906,8 +4975,19 @@ ${rdP ? "" : `
           teamPlayers(partner.rid)
             .filter(p => dispVal(p) >= tradeFloors().target && (p.ros || 0) > 0 && wantMatch(p.pos))
             .forEach(target => {
-              const pkg = buildPackage(payPool, target.value, 0.90, 1.12, null, target.value);
+              let pkg = buildPackage(payPool, target.value, 0.90, 1.12, null, target.value);
               if (!pkg) return;
+              /* COUNTERPARTY SANITY (Oct 21 fix, dynasty only): from
+                 a partner who is NOT a genuine firesale (archetype
+                 plus a live season — see genuineRebuildPartner), the
+                 package must give them a player who starts in their
+                 post-trade lineup. If the best package doesn't, try
+                 rebuilding around a starter-bound player; if no
+                 package qualifies, the buy doesn't exist. */
+              if (VALMODE !== "redraft" && !genuineRebuildPartner(partner) && !pkgStartsForPartner(partner, target, pkg)) {
+                pkg = rebuildWithStarter(partner, target, payPool);
+                if (!pkg) return;
+              }
               const outIds = pkgPlayerIds(pkg);
               const newIds = myIds.filter(id => !outIds.includes(id)).concat([target.id]);
               const dPpg = optimalLineup(newIds).total - base;
@@ -4921,21 +5001,29 @@ ${rdP ? "" : `
                  — picks are at least half the package value — and no
                  young core player (below his position's peak age) may
                  go out. At +6.0 or better the gain is a clear upgrade
-                 and either rule may bend. */
+                 and either rule may bend. (3) A deal that passes
+                 every other gate but lands in [NEAR_MISS_MIN_GAIN,
+                 DYNASTY_MIN_GAIN) is collected as a near miss for the
+                 strip under the main list, not dropped silently. */
+              const adjTarget = target.value + consolBonusFor([target.value], pkg.length);
+              const gapPct = Math.abs(pkgValue(pkg) - adjTarget) / adjTarget;
+              const score = dPpg * 6 + windowBonus + Math.max(0, 8 - gapPct * 20) + Math.min(3, target.value / 3000);
               if (VALMODE !== "redraft" && mine.arch === "dynasty") {
-                if (dPpg < DYNASTY_MIN_GAIN) return;
                 if (dPpg < DYNASTY_CLEAR_GAIN) {
                   const pickShare = pkg.filter(a => a.kind === "pick").reduce((s2, a) => s2 + a.value, 0) / Math.max(pkgValue(pkg), 1);
                   const youngOut = pkg.some(a => a.kind === "player" && (a.p.age ?? 99) < (ARCH_PEAK_AGE[a.p.pos] ?? 28));
                   if (pickShare < 0.5 || youngOut) return;
                 }
+                if (dPpg < DYNASTY_MIN_GAIN) {
+                  if (collectNear && dPpg >= NEAR_MISS_MIN_GAIN)
+                    nearOut.push({ dir: "buy", partner, target, pkg, dPpg, score, basePpg: base, nearMiss: true });
+                  return;
+                }
               }
-              const adjTarget = target.value + consolBonusFor([target.value], pkg.length);
-              const gapPct = Math.abs(pkgValue(pkg) - adjTarget) / adjTarget;
-              const score = dPpg * 6 + windowBonus + Math.max(0, 8 - gapPct * 20) + Math.min(3, target.value / 3000);
               out.push({ dir: "buy", partner, target, pkg, dPpg, score, basePpg: base });
             });
         });
+        out.nearMisses = nearOut.sort((a, b) => b.dPpg - a.dPpg).slice(0, 3);
         return out;
       }
 
@@ -5118,6 +5206,7 @@ ${rdP ? "" : `
           .sort((a, b) => needScore(rid, b) - needScore(rid, a));
         let all = [];
         let posNote = null;
+        let nearRaw = [];
         /* Redraft: every team is effectively win-now — there is no
            future to build for — so every team gets buys under the
            win-now rules (raise projected pts/wk or the deal doesn't
@@ -5131,9 +5220,17 @@ ${rdP ? "" : `
           all = [...swaps, ...buySuggestions(rid, mine)];
           posNote = positionalNote(read, swaps.length);
         }
-        else if (mine.arch === "win-now" || mine.arch === "dynasty") all = buySuggestions(rid, mine);
+        else if (mine.arch === "win-now" || mine.arch === "dynasty") {
+          const buys = buySuggestions(rid, mine, { collectNear: VALMODE === "dynasty" });
+          all = buys;
+          nearRaw = buys.nearMisses || [];
+        }
         else if (mine.arch === "rebuilder") all = sellSuggestions(rid, mine);
-        else all = [...buySuggestions(rid, mine), ...sellSuggestions(rid, mine)];
+        else {
+          const buys = buySuggestions(rid, mine, { collectNear: VALMODE === "dynasty" });
+          all = [...buys, ...sellSuggestions(rid, mine)];
+          nearRaw = buys.nearMisses || [];
+        }
         // dedupe by direction+partner+headline asset, diversify partners
         const seen = new Set(); const out = []; const perPartner = {}; const perDir = {};
         all.sort((a, b) => b.score - a.score);
@@ -5194,13 +5291,25 @@ ${rdP ? "" : `
           if (picked.length >= 8) break;
           if (!picked.includes(s)) take(s);
         }
-        return { myNeeds, suggestions: picked, mine, posNote };
+        /* Near misses get the same fairness grading as the main
+           list — only Fair or Close deals show, labeled as the
+           under-the-bar deals they are. */
+        const nearGraded = [];
+        for (const s of nearRaw) {
+          const oa = offerAssetsOf(s);
+          const g = offerGrade(oa.give, oa.get);
+          if (g.zone === "lopsided") continue;
+          s.grade = g;
+          nearGraded.push(s);
+        }
+        nearGraded.sort((a, b) => b.dPpg - a.dPpg);
+        return { myNeeds, suggestions: picked, mine, posNote, nearMisses: nearGraded.slice(0, 3) };
       }
 
       function renderFinder() {
         const rid = Number(document.getElementById("finder-team").value);
         if (window.GUEST_MODE || !TBY[rid]) { const el = document.getElementById("finder-out"); if (el) el.innerHTML = ""; return; }
-        const { suggestions, mine, posNote } = findTrades(rid);
+        const { suggestions, mine, posNote, nearMisses } = findTrades(rid);
         const el = document.getElementById("finder-out");
         const basePpg = optimalLineup(mine.playerIds).total;
         const want = finderState.want;
@@ -5254,7 +5363,7 @@ ${rdP ? "" : `
         }
         const topScore = suggestions.length ? suggestions[0].score : 1;
         const cardFor = s => {
-          const fitIdx = Math.max(1, Math.round(100 * s.score / topScore));
+          const fitIdx = Math.max(1, Math.min(100, Math.round(100 * s.score / topScore)));
           const isBuy = s.dir === "buy";
           const giveAssets = isBuy ? s.pkg : [playerAsset(s.vet)];
           const getAssets = isBuy ? [playerAsset(s.target)] : s.pkg;
@@ -5303,6 +5412,8 @@ ${rdP ? "" : `
                 : `<span class="dir-tag">Win-now buy</span>Redraft rules: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, never a starter. There is no next season to save for.`
               : mine.arch === "win-now"
               ? `<span class="dir-tag">Win-now buy</span>You're win-now: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, not a starter.`
+              : mine.arch === "dynasty" && s.nearMiss
+              ? `<span class="dir-tag">Near miss</span><strong>${dTxt} projected pts/week</strong> — just under your Dynasty bar (+${DYNASTY_MIN_GAIN.toFixed(1)}). A real, fairly-priced deal, shown for transparency rather than as a recommendation: the only kind a Dynasty 👑 core acts on clears the bar outright. Paid for with ${payDesc}; your young starters stay home.`
               : mine.arch === "dynasty"
               ? `<span class="dir-tag">Dynasty buy</span>A clear upgrade — the only kind a Dynasty 👑 core makes: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc}. Your young starters stay home.`
               : `<span class="dir-tag">Win-now move</span>Buys production now: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc} — future capital spent on this season.`;
@@ -5354,6 +5465,13 @@ ${rdP ? "" : `
           html += sells.length ? sells.map(cardFor).join("") : `<div class="diag"><p>No rebuild sell cleared the bar right now — no contender can pay full value for your veterans in picks and youth today.</p></div>`;
         } else {
           html += suggestions.map(cardFor).join("");
+        }
+        /* Near misses (dynasty mode only): real deals that passed
+           every other gate but landed under the +3.0 Dynasty bar —
+           rendered below the recommendations, visually subordinate,
+           each labeled with its actual gain. */
+        if (VALMODE === "dynasty" && nearMisses && nearMisses.length) {
+          html += `<div class="near-miss-strip"><h3 class="path-head">Near misses</h3><p class="path-desc">Deals that work on price and fit but add less than the +3.0 projected pts/week your Dynasty 👑 bar demands — here for transparency, not as recommendations.</p>${nearMisses.map(cardFor).join("")}</div>`;
         }
         el.innerHTML = html;
       }
