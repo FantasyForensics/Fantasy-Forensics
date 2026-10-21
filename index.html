@@ -19,9 +19,9 @@
     <meta property="og:title" content="Fantasy Forensics — Price Every Player. Win Every Trade." />
     <meta property="og:description" content="The one-stop shop for dynasty fantasy football: trade calculator, player values, 10,000-sim season projections, lineup optimizer, and draft room. Free." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://muse.ai/s/dynasty-analyzer-xgxk6zgavxnxris" />
+    <meta property="og:url" content="https://thefantasyforensics.com/" />
     <meta property="og:site_name" content="Fantasy Forensics" />
-    <meta property="og:image" content="https://muse.ai/s/dynasty-analyzer-xgxk6zgavxnxris/assets/og-image.png" />
+    <meta property="og:image" content="https://thefantasyforensics.com/og-image.png" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -30,8 +30,26 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Fantasy Forensics — Price Every Player. Win Every Trade." />
     <meta name="twitter:description" content="The one-stop shop for dynasty fantasy football: trade calculator, player values, 10,000-sim season projections, lineup optimizer, and draft room. Free." />
-    <meta name="twitter:image" content="https://muse.ai/s/dynasty-analyzer-xgxk6zgavxnxris/assets/og-image.png" />
+    <meta name="twitter:image" content="https://thefantasyforensics.com/og-image.png" />
     <meta name="twitter:image:alt" content="Fantasy Forensics — Price Every Player. Win Every Trade." />
+    <link rel="canonical" href="https://thefantasyforensics.com/" />
+    <meta name="google-site-verification" content="cS7Yc2vsCySuT8ZOr1pc_klIyfHORCR0iqO9XDDWQN8" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Fantasy Forensics",
+      "url": "https://thefantasyforensics.com/",
+      "applicationCategory": "SportsApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Requires JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
     <!-- Insights structured data — regenerated with the article feed (see the INSIGHTS template spec in the Insights script) -->
     <script type="application/ld+json">
     {
@@ -1124,6 +1142,8 @@
       .sig.out { background: var(--red-soft); color: var(--red); }
       .sig.bye { background: rgba(255,176,32,.14); color: var(--gold); }
       .sig.q { background: var(--surface-2); color: var(--ink-2); }
+      .inj-chip.lu-q { background: rgba(255,176,32,.14); color: var(--gold); border-color: rgba(255,176,32,.45); }
+      .inj-chip.lu-red { background: var(--red-soft); color: var(--red); border-color: rgba(255,46,136,.45); }
       .lu-delta { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
       .lu-delta.up { color: var(--accent); }
       .lu-delta.dn { color: var(--red); }
@@ -2408,7 +2428,7 @@
         <div id="lineup-out"></div>
         <details class="how-box inseason">
           <summary>How this works</summary>
-          <p class="tab-intro">The weekly question: <strong>who do I start Sunday?</strong> For the team you pick, this builds the <strong>optimal lineup for the current week</strong> from the same rest-of-season projections behind Season Outlook — with a one-week availability adjustment on top: a player on <strong>bye</strong> or listed <strong>Out / IR / PUP / Suspended</strong> projects for zero and is auto-benched, Doubtful is halved, Questionable is trimmed 10%. A player with <strong>no NFL team</strong> — unsigned, per the same live Sleeper players feed that carries the injury designations — projects for zero, is labeled Unsigned, and is <strong>excluded from the optimal lineup entirely</strong>, whatever his dynasty value says. A signed player outside the priced pool shows <strong>Unpriced</strong> rather than a fake zero: his projection is unknown, and he starts only when no priced option exists. Below it, the current <strong>real Sleeper matchup</strong>: both teams' optimal lineups, a win probability, and the decisions the game swings on. Same separation rule as everything else here — <strong>projections never touch dynasty values</strong>, and nothing in this tab moves a price on the board.</p>
+          <p class="tab-intro">The weekly question: <strong>who do I start Sunday?</strong> For the team you pick, this builds the <strong>optimal lineup for the current week</strong> from the weekly projections ESPN and Rotowire publish — printed exactly as the sources project them, never scaled up or down on this page. An injury designation rides as a tag on the player's name (<strong>Q</strong>, <strong>D</strong>, <strong>Out</strong>) for you to weigh yourself. A player on <strong>bye</strong>, or one the sources don't project at all, projects for zero and is auto-benched; a player listed Out who is nevertheless projected to play keeps his projection and is flagged a <strong>status conflict</strong> instead — a stale designation never erases a real projection. A player with <strong>no NFL team</strong> — unsigned, per the same live Sleeper players feed that carries the injury designations — projects for zero, is labeled Unsigned, and is <strong>excluded from the optimal lineup entirely</strong>, whatever his dynasty value says. A signed player outside the priced pool shows <strong>Unpriced</strong> rather than a fake zero: his projection is unknown, and he starts only when no priced option exists. Below it, the current <strong>real Sleeper matchup</strong>: both teams' optimal lineups, a win probability, and the decisions the game swings on. Same separation rule as everything else here — <strong>projections never touch dynasty values</strong>, and nothing in this tab moves a price on the board.</p>
         </details>
 
       </section>
@@ -3836,6 +3856,17 @@
       function injChip(p) {
         return p.inj ? ` <span class="inj-chip sev-${injSev(p)}">${esc(injLabel(p))}</span>` : "";
       }
+      /* Lineup designation chip (Eric, 2026-10-21): the short tag the
+         league apps use — Q amber, D and the out-class red — printed
+         beside the name in the Lineup Analyzer. Information only: the
+         designation never scales a projection on this site (wkProj
+         publishes the sources' numbers as-is). */
+      function desigChip(p) {
+        if (!p || !p.inj) return "";
+        if (p.inj === "Questionable") return ` <span class="inj-chip lu-q">Q</span>`;
+        if (p.inj === "Doubtful") return ` <span class="inj-chip lu-red">D</span>`;
+        return ` <span class="inj-chip lu-red">${esc(p.inj)}</span>`;
+      }
       function espnNewsUrl(p) { // his ESPN player page where the feed carries an id; ESPN's injuries page otherwise
         return p.espn ? `https://www.espn.com/nfl/player/_/id/${p.espn}` : "https://www.espn.com/nfl/injuries";
       }
@@ -4218,6 +4249,18 @@ ${rdP ? "" : `
         const r = y[round]; if (!r) return 1;
         const ti = { Early: 0, Mid: 1, Late: 2 }[tier];
         return ti == null ? 1 : r[ti];
+      }
+      /* Pick tiers (Eric, 2026-10-21): ONE canonical rank→tier
+         mapping for the whole site. Rank 1 = the league's best team;
+         the worst third prices Early, the best third Late. Both
+         league builders stamp provisional tiers from this mapping
+         (points-for rank), and the connect flow re-stamps every pick
+         from the season sim's projected final standings through the
+         same mapping (restampPickTiers) — no second copy of the rule
+         may exist. */
+      function pickTierFromRank(rk, n) {
+        const r = rk || Math.ceil(n / 2);
+        return r > (2 * n) / 3 ? "Early" : r <= n / 3 ? "Late" : "Mid";
       }
       function tierOfPick(pk) {
         if (pk.tier) return pk.tier;
@@ -4961,7 +5004,7 @@ ${rdP ? "" : `
          least 5% above the league average; NEED when bottom third and
          at least 5% below. Swaps then flip one surplus player for a
          comparable player at a need position: one-for-one, redraft
-         values inside a ±20% band, and the incoming player has to
+         values inside a ±10% band, and the incoming player has to
          actually crack the post-trade optimal lineup without the swap
          costing the lineup more than a tenth of a point a week. A
          balanced roster produces no swaps and an honest note, and the
@@ -5015,7 +5058,7 @@ ${rdP ? "" : `
                 const mutual = (pSpRatio <= 0.97 ? 3 : 0) + (pNpRatio >= 1.05 ? 2 : 0);
                 theirAtPos.forEach((target, tIdx) => {
                   const tv = dispVal(target);
-                  if (tv < sv * 0.8 || tv > sv * 1.2) return; // the ±20% value band
+                  if (tv < sv * 0.9 || tv > sv * 1.1) return; // the ±10% value band — the calculator's own lopsided line
                   if ((target.ros || 0) <= 0) return;
                   const newIds = myIds.filter(id => id !== send.id).concat([target.id]);
                   const newOpt = optimalLineup(newIds);
@@ -5042,8 +5085,8 @@ ${rdP ? "" : `
         const list = arr => arr.slice(0, 2).map(tag).join(" and ");
         if (read.surplus.length && read.needs.length) {
           return swapCount
-            ? `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> but <strong>thin at ${list(read.needs)}</strong> by projected starter points. The <strong>positional swaps</strong> up top flip surplus depth into the thin spot — one-for-one, value-matched within ±20% — and the standard win-now buys follow below.`
-            : `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> but <strong>thin at ${list(read.needs)}</strong> by projected starter points — but no one-for-one swap inside the ±20% value band also cleared the lineup check, so the ideas below are the standard win-now buys.`;
+            ? `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> but <strong>thin at ${list(read.needs)}</strong> by projected starter points. The <strong>positional swaps</strong> up top flip surplus depth into the thin spot — one-for-one, value-matched — and the standard win-now buys follow below.`
+            : `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> but <strong>thin at ${list(read.needs)}</strong> by projected starter points — but no value-matched one-for-one swap also cleared the lineup check, so the ideas below are the standard win-now buys.`;
         }
         if (read.surplus.length) return `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> by projected starter points, but no position is thin enough to demand a fix — so the ideas below are the standard win-now buys, not forced swaps.`;
         if (read.needs.length) return `Positional read: this roster is <strong>thin at ${list(read.needs)}</strong> by projected starter points, but no position is deep enough to pay for the fix out of surplus — the ideas below are the standard win-now buys.`;
@@ -5645,7 +5688,7 @@ ${rdP ? "" : `
         <h2>Players outside the core board</h2>
         <p>Players outside the core board (deep benches, new call-ups) have no algorithm baseline price. Their values are estimated from their production, their age, and their role — and should be treated as less certain than a baseline-priced value.</p>
         <h2>Draft picks — algorithm-priced, not estimated</h2>
-        <p>Pick values are computed by the algorithm itself, off the same model as player prices: a <strong>2027 1st is worth 6,008 (early) / 4,537 (mid) / 3,892 (late)</strong>; a 2027 2nd 3,024 / 2,569 / 2,339; a 2028 1st 4,627 / 3,596 / 3,114 and a 2029 1st 3,969 / 3,197 / 2,776. Projected slots come from the original team's current points-for pace. Future picks are discounted for the wait — the further out the pick, the less it is worth today — but the discount is shallower than production alone would set, because the market prices future picks hot, especially with the stacked 2027 class in view. A mid 2027 1st prices like a low-end WR3/RB3 veteran. Those are superflex prices: in a 1QB league every slot on the ladder re-prices down to that format's market, where no second quarterback slot props up the picks that would have landed passers.</p>
+        <p>Pick values are computed by the algorithm itself, off the same model as player prices: a <strong>2027 1st is worth 6,008 (early) / 4,537 (mid) / 3,892 (late)</strong>; a 2027 2nd 3,024 / 2,569 / 2,339; a 2028 1st 4,627 / 3,596 / 3,114 and a 2029 1st 3,969 / 3,197 / 2,776. Projected slots come from the site's own season projection: the 10,000-sim Season Outlook's projected final standings — the worse the original team is projected to finish, the earlier its picks price. The same projected finish prices a team's picks two and three years out, until those seasons can be simulated themselves. Future picks are discounted for the wait — the further out the pick, the less it is worth today — but the discount is shallower than production alone would set, because the market prices future picks hot, especially with the stacked 2027 class in view. A mid 2027 1st prices like a low-end WR3/RB3 veteran. Those are superflex prices: in a 1QB league every slot on the ladder re-prices down to that format's market, where no second quarterback slot props up the picks that would have landed passers.</p>
         <h2>Trade verdicts — the roster bonus</h2>
         <p>Adding up raw prices lies about uneven trades. Three players worth 3,000 each sum to 9,000, but they do not beat one 8,500 stud: starting roster spots are scarce, and only so many of the three can ever take the field in the stud's place. So the trade calculator never judges a deal on raw sums alone. Each side's verdict number — its <strong>Trade value</strong> — is its raw sum plus a <strong>roster bonus</strong> for the side receiving fewer assets: the roster spots that side frees up are worth waiver-fill value, scaled up when the side's best asset concentrates production into a single roster spot. The bonus only ever goes to the side receiving fewer players and picks; when a trade sends the same number of assets each way, there is no bonus at all. Picks count as assets the same way players do, which is why four late 2nds don't add up to one early 1st here. The verdict, the fair/close/lopsided thresholds, and the balancing-pick suggestion are all computed on trade values; the calculator still prints the <strong>Raw sum</strong> under the Trade value, with the roster bonus on its own labeled line whenever one applies, so the credit is never hidden. The bonus tempers fair deals rather than reversing them: two good starters still beat one great player when their combined value clears his price plus the bonus — and a 1-for-1 of near-equals barely moves at all, because neither side earns a bonus.</p>
         <h2>What is the roster bonus?</h2>
@@ -5653,7 +5696,7 @@ ${rdP ? "" : `
         <h2>The injury feed — what it shows, and what it won't</h2>
         <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The honesty rule: <strong>no free source publishes a reliable expected-return date</strong>, so the board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
         <h2>Power rankings &amp; the team tags</h2>
-        <p>Power score combines starters value (50%) and rest-of-season projected points (50%), each as a league percentile. Points scored so far don't enter it — a September box score isn't a forecast. In redraft mode the score is projected points alone: this season is all there is, so there is no future to price. <strong>Starters value is best-ball:</strong> the value of each team's best possible lineup under its league's slots, filled by dynasty value the way the Lineup Analyzer's optimizer fills its slots — never the lineup the manager happens to have set on Sleeper. Bye weeks are ignored (a star on bye counts at full value — this measures roster strength, not one week), while players on IR / PUP or listed Out stay excluded, exactly as the optimizer treats them. The <strong>projected-points half</strong> is the Season Outlook engine's number: the same best-possible lineup construction, scored by rest-of-season projected points per week — the identical optimal-lineup total that drives the playoff odds, so the ranking and the odds can never disagree about how strong a lineup projects.</p> The team tag reads that ranking together with the age of each team's starting core. The top third splits by core age: a veteran core is tagged <strong>Win-Now ⏳</strong> — its window is this season — and a young core <strong>Dynasty 👑</strong>, built to contend now and for years. The middle third is <strong>Crossroads 🔀</strong>: close enough to contend, one decision from either direction. The bottom third is <strong>Rebuilder 🔨</strong>, playing for next year. The tags drive Player Targets: contenders see buys, rebuilders see sells, and Crossroads teams pick a path.</p>
+        <p>Power score combines starters value and rest-of-season projected points, each as a league percentile. Points scored so far don't enter it — a September box score isn't a forecast. In redraft mode the score is projected points alone: this season is all there is, so there is no future to price. <strong>Starters value is best-ball:</strong> the value of each team's best possible lineup under its league's slots, filled by dynasty value the way the Lineup Analyzer's optimizer fills its slots — never the lineup the manager happens to have set on Sleeper. Bye weeks are ignored (a star on bye counts at full value — this measures roster strength, not one week), while players on IR / PUP or listed Out stay excluded, exactly as the optimizer treats them. The <strong>projected-points half</strong> is the Season Outlook engine's number: the same best-possible lineup construction, scored by rest-of-season projected points per week — the identical optimal-lineup total that drives the playoff odds, so the ranking and the odds can never disagree about how strong a lineup projects.</p> The team tag reads that ranking together with the age of each team's starting core. The top third splits by core age: a veteran core is tagged <strong>Win-Now ⏳</strong> — its window is this season — and a young core <strong>Dynasty 👑</strong>, built to contend now and for years. The middle third is <strong>Crossroads 🔀</strong>: close enough to contend, one decision from either direction. The bottom third is <strong>Rebuilder 🔨</strong>, playing for next year. The tags drive Player Targets: contenders see buys, rebuilders see sells, and Crossroads teams pick a path.</p>
         <h2>Honest limits</h2>
         <ul>
           <li><strong>It's a snapshot.</strong> Rosters, standings, algorithm prices, and ranks are as of ${DATA.league.snapshot} (NFL Week ${DATA.league.week}). Later news is not priced in.</li>
@@ -6423,24 +6466,11 @@ ${rdP ? "" : `
           bits.push("Depth-chart insurance: he matters the week the starter in front of him goes down, and not before.");
         return bits.slice(0, 2).join(" ");
       }
-      function bidRange(lo, hi) {
-        /* Pickup guidance in the connected league's own waiver
-           language. FAAB leagues: a bid as a share of the league's
-           ACTUAL total budget (waiverSystem reads it from the league
-           meta — no assumed $300 anywhere). Priority leagues (and
-           guests, who have no league): no bids exist, so the same
-           tiers become claim advice — spend priority, conditional
-           claim, or wait for free agency. Returns display-ready text;
-           render sites print it verbatim. */
-        const ws = waiverSystem();
-        if (ws && ws.type === "faab") {
-          const fb = ws.budget;
-          return `Bid $${Math.round(fb * lo)}–$${Math.round(fb * hi)} · ${Math.round(lo * 100)}–${Math.round(hi * 100)}% FAAB`;
-        }
-        if (lo >= 0.15) return "Worth a waiver claim — use your priority";
-        if (lo >= 0.05) return "Worth a claim if your priority is low";
-        return "Safe to wait for free agency";
-      }
+      /* No bid guidance anywhere (Eric, 2026-10-21): Sleeper and
+         ESPN already suggest FAAB bids and claim handling inside the
+         league app, at the moment the claim is placed. This board
+         ranks who deserves the claim — value-add order, sections,
+         ROS rates — and never prints a price. */
       function renderWaivers() {
         const sel = document.getElementById("waiver-team");
         const rid = Number(sel.value || USER_RID);
@@ -6497,7 +6527,7 @@ ${rdP ? "" : `
           ${drop ? `<p>Easiest roster spot to open: <strong>${esc(drop.name)}</strong>${dropBadge} (${drop.pos}, ${typeof VALMODE !== "undefined" && VALMODE === "redraft" ? "redraft" : "dynasty"} value ${fmt(dispVal(drop))}) — this team's lowest-value bench player.${dropDrops > 0 ? ` He's also among the most-dropped players nationally in the last 24h (${dropDrops.toLocaleString()} drops across Sleeper).` : ""}</p>` : ""}
         </div>`;
 
-        const row = (m, bid) => {
+        const row = m => {
           const p = m.p;
           const tr = p.trnd ?? 0;
           const trCls = tr >= 1 ? "up" : tr <= -1 ? "dn" : "flat";
@@ -6516,31 +6546,30 @@ ${rdP ? "" : `
             <div class="wv-nums">
               <div class="wv-ros">${(p.ros || 0).toFixed(1)}<small>ROS pts/wk</small></div>
               ${gap}
-              <span class="wv-bid">${bid}</span>
             </div>
           </div>`;
         };
-        const section = (title, sub, list, bid) => {
+        const section = (title, sub, list) => {
           const l = filt(list);
           if (!l.length) return "";
-          return `<div class="wv-card"><h3>${title}</h3><p class="wv-sub">${sub}</p>${l.map(m => row(m, bid)).join("")}</div>`;
+          return `<div class="wv-card"><h3>${title}</h3><p class="wv-sub">${sub}</p>${l.map(m => row(m)).join("")}</div>`;
         };
         html += section("Startable now — must-adds",
           "Projects to outscore the weakest starter in this team's best-ball lineup at his position. In a league this deep, this list is empty most weeks — when it isn't, move fast.",
-          startable, bidRange(0.15, 0.25));
+          startable);
         html += section("Stash targets",
           "Age 24 or younger with a rising role — or no 2026 snaps yet, where the bet is the depth chart. Ranked by dynasty value; these are next month's starters, not this week's.",
-          stash, bidRange(0.05, 0.10));
+          stash);
         html += section("Best of the rest",
           "Everyone else on the wire, ranked by projected points per week, boosted where a player sits close to this team's bar at his position.",
-          rest, bidRange(0.01, 0.03));
+          rest);
         /* Streaming: one-week fill-ins, ranked by this week's matchup-aware
            projection (wkProj — ESPN/Rotowire weekly projections, already
            baked into the file). Candidates are unrostered players at the
            positions where this team's bar is weakest, filtered by the
            position toggle like the other sections. If no weekly data is
            baked (no ESPN_WK_PROJ), keep the old punt text so the section
-           degrades silently. Bid tier 1–3% (best-of-the-rest band), same as before. */
+           degrades silently. */
         const streamHtml = (() => {
           const hasWk = typeof wkProj === "function" && window.ESPN_WK_PROJ && typeof window.ESPN_WK_PROJ === "object"
             && Object.keys(window.ESPN_WK_PROJ).length > 0;
@@ -6567,7 +6596,6 @@ ${rdP ? "" : `
               </div>
               <div class="wv-nums">
                 <div class="wv-ros">${w.pts.toFixed(1)}<small>Week ${wk} proj</small></div>
-                <span class="wv-bid">${bidRange(0.01, 0.03)}</span>
               </div>
             </div>`;
           }).join("");
@@ -6591,7 +6619,7 @@ ${rdP ? "" : `
       const wvMethodEl = document.getElementById("method-body");
       if (wvMethodEl) wvMethodEl.innerHTML += `
         <h2>Waiver targets</h2>
-        <p>The pool is every tracked player not on one of the ${DATA.teams.length || 12} rosters — the same filter as the values board, so team-less and retired names never appear. A target's <strong>value-add</strong> is his rest-of-season PPG (in this league's scoring) minus the weakest starter at his position on the selected team, counting flex and superflex occupants — the player he'd actually have to beat. Targets are ranked by that value-add, so a genuine lineup upgrade outranks a slightly bigger projection buried behind someone else's starters. Dynasty value is printed on every card for context but never drives this ranking. The <strong>stash list</strong> is age 24 or younger with a rising role, or with no 2026 snaps yet. <strong>Pickup guidance</strong> follows the connected league's waiver system: in a FAAB league, each target carries a suggested bid as a share of that league's actual budget — startable now 15–25%, stashes 5–10%, the rest 1–3%; in a rolling-priority league there are no bids to suggest, so the same tiers become claim advice — worth spending priority on, worth a claim if priority is cheap, or safe to wait for free agency. Guidance, not gospel: your league-mates' habits matter more than any tier.</p>`;
+        <p>The pool is every tracked player not on one of the ${DATA.teams.length || 12} rosters — the same filter as the values board, so team-less and retired names never appear. A target's <strong>value-add</strong> is his rest-of-season PPG (in this league's scoring) minus the weakest starter at his position on the selected team, counting flex and superflex occupants — the player he'd actually have to beat. Targets are ranked by that value-add, so a genuine lineup upgrade outranks a slightly bigger projection buried behind someone else's starters. Dynasty value is printed on every card for context but never drives this ranking. The <strong>stash list</strong> is age 24 or younger with a rising role, or with no 2026 snaps yet. There is deliberately <strong>no bid guidance</strong> here: your league app already suggests a FAAB bid — or shows your claim priority — at the moment you place the claim. This board's job is the ranking: who deserves the claim, and by how much he clears your bar.</p>`;
     </script>
     <script>
       "use strict";
@@ -6905,15 +6933,21 @@ ${rdP ? "" : `
           if (base > 0 && hardOut) return { pts: base, tag: "Status conflict", cls: "q", sos, unpriced: !!p.unpriced, dis, conflict: inj };
           /* A zero (or no) projection: the designation rules. */
           if (hardOut) return { pts: 0, tag: inj, cls: "out" };
-          if (inj === "Doubtful") return { pts: base * 0.5, tag: "Doubtful", cls: "out", sos, unpriced: !!p.unpriced, dis };
-          if (inj === "Questionable") return { pts: base * 0.9, tag: "Questionable", cls: "q", sos, unpriced: !!p.unpriced, dis };
+          /* Designations no longer scale the number (Eric, 2026-10-21):
+             the sources already price availability into their
+             projections, so Doubtful / Questionable ride as labels
+             only (the designation chip beside the name) — the
+             published projection stands as-is, the way the league
+             apps present it. */
+          if (inj === "Doubtful") return { pts: base, tag: "Doubtful", cls: "out", sos, unpriced: !!p.unpriced, dis };
+          if (inj === "Questionable") return { pts: base, tag: "Questionable", cls: "q", sos, unpriced: !!p.unpriced, dis };
           return { pts: base, tag: null, cls: "", sos, unpriced: !!p.unpriced, dis };
         }
         /* No weekly data anywhere: an Out/IR/PUP/Suspended player falls
            back to nothing, never to the ROS estimate. */
         if (hardOut) return { pts: 0, tag: inj, cls: "out" };
-        if (inj === "Doubtful") return { pts: rosScore(p) * 0.5, tag: "Doubtful", cls: "out", sos, unpriced: !!p.unpriced };
-        if (inj === "Questionable") return { pts: rosScore(p) * 0.9, tag: "Questionable", cls: "q", sos, unpriced: !!p.unpriced };
+        if (inj === "Doubtful") return { pts: rosScore(p), tag: "Doubtful", cls: "out", sos, unpriced: !!p.unpriced };
+        if (inj === "Questionable") return { pts: rosScore(p), tag: "Questionable", cls: "q", sos, unpriced: !!p.unpriced };
         return { pts: rosScore(p), tag: null, cls: "", sos, unpriced: !!p.unpriced };
       }
       function sosTxt(pr) {
@@ -7041,7 +7075,11 @@ ${rdP ? "" : `
         const gain = opt.total - curTotal;
         const f1 = x => (Math.round(x * 10) / 10).toFixed(1);
 
-        const tagHtml = pr => pr.tag ? ` <span class="sig ${pr.cls}">${esc(pr.tag)}</span>` : "";
+        /* Pure designation tags are carried by the desigChip beside
+           the name now; tagHtml keeps the non-designation labels
+           (Bye, Unsigned, Status conflict). */
+        const DESIG_TAGS = { Questionable: 1, Doubtful: 1, Out: 1, IR: 1, PUP: 1, Suspended: 1 };
+        const tagHtml = pr => pr.tag && !DESIG_TAGS[pr.tag] ? ` <span class="sig ${pr.cls}">${esc(pr.tag)}</span>` : "";
         /* An unpriced player's projection is unknown — print the word,
            never a 0 that claims knowledge nobody has. */
         const projTxt = pr => pr.unpriced ? "Unpriced" : f1(pr.pts);
@@ -7077,7 +7115,7 @@ ${rdP ? "" : `
           return notes.length ? `<div class="sub contra">${notes.join("; ")} (per ESPN)</div>` : "";
         };
         const rowHtml = r => `<tr><td><span class="slot-tag">${r.slot}</span></td>
-          <td>${hsImg(r.p)}<span class="p-name">${esc(r.p.name)}</span>${tagHtml(r.proj)}<div class="p-sub">${r.proj.unsigned ? "No NFL team" : logoImg(r.p.team) + esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}${r.p.unpriced ? " · Unpriced — no consensus value" : ""}${crowdStart(r.p, r.proj)}</div></td>
+          <td>${hsImg(r.p)}<span class="p-name">${esc(r.p.name)}</span>${desigChip(r.p)}${tagHtml(r.proj)}<div class="p-sub">${r.proj.unsigned ? "No NFL team" : logoImg(r.p.team) + esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}${r.p.unpriced ? " · Unpriced — no consensus value" : ""}${crowdStart(r.p, r.proj)}</div></td>
           <td class="num">${projTxt(r.proj)}</td></tr>`;
         /* K / DEF starter slots (connected leagues only): starterSlots()
            drops them — there is no priced pool and no weekly projection
@@ -7134,8 +7172,8 @@ ${rdP ? "" : `
           movesHtml = `<div class="wv-card"><h3>Make these moves — +${f1(shownGain)} projected points</h3>
             <p class="wv-sub">Start the left player over the right one. A starter projecting zero is auto-benched: bye weeks and Out / IR / PUP / Suspended designations score nothing in Week ${VW}, a player with no NFL team is excluded entirely, and the reason rides on his name. A designation that contradicts a real weekly projection is flagged as a status conflict instead of a zero - verify before Sunday.</p>
             ${pairs.map(({ inn, out }) => `<div class="mv-row">
-              <div>${hsImg(inn.p, "phs-sm")}<span class="who">Start ${esc(inn.p.name)}</span> <span class="sub">${inn.slot} · ${inn.proj.unsigned ? "No NFL team" : logoImg(inn.p.team) + esc(inn.p.team)}${sosTxt(inn.proj)}${crowdStart(inn.p, inn.proj)}</span>
-                <div class="sub">over ${esc(out.p.name)} (${out.slot})${out.proj.tag ? ` — <strong>${esc(out.proj.tag)}</strong>` : ""}${crowdStart(out.p, out.proj)}</div>${contraNote(inn, out)}</div>
+              <div>${hsImg(inn.p, "phs-sm")}<span class="who">Start ${esc(inn.p.name)}${desigChip(inn.p)}</span> <span class="sub">${inn.slot} · ${inn.proj.unsigned ? "No NFL team" : logoImg(inn.p.team) + esc(inn.p.team)}${sosTxt(inn.proj)}${crowdStart(inn.p, inn.proj)}</span>
+                <div class="sub">over ${esc(out.p.name)}${desigChip(out.p)} (${out.slot})${out.proj.tag && !DESIG_TAGS[out.proj.tag] ? ` — <strong>${esc(out.proj.tag)}</strong>` : ""}${crowdStart(out.p, out.proj)}</div>${contraNote(inn, out)}</div>
               <div class="delta">${(inn.proj.unpriced || out.proj.unpriced) ? `<span class="lu-delta flat">Unpriced</span>` : `<span class="lu-delta up">+${f1(inn.proj.pts - out.proj.pts)}</span>`}<div class="sub">${projTxt(inn.proj)} vs ${projTxt(out.proj)}</div></div>
             </div>`).join("")}</div>`;
         }
@@ -7339,7 +7377,7 @@ ${rdP ? "" : `
           if (r.lvl === "red") {
             if (r.cover) {
               const swing = r.cover.proj.pts - r.proj.pts;
-              swap = `<div class="risk-swap">Best bench cover: ${hsImg(r.cover.p, "phs-sm")}<strong>${esc(r.cover.p.name)}</strong> <span class="sub">${logoImg(r.cover.p.team)}${esc(r.cover.p.team)} · ${r.cover.p.pos}</span> — proj ${r.cover.proj.unpriced ? "Unpriced" : rf1(r.cover.proj.pts)} <span class="lu-delta ${swing >= 0 ? "up" : "dn"}">(${swing >= 0 ? "+" : "−"}${rf1(Math.abs(swing))})</span></div>`;
+              swap = `<div class="risk-swap">Best bench cover: ${hsImg(r.cover.p, "phs-sm")}<strong>${esc(r.cover.p.name)}</strong>${desigChip(r.cover.p)} <span class="sub">${logoImg(r.cover.p.team)}${esc(r.cover.p.team)} · ${r.cover.p.pos}</span> — proj ${r.cover.proj.unpriced ? "Unpriced" : rf1(r.cover.proj.pts)} <span class="lu-delta ${swing >= 0 ? "up" : "dn"}">(${swing >= 0 ? "+" : "−"}${rf1(Math.abs(swing))})</span></div>`;
             } else {
               swap = `<div class="risk-swap">No bench cover at this slot — the waiver wire is the play.</div>`;
             }
@@ -8059,10 +8097,10 @@ ${rdP ? "" : `
         const seasonNum = Number(league.season);
         const byRid = {}; teams.forEach(t => { byRid[t.rid] = t; });
         const pfRank = {}; [...teams].sort((a, b2) => b2.pf - a.pf).forEach((t, i) => { pfRank[t.rid] = i + 1; });
-        const tierOf = rid => {
-          const rk = pfRank[rid] || Math.ceil(n / 2);
-          return rk > (2 * n) / 3 ? "Early" : rk <= n / 3 ? "Late" : "Mid";
-        };
+        /* Pick tiers come from pickTierFromRank (canonical):
+           provisional here, from the original team's points-for
+           rank; restampPickTiers re-prices them off the season
+           sim's projected final standings once the sim lands. */
         const own = {}; // key -> owner rid
         /* Pick years floor at 2027: the 2026 class is already drafted, so
            a connected league never mints a 2026 (or earlier) pick as a
@@ -8077,8 +8115,10 @@ ${rdP ? "" : `
           teams.forEach(t => { own[`${yr}-${rd}-${t.rid}`] = t.rid; });
         /* The OWNER of each pick is real data from Sleeper's
            traded_picks — never assumed from the slot projection. The
-           slot TIER (which prices the pick) still derives from the
-           ORIGINAL team's points-for rank: a weak team's 1st is worth
+           slot TIER (which prices the pick) still keys off the
+           ORIGINAL team — provisionally its points-for rank here,
+           then the sim's projected finish after the connect-time
+           re-stamp: a weak team's 1st is worth
            more whoever holds it. via[key] records the picks Sleeper
            says actually changed hands, so labels and notes can say
            "via Team X" instead of implying the holder is the original
@@ -8095,13 +8135,13 @@ ${rdP ? "" : `
         Object.keys(own).forEach(key => {
           const [yr, rd, orig] = key.split("-").map(Number);
           const dy = Math.min(Math.max(yr - seasonNum, 1), 3);
-          const tier = tierOf(orig);
+          const tier = pickTierFromRank(pfRank[orig], n);
           const value = SLP_LADDER[dy][rd - 1][{ Early: 0, Mid: 1, Late: 2 }[tier]];
           const holder = byRid[own[key]];
           const viaName = via[key] != null && holder ? holder.name : null;
           const pk = {
             key, season: yr, round: rd, orig, origName: byRid[orig] ? byRid[orig].name : "Team " + orig,
-            value, baseValue: value, tierIdx: { Early: 0, Mid: 1, Late: 2 }[tier],
+            value, baseValue: value, tier, tierIdx: { Early: 0, Mid: 1, Late: 2 }[tier],
             label: viaName ? `${yr} ${RD_ORD[rd] || "Round " + rd} (via ${viaName})` : `${yr} Round ${rd}`,
             slotNote: viaName
               ? `owned by ${viaName} via trade; orig. team projects ${tier.toLowerCase()} (sits ${slpOrd(pfRank[orig] || 0)} of ${n} by points through Week ${week})`
@@ -8356,6 +8396,58 @@ ${rdP ? "" : `
       }
       window.renderLeagueSwitcher = renderLeagueSwitcher;
 
+      /* Pick tiers from the season sim (Eric, 2026-10-21): once the
+         connected league's 10,000-sim outlook exists, every future
+         pick is re-tiered — and re-priced off the ladder — by the
+         ORIGINAL team's PROJECTED final standing (the sim's
+         expected-wins ranking): the worst projected finish prices
+         Early. Projected movement is the point: a team that wins,
+         trades, or accidentally wins while tanking moves its picks'
+         prices at the next connect. 2028/2029 inherit the same
+         projected finish. Runs once per connect, from both sim paths
+         in setConnectedLeague (cached and fresh); the projection is
+         the per-connect sim itself (SIM_BY_LEAGUE), never recomputed
+         here. Leagues the sim can't run (not 12 teams) keep the
+         builders' points-for tiers. */
+      function projFinishRanks(sim) {
+        if (!sim || !sim.results || !DATA.teams.length) return null;
+        const ts = DATA.teams.filter(t => sim.results[t.rid] && isFinite(sim.results[t.rid].expWins));
+        if (ts.length !== DATA.teams.length) return null;
+        const sorted = ts.slice().sort((a, b) =>
+          (sim.results[b.rid].expWins - sim.results[a.rid].expWins) ||
+          ((sim.results[b.rid].playoff || 0) - (sim.results[a.rid].playoff || 0)) ||
+          (b.pf - a.pf));
+        const rank = {};
+        sorted.forEach((t, i) => { rank[t.rid] = i + 1; });
+        return rank;
+      }
+      function restampPickTiers() {
+        if (window.GUEST_MODE) return false;
+        const sim = (window.SIM_BY_LEAGUE && window.SIM_BY_LEAGUE.conn) || window.SeasonSim;
+        const ranks = projFinishRanks(sim);
+        if (!ranks) return false;
+        const n = DATA.teams.length;
+        const seasonNum = Number(DATA.league.season) || 2026;
+        const TIDX = { Early: 0, Mid: 1, Late: 2 };
+        DATA.teams.forEach(holder => {
+          (holder.picks || []).forEach(pk => {
+            const fr = ranks[pk.orig];
+            if (!fr) return;
+            const tier = pickTierFromRank(fr, n);
+            const dy = Math.min(Math.max(pk.season - seasonNum, 1), 3);
+            const val = SLP_LADDER[dy][pk.round - 1][TIDX[tier]];
+            pk.tier = tier; pk.tierIdx = TIDX[tier]; pk.value = val; pk.baseValue = val;
+            const viaName = pk.orig !== holder.rid ? holder.name : null;
+            pk.slotNote = (viaName ? `owned by ${viaName} via trade; orig. team ` : "")
+              + `projects ${tier.toLowerCase()} (sim projects orig. team to finish ${slpOrd(fr)} of ${n})`;
+          });
+          holder.picksVal = (holder.picks || []).reduce((s2, pk) => s2 + pk.value, 0);
+        });
+        window.PROJ_FINISH_RANK = ranks;
+        return true;
+      }
+      window.restampPickTiers = restampPickTiers;
+
       function setConnectedLeague() {
         const C = window.CONN_LEAGUE;
         if (!C) return;
@@ -8390,6 +8482,7 @@ ${rdP ? "" : `
         }
         if (window.SIM_BY_LEAGUE.conn) {
           window.SeasonSim = window.SIM_BY_LEAGUE.conn;
+          restampPickTiers();
           window.SeasonSim.renderSeason();
         } else {
           window.SeasonSim = null;
@@ -8404,6 +8497,7 @@ ${rdP ? "" : `
                 if (!window.SIM_BY_LEAGUE.conn) window.SIM_BY_LEAGUE.conn = window.buildSeasonSim();
                 if (window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE) return;
                 window.SeasonSim = window.SIM_BY_LEAGUE.conn;
+                restampPickTiers();
                 window.SeasonSim.renderSeason();
                 renderTeamStrip();
                 renderFinder();
@@ -8911,21 +9005,21 @@ ${rdP ? "" : `
         const n = teams.length;
         const byRid = {}; teams.forEach(t => { byRid[t.rid] = t; });
         const pfRank = {}; [...teams].sort((a, b2) => b2.pf - a.pf).forEach((t, i) => { pfRank[t.rid] = i + 1; });
-        const tierOf = rid => {
-          const rk = pfRank[rid] || Math.ceil(n / 2);
-          return rk > (2 * n) / 3 ? "Early" : rk <= n / 3 ? "Late" : "Mid";
-        };
+        /* Pick tiers come from pickTierFromRank (canonical):
+           provisional here, from the original team's points-for
+           rank; restampPickTiers re-prices them off the season
+           sim's projected final standings once the sim lands. */
         teams.forEach(t => {
           /* Same 2027 floor as the Sleeper builder: the 2026 class is
              drafted and gone, so no 2026 (or earlier) pick is ever minted
              as a current asset — current-season leagues get 2027–2029. */
           const firstPickYr = Math.max(season + 1, 2027);
           for (let yr = firstPickYr; yr <= firstPickYr + 2; yr++) for (let rd = 1; rd <= 3; rd++) {
-            const dy = Math.min(Math.max(yr - season, 1), 3), tier = tierOf(t.rid);
+            const dy = Math.min(Math.max(yr - season, 1), 3), tier = pickTierFromRank(pfRank[t.rid], n);
             t.picks.push({
               key: `${yr}-${rd}-${t.rid}`, season: yr, round: rd, orig: t.rid, origName: t.name,
               value: SLP_LADDER[dy][rd - 1][{ Early: 0, Mid: 1, Late: 2 }[tier]],
-              baseValue: SLP_LADDER[dy][rd - 1][{ Early: 0, Mid: 1, Late: 2 }[tier]], tierIdx: { Early: 0, Mid: 1, Late: 2 }[tier],
+              baseValue: SLP_LADDER[dy][rd - 1][{ Early: 0, Mid: 1, Late: 2 }[tier]], tier, tierIdx: { Early: 0, Mid: 1, Late: 2 }[tier],
               label: `${yr} Round ${rd}`,
               slotNote: `projects ${tier.toLowerCase()} (orig. team sits ${slpOrd(pfRank[t.rid] || 0)} of ${n} by points through Week ${week})`,
             });
@@ -9114,7 +9208,7 @@ ${rdP ? "" : `
          SIM_BY_LEAGUE exactly as league switching caches it), the week's
          matchup from the same opponent tables the Lineup tab reads, and
          the top waiver targets from the waiver engine's own ranking
-         (wvOptimal / wvBar / wvIsStash / bidRange, same tier order the
+         (wvOptimal / wvBar / wvIsStash, same tier order the
          More tab renders: must-adds, stashes, best of the rest). No new
          math — the dashboard temporarily points the shared engine state
          (DATA / TBY / owners / projections / format) at each league,
@@ -9201,11 +9295,11 @@ ${rdP ? "" : `
         const stash = (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? [] : pool.filter(m => m.add <= 0 && wvIsStash(m.p)).sort((a, b) => dispVal(b.p) - dispVal(a.p));
         const stashIds = new Set(stash.map(m => m.p.id));
         const rest = pool.filter(m => m.add <= 0 && !stashIds.has(m.p.id)).sort(byScore);
-        const tag = (m, kind, lo, hi) => ({ p: m.p, bar: m.bar, add: m.add, kind, bid: bidRange(lo, hi).split(" · ")[0] });
+        const tag = (m, kind) => ({ p: m.p, bar: m.bar, add: m.add, kind });
         return [
-          ...startable.map(m => tag(m, "Must-add", 0.15, 0.25)),
-          ...stash.map(m => tag(m, "Stash", 0.05, 0.10)),
-          ...rest.map(m => tag(m, "Top of the wire", 0.01, 0.03)),
+          ...startable.map(m => tag(m, "Must-add")),
+          ...stash.map(m => tag(m, "Stash")),
+          ...rest.map(m => tag(m, "Top of the wire")),
         ].slice(0, 2);
       }
 
@@ -9304,7 +9398,7 @@ ${rdP ? "" : `
               return `<div class="mt-wv-row">
                 <div class="mt-wv-main">
                   ${(typeof window.hsImg === "function") ? window.hsImg(p, "phs-sm") : ""}<span class="mt-wv-name">${esc(p.name)}</span><span class="mt-wv-kind ${kindCls}">${w.kind}</span>
-                  <div class="mt-wv-meta">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team)} · ${p.pos}${p.posRank} · Age ${p.age != null ? p.age : "—"} · ${esc(w.bid)}${(window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].o === "number") ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned</span>` : ""}</div>
+                  <div class="mt-wv-meta">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team)} · ${p.pos}${p.posRank} · Age ${p.age != null ? p.age : "—"}${(window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].o === "number") ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned</span>` : ""}</div>
                   ${gap}
                 </div>
                 <div class="mt-wv-nums"><div class="mt-wv-ros">${(p.ros || 0).toFixed(1)}<small>ROS pts/wk</small></div></div>
@@ -10475,7 +10569,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
          redraft-only Improve Your Odds panel. syncModeChrome calls
          window.applyLeagueModeChrome at the end of every mode
          transition, so none of this can drift from the toggle. */
-      const RD_FINDER_INTRO = `Pick a team and the finder hunts <strong>production</strong>. This is a redraft league — there is no next year — so every idea is a <strong>win-now buy</strong>: bench depth goes out, a player who raises the optimal lineup's projected points per week comes in, and a deal that lowers projected points per week <strong>never appears</strong>, however the values balance. <strong>No draft picks change hands</strong> — picks don't exist here. Targets are priced on rest-of-season production alone, and every other roster is a potential partner. Where a roster is <strong>lopsided</strong> — stacked at one position, thin at another, by projected starter points against the league — the finder leads with <strong>positional swaps</strong>: one surplus player flipped one-for-one for a comparable player at the thin position, value-matched within ±20%, each with the reasoning spelled out on the card.`;
+      const RD_FINDER_INTRO = `Pick a team and the finder hunts <strong>production</strong>. This is a redraft league — there is no next year — so every idea is a <strong>win-now buy</strong>: bench depth goes out, a player who raises the optimal lineup's projected points per week comes in, and a deal that lowers projected points per week <strong>never appears</strong>, however the values balance. <strong>No draft picks change hands</strong> — picks don't exist here. Targets are priced on rest-of-season production alone, and every other roster is a potential partner. Where a roster is <strong>lopsided</strong> — stacked at one position, thin at another, by projected starter points against the league — the finder leads with <strong>positional swaps</strong>: one surplus player flipped one-for-one for a comparable player at the thin position, value-matched, each with the reasoning spelled out on the card.`;
       const RD_TEAMS_INTRO = `Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 10,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong>. Below it, the <strong>Improve Your Odds</strong> panel prices the moves that most raise your title odds. Every roster below is graded on <strong>starting-lineup strength, total roster value, and points scored</strong> — in <strong>redraft prices</strong> throughout: rest of season only, no picks, no age curves. In a redraft league every team is a contender or a spoiler; there are no rebuilders. Tap a team to see its full roster.`;
       const RD_WAIVER_INTRO = `Every unrostered player in the snapshot, ranked for the team you pick — not by name value, but by <strong>what he would do for that lineup</strong>. Each target is ranked by what he would add over the weakest starter he'd have to beat at his position, flex and superflex slots included — his projected points per week against that starter's. In redraft there is no stash list — a pickup either helps this season or he isn't worth the roster spot.`;
 
