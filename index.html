@@ -2454,7 +2454,7 @@
         <div id="rt-offer" hidden></div>
         <details class="how-box">
           <summary>How the calculator works</summary>
-          <p class="tab-intro" id="calc-intro">Build a deal from any two rosters (or the free-agent pool). The verdict weighs <strong>trade value and team fit</strong> — each side's raw sum plus its value adjustment, so the side receiving fewer players gets credit for concentrating value into fewer roster spots and one stud is not outweighed by a pile of lesser pieces — and whether the pieces fill a need, cost a starter, or fight a team's competitive window.</p>
+          <p class="tab-intro" id="calc-intro">Build a deal from any two rosters (or the free-agent pool). The verdict weighs <strong>trade value and team fit</strong> — each side's raw sum plus its value adjustment, so the side whose value sits concentrated in its best players gets credit for that concentration and one stud is not outweighed by a pile of lesser pieces — and whether the pieces fill a need, cost a starter, or fight a team's competitive window.</p>
         </details>
       </section>
 
@@ -2619,7 +2619,7 @@
         </details>
         <details class="how-box">
           <summary>What is the value adjustment?</summary>
-          <p class="tab-intro">When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and production concentrated into fewer spots is worth more than the same production spread across extra bodies you have to roster. The value adjustment is the credit the calculator gives that side for the concentration: the best player in a deal carries weight beyond his raw price, so the side receiving him gets credited the amount that balances that difference. It only ever goes to the side receiving fewer players, and when a trade sends the same number of players each way, there is no adjustment at all.</p>
+          <p class="tab-intro">When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and production concentrated into fewer spots is worth more than the same production spread across extra bodies you have to roster. The value adjustment is the credit the calculator gives that side for the concentration: the best player in a deal carries weight beyond his raw price, so the side receiving him gets credited the amount that balances that difference. It follows concentration, not headcount: whichever side's production is packed into the fewest, best players earns it — in any trade shape, even when both sides send the same number of players — and a deal whose value is spread just as evenly on both sides earns none.</p>
         </details>
         <details class="how-box">
           <summary>Dynasty or redraft — how does the site know?</summary>
@@ -4211,21 +4211,25 @@ ${rdP ? "" : `
       }
       function sideTotal(side) { return assetsOf(side).reduce((s, a) => s + assetValue(a), 0); }
 
-      /* Value adjustment: when one side of a deal receives fewer
-         assets than the other, raw sums understate that side — the
-         best player in a deal carries weight beyond his raw price,
-         because production concentrated into one roster spot is
-         worth more than the same production spread across extra
+      /* Value adjustment: raw sums understate the side of a deal
+         whose production is concentrated into fewer, better assets
+         — the best player in a deal carries weight beyond his raw
+         price, because production concentrated into one roster spot
+         is worth more than the same production spread across extra
          bodies that must be rostered. The adjustment re-prices
          every asset through the convex curve vaPhi — in which the
          best players count for disproportionately more than their
-         raw price — and credits the fewer-assets side, ONLY when
-         it is also the curve-leading side, exactly the raw value
-         that would balance the two curved sums. An even deal
-         (equal asset counts) earns none. Adjusted total = raw sum
-         + value adjustment, and every verdict on the page
-         (calculator, Trade Finder, Real Trades grades, offer
-         builder) judges the adjusted totals. */
+         raw price — finds the side whose curved (φ) sum LEADS,
+         whatever the asset counts on either side (1-for-1, 2-for-2,
+         4-for-7 all take the identical path), and credits that side
+         exactly the raw value that would balance the two curved
+         sums. The credit follows the curve-lead smoothly as assets
+         are added or removed — it never snaps to zero over a count
+         or a lead change; a deal whose curved sums genuinely
+         balance is the only zero. Adjusted total = raw sum + value
+         adjustment, and every verdict on the page (calculator,
+         Trade Finder, Real Trades grades, offer builder) judges
+         the adjusted totals. */
       const VA_V = 11135; // curve anchor: the board's #1 player value at bake time
       function vaPhi(p, t) {
         return p * (0.100
@@ -4233,20 +4237,42 @@ ${rdP ? "" : `
           + 0.132 * Math.pow(p / t, 1.3)
           + 0.188 * Math.pow(p / (VA_V + 2000), 1.28));
       }
-      function valueAdjustmentFor(myValues, otherValues) {
-        if (!myValues.length || myValues.length >= otherValues.length) return 0;
-        const t = Math.max(...myValues, ...otherValues);
-        if (!(t > 0)) return 0;
-        const gap = myValues.reduce((s, v) => s + vaPhi(v, t), 0)
-                  - otherValues.reduce((s, v) => s + vaPhi(v, t), 0);
-        if (gap <= 0) return 0; // the fewer side must actually be the top-heavy side
-        let lo = 0, hi = 30000; // solve vaPhi(x, t) = gap (bisection;
+      /* The pair solve behind every value adjustment: returns
+         [creditA, creditB] for two sides' raw value vectors. At
+         most one entry is nonzero — the credit owed the side whose
+         φ-sum leads. Both φ-sums and the single bisection are
+         computed once here, so paired consumers (band pricing,
+         offer grades, per-side totals) all price off the same
+         solve instead of re-deriving it per side. */
+      function vaPair(aValues, bValues) {
+        if (!aValues.length || !bValues.length) return [0, 0];
+        const t = Math.max(...aValues, ...bValues);
+        if (!(t > 0)) return [0, 0];
+        const gap = aValues.reduce((s, v) => s + vaPhi(v, t), 0)
+                  - bValues.reduce((s, v) => s + vaPhi(v, t), 0);
+        if (gap === 0) return [0, 0]; // curved sums balance exactly
+        const lead = gap > 0 ? aValues : bValues;
+        const trail = gap > 0 ? bValues : aValues;
+        const g = Math.abs(gap);
+        const leadSum = lead.reduce((s, v) => s + v, 0);
+        const trailSum = trail.reduce((s, v) => s + v, 0);
+        /* Skip-gate: the credit is positive only when the equalizer
+           x outruns the leader's raw lead (leadSum - trailSum), and
+           vaPhi is increasing — so one evaluation at that deficit
+           settles it. When vaPhi(deficit) >= g, x <= deficit and
+           the credit below would clamp to exactly 0; returning here
+           changes no result, it just skips the solve (the package
+           search prices millions of subsets through this path). */
+        if (leadSum - trailSum > 0 && vaPhi(leadSum - trailSum, t) >= g) return [0, 0];
+        let lo = 0, hi = 30000; // solve vaPhi(x, t) = g (bisection;
         // 26 iterations pin x to <0.001 — far below display rounding)
-        for (let i = 0; i < 26; i++) { const m = (lo + hi) / 2; if (vaPhi(m, t) < gap) lo = m; else hi = m; }
+        for (let i = 0; i < 26; i++) { const m = (lo + hi) / 2; if (vaPhi(m, t) < g) lo = m; else hi = m; }
         const x = (lo + hi) / 2;
-        const otherSum = otherValues.reduce((s, v) => s + v, 0);
-        const mySum = myValues.reduce((s, v) => s + v, 0);
-        return Math.max(0, (otherSum + x) - mySum);
+        const credit = Math.max(0, (trailSum + x) - leadSum);
+        return gap > 0 ? [credit, 0] : [0, credit];
+      }
+      function valueAdjustmentFor(myValues, otherValues) {
+        return vaPair(myValues, otherValues)[0];
       }
       function sideBonus(side) {
         const other = side === "A" ? "B" : "A";
@@ -4593,7 +4619,7 @@ ${rdP ? "" : `
           <div class="adj-row">
             <span>Trade value ${fmt(Math.round(ea))}</span><span>Trade value ${fmt(Math.round(eb))}</span>
           </div>
-          <p class="bonus-note">Verdict uses the trade values: each side's raw sum plus its value adjustment. The adjustment goes to the side receiving fewer assets — the best player in a deal carries weight beyond his raw price, and the adjustment balances that — and even trades earn no adjustment, so three good players don't automatically outweigh one great one.</p>
+          <p class="bonus-note">Verdict uses the trade values: each side's raw sum plus its value adjustment. The adjustment goes to the side whose value is most concentrated — the best player in a deal carries weight beyond his raw price, and the adjustment balances that — whatever the asset counts on either side, so three good players don't automatically outweigh one great one.</p>
           ${balance}
           <div class="verdict-assets">
             <div><h4>${esc(nameA)} sends</h4><ul>${verdictAssetList("A")}</ul></div>
@@ -4864,16 +4890,26 @@ ${rdP ? "" : `
          [lo, hi] x the target price — the mechanism that makes young studs
          cost a stack and veterans cost a song. Tries several orderings and
          keeps the package closest to the target price. When oppBest is
-         given (the lone asset on the other side of the deal), the target
-         is that asset's ADJUSTED value against this very package: the
-         other side receives fewer assets, so its value adjustment —
-         computed from the package's actual composition, the same
-         value-adjustment judging the calculator uses — sets the price
-         the package must reach. */
+         given (the lone asset on the other side of the deal), the two
+         sides are priced against each other with the calculator's own
+         symmetric adjustment (vaPair), computed from the package's actual
+         composition: the package must bring its ADJUSTED total inside
+         the band around the target's ADJUSTED price. When the target's
+         side curve-leads — the usual case, a lone producer against a
+         stack — that is the target's raw value plus its credit, exactly
+         as before. When the package itself curve-leads (its top piece
+         outweighs the target on the curve), the package earns the
+         credit instead and the target's price stays raw — the same
+         rule offerGrade applies to the finished card, so the band can
+         never call fair here what the grade calls lopsided there. */
       function buildPackage(pool, targetVal, lo, hi, anchor, oppBest) {
         if (!pool.length && !anchor) return null;
-        const effTarget = pkg => oppBest == null ? targetVal
-          : targetVal + valueAdjustmentFor([oppBest], pkg.map(a => a.value));
+        const adjPairFor = pkg => {
+          if (oppBest == null) return null;
+          const vals = pkg.map(a => a.value);
+          const [cT, cP] = vaPair([oppBest], vals);
+          return [targetVal + cT, vals.reduce((s, v) => s + v, 0) + cP];
+        };
         /* Exhaustive bounded search (Oct 21 fix): every subset of the
            pool up to 4 assets (~21 assets ⇒ ≤ ~7.5k subsets) is priced
            against the same length-adjusted band the old walk used.
@@ -4894,11 +4930,13 @@ ${rdP ? "" : `
           const pkg = anchor ? [anchor, ...sub] : sub;
           const len = pkg.length;
           if (!len || len > 4) return;
-          const adj = effTarget(pkg);
           let tot = 0, pickVal = 0;
           for (const a of pkg) { tot += a.value; if (a.kind === "pick") pickVal += a.value; }
-          if (tot < adj * lo || tot > adj * hi) return;
-          const dist = Math.abs(tot - adj);
+          const pr = adjPairFor(pkg);
+          const adjTgt = pr ? pr[0] : targetVal;
+          const adjPkg = pr ? pr[1] : tot;
+          if (adjPkg < adjTgt * lo || adjPkg > adjTgt * hi) return;
+          const dist = Math.abs(adjPkg - adjTgt);
           if (!best || len < best.pkg.length
             || (len === best.pkg.length && (dist < best.dist - 1e-9
               || (Math.abs(dist - best.dist) <= 1e-9 && pickVal > best.pickVal))))
@@ -5028,8 +5066,9 @@ ${rdP ? "" : `
                  every other gate but lands in [NEAR_MISS_MIN_GAIN,
                  DYNASTY_MIN_GAIN) is collected as a near miss for the
                  strip under the main list, not dropped silently. */
-              const adjTarget = target.value + valueAdjustmentFor([target.value], pkg.map(a => a.value));
-              const gapPct = Math.abs(pkgValue(pkg) - adjTarget) / adjTarget;
+              const [cTgt, cPkg] = vaPair([target.value], pkg.map(a => a.value));
+              const adjTarget = target.value + cTgt;
+              const gapPct = Math.abs((pkgValue(pkg) + cPkg) - adjTarget) / adjTarget;
               const score = dPpg * 6 + windowBonus + Math.max(0, 8 - gapPct * 20) + Math.min(3, target.value / 3000);
               if (VALMODE !== "redraft" && mine.arch === "dynasty") {
                 if (dPpg < DYNASTY_CLEAR_GAIN) {
@@ -5089,15 +5128,17 @@ ${rdP ? "" : `
             }
             if (!pkg) return;
             const getsVal = pkgValue(pkg);
-            const vetAdj = vet.value + valueAdjustmentFor([vet.value], pkg.map(a => a.value));
-            if (getsVal < vetAdj) return; // a sell never loses value — judged on the vet's adjusted price, value adjustment included
+            const [cVet, cPkg] = vaPair([vet.value], pkg.map(a => a.value));
+            const vetAdj = vet.value + cVet;
+            const getsAdj = getsVal + cPkg;
+            if (getsAdj < vetAdj) return; // a sell never loses value — judged on adjusted totals both sides: the vet's adjusted price against the return's adjusted total, value adjustment included
             const pOut = pkgPlayerIds(pkg);
             const pNew = partner.playerIds.filter(id => !pOut.includes(id)).concat([vet.id]);
             const pD = optimalLineup(pNew).total - optimalLineup(partner.playerIds).total;
             if (pD < 0.1 && needScore(partner.rid, vet.pos) <= 300) return;
             const myNew = myIds.filter(id => id !== vet.id).concat(pOut);
             const dPpg = optimalLineup(myNew).total - base;
-            const futureGain = Math.round(getsVal - vetAdj);
+            const futureGain = Math.round(getsAdj - vetAdj);
             const score = futureGain / 120 + windowBonus + (myLineup.has(vet.id) ? 2 : 0) + Math.max(0, pD);
             out.push({ dir: "sell", partner, vet, pkg, dPpg, futureGain, score, basePpg: base });
           });
@@ -5206,7 +5247,8 @@ ${rdP ? "" : `
 
       /* The calculator's fairness meter, applied to a finder offer:
          both sides judged on trade value — raw sum plus the value
-         adjustment for the side receiving fewer assets — with the same
+         adjustment for whichever side's value is most concentrated
+         (the curve-leading side) — with the same
          zones the calculator prints (Fair within 5%, Close within
          10%). Player Targets only ever shows Fair or Close offers. */
       function offerGrade(giveAssets, getAssets) {
@@ -5831,9 +5873,9 @@ ${rdP ? "" : `
         <h2>Draft picks — algorithm-priced, not estimated</h2>
         <p>Pick values are computed by the algorithm itself, off the same model as player prices: a <strong>2027 1st is worth 6,008 (early) / 4,537 (mid) / 3,892 (late)</strong>; a 2027 2nd 3,024 / 2,569 / 2,339; a 2028 1st 4,627 / 3,596 / 3,114 and a 2029 1st 3,969 / 3,197 / 2,776. Projected slots come from the site's own season projection: the 10,000-sim Season Outlook's projected final standings — the worse the original team is projected to finish, the earlier its picks price. The same projected finish prices a team's picks two and three years out, until those seasons can be simulated themselves. Future picks are discounted for the wait — the further out the pick, the less it is worth today — but the discount is shallower than production alone would set, because the market prices future picks hot, especially with the stacked 2027 class in view. A mid 2027 1st prices like a low-end WR3/RB3 veteran. Those are superflex prices: in a 1QB league every slot on the ladder re-prices down to that format's market, where no second quarterback slot props up the picks that would have landed passers.</p>
         <h2>Trade verdicts — the value adjustment</h2>
-        <p>Adding up raw prices lies about uneven trades. Three players worth 3,000 each sum to 9,000, but they do not beat one 8,500 stud: starting roster spots are scarce, and only so many of the three can ever take the field in the stud's place. So the trade calculator never judges a deal on raw sums alone. Each side's verdict number — its <strong>Trade value</strong> — is its raw sum plus a <strong>value adjustment</strong> for the side receiving fewer assets: the best player in a deal carries weight beyond his raw price, because production concentrated into a single roster spot is worth more than the same production spread across the extra spots the other side has to carry. The adjustment only ever goes to the side receiving fewer players and picks; when a trade sends the same number of assets each way, there is no adjustment at all. Picks count as assets the same way players do, which is why four late 2nds don't add up to one early 1st here. The verdict, the fair/close/lopsided thresholds, and the balancing-pick suggestion are all computed on trade values; the calculator still prints the <strong>Raw sum</strong> under the Trade value, with the value adjustment on its own labeled line whenever one applies, so the credit is never hidden. The adjustment tempers fair deals rather than reversing them: two good starters still beat one great player when their combined value clears his price plus the adjustment — and a 1-for-1 of near-equals barely moves at all, because neither side earns an adjustment.</p>
+        <p>Adding up raw prices lies about uneven trades. Three players worth 3,000 each sum to 9,000, but they do not beat one 8,500 stud: starting roster spots are scarce, and only so many of the three can ever take the field in the stud's place. So the trade calculator never judges a deal on raw sums alone. Each side's verdict number — its <strong>Trade value</strong> — is its raw sum plus a <strong>value adjustment</strong> for the side whose value is most concentrated: the best player in a deal carries weight beyond his raw price, because production concentrated into a single roster spot is worth more than the same production spread across the extra spots the other side has to carry. The adjustment follows concentration, not headcount — a top-heavy side earns it in any trade shape, even when both sides send the same number of assets, and only a deal whose value is spread just as evenly on both sides earns none. Picks count as assets the same way players do, which is why four late 2nds don't add up to one early 1st here. The verdict, the fair/close/lopsided thresholds, and the balancing-pick suggestion are all computed on trade values; the calculator still prints the <strong>Raw sum</strong> under the Trade value, with the value adjustment on its own labeled line whenever one applies, so the credit is never hidden. The adjustment tempers fair deals rather than reversing them: two good starters still beat one great player when their combined value clears his price plus the adjustment — and a 1-for-1 of near-equals moves only a little, because two single players sit close together on the concentration curve.</p>
         <h2>What is the value adjustment?</h2>
-        <p>When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and production concentrated into fewer spots is worth more than the same production spread across extra bodies you have to roster. The value adjustment is the credit the calculator gives that side for the concentration. The best player in a deal carries weight beyond his raw price: one great player producing from a single spot is worth more than the same production spread across extra bodies you have to roster, so the side taking back fewer players gets credited the amount that balances that difference. It only ever goes to the side receiving fewer players, and when a trade sends the same number of players each way, there is no adjustment at all.</p>
+        <p>When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and production concentrated into fewer spots is worth more than the same production spread across extra bodies you have to roster. The value adjustment is the credit the calculator gives that side for the concentration. The best player in a deal carries weight beyond his raw price: one great player producing from a single spot is worth more than the same production spread across extra bodies you have to roster, so the side taking back fewer players gets credited the amount that balances that difference. It follows concentration, not headcount: whichever side's production is packed into the fewest, best players earns it — in any trade shape, even when both sides send the same number of players — and a deal whose value is spread just as evenly on both sides earns none.</p>
         <h2>The injury feed — what it shows, and what it won't</h2>
         <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The honesty rule: <strong>no free source publishes a reliable expected-return date</strong>, so the board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
         <h2>Power rankings &amp; the team tags</h2>
@@ -7726,7 +7768,7 @@ ${rdP ? "" : `
         title: "Fantasy Forensics — Player Values",
         footer: "Fantasy Forensics · Values are computed by our proprietary Dynasty Value Algorithm (" + DATA.league.snapshot + " snapshot), adjusted for the scoring format set in the League Format tool. Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot; injuries and news after that date are not priced in.",
         boardIntro: `Every price on this board is computed by our <strong>proprietary Dynasty Value Algorithm</strong>, built from deep analytics and market consensus. It weighs production, role and usage, age, and availability into a single value for every player, priced for <strong>the scoring format</strong> set in the <strong>League Format</strong> tool (Fantasy Tools menu). Where a player’s recent form runs ahead of his price — or behind it — he is flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>. Tap “Why?” on any player for his season line, his usage, and his value history. No league needed — connect one only for the team tools.`,
-        calcIntro: `Add <strong>any players or draft picks</strong> to either side — no rosters, no league needed. Picks are the standard rookie slots (2027–2029, 1st through 4th round, early/mid/late), priced on the same ladder the league views use. The verdict is a <strong>pure value comparison</strong> on the same algorithm that prices the board, with the <strong>value adjustment</strong> applied — the side receiving fewer assets earns an adjustment because the best player in a deal carries weight beyond raw totals, so one stud is not outweighed by three lesser pieces just because their prices add up. Connect a league and the calculator adds roster-fit notes and title-odds impact for both teams.`,
+        calcIntro: `Add <strong>any players or draft picks</strong> to either side — no rosters, no league needed. Picks are the standard rookie slots (2027–2029, 1st through 4th round, early/mid/late), priced on the same ladder the league views use. The verdict is a <strong>pure value comparison</strong> on the same algorithm that prices the board, with the <strong>value adjustment</strong> applied — the side whose value sits concentrated in its best players earns an adjustment because the best player in a deal carries weight beyond raw totals, so one stud is not outweighed by three lesser pieces just because their prices add up. Connect a league and the calculator adds roster-fit notes and title-odds impact for both teams.`,
       };
 
 
@@ -7893,7 +7935,7 @@ ${rdP ? "" : `
          (it tracks the dynasty board's weekly recompute). Mode is
          in-memory only. */
       const RD_BOARD_INTRO = `Redraft values · rest of season. Every price on this board is a <strong>rest-of-season price</strong>: each player's expected points from Week ${DATA.league.week} on, converted into a value on the same scale as the dynasty board. <strong>No age curves</strong> — a producing 30-year-old outprices a 22-year-old stash — and <strong>no draft picks</strong>: in redraft, this year is the only year. The scoring format in the <strong>League Format</strong> tool re-prices this board exactly as it does the dynasty board, and the <strong>trade calculator</strong> works in this mode too. Tap “Why?” on any player for his projection and his dynasty value history.`;
-      const RD_CALC_INTRO = `Build a deal with <strong>rest-of-season values</strong> — both sides are priced with the same rest-of-season values as the board, so a win-now rental and a fading name carry the prices they'd carry in a redraft league. <strong>No draft picks change hands in this mode</strong>: picks aren't assets mid-season. The <strong>value adjustment</strong> applies here too — the side receiving fewer players earns an adjustment because a stud's production concentrated in one spot outweighs the same production spread over extra bodies, so depth doesn't outweigh a stud just by adding up. Roster-fit notes and title-odds impact still apply in a connected league.`;
+      const RD_CALC_INTRO = `Build a deal with <strong>rest-of-season values</strong> — both sides are priced with the same rest-of-season values as the board, so a win-now rental and a fading name carry the prices they'd carry in a redraft league. <strong>No draft picks change hands in this mode</strong>: picks aren't assets mid-season. The <strong>value adjustment</strong> applies here too — the side whose value sits concentrated in its best players earns an adjustment because a stud's production in one spot outweighs the same production spread over extra bodies, so depth doesn't outweigh a stud just by adding up. Roster-fit notes and title-odds impact still apply in a connected league.`;
 
       function syncModeChrome() {
         const rd = VALMODE === "redraft";
@@ -9744,8 +9786,9 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         }
         /* Per-side adjusted totals for a trade: raw sum + value
            adjustment, the calculator's own judging
-           (valueAdjustmentFor). The adjustment goes to the side that
-           received fewer assets, comparing the two sides' priced
+           (valueAdjustmentFor). The adjustment goes to the side whose
+           value is most concentrated — the curve-leading side —
+           comparing the two sides' priced
            value vectors. In a multi-way deal there is no single
            counterpart to balance against, so those sides stay at
            their raw sums. */
@@ -10209,11 +10252,12 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           });
           if (!chosen.length) return null;
           const raw = chosen.reduce((s, a) => s + a.v, 0);
-          /* Judged the calculator's way — raw sum plus the value
-             adjustment. The headliner travels alone, so his side
-             receives fewer assets and carries the adjustment; the
-             package side is its raw sum. A one-for-one package earns
-             no adjustment on either side. */
+          /* Judged the calculator's way — both sides on raw sum plus
+             the value adjustment. The headliner travels alone, so his
+             side usually carries the adjustment (his production is
+             concentrated in a single asset); a top-heavy package can
+             earn it instead — the same symmetric rule the calculator
+             applies, run in both directions exactly as it does. */
           const adjPkg = raw + valueAdjustmentFor(chosen.map(a => a.v), [headV]);
           const adjHead = headV + valueAdjustmentFor([headV], chosen.map(a => a.v));
           const pct = Math.abs(adjPkg - adjHead) / Math.max(adjPkg, adjHead, 1);
@@ -10529,9 +10573,9 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
               ]
             } },
             { h: "Roster spots are the currency" },
-            { p: "The logic is roster math. This league starts eleven players a week. Gibbs occupies one slot and produces like it: 30.7 points per game through Week 5, a 77% snap share, the No. 2 usage rank among all running backs, receivers and tight ends. Brown and Collins occupy two slots — and the second slot is never free, because Collins' points come <em>instead of</em> your next bench option's, not in addition to them. So the calculator adds a <strong>value adjustment</strong> to the side taking back fewer players: the best player in a deal carries weight beyond his raw price, and the adjustment credits the side whose production is concentrated into fewer spots the amount that balances that difference. Gibbs' side takes back one player instead of two, collects a 6,619-point value adjustment, and lands at 16,604. Brown and Collins collect none and stay at 9,973. The 6,631-point gap is what that concentration is actually worth in this deal." },
+            { p: "The logic is roster math. This league starts eleven players a week. Gibbs occupies one slot and produces like it: 30.7 points per game through Week 5, a 77% snap share, the No. 2 usage rank among all running backs, receivers and tight ends. Brown and Collins occupy two slots — and the second slot is never free, because Collins' points come <em>instead of</em> your next bench option's, not in addition to them. So the calculator adds a <strong>value adjustment</strong> to the side whose production is concentrated into fewer spots: the best player in a deal carries weight beyond his raw price, and the adjustment credits that side the amount that balances that difference. Gibbs' side takes back one player instead of two, collects a 6,619-point value adjustment, and lands at 16,604. Brown and Collins collect none and stay at 9,973. The 6,631-point gap is what that concentration is actually worth in this deal." },
             { h: "It tempers deals; it doesn't crown studs" },
-            { p: "The adjustment cuts both ways, deliberately. It only ever goes to the side receiving fewer players, and an even trade — the same number of players each way — earns none, so a 1-for-1 of near-equals barely moves. Nor does it hand the win to the single biggest name: two genuinely strong starters still beat one great player whenever their combined value clears his price plus the adjustment. Picks count as assets the same way, which is why four late 2nds don't add up to one early 1st in our calculator even when the raw sums insist they should. The raw totals never disappear, either: every verdict leads with the adjusted Trade value and prints the Raw sum right beneath it, with the value adjustment on its own line whenever one applies — never a hidden thumb on the scale." },
+            { p: "The adjustment cuts both ways, deliberately. It follows concentration, not headcount — an even trade can earn one when one side is top-heavy — and a 1-for-1 of near-equals moves only a little, because two single players sit close together on the curve. Nor does it hand the win to the single biggest name: two genuinely strong starters still beat one great player whenever their combined value clears his price plus the adjustment. Picks count as assets the same way, which is why four late 2nds don't add up to one early 1st in our calculator even when the raw sums insist they should. The raw totals never disappear, either: every verdict leads with the adjusted Trade value and prints the Raw sum right beneath it, with the value adjustment on its own line whenever one applies — never a hidden thumb on the scale." },
             { jump: { label: "Try it in the calculator →", nav: "trades" } }
           ]
         },
@@ -11068,7 +11112,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         drawSide(xA, nameA, listA, a, ea);
         drawSide(xB, nameB, listB, b, eb);
         ctx.fillStyle = SH.ink2; ctx.font = shFont(500, 23);
-        ctx.fillText("Verdict on trade values — raw sums plus the value adjustment: the side receiving fewer assets earns an adjustment — the best player in a deal carries weight beyond raw totals.", 56, H - 128);
+        ctx.fillText("Verdict on trade values — raw sums plus the value adjustment: the side with its value concentrated in its best players earns an adjustment — the best player in a deal carries weight beyond raw totals.", 56, H - 128);
         shDeliver(cv, "fantasy-forensics-trade-verdict.png");
       };
 
