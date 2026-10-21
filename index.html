@@ -741,12 +741,12 @@
         padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px;
         background: rgba(0,0,0,.35); color: var(--ink); font-weight: 600;
       }
-      /* The "I want" position target: a sticky, high-contrast panel —
-         the one control in the finder that must be impossible to
-         scroll past. It pins under the main nav while the results
-         run below it, in both value modes. */
+      /* The "I want" position target: a high-contrast panel at the
+         top of the finder, in both value modes. It scrolls away with
+         the page (was sticky: the pinned panel rode over the trade
+         cards on phones and blocked them — Eric, Oct 21). In normal
+         flow it can never overlap or hide content. */
       .want-panel {
-        position: sticky; top: 58px; z-index: 24;
         display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px;
         margin: 0 0 18px; padding: 14px 16px;
         background: rgba(12, 12, 28, .94);
@@ -775,7 +775,7 @@
       }
       .want-btns .want-sub { font-size: 11.5px; font-weight: 600; opacity: .65; letter-spacing: .04em; }
       @media (max-width: 560px) {
-        .want-panel { top: 56px; padding: 12px 13px; gap: 8px 12px; }
+        .want-panel { padding: 12px 13px; gap: 8px 12px; }
         .want-label { font-size: 19px; }
         .want-btns { flex-basis: 100%; }
         .want-btns button { flex: 1 1 30%; min-height: 50px; padding: 9px 8px; font-size: 15.5px; }
@@ -2619,7 +2619,7 @@
         </details>
         <details class="how-box">
           <summary>What is the value adjustment?</summary>
-          <p class="tab-intro">When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and production concentrated into fewer spots is worth more than the same production spread across extra bodies you have to roster. The value adjustment is the credit the calculator gives that side for the concentration: the best player in a deal carries weight beyond his raw price, so the side receiving him gets credited the amount that balances that difference. It follows concentration, not headcount: whichever side's production is packed into the fewest, best players earns it — in any trade shape, even when both sides send the same number of players — and a deal whose value is spread just as evenly on both sides earns none.</p>
+          <p class="tab-intro">When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and production concentrated into fewer spots is worth more than the same production spread across extra bodies you have to roster. The value adjustment is the credit the calculator gives that side for the concentration: the best player in a deal carries weight beyond his raw price, so the side receiving him gets credited the amount that balances that difference. It follows concentration, not headcount: whichever side's production is packed into the fewest, best players earns it — in any trade shape, even when both sides send the same number of players — and a deal whose value is spread just as evenly on both sides earns none. A straight 1-for-1 earns none either: one player a side, there is no concentration to price, so the raw difference is the whole gap.</p>
         </details>
         <details class="how-box">
           <summary>Dynasty or redraft — how does the site know?</summary>
@@ -4219,14 +4219,17 @@ ${rdP ? "" : `
          bodies that must be rostered. The adjustment re-prices
          every asset through the convex curve vaPhi — in which the
          best players count for disproportionately more than their
-         raw price — finds the side whose curved (φ) sum LEADS,
-         whatever the asset counts on either side (1-for-1, 2-for-2,
-         4-for-7 all take the identical path), and credits that side
-         exactly the raw value that would balance the two curved
-         sums. The credit follows the curve-lead smoothly as assets
-         are added or removed — it never snaps to zero over a count
-         or a lead change; a deal whose curved sums genuinely
-         balance is the only zero. Adjusted total = raw sum + value
+         raw price — finds the side whose curved (φ) sum LEADS and
+         credits that side exactly the raw value that would balance
+         the two curved sums, whatever the asset counts on either
+         side (2-for-1, 2-for-2, 4-for-7 all take the identical
+         path). One exception, at KTC parity (Eric, Oct 21): a true
+         1-for-1 — one asset against one asset — carries NO
+         adjustment; the raw difference is the gap. The credit
+         follows the curve-lead smoothly as assets are added or
+         removed — it never snaps to zero over a count or a lead
+         change; the only zeros are a genuine curve balance and the
+         1-for-1 carve-out. Adjusted total = raw sum + value
          adjustment, and every verdict on the page (calculator,
          Trade Finder, Real Trades grades, offer builder) judges
          the adjusted totals. */
@@ -4246,6 +4249,10 @@ ${rdP ? "" : `
          solve instead of re-deriving it per side. */
       function vaPair(aValues, bValues) {
         if (!aValues.length || !bValues.length) return [0, 0];
+        // True 1-for-1: no adjustment (KTC parity, Eric Oct 21) —
+        // with one asset a side there is no concentration to price,
+        // so the raw difference is the whole gap.
+        if (aValues.length === 1 && bValues.length === 1) return [0, 0];
         const t = Math.max(...aValues, ...bValues);
         if (!(t > 0)) return [0, 0];
         const gap = aValues.reduce((s, v) => s + vaPhi(v, t), 0)
@@ -5875,7 +5882,7 @@ ${rdP ? "" : `
         <h2>Trade verdicts — the value adjustment</h2>
         <p>Adding up raw prices lies about uneven trades. Three players worth 3,000 each sum to 9,000, but they do not beat one 8,500 stud: starting roster spots are scarce, and only so many of the three can ever take the field in the stud's place. So the trade calculator never judges a deal on raw sums alone. Each side's verdict number — its <strong>Trade value</strong> — is its raw sum plus a <strong>value adjustment</strong> for the side whose value is most concentrated: the best player in a deal carries weight beyond his raw price, because production concentrated into a single roster spot is worth more than the same production spread across the extra spots the other side has to carry. The adjustment follows concentration, not headcount — a top-heavy side earns it in any trade shape, even when both sides send the same number of assets, and only a deal whose value is spread just as evenly on both sides earns none. Picks count as assets the same way players do, which is why four late 2nds don't add up to one early 1st here. The verdict, the fair/close/lopsided thresholds, and the balancing-pick suggestion are all computed on trade values; the calculator still prints the <strong>Raw sum</strong> under the Trade value, with the value adjustment on its own labeled line whenever one applies, so the credit is never hidden. The adjustment tempers fair deals rather than reversing them: two good starters still beat one great player when their combined value clears his price plus the adjustment — and a 1-for-1 of near-equals moves only a little, because two single players sit close together on the concentration curve.</p>
         <h2>What is the value adjustment?</h2>
-        <p>When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and production concentrated into fewer spots is worth more than the same production spread across extra bodies you have to roster. The value adjustment is the credit the calculator gives that side for the concentration. The best player in a deal carries weight beyond his raw price: one great player producing from a single spot is worth more than the same production spread across extra bodies you have to roster, so the side taking back fewer players gets credited the amount that balances that difference. It follows concentration, not headcount: whichever side's production is packed into the fewest, best players earns it — in any trade shape, even when both sides send the same number of players — and a deal whose value is spread just as evenly on both sides earns none.</p>
+        <p>When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and production concentrated into fewer spots is worth more than the same production spread across extra bodies you have to roster. The value adjustment is the credit the calculator gives that side for the concentration. The best player in a deal carries weight beyond his raw price: one great player producing from a single spot is worth more than the same production spread across extra bodies you have to roster, so the side taking back fewer players gets credited the amount that balances that difference. It follows concentration, not headcount: whichever side's production is packed into the fewest, best players earns it — in any trade shape, even when both sides send the same number of players — and a deal whose value is spread just as evenly on both sides earns none. A straight 1-for-1 earns none either: one player a side, there is no concentration to price, so the raw difference is the whole gap.</p>
         <h2>The injury feed — what it shows, and what it won't</h2>
         <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The honesty rule: <strong>no free source publishes a reliable expected-return date</strong>, so the board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
         <h2>Power rankings &amp; the team tags</h2>
@@ -10574,7 +10581,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             { h: "Roster spots are the currency" },
             { p: "The logic is roster math. This league starts eleven players a week. Gibbs occupies one slot and produces like it: 30.7 points per game through Week 5, a 77% snap share, the No. 2 usage rank among all running backs, receivers and tight ends. Brown and Collins occupy two slots — and the second slot is never free, because Collins' points come <em>instead of</em> your next bench option's, not in addition to them. So the calculator adds a <strong>value adjustment</strong> to the side whose production is concentrated into fewer spots: the best player in a deal carries weight beyond his raw price, and the adjustment credits that side the amount that balances that difference. Gibbs' side takes back one player instead of two, collects a 6,619-point value adjustment, and lands at 16,604. Brown and Collins collect none and stay at 9,973. The 6,631-point gap is what that concentration is actually worth in this deal." },
             { h: "It tempers deals; it doesn't crown studs" },
-            { p: "The adjustment cuts both ways, deliberately. It follows concentration, not headcount — an even trade can earn one when one side is top-heavy — and a 1-for-1 of near-equals moves only a little, because two single players sit close together on the curve. Nor does it hand the win to the single biggest name: two genuinely strong starters still beat one great player whenever their combined value clears his price plus the adjustment. Picks count as assets the same way, which is why four late 2nds don't add up to one early 1st in our calculator even when the raw sums insist they should. The raw totals never disappear, either: every verdict leads with the adjusted Trade value and prints the Raw sum right beneath it, with the value adjustment on its own line whenever one applies — never a hidden thumb on the scale." },
+            { p: "The adjustment cuts both ways, deliberately. It follows concentration, not headcount — an even trade can earn one when one side is top-heavy — and a true 1-for-1 earns none at all — one player a side, there is no concentration to price, so the raw difference is the whole story. Nor does it hand the win to the single biggest name: two genuinely strong starters still beat one great player whenever their combined value clears his price plus the adjustment. Picks count as assets the same way, which is why four late 2nds don't add up to one early 1st in our calculator even when the raw sums insist they should. The raw totals never disappear, either: every verdict leads with the adjusted Trade value and prints the Raw sum right beneath it, with the value adjustment on its own line whenever one applies — never a hidden thumb on the scale." },
             { jump: { label: "Try it in the calculator →", nav: "trades" } }
           ]
         },
