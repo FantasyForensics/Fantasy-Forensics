@@ -2292,9 +2292,12 @@
       .rd-wks { margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: .05em; color: var(--cyan); border: 1px solid rgba(0,229,255,.4); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
       .rd-ev { font-size: 14px; line-height: 1.5; color: var(--ink); margin: 0 0 8px; }
       .rd-ev b { color: var(--accent); font-weight: 700; }
-      .rd-base { font-size: 13px; line-height: 1.5; color: var(--ink-2); margin: 0 0 8px; }
-      .rd-rates { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--ink-3); border-top: 1px solid rgba(255,255,255,.08); padding-top: 8px; }
-      .rd-rates b { color: var(--ink); font-family: "Space Grotesk", sans-serif; }
+      .rd-head { font-family: "Space Grotesk", sans-serif; font-size: 18px; font-weight: 700; line-height: 1.3; color: var(--ink); margin: 2px 0 8px; }
+      .rd-track { font-size: 11.5px; line-height: 1.55; color: var(--ink-3); border-top: 1px solid rgba(255,255,255,.08); padding-top: 8px; margin: 10px 0 0; }
+      .rd-track b { color: var(--ink-2); }
+      .rd-why .rd-head { font-size: 15px; margin: 0 0 6px; }
+      .rd-why .rd-track { border-top-color: rgba(0,229,255,.18); margin-bottom: 8px; }
+      .radar-sub { font-size: 16.5px; font-weight: 600; color: var(--ink); line-height: 1.4; margin: 2px 0 8px; }
       .rd-empty { color: var(--ink-2); font-size: 15px; border: 1px dashed rgba(255,255,255,.2); border-radius: 14px; padding: 18px; }
       .rd-risk { margin-top: 8px; }
       button.sig.radar { font: inherit; cursor: pointer; }
@@ -2696,7 +2699,8 @@
 
       <section class="tab" id="tab-radar" role="tabpanel">
         <h2 class="block-title">Opportunity Radar<span class="launch-badge">Free during launch</span></h2>
-        <p class="tab-intro">One screen, one idea: a player's workload — his targets and carries — has already reached starter level over his last three games, but his scoring hasn't caught up yet. That gap has tended to close. Every flag below carries its evidence and the measured record of flags like it in <strong>2024–25</strong>, seasons this screen was never tuned on. It is a screen, not a verdict — most flags still don't break out, and the rates say exactly how often they have.</p>
+        <p class="radar-sub">Players whose role is bigger than their scoring — history says the scoring usually catches up.</p>
+        <p class="tab-intro">Each player below is getting starter-level targets and carries over his last three games but scoring like a backup. Most flags still don't break out — every card shows how often flags like it actually have, measured on <strong>2024–25</strong>, seasons this screen was never tuned on.</p>
         <div id="radar-out"></div>
       </section>
 
@@ -13410,22 +13414,23 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
       function rdEvidence(f) {
         return `<b>${f.opp_per_game.toFixed(1)} opportunities/game</b> over his last 3 (${rdOrd(f.workload_pct)} percentile of ${f.position}s) but just <b>${f.pts_per_touch.toFixed(2)} points per touch</b> (${rdOrd(f.pts_per_touch_pct)} percentile) — ${f.recent_ppg.toFixed(1)} pts/game in that span.`;
       }
-      function rdBaseLine(f) {
-        const b = f.base_rate || {};
-        return `Players flagged like this in 2024–25 — seasons the signal was never tuned on — went on to average <b>+${(b.median_ppg_lift || 0).toFixed(1)} pts/game</b> more than similar players over their next 3 games, finishing top-24 at their position ${rdPct(b.flag_top24_rate || 0)} of the time vs ${rdPct(b.control_top24_rate || 0)} for similar unflagged players (${b.n_flags_graded || 0} flags graded).`;
+      function rdHeadline(f) {
+        const work = f.workload_pct >= 0.9 ? "star-level" : "starter-level";
+        const score = f.pts_per_touch_pct <= 0.15 ? "Scoring like a backup" : "Scoring well below his role";
+        return `Getting ${work} work. ${score}. That gap usually closes.`;
       }
-      function rdRates(f) {
+      function rdTrackRecord(f) {
         const b = f.base_rate || {};
-        const cell = (lbl, a, c) => `<span>${lbl} <b>${rdPct(a || 0)}</b> vs ${rdPct(c || 0)}</span>`;
-        return `<div class="rd-rates"><span>Next-3 finish rates, flagged vs similar unflagged:</span>${cell("Top-12", b.flag_top12_rate, b.control_top12_rate)}${cell("Top-24", b.flag_top24_rate, b.control_top24_rate)}${cell("Top-36", b.flag_top36_rate, b.control_top36_rate)}</div>`;
+        const posNoun = { RB: "running backs", WR: "wide receivers", TE: "tight ends" }[f.position] || "players";
+        return `Why he's flagged: of ${b.n_flags_graded || 0} ${posNoun} flagged like this in 2024–25 — seasons this signal was never tuned on — the group averaged <b>+${(b.median_ppg_lift || 0).toFixed(1)} pts/game</b> more than similar players over their next 3 games, and <b>${rdPct(b.flag_top24_rate || 0)}</b> of them finished top-24 at the position vs ${rdPct(b.control_top24_rate || 0)} of similar unflagged players. Top-12 finishes: ${rdPct(b.flag_top12_rate || 0)} of flags vs ${rdPct(b.control_top12_rate || 0)}; top-36: ${rdPct(b.flag_top36_rate || 0)} vs ${rdPct(b.control_top36_rate || 0)}.`;
       }
       function rdCard(f) {
         const p = PBY[f.player_id];
         return `<div class="rd-card">
           <div class="rd-top">${hsImg(p || { id: f.player_id })}<div><div class="rd-name">${esc(f.name)}</div><div class="rd-meta">${f.position} · ${logoImg(f.team)}${esc(f.team)}</div></div><span class="rd-wks">${rdWks(f)}</span></div>
+          <p class="rd-head">${rdHeadline(f)}</p>
           <p class="rd-ev">${rdEvidence(f)}</p>
-          <p class="rd-base">${rdBaseLine(f)}</p>
-          ${rdRates(f)}
+          <div class="rd-track">${rdTrackRecord(f)}</div>
           ${f.injury_risk ? `<div class="rd-risk"><span class="inj-chip sev-mid">${esc(f.injury_risk)}</span></div>` : ""}
         </div>`;
       }
@@ -13439,7 +13444,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (!p) return "";
         const f = rdLiveFlags().find(x => String(x.player_id) === String(p.id));
         if (!f) return "";
-        return `<div class="rd-why"><div class="rd-why-h">📡 On the Opportunity Radar this week</div><p>${rdEvidence(f)}</p><p>${rdBaseLine(f)}</p><button type="button" class="rd-goto" data-radar-go>See the full Radar board →</button></div>`;
+        return `<div class="rd-why"><div class="rd-why-h">📡 On the Opportunity Radar this week</div><p class="rd-head">${rdHeadline(f)}</p><p>${rdEvidence(f)}</p><p class="rd-track">${rdTrackRecord(f)}</p><button type="button" class="rd-goto" data-radar-go>See the full Radar board →</button></div>`;
       }
       window.radarWhy = radarWhy;
       function renderRadar() {
