@@ -2303,6 +2303,51 @@
       .rd-why .rd-why-h { font-family: "Space Grotesk", sans-serif; font-weight: 700; color: var(--cyan); margin-bottom: 4px; }
       .rd-why p { margin: 0 0 6px; }
       .rd-goto { font: inherit; font-size: 12.5px; font-weight: 700; color: var(--accent); background: none; border: 1px solid rgba(198,255,0,.45); border-radius: 999px; padding: 3px 10px; cursor: pointer; }
+
+      /* ---------- Team Portfolio ---------- */
+      .tp-wrap { max-width: 1060px; }
+      .tp-side { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+      .tp-selrow { display: flex; align-items: center; gap: 10px; }
+      .tp-selrow label { font-weight: 700; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+      .tp-selrow select { font: inherit; background: var(--surface-2); color: var(--ink); border: 1px solid rgba(198,255,0,.45); border-radius: 10px; padding: 8px 12px; max-width: 280px; }
+      .tp-demonote { color: var(--ink-3); font-size: 13px; text-align: right; max-width: 300px; line-height: 1.45; }
+      .tp-rdnote { margin-top: 8px; color: #00E5FF; font-weight: 700; font-size: 14px; }
+      .tp-tablewrap { border: 1px solid rgba(255,255,255,.12); border-radius: 16px; overflow: hidden; background: linear-gradient(165deg, rgba(255,255,255,.035), rgba(255,255,255,.008)); }
+      .tp-table { width: 100%; border-collapse: collapse; }
+      .tp-table th { font-family: "Space Grotesk", sans-serif; font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.03); }
+      .tp-table th.num, .tp-table td.num { text-align: right; }
+      .tp-table td { padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,.06); vertical-align: middle; }
+      .tp-table tbody tr:last-child td { border-bottom: none; }
+      .tp-table tbody tr:hover td { background: rgba(198,255,0,.03); }
+      .tp-sortbtn { font: inherit; color: inherit; background: none; border: none; cursor: pointer; letter-spacing: inherit; text-transform: inherit; padding: 0; }
+      .tp-sortbtn.on { color: var(--accent); }
+      .tp-sortbtn:hover { color: var(--ink); }
+      .tp-hold { display: flex; align-items: center; gap: 11px; min-width: 0; }
+      .tp-hold .phs { width: 40px; height: 40px; flex: none; }
+      .tp-name { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 16px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tp-sub { color: var(--ink-3); font-size: 12.5px; margin-top: 2px; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+      .tp-sub .tlogo { width: 15px; height: 15px; }
+      .tp-pos { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 12px; color: #00E5FF; border: 1px solid rgba(0,229,255,.4); border-radius: 7px; padding: 2px 7px; white-space: nowrap; }
+      .tp-delta { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .tp-delta small { font-size: 12px; opacity: .85; }
+      .tp-delta.up { color: var(--accent); }
+      .tp-delta.dn { color: #FF2E88; }
+      .tp-delta.flat { color: var(--ink-3); }
+      .tp-val { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 17px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .tp-nodata { color: var(--ink-3); }
+      .tp-spark { display: block; }
+      .tp-pickrow td { background: rgba(0,229,255,.025); }
+      .tp-pickico { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1px solid rgba(0,229,255,.45); background: rgba(0,229,255,.08); color: #00E5FF; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+      .tp-foot { color: var(--ink-3); font-size: 13.5px; line-height: 1.55; margin-top: 14px; }
+      .tp-open-picks { display: inline-block; margin-top: 12px; border: 1px solid rgba(198,255,0,.55); background: var(--surface-2); color: var(--ink); border-radius: 999px; padding: 9px 17px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
+      .tp-open-picks:hover { box-shadow: 0 0 12px rgba(198,255,0,.35); }
+      .tp-card-btn { margin-left: 8px; }
+      @media (max-width: 640px) {
+        .tp-side { align-items: flex-start; }
+        .tp-demonote { text-align: left; }
+        .tp-table th.tp-c-trend, .tp-table td.tp-c-trend { display: none; }
+        .tp-name { font-size: 14.5px; }
+      }
     </style>
   </head>
   <body>
@@ -2345,6 +2390,7 @@
           <button type="button" class="tool-entry" data-tool="waivers" role="menuitem"><span class="tool-name">Waiver Targets</span><span class="tool-desc">The adds that actually improve your lineup</span></button>
           <button type="button" class="tool-entry" data-tool="realtrades" role="menuitem"><span class="tool-name">Real Trades</span><span class="tool-desc">What real leagues actually paid</span></button>
           <button type="button" class="tool-entry" data-tool="picks" role="menuitem"><span class="tool-name">Pick Portfolio</span><span class="tool-desc">Every draft pick you own, priced like a portfolio</span></button>
+          <button type="button" class="tool-entry" data-tool="teamport" role="menuitem"><span class="tool-name">Team Portfolio</span><span class="tool-desc">Your whole roster — players and picks — priced like a portfolio</span></button>
           <button type="button" class="tool-entry" data-tool="command" role="menuitem"><span class="tool-name">Command Center</span><span class="tool-desc">Every league you play in, on one screen</span></button>
           <button type="button" class="tool-entry" data-tool="radar" role="menuitem"><span class="tool-name">Opportunity Radar</span><span class="tool-desc">Starter-sized workloads whose scoring hasn't caught up — with the measured record</span></button>
           <div class="tools-div" role="separator"></div>
@@ -2481,6 +2527,7 @@
         <div id="myteams-out"></div>
         </div>
         <div id="pk-promo"></div>
+        <div id="tp-promo"></div>
         <div class="subnav-mount subnav-inview" data-subnav-mount="league"></div>
         <div id="lg-power" data-subview="power">
         <div id="wtw-wrap" hidden>
@@ -2633,6 +2680,12 @@
       <section class="tab" id="tab-picks" role="tabpanel">
         <h2 class="block-title">Pick Portfolio</h2>
         <div id="picks-out"></div>
+      </section>
+
+      <section class="tab" id="tab-teamport" role="tabpanel">
+        <h2 class="block-title">Team Portfolio</h2>
+        <p class="tab-intro">One roster, priced like a portfolio — every player and every draft pick in a single total, with this week's move and the trend across the weekly snapshots on file. Any team in the league, not just yours.</p>
+        <div id="teamport-out"></div>
       </section>
 
       <section class="tab" id="tab-command" role="tabpanel">
@@ -4047,8 +4100,8 @@
         "Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot; injuries and news after that date are not priced in.";
 
       /* ---------- tabs ---------- */
-      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", picks: "tab-picks", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", faq: "tab-faq" };
-      const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, picks: 1, command: 1, radar: 1, format: 1, how: 1, faq: 1 };
+      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", picks: "tab-picks", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", faq: "tab-faq" };
+      const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, picks: 1, teamport: 1, command: 1, radar: 1, format: 1, how: 1, faq: 1 };
       function activateNav(key, arg) {
         const viewKey = key === "risk" ? "lineup" : key;
         document.querySelectorAll("nav.mainnav > button, nav.mainnav .tools-btn").forEach(b => {
@@ -4255,7 +4308,7 @@ ${rdP ? "" : `
             <div class="grades">${["QB", "RB", "WR", "TE"].map(pos =>
               `<span class="grade ${gradeClass(t.grades[pos])}">${pos} <b>${t.grades[pos]}</b></span>`).join("")}
             </div>
-            <button class="expand-btn" data-expand="${t.rid}">View roster${rdP ? "" : " &amp; picks"} ▾</button>
+            <button class="expand-btn" data-expand="${t.rid}">View roster${rdP ? "" : " &amp; picks"} ▾</button><button class="expand-btn tp-card-btn" data-tp-team="${t.rid}">Team Portfolio →</button>
             <div class="roster-detail" id="detail-${t.rid}">
               <h3>Roster by ${rdP ? "redraft value" : "value"} <span class="p-sub">(slot tags = best-ball lineup)</span></h3>
               <table class="mini"><thead><tr><th>Player</th><th>Pos rank</th><th class="num">This week</th><th class="num">Value</th></tr></thead>
@@ -4314,6 +4367,7 @@ ${rdP ? "" : `
             </div>
             <table class="mini"><thead><tr><th>Player</th><th>Pos rank</th><th class="num">This week</th><th class="num">Value</th></tr></thead>
             <tbody>${rows}</tbody></table>
+            <button class="expand-btn tp-card-btn" data-tp-team="${t.rid}">Team Portfolio →</button>
           </article>`;
         }).join("");
       }
@@ -13438,6 +13492,285 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
            chip — re-render once so flagged rows carry it. */
         if (typeof renderBoard === "function") renderBoard();
         renderRadar();
+      })();
+    </script>
+    <script>
+      "use strict";
+      /* ================= Team Portfolio (Eric, Oct 22, 2026) =================
+         The whole roster as a stock portfolio: every player plus every
+         draft pick in one total, one weekly move, one trend line. It
+         prices nothing itself — player prices and weekly steps are the
+         Values board's own (dispVal + the stored snapshot history the
+         Risers & Fallers board reads), pick prices are the Pick
+         Portfolio's own (team.picks + pickPrice(), guest ladder +
+         guestPickValue()), and the picks section below is that same
+         data path, so the two surfaces can never disagree. The chart
+         prices the CURRENT roster at each past snapshot — labeled as
+         such — and never fills in a week the snapshots don't hold. */
+      const tpState = { rid: null, ctx: null, sort: "value", dir: 1 };
+      const TP_TIERCLS = { Early: "e", Mid: "m", Late: "l" };
+      const TP_ORD = { 1: "1st", 2: "2nd", 3: "3rd", 4: "4th" };
+
+      function tpIsGuest() { return !!window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn" || !(DATA.teams || []).length; }
+      function tpIsRedraft() { return typeof VALMODE !== "undefined" && VALMODE === "redraft"; }
+      function tpCtxKey() {
+        return (window.GUEST_MODE ? "guest" : (window.CURRENT_LEAGUE || "?")) + "|" + ((DATA.league && DATA.league.name) || "") + "|" + (DATA.teams || []).length;
+      }
+      /* The weekly step exactly as the Risers & Fallers board computes
+         it: the last two stored snapshots, re-priced to the format. */
+      function tpWk(p) {
+        if (!p || !p.hist || p.hist.length < 2) return null;
+        const f = factorRatio(p.pos);
+        const prev = Math.round(p.hist[p.hist.length - 2] * f);
+        const cur = Math.round(p.hist[p.hist.length - 1] * f);
+        return { d: cur - prev, pct: prev ? (cur - prev) / prev * 100 : 0 };
+      }
+      function tpSpark(p) {
+        if (!p || !p.hist || p.hist.length < 2) return '<span class="tp-nodata">—</span>';
+        const f = factorRatio(p.pos);
+        const pts = p.hist.map(v => Math.round(v * f));
+        const lo = Math.min(...pts), hi = Math.max(...pts), span = (hi - lo) || 1;
+        const W = 86, H = 26, PX = 2, PY = 3;
+        const X = i => PX + (W - 2 * PX) * i / (pts.length - 1);
+        const Y = v => PY + (H - 2 * PY) * (1 - (v - lo) / span);
+        const up = pts[pts.length - 1] >= pts[0];
+        const col = up ? "#C6FF00" : "#FF2E88";
+        const line = pts.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+        const area = `M${X(0).toFixed(1)},${Y(pts[0]).toFixed(1)} ` + pts.map((v, i) => `L${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ") + ` L${X(pts.length - 1).toFixed(1)},${H} L${X(0).toFixed(1)},${H} Z`;
+        return `<svg class="tp-spark" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><path d="${area}" fill="${up ? "rgba(198,255,0,.10)" : "rgba(255,46,136,.10)"}"/><polyline points="${line}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(pts.length - 1).toFixed(1)}" cy="${Y(pts[pts.length - 1]).toFixed(1)}" r="2.2" fill="${col}"/></svg>`;
+      }
+
+      /* Guest demo: a showcase roster drawn deterministically from the
+         live board (real players, real prices, real history) plus a
+         pick bundle priced on the guest ladder — the grouping is the
+         demo, every number on it is the board's own. */
+      const TP_DEMO_RANKS = { QB: [3, 12, 23], RB: [4, 9, 18, 27, 40, 54], WR: [4, 7, 16, 25, 37, 51, 68], TE: [3, 11, 19] };
+      const TP_DEMO_PICKS = ["2027-1-M", "2027-2-E", "2027-3-L", "2028-1-L", "2028-2-M", "2029-1-E"];
+      function tpDemoTeam() {
+        const players = [];
+        Object.keys(TP_DEMO_RANKS).forEach(pos => {
+          const pool = DATA.players.filter(p => p.pos === pos && !p.unpriced && p.posRank != null).sort((a, b) => a.posRank - b.posRank);
+          TP_DEMO_RANKS[pos].forEach(r => { const p = pool[r - 1]; if (p && !players.includes(p)) players.push(p); });
+        });
+        const picks = TP_DEMO_PICKS.map(k => (typeof GPBY !== "undefined") ? GPBY[k] : null).filter(Boolean).map(gp => ({
+          season: gp.year, round: gp.roundNum, tier: ["Early", "Mid", "Late"][gp.tierIdx], tierIdx: gp.tierIdx,
+          origName: ["Early", "Mid", "Late"][gp.tierIdx] + " projected finish", value: guestPickValue(gp), demo: true,
+        }));
+        return { name: "Demo Team", demo: true, isUser: true, players, picks };
+      }
+      function tpTeam() {
+        if (tpIsGuest()) return tpDemoTeam();
+        const key = tpCtxKey();
+        if (tpState.ctx !== key) { tpState.ctx = key; tpState.rid = null; }
+        let t = DATA.teams.find(x => String(x.rid) === String(tpState.rid));
+        if (!t) t = DATA.teams.find(x => x.isUser) || DATA.teams[0];
+        tpState.rid = t.rid;
+        return {
+          name: t.name, rid: t.rid, isUser: !!t.isUser, record: t.record, powerRank: t.powerRank, demo: false,
+          players: (t.playerIds || []).map(id => PBY[id]).filter(Boolean),
+          picks: (t.picks || []).map(pk => ({ season: pk.season, round: pk.round, tier: pk.tier, tierIdx: pk.tierIdx, origName: pk.origName || "", value: pickPrice(pk) })),
+        };
+      }
+      /* Rows + totals for a team, in the active mode. Weekly move is
+         players-only until weekly pick readings exist (PICK_HIST >= 2);
+         picks then contribute their own last-step change, priced the
+         way the Pick Portfolio prices them. */
+      function tpBuild(team) {
+        const rd = tpIsRedraft();
+        const rows = [];
+        let playersTotal = 0, picksTotal = 0, wkD = 0;
+        team.players.forEach(p => {
+          const v = (!p.unpriced && dispVal(p) != null) ? dispVal(p) : null;
+          if (v != null) playersTotal += v;
+          const w = rd ? null : tpWk(p);
+          if (w) wkD += w.d;
+          rows.push({ kind: "player", p, value: v, wk: w });
+        });
+        const pickHist = (typeof ff4Hist === "function") ? ff4Hist() : [];
+        const pickSteps = !rd && pickHist.length >= 2;
+        (rd ? [] : team.picks).forEach(pk => {
+          picksTotal += pk.value;
+          let w = null;
+          if (pickSteps && typeof ff4HistCell === "function") {
+            const cPrev = ff4HistCell(pickHist[pickHist.length - 2], pk.season, pk.round, pk.tierIdx);
+            if (cPrev != null) { const d = Math.round(pk.value) - cPrev; w = { d, pct: cPrev ? d / cPrev * 100 : 0 }; wkD += d; }
+          }
+          rows.push({ kind: "pick", pk, value: pk.value, wk: w });
+        });
+        const total = playersTotal + picksTotal;
+        const prevTotal = total - wkD;
+        return { rows, playersTotal, picksTotal, total, wkD, wkPct: prevTotal > 0 ? wkD / prevTotal * 100 : 0, pickSteps };
+      }
+      function tpChart(team, built) {
+        const priced = built.rows.filter(r => r.kind === "player" && r.p.hist && r.p.hist.length >= 2);
+        if (priced.length < 3) return "";
+        const n = Math.max(...priced.map(r => r.p.hist.length));
+        if (n < 2) return "";
+        const carried = built.total - priced.reduce((s, r) => s + dispVal(r.p), 0);
+        const sums = [];
+        for (let j = 0; j < n; j++) {
+          let s = carried;
+          priced.forEach(r => { const h = r.p.hist; const idx = h.length - n + j; if (idx >= 0) s += Math.round(h[idx] * factorRatio(r.p.pos)); });
+          sums.push(s);
+        }
+        const wkNow = (DATA.league && DATA.league.week) || 0;
+        const wkLbl = j => wkNow ? "Wk " + (wkNow - n + 1 + j) : "Snapshot " + (j + 1);
+        const W = 560, H = 170, PL = 20, PR = 40, PT = 24, PB = 24;
+        const lo0 = Math.min(...sums), hi0 = Math.max(...sums);
+        const padV = Math.max((hi0 - lo0) * 0.18, hi0 * 0.02, 1);
+        const lo = lo0 - padV, hi = hi0 + padV;
+        const X = i => PL + (W - PL - PR) * i / (n - 1);
+        const Y = v => PT + (H - PT - PB) * (1 - (v - lo) / (hi - lo));
+        const line = sums.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+        const area = `M${X(0).toFixed(1)},${Y(sums[0]).toFixed(1)} ` + sums.map((v, i) => `L${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ") + ` L${X(n - 1).toFixed(1)},${(H - PB).toFixed(1)} L${X(0).toFixed(1)},${(H - PB).toFixed(1)} Z`;
+        const d = sums[n - 1] - sums[0];
+        const dpct = sums[0] ? d / sums[0] * 100 : 0;
+        const dCls = d > 0 ? "up" : d < 0 ? "dn" : "flat";
+        const dTxt = `${d > 0 ? "+" : d < 0 ? "−" : ""}${fmt(Math.abs(d))} (${dpct > 0 ? "+" : dpct < 0 ? "−" : ""}${Math.abs(dpct).toFixed(1)}%) since ${wkLbl(0)}`;
+        const dots = sums.map((v, i) => {
+          const isLast = i === n - 1;
+          return `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${isLast ? 4.5 : 3}" fill="${isLast ? "#C6FF00" : "#0A0A1A"}" stroke="#C6FF00" stroke-width="2"/>` +
+            (i === 0 || isLast ? `<text x="${X(i).toFixed(1)}" y="${(Y(v) - 10).toFixed(1)}" text-anchor="${i === 0 ? "start" : "end"}" font-size="12.5" font-weight="700" fill="#F2F2F5" font-family="Space Grotesk, sans-serif">${fmt(v)}</text>` : "") +
+            `<text x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="#83839C" font-family="Space Grotesk, sans-serif">${wkLbl(i)}${isLast ? " · now" : ""}</text>`;
+        }).join("");
+        return `<div class="vh">
+          <div class="vh-head"><span class="vh-title">Team value — the current roster at each weekly snapshot</span><span class="vh-delta ${dCls}">${dTxt}</span></div>
+          <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Team value history chart for ${esc(team.name)}: ${fmt(sums[0])} at ${wkLbl(0)} to ${fmt(sums[n - 1])} now">
+            <path d="${area}" fill="rgba(198,255,0,.10)"/>
+            <polyline points="${line}" fill="none" stroke="#C6FF00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+            ${dots}
+          </svg>
+          <div class="vh-note">One point per weekly snapshot${DATA.league && DATA.league.snapshot ? ` · latest snapshot ${esc(DATA.league.snapshot)}` : ""}. Players without snapshot history, and picks, are carried at today's prices in every week.</div>
+        </div>`;
+      }
+      function tpDeltaCell(w) {
+        if (!w) return '<span class="tp-nodata">—</span>';
+        const cls = w.d > 0 ? "up" : w.d < 0 ? "dn" : "flat";
+        const arrow = w.d > 0 ? "▲" : w.d < 0 ? "▼" : "—";
+        return `<span class="tp-delta ${cls}">${arrow} ${fmt(Math.abs(w.d))} <small>(${w.pct > 0 ? "+" : w.pct < 0 ? "−" : ""}${Math.abs(w.pct).toFixed(1)}%)</small></span>`;
+      }
+      function tpRender() {
+        const out = document.getElementById("teamport-out");
+        if (!out) return;
+        const rd = tpIsRedraft();
+        const team = tpTeam();
+        const built = tpBuild(team);
+        const rows = built.rows.slice();
+        const s = tpState.dir;
+        rows.sort((a, b) => {
+          if (tpState.sort === "wk") {
+            const av = a.wk ? a.wk.d : null, bv = b.wk ? b.wk.d : null;
+            if (av == null && bv == null) return (b.value || 0) - (a.value || 0);
+            if (av == null) return 1;
+            if (bv == null) return -1;
+            return (bv - av) * s;
+          }
+          const av = a.value, bv = b.value;
+          if (av == null && bv == null) return 0;
+          if (av == null) return 1;
+          if (bv == null) return -1;
+          return (bv - av) * s;
+        });
+        const dCls = built.wkD > 0 ? "up" : built.wkD < 0 ? "dn" : "";
+        const dArrow = built.wkD > 0 ? "▲" : built.wkD < 0 ? "▼" : "—";
+        const selHtml = team.demo
+          ? `<div class="tp-demonote">Demo portfolio, built from this week's board — connect your league and every real team's portfolio loads here instead.</div>`
+          : `<div class="tp-selrow"><label for="tp-team-sel">Team</label><select id="tp-team-sel">${DATA.teams.slice().sort((a, b) => (a.powerRank || 99) - (b.powerRank || 99)).map(t => `<option value="${t.rid}" ${String(t.rid) === String(team.rid) ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("")}</select></div>
+             ${team.record ? `<div class="tp-demonote">${esc(team.record)}${team.powerRank ? ` · power #${team.powerRank} of ${DATA.teams.length}` : ""}</div>` : ""}`;
+        const rowHtml = rows.map(r => {
+          if (r.kind === "pick") {
+            const pk = r.pk;
+            return `<tr class="tp-pickrow">
+              <td><div class="tp-hold"><span class="tp-pickico">◆</span><div><div class="tp-name">${pk.season} ${TP_ORD[pk.round] || "Round " + pk.round} pick</div><div class="tp-sub">${esc(pk.origName || "")}${pk.demo ? " · demo pick" : ""}</div></div></div></td>
+              <td class="tp-c-trend"><span class="pk-tier ${TP_TIERCLS[pk.tier] || "m"}">${pk.tier} tier</span></td>
+              <td class="num">${tpDeltaCell(r.wk)}</td>
+              <td class="num tp-val">${fmt(r.value)}</td></tr>`;
+          }
+          const p = r.p;
+          return `<tr>
+            <td><div class="tp-hold">${hsImg(p, "phs-sm")}<div><div class="tp-name">${esc(p.name)}</div><div class="tp-sub"><span class="tp-pos">${p.pos}${p.posRank || ""}</span>${logoImg(p.team)}${esc(p.team || "")}${p.age != null ? ` · Age ${p.age}` : ""}${p.inj ? ` · ${esc(p.inj)}` : ""}</div></div></div></td>
+            <td class="tp-c-trend">${tpSpark(p)}</td>
+            <td class="num">${tpDeltaCell(r.wk)}</td>
+            <td class="num tp-val">${r.value == null ? '<span class="tp-nodata">Unpriced</span>' : fmt(r.value)}</td></tr>`;
+        }).join("");
+        const sortBtn = (key, label) => `<button type="button" class="tp-sortbtn ${tpState.sort === key ? "on" : ""}" data-tp-sort="${key}">${label}${tpState.sort === key ? (s === 1 ? " ▼" : " ▲") : ""}</button>`;
+        out.innerHTML = `<div class="tp-wrap">
+          <div class="pk-hero">
+            <div class="pk-hero-main">
+              <div class="pk-kicker">Team Portfolio · ${esc(team.name)}${team.isUser && !team.demo ? " · Your team" : ""}${team.demo ? " · Demo" : ""}</div>
+              <div class="pk-total">${fmt(built.total)}</div>
+              <div class="pk-sub">${team.players.length} players · ${fmt(built.playersTotal)}${rd ? "" : ` &nbsp;+&nbsp; ${team.picks.length} picks · ${fmt(built.picksTotal)}`}</div>
+              ${rd
+                ? `<div class="tp-rdnote">Redraft portfolio — players only. Redraft leagues hold no future picks, so picks sit this one out.</div>`
+                : `<div class="pk-delta ${dCls}">${dArrow} ${fmt(Math.abs(built.wkD))} (${built.wkPct > 0 ? "+" : built.wkPct < 0 ? "−" : ""}${Math.abs(built.wkPct).toFixed(1)}%) this week</div>`}
+            </div>
+            <div class="tp-side">${selHtml}</div>
+          </div>
+          ${rd ? "" : tpChart(team, built)}
+          <div class="tp-tablewrap"><table class="tp-table">
+            <thead><tr><th>Holding</th><th class="tp-c-trend">${rd ? "Dynasty trend" : "Trend"}</th><th class="num">${sortBtn("wk", "Week Δ")}</th><th class="num">${sortBtn("value", "Value")}</th></tr></thead>
+            <tbody>${rowHtml || `<tr><td colspan="4" class="pk-empty">No holdings on this roster.</td></tr>`}</tbody>
+          </table></div>
+          ${rd ? "" : `<button type="button" class="tp-open-picks" id="tp-open-picks">Open the full Pick Portfolio →</button>`}
+          <p class="tp-foot">${rd
+            ? "Redraft prices are rest-of-season only and re-set with each weekly update, so no weekly move is shown; each row's sparkline is the player's dynasty value history — the same one his player panel shows."
+            : `Prices are the board's own — the same values and weekly snapshots behind Player Values and the Risers &amp; Fallers board. The trend line prices today's roster at each past snapshot, so it tracks what this group of players was worth week to week, not the roster this team actually held then.${built.pickSteps ? "" : " Picks count in the total at today's prices and sit flat in the weekly change — weekly pick price history starts with the current snapshot, and pick movement joins the weekly change as new readings land."}`}</p>
+        </div>`;
+        const sel = document.getElementById("tp-team-sel");
+        if (sel) sel.addEventListener("change", () => { tpState.rid = sel.value; tpState.ctx = tpCtxKey(); tpRender(); });
+        out.querySelectorAll("[data-tp-sort]").forEach(btn => btn.addEventListener("click", () => {
+          const k = btn.dataset.tpSort;
+          if (tpState.sort === k) tpState.dir = tpState.dir === 1 ? -1 : 1;
+          else { tpState.sort = k; tpState.dir = 1; }
+          tpRender();
+        }));
+        const op = document.getElementById("tp-open-picks");
+        if (op) op.addEventListener("click", () => { window.activateNav("picks"); window.scrollTo({ top: 0 }); });
+      }
+      window.tpRender = tpRender;
+      function tpRenderPromo() {
+        const mount = document.getElementById("tp-promo");
+        if (!mount) return;
+        if (window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn") { mount.innerHTML = ""; return; }
+        const me = (DATA.teams || []).find(t => t.isUser);
+        if (!me) { mount.innerHTML = ""; return; }
+        const team = {
+          name: me.name, isUser: true, demo: false,
+          players: (me.playerIds || []).map(id => PBY[id]).filter(Boolean),
+          picks: (me.picks || []).map(pk => ({ season: pk.season, round: pk.round, tier: pk.tier, tierIdx: pk.tierIdx, origName: pk.origName || "", value: pickPrice(pk) })),
+        };
+        const built = tpBuild(team);
+        const rd = tpIsRedraft();
+        mount.innerHTML = `<div class="pk-promo">
+          <div><div class="pk-kicker">Team Portfolio</div><div class="pk-promo-total">${fmt(built.total)}</div>
+          <div class="pk-sub">${team.players.length} players${rd ? "" : ` + ${team.picks.length} picks`} · ${rd ? "redraft — players only" : `${built.wkD >= 0 ? "▲" : "▼"} ${fmt(Math.abs(built.wkD))} this week`}</div></div>
+          <button type="button" class="pk-open" id="tp-open-btn">Open portfolio →</button>
+        </div>`;
+        const b = document.getElementById("tp-open-btn");
+        if (b) b.addEventListener("click", () => { tpState.rid = me.rid; tpState.ctx = tpCtxKey(); window.activateNav("teamport"); window.scrollTo({ top: 0 }); });
+      }
+      window.tpRenderPromo = tpRenderPromo;
+      (function () {
+        const orig = window.activateNav;
+        if (typeof orig === "function") {
+          window.activateNav = function (k, a) {
+            const r = orig(k, a);
+            if (k === "teamport") tpRender();
+            if (k === "league") setTimeout(tpRenderPromo, 40);
+            return r;
+          };
+        }
+        window.addEventListener("modechange", () => setTimeout(() => { tpRender(); tpRenderPromo(); }, 40));
+        document.addEventListener("click", e => {
+          const b = e.target && e.target.closest ? e.target.closest("[data-tp-team]") : null;
+          if (!b) return;
+          tpState.rid = b.dataset.tpTeam;
+          tpState.ctx = tpCtxKey();
+          window.activateNav("teamport");
+          window.scrollTo({ top: 0 });
+        });
+        tpRender();
+        tpRenderPromo();
       })();
     </script>
   </body>
