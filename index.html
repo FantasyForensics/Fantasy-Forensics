@@ -1104,6 +1104,7 @@
       .po-insights { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 14.5px; flex: 1 1 320px; }
       .po-insights li { margin: 3px 0; }
       .po-table tr.mine-row td { background: var(--accent-soft); }
+      .po-scroll { overflow-x: auto; }
       /* ---------- bye-week planner ---------- */
       .bye-grid { border-collapse: collapse; width: 100%; font-size: 12px; }
       .bye-grid th, .bye-grid td { padding: 4px 2px; text-align: center; border-bottom: 1px solid var(--line); }
@@ -2424,6 +2425,8 @@
           <button type="button" class="tool-entry" data-tool="teamport" role="menuitem"><span class="tool-name">Team Portfolio</span><span class="tool-desc">Your whole roster — players and picks — priced like a portfolio</span></button>
           <button type="button" class="tool-entry" data-tool="command" role="menuitem"><span class="tool-name">Command Center</span><span class="tool-desc">Every league you play in, on one screen</span></button>
           <button type="button" class="tool-entry" data-tool="radar" role="menuitem"><span class="tool-name">Opportunity Radar</span><span class="tool-desc">Starter-sized workloads whose scoring hasn't caught up — with the measured record</span></button>
+          <button type="button" class="tool-entry" data-tool="ppath" role="menuitem"><span class="tool-name">Playoff Path Explorer</span><span class="tool-desc">Your magic number, and the games that swing your playoff odds</span></button>
+          <button type="button" class="tool-entry" data-tool="psched" role="menuitem"><span class="tool-name">Playoff Schedule Difficulty</span><span class="tool-desc">How soft each team's Weeks 15–17 playoff path really is</span></button>
           </div>
         </div>
         <button role="tab" data-nav="draft" type="button" aria-selected="false">Draft Command</button>
@@ -2575,7 +2578,6 @@
       </div>
         <div id="lg-outlook" data-subview="outlook">
         <div id="season-out"></div>
-        <div id="pp-explorer"></div>
         <details class="how-box inseason">
           <summary>How this works</summary>
           <p class="tab-intro">A <strong>separate engine</strong> that answers a different question: not what your players are worth, but what your team does <strong>this season</strong>. Every player is re-priced as a <strong>rest-of-season projection</strong> — a redraft lens: this year’s points only, no age curves, no dynasty value. Each team’s best lineup is projected, then the rest of the season is <strong>simulated 10,000 times</strong> (the remaining regular-season weeks, plus the six-team playoffs). Nothing here feeds the dynasty values, the power score, or the trade calculator’s verdict — those stay exactly as they were. What it does feed is <strong>trade advice</strong>: Player Targets and the calculator show each deal’s title-odds swing next to its dynasty math, because a deal can be fair on value and still wrong for your window. Projections use <strong>this league’s actual scoring</strong> and do not move with the League format explorer.</p>
@@ -2584,6 +2586,8 @@
       </div>
         <div id="lg-odds" data-subview="odds">
         <div id="odds-panel"></div>
+        <div id="pp-explorer"></div>
+        <div id="po-sched"></div>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
       </section>
@@ -4165,6 +4169,15 @@
         closeTools();
         const k = el.dataset.tool;
         if (k === "risk") activateNav("risk");
+        else if (k === "ppath" || k === "psched") {
+          /* Both live in the League Analyzer's Playoff Odds subview:
+             render first so the section is at full height, land on the
+             odds subview, then let activateNav scroll to the section. */
+          if (k === "ppath" && typeof window.ff4RenderPP === "function") window.ff4RenderPP();
+          if (k === "psched" && typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
+          window.__subnavNext.league = "odds";
+          activateNav("league", k === "ppath" ? "#pp-explorer" : "#po-sched");
+        }
         else { activateNav(k); window.scrollTo({ top: 0 }); }
       }));
       /* ---------- sub-navs (generic mechanism; League Analyzer adopts it) ----------
@@ -6660,7 +6673,7 @@ ${rdP ? "" : `
               <ul class="po-insights">${insights(mine).map(s => `<li>${s}</li>`).join("") || "<li>No extreme matchups on your path — it's the strength of your lineup, not the schedule, that decides your December.</li>"}</ul>
             </div>
             ${mine.score < 47 ? `<p class="expl">That's a below-average path — if you're buying, buy the positions this schedule picks on; if you're on the fence about selling a starter with a December gauntlet, this is the case for it.</p>` : mine.score >= 53 ? `<p class="expl">That's a better-than-average path — your starters' December matchups do some of the work for you, which strengthens the case for a win-now move.</p>` : ""}` : ""}
-            <table class="mini po-table"><thead><tr><th>#</th><th>Team</th><th>Difficulty</th><th>Softest starter matchup</th><th>Toughest starter matchup</th></tr></thead><tbody>${table}</tbody></table>
+            <div class="po-scroll"><table class="mini po-table"><thead><tr><th>#</th><th>Team</th><th>Difficulty</th><th>Softest starter matchup</th><th>Toughest starter matchup</th></tr></thead><tbody>${table}</tbody></table></div>
           </div>`;
         }
 
@@ -6733,7 +6746,6 @@ ${rdP ? "" : `
             </div>
             ${cards}
             <div class="pb-wrap" data-pb-root></div>
-            ${playoffSection()}
             <div class="diag"><h3>How to read this</h3>
               <p>Everything here runs on rest-of-season projections, not dynasty value. We project every player's remaining games, then rank teams and set playoff odds by how their rosters project from here to the end of the season. A player can be a valuable dynasty asset and still count for almost nothing here if he isn't projected to score this year.</p>
             </div>`;
@@ -6821,7 +6833,7 @@ ${rdP ? "" : `
           },
         };
 
-        return { results, means, meansWk, baseOpt, finderImpact, calcImpactHtml, impact, renderSeason, oddsWithMeans, path: pathAPI, format: FMT };
+        return { results, means, meansWk, baseOpt, finderImpact, calcImpactHtml, impact, renderSeason, oddsWithMeans, path: pathAPI, format: FMT, playoffHtml: playoffSection };
       };
       window.SeasonSim = DATA.teams.length ? window.buildSeasonSim() : null;
       window.SIM_BY_LEAGUE = {};
@@ -8606,6 +8618,7 @@ ${rdP ? "" : `
           refreshAll();
           if (typeof renderLineup === "function") renderLineup();
           if (typeof window.renderOddsPanel === "function") window.renderOddsPanel();
+          if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
         }).catch(() => {
           window.__injFetching = false;
           window.INJ_STATE = { status: "failed", at: window.INJ_STATE.at || 0 };
@@ -9087,6 +9100,7 @@ ${rdP ? "" : `
           window.SeasonSim = window.SIM_BY_LEAGUE.conn;
           restampPickTiers();
           window.SeasonSim.renderSeason();
+          if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
         } else {
           window.SeasonSim = null;
           const so = document.getElementById("season-out");
@@ -9106,6 +9120,7 @@ ${rdP ? "" : `
                 renderFinder();
                 renderVerdict();
                 if (typeof window.renderOddsPanel === "function") window.renderOddsPanel();
+                if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
               } catch (e) {
                 const so2 = document.getElementById("season-out");
                 if (so2) so2.innerHTML = `<div class="diag"><h3>Season sim couldn't be built for this league</h3><p>Everything else on this page is fully live on ${esc(C.league.name)}.</p></div>`;
@@ -10031,9 +10046,12 @@ ${rdP ? "" : `
 
       function mtRender() {
         if (!mtOut) return;
-        if (!window.CONN_LEAGUE) {
+        if (!window.CONN_LEAGUE || !DATA.teams || !DATA.teams.length) {
           /* No league connected: the Teams tab's locked state is the
-             single guest empty state for this tab — render nothing here. */
+             single guest empty state for this tab — render nothing here.
+             The empty-teams case is the league loader's mid-swap moment
+             (CONN_LEAGUE set, rosters not yet applied): skip this pass —
+             setConnectedLeague re-renders the moment the data lands. */
           mtOut.innerHTML = "";
           return;
         }
@@ -11259,6 +11277,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           });
         }
         if (typeof window.renderOddsPanel === "function") window.renderOddsPanel();
+        if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
         if (typeof window.renderInjFresh === "function") window.renderInjFresh();
       };
 
@@ -11268,6 +11287,19 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
          adds through the sim's paired-delta impact(), the lineup fix
          by re-simming at the set lineup's rest-of-season strength.
          Nothing here invents a number the engines don't already own. */
+      /* ---------- Playoff schedule difficulty (Weeks 15–17) ----------
+         The card moved out of Season Outlook into the Playoff Odds
+         subview (Eric, Oct 22), under the Playoff Path Explorer. The
+         HTML still comes from the sim that owns the optimal lineups
+         it grades (sim.playoffHtml) — this function is only the
+         mount, re-run wherever the odds panel re-renders. */
+      window.renderPlayoffSched = function () {
+        const el = document.getElementById("po-sched");
+        if (!el) return;
+        const sim = window.SeasonSim;
+        el.innerHTML = (sim && typeof sim.playoffHtml === "function") ? sim.playoffHtml() : "";
+      };
+
       window.renderOddsPanel = function () {
         const el = document.getElementById("odds-panel");
         if (!el) return;
@@ -13565,7 +13597,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
       window.ff4RenderPP = ff4RenderPP;
       (function () {
         const so = document.getElementById("season-out");
-        if (so && "MutationObserver" in window) { let t = null; new MutationObserver(() => { clearTimeout(t); t = setTimeout(ff4RenderPP, 60); }).observe(so, { childList: true }); }
+        if (so && "MutationObserver" in window) { let t = null; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { ff4RenderPP(); if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched(); }, 60); }).observe(so, { childList: true }); }
         window.addEventListener("modechange", () => setTimeout(ff4RenderPP, 80));
       })();
 
