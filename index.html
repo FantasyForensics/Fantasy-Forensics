@@ -399,7 +399,6 @@
       .near-miss-strip .path-head { font-size: 15px; color: var(--ink-2); }
       .near-miss-strip .suggestion { opacity: .85; }
       .path-desc { color: var(--ink-2); margin: 0 0 6px; max-width: 72ch; }
-      .faq-list .how-box { margin: 12px 0; }
       section.tab { display: none; padding-top: 18px; }
       section.tab.active { display: block; }
       .tab-intro { color: var(--ink-2); max-width: 72ch; margin: 0 0 18px; }
@@ -2197,7 +2196,7 @@
       }
     </style>
     <style>
-      /* ---------- Four-feature batch: Balancer / Pick Portfolio / Command Center / Playoff Path ---------- */
+      /* ---------- Four-feature batch: Balancer / Command Center (Spotlight) / Playoff Path ---------- */
       .bal-box { margin-top: 14px; border: 1px solid rgba(0,229,255,.35); background: linear-gradient(135deg, rgba(0,229,255,.07), rgba(198,255,0,.05)); border-radius: 14px; padding: 14px 16px; }
       .bal-head { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: .03em; color: #00E5FF; }
       .bal-note { color: var(--ink-2); font-size: 14.5px; line-height: 1.5; margin: 6px 0 0; }
@@ -2208,50 +2207,82 @@
       .bal-done { border-color: rgba(198,255,0,.4); }
       .bal-done .bal-head { color: var(--accent); }
 
-      .pk-wrap { max-width: 1060px; }
       .pk-hero { display: flex; flex-wrap: wrap; gap: 18px; justify-content: space-between; align-items: flex-end; border: 1px solid rgba(198,255,0,.35); border-radius: 18px; padding: 20px 22px; background: radial-gradient(120% 160% at 12% 0%, rgba(198,255,0,.13), transparent 55%), linear-gradient(135deg, #1B0B33, #0D0D20); margin-bottom: 16px; }
       .pk-kicker { font-family: "Space Grotesk", sans-serif; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #00E5FF; }
       .pk-total { font-family: "Space Grotesk", sans-serif; font-size: 52px; font-weight: 700; line-height: 1.02; color: var(--accent); text-shadow: 0 0 26px rgba(198,255,0,.35); font-variant-numeric: tabular-nums; }
       .pk-sub { color: var(--ink-2); font-size: 14px; margin-top: 4px; }
       .pk-delta { margin-top: 8px; font-weight: 700; font-size: 15px; }
-      .pk-delta.up, .pk-note.up { color: var(--accent); }
-      .pk-delta.dn, .pk-note.dn { color: #FF2E88; }
-      .pk-years { display: flex; gap: 10px; }
-      .pk-year { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px 14px; text-align: center; background: rgba(255,255,255,.03); }
-      .pk-year span { display: block; font-size: 12px; color: var(--ink-3); letter-spacing: .08em; }
-      .pk-year b { font-family: "Space Grotesk", sans-serif; font-size: 17px; }
-      .pk-yearhead { font-family: "Space Grotesk", sans-serif; font-size: 19px; margin: 20px 0 10px; }
-      .pk-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 12px; }
-      .pk-card { border: 1px solid rgba(255,255,255,.13); border-radius: 14px; padding: 13px 15px; background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); }
-      .pk-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-      .pk-slot { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 17px; }
+      .pk-delta.up { color: var(--accent); }
+      .pk-delta.dn { color: #FF2E88; }
       .pk-tier { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 2px 9px; }
       .pk-tier.e { background: rgba(198,255,0,.16); color: var(--accent); border: 1px solid rgba(198,255,0,.5); }
       .pk-tier.m { background: rgba(0,229,255,.12); color: #00E5FF; border: 1px solid rgba(0,229,255,.45); }
       .pk-tier.l { background: rgba(255,46,136,.12); color: #FF2E88; border: 1px solid rgba(255,46,136,.4); }
-      .pk-orig { color: var(--ink-2); font-size: 13.5px; margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .pk-val { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 24px; margin-top: 6px; font-variant-numeric: tabular-nums; }
-      .pk-note { color: var(--ink-3); font-size: 12.5px; margin-top: 3px; }
-      .pk-foot { color: var(--ink-3); font-size: 13.5px; line-height: 1.55; margin-top: 16px; }
       .pk-empty { color: var(--ink-2); }
       .pk-promo { display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; align-items: center; border: 1px solid rgba(198,255,0,.35); border-radius: 16px; padding: 16px 20px; margin: 18px 0 6px; background: radial-gradient(120% 160% at 10% 0%, rgba(198,255,0,.12), transparent 55%), linear-gradient(135deg, #1B0B33, #0D0D20); }
       .pk-promo-total { font-family: "Space Grotesk", sans-serif; font-size: 34px; font-weight: 700; color: var(--accent); line-height: 1.05; font-variant-numeric: tabular-nums; }
       .pk-open { border: 1px solid rgba(198,255,0,.55); background: var(--surface-2); color: var(--ink); border-radius: 999px; padding: 10px 18px; font: inherit; font-weight: 700; cursor: pointer; }
       .pk-open:hover { box-shadow: 0 0 12px rgba(198,255,0,.35); }
 
-      .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
-      .cc-card { border: 1px solid rgba(0,229,255,.28); border-radius: 16px; padding: 16px 18px; background: linear-gradient(160deg, rgba(0,229,255,.05), rgba(255,255,255,.012)); }
       .cc-name { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 18.5px; line-height: 1.25; }
       .cc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-      .cc-team { font-weight: 700; font-size: 16px; margin-top: 12px; }
-      .cc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-      .cc-stats span { display: block; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
-      .cc-stats b { font-family: "Space Grotesk", sans-serif; font-size: 17.5px; }
       .cc-status { color: var(--ink-2); font-size: 14px; line-height: 1.5; margin: 10px 0 0; }
       .cc-loading { color: var(--ink-3); }
       .cc-enter { margin-top: 12px; border: 1px solid rgba(198,255,0,.55); background: var(--surface-2); color: var(--ink); border-radius: 999px; padding: 8px 16px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
       .cc-enter:hover { box-shadow: 0 0 12px rgba(198,255,0,.35); }
       .cc-empty { border: 1px dashed rgba(255,255,255,.25); border-radius: 16px; padding: 22px; color: var(--ink-2); max-width: 640px; }
+      .cc-layout { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(250px, 1fr); gap: 16px; align-items: start; }
+      .cc-spot { border: 1px solid rgba(0,229,255,.3); border-radius: 18px; padding: 20px 22px; background: radial-gradient(120% 160% at 10% 0%, rgba(0,229,255,.08), transparent 55%), linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); }
+      .cc-spot-top { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-start; }
+      .cc-spot-top .cc-enter { margin-top: 2px; }
+      .cc-spot-team { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 24px; line-height: 1.15; }
+      .cc-spot-league { color: var(--ink-2); font-size: 14.5px; margin-top: 2px; }
+      .cc-spot-mid { display: flex; flex-wrap: wrap; gap: 22px; align-items: center; margin-top: 16px; }
+      .cc-ring { position: relative; width: 132px; height: 132px; flex: 0 0 auto; }
+      .cc-ring svg { display: block; }
+      .cc-ring-c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+      .cc-ring-num { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 30px; line-height: 1; }
+      .cc-ring-num.sm { font-size: 19px; }
+      .cc-ring-lab { font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); margin-top: 4px; }
+      .cc-spot-stats { display: grid; grid-template-columns: repeat(2, minmax(110px, auto)); gap: 14px 30px; }
+      .cc-spot-stats span { display: block; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+      .cc-spot-stats b { font-family: "Space Grotesk", sans-serif; font-size: 21px; }
+      .cc-lines { border-top: 1px solid rgba(255,255,255,.1); margin-top: 16px; padding-top: 12px; display: grid; gap: 8px; }
+      .cc-line { font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+      .cc-line b { color: var(--ink); font-family: "Space Grotesk", sans-serif; }
+      .cc-line .cc-delta { color: #00E5FF; font-weight: 700; }
+      .cc-spark { margin-top: 14px; }
+      .cc-spark-k { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
+      .cc-rail { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+      .cc-rail-h { font-family: "Space Grotesk", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+      .cc-rail-it { text-align: left; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 12px 14px; background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.01)); color: var(--ink); font: inherit; cursor: pointer; width: 100%; }
+      .cc-rail-it:hover, .cc-rail-it:focus-visible { border-color: rgba(0,229,255,.5); }
+      .cc-rail-it.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent), 0 0 12px rgba(198,255,0,.2); cursor: default; }
+      .cc-rail-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+      .cc-rail-team { font-weight: 700; font-size: 15.5px; }
+      .cc-rail-odds { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 19px; color: var(--accent); white-space: nowrap; }
+      .cc-rail-sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+      .cc-rail-lg { color: var(--ink-3); font-size: 12.5px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .cc-queue { border: 1px solid rgba(255,46,136,.35); border-radius: 16px; padding: 14px 18px; margin-bottom: 16px; background: linear-gradient(150deg, rgba(255,46,136,.05), rgba(255,255,255,.012)); }
+      .cc-queue.clean { border-color: rgba(198,255,0,.35); background: linear-gradient(150deg, rgba(198,255,0,.05), rgba(255,255,255,.012)); }
+      .cc-queue-h { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: .05em; }
+      .cc-queue-it { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; width: 100%; text-align: left; border: 0; border-top: 1px solid rgba(255,255,255,.08); background: none; color: var(--ink); font: inherit; padding: 9px 2px; cursor: pointer; }
+      .cc-queue-it.static { cursor: default; }
+      .cc-queue-it:hover .cc-q-player, .cc-queue-it:focus-visible .cc-q-player { text-decoration: underline; }
+      .cc-queue-it.static:hover .cc-q-player { text-decoration: none; }
+      .cc-q-player { font-weight: 700; font-size: 15.5px; }
+      .cc-q-issue { color: #FF7EB6; font-weight: 600; font-size: 14.5px; }
+      .cc-q-issue.bye { color: #00E5FF; }
+      .cc-q-issue.dbt { color: var(--ink-2); }
+      .cc-q-where { color: var(--ink-3); font-size: 13px; margin-left: auto; }
+      .cc-queue-note { color: var(--ink-2); font-size: 14.5px; margin: 6px 0 2px; }
+      @media (max-width: 860px) {
+        .cc-layout { grid-template-columns: 1fr; }
+        .cc-rail { order: -1; flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+        .cc-rail-h { display: none; }
+        .cc-rail-it { flex: 0 0 auto; width: auto; max-width: 250px; }
+        .cc-rail-it .cc-chips { display: none; }
+      }
 
       .pp-box { border: 1px solid rgba(255,46,136,.35); border-radius: 16px; padding: 18px 20px; margin-top: 16px; background: linear-gradient(150deg, rgba(255,46,136,.06), rgba(255,255,255,.012)); }
       .pp-box h3 { font-family: "Space Grotesk", sans-serif; font-size: 20px; margin: 0 0 4px; }
@@ -2276,7 +2307,7 @@
       .pp-swingrow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.08); font-size: 14.5px; }
       .pp-swingrow b { font-family: "Space Grotesk", sans-serif; color: #00E5FF; font-size: 17px; }
       .pp-swingrow small { color: var(--ink-3); }
-      @media (max-width: 640px) { .pk-total { font-size: 40px; } .cc-stats b { font-size: 15.5px; } }
+      @media (max-width: 640px) { .pk-total { font-size: 40px; } .cc-spot-stats b { font-size: 18px; } .cc-spot { padding: 16px; } }
       /* ---------- Opportunity Radar ---------- */
       .launch-badge { display: inline-block; vertical-align: middle; margin-left: 10px; font-family: "Space Grotesk", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0A0A1A; background: var(--accent); border-radius: 999px; padding: 3px 10px; }
       .radar-meta { color: var(--ink-3); font-size: 13px; margin: -4px 0 14px; }
@@ -2342,8 +2373,6 @@
       .tp-pickrow td { background: rgba(0,229,255,.025); }
       .tp-pickico { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1px solid rgba(0,229,255,.45); background: rgba(0,229,255,.08); color: #00E5FF; display: flex; align-items: center; justify-content: center; font-size: 17px; }
       .tp-foot { color: var(--ink-3); font-size: 13.5px; line-height: 1.55; margin-top: 14px; }
-      .tp-open-picks { display: inline-block; margin-top: 12px; border: 1px solid rgba(198,255,0,.55); background: var(--surface-2); color: var(--ink); border-radius: 999px; padding: 9px 17px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
-      .tp-open-picks:hover { box-shadow: 0 0 12px rgba(198,255,0,.35); }
       .tp-card-btn { margin-left: 8px; }
       @media (max-width: 640px) {
         .tp-side { align-items: flex-start; }
@@ -2392,15 +2421,9 @@
           <button type="button" class="tool-entry" data-tool="bye" role="menuitem"><span class="tool-name">Bye Week Planner</span><span class="tool-desc">Every bye week coming, and where your roster has holes</span></button>
           <button type="button" class="tool-entry" data-tool="waivers" role="menuitem"><span class="tool-name">Waiver Targets</span><span class="tool-desc">The adds that actually improve your lineup</span></button>
           <button type="button" class="tool-entry" data-tool="realtrades" role="menuitem"><span class="tool-name">Real Trades</span><span class="tool-desc">What real leagues actually paid</span></button>
-          <button type="button" class="tool-entry" data-tool="picks" role="menuitem"><span class="tool-name">Pick Portfolio</span><span class="tool-desc">Every draft pick you own, priced like a portfolio</span></button>
           <button type="button" class="tool-entry" data-tool="teamport" role="menuitem"><span class="tool-name">Team Portfolio</span><span class="tool-desc">Your whole roster — players and picks — priced like a portfolio</span></button>
           <button type="button" class="tool-entry" data-tool="command" role="menuitem"><span class="tool-name">Command Center</span><span class="tool-desc">Every league you play in, on one screen</span></button>
           <button type="button" class="tool-entry" data-tool="radar" role="menuitem"><span class="tool-name">Opportunity Radar</span><span class="tool-desc">Starter-sized workloads whose scoring hasn't caught up — with the measured record</span></button>
-          <div class="tools-div" role="separator"></div>
-          <button type="button" class="tool-entry" data-tool="format" role="menuitem"><span class="tool-name">League Format</span><span class="tool-desc">Your league's scoring and shape</span></button>
-          <button type="button" class="tool-entry" data-tool="how" role="menuitem"><span class="tool-name">How Values Work</span><span class="tool-desc">How our proprietary algorithm prices players, in plain words</span></button>
-          <button type="button" class="tool-entry" data-tool="faq" role="menuitem"><span class="tool-name">FAQ</span><span class="tool-desc">Answers, including the value adjustment</span></button>
-          <button class="tool-entry" type="button" data-tool="draft"><span class="te-name">Draft Command</span><span class="te-desc">Rookie and snake drafts, with pick recommendations</span></button>
           </div>
         </div>
         <button role="tab" data-nav="draft" type="button" aria-selected="false">Draft Command</button>
@@ -2529,8 +2552,7 @@
         <h2 class="block-title">Your Team</h2>
         <div id="myteams-out"></div>
         </div>
-        <div id="pk-promo"></div>
-        <div id="tp-promo"></div>
+          <div id="tp-promo"></div>
         <div class="subnav-mount subnav-inview" data-subnav-mount="league"></div>
         <div id="lg-power" data-subview="power">
         <div id="wtw-wrap" hidden>
@@ -2680,10 +2702,6 @@
         </details>
       </section>
 
-      <section class="tab" id="tab-picks" role="tabpanel">
-        <h2 class="block-title">Pick Portfolio</h2>
-        <div id="picks-out"></div>
-      </section>
 
       <section class="tab" id="tab-teamport" role="tabpanel">
         <h2 class="block-title">Team Portfolio</h2>
@@ -2693,7 +2711,7 @@
 
       <section class="tab" id="tab-command" role="tabpanel">
         <h2 class="block-title">Command Center</h2>
-        <p class="tab-intro">Every league on your Sleeper account where you hold a roster — record, power rank and playoff odds for each, loaded one league at a time so the page stays quick. Tap a card to open that league in full.</p>
+        <p class="tab-intro">Every league on your Sleeper account where you hold a roster. One league sits in the spotlight — playoff odds, the magic number, the swing game that matters most, and your team-value trend — with the rest ranked beside it and the players who need you first up top. Tap a league to bring it into focus, or open it for the full breakdown.</p>
         <div id="cc-out"></div>
       </section>
 
@@ -2798,41 +2816,6 @@
         <div class="method" id="method-body"></div>
       </section>
 
-      <section class="tab" id="tab-faq" role="tabpanel">
-        <h2 class="block-title">Frequently Asked Questions</h2>
-        <div class="faq-list">
-        <details class="how-box">
-          <summary>How do I connect my league?</summary>
-          <p class="tab-intro">Enter your Sleeper username on the home screen and pick your league. Your rosters, standings, records and draft picks load, and every tool on the site — League Analyzer, the Lineup Analyzer, Player Targets, Waiver Targets — prices and projects for your league's real settings. Until you connect, you're browsing in guest mode with a standard dynasty format.</p>
-        </details>
-        <details class="how-box">
-          <summary>What is the value adjustment?</summary>
-          <p class="tab-intro">When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and production concentrated into fewer spots is worth more than the same production spread across extra bodies you have to roster. The value adjustment is how the calculator prices that concentration: the best player in a deal carries value beyond his raw price, and the two sides' trade values are set by the amount that balances that difference. It follows concentration, not headcount: the side whose production is packed into the fewest, best players sets the terms — in any trade shape, even when both sides send the same number of players — and a deal whose value is spread just as evenly on both sides has no difference to balance. A straight 1-for-1 earns none either: one player a side, there is no concentration to price, so the raw difference is the whole gap.</p>
-        </details>
-        <details class="how-box">
-          <summary>Dynasty or redraft — how does the site know?</summary>
-          <p class="tab-intro">It's detected from your league's settings when you connect. Dynasty leagues get long-term values, priced draft picks, and Player Targets. Redraft leagues get rest-of-season prices only: no picks anywhere, and no Player Targets — in redraft there is no next year to build for, so every team plays to win now.</p>
-        </details>
-        <details class="how-box">
-          <summary>Why isn't my league's kicker or defense priced?</summary>
-          <p class="tab-intro">The board prices quarterbacks, running backs, wide receivers and tight ends — the players whose value actually swings trades and lineups. Kickers and team defenses aren't priced.</p>
-        </details>
-        <details class="how-box">
-          <summary>Where do the projections come from?</summary>
-          <p class="tab-intro">Weekly and rest-of-season projections are converted to your league's exact scoring settings, so a projection here is the points that player would score in your league. The same projections power the Lineup Analyzer, Season Outlook and Player Targets — and they never change a player's dynasty value.</p>
-        </details>
-        <details class="how-box">
-          <summary>How current is the data?</summary>
-          <p class="tab-intro">Every page carries its snapshot date in the footer — values, standings and ranks are as of that snapshot. Injury designations also refresh live from Sleeper when you open your league, and the Lineup Analyzer shows when they were last checked.</p>
-        </details>
-        <details class="how-box">
-          <summary>What is Player Targets?</summary>
-          <p class="tab-intro">Personalized trade recommendations for your team. If you're rebuilding, it builds graded offers for your aging veterans, matched to the contenders in your league who need them and can pay. If you're contending, it finds the veterans on rebuilding rosters who raise your projected points per week, priced in your picks and young players. If you're in between, you pick a direction — pivot to win-now or pivot to rebuild — and it works that path.</p>
-        </details>
-        </div>
-        <h2 class="block-title">About Fantasy Forensics</h2>
-        <p class="tab-intro">Fantasy Forensics prices every player, grades every trade, and builds the deals your team should make — for dynasty and redraft leagues alike, in your league's own scoring. Every price comes from our proprietary algorithm, built from deep analytics and consensus. Drafting? The <a href="#" data-draft-go>Draft Command</a> covers rookie and snake drafts with pick recommendations.</p>
-      </section>
 
       
 
@@ -4104,8 +4087,8 @@
         "Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot; injuries and news after that date are not priced in.";
 
       /* ---------- tabs ---------- */
-      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", picks: "tab-picks", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", faq: "tab-faq" };
-      const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, picks: 1, teamport: 1, command: 1, radar: 1, format: 1, how: 1, faq: 1 };
+      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how" };
+      const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, teamport: 1, command: 1, radar: 1, format: 1, how: 1 };
       function activateNav(key, arg) {
         const viewKey = key === "risk" ? "lineup" : key;
         document.querySelectorAll("nav.mainnav > button, nav.mainnav .tools-btn").forEach(b => {
@@ -12923,8 +12906,9 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
       "use strict";
       /* ================= Four-feature batch (Eric, Oct 21–22, 2026) =================
          1) Offer Balancer under the trade calculator's verdict.
-         2) Pick Portfolio Tracker (Fantasy Tools) + League Analyzer promo.
-         3) Multi-League Command Center (Fantasy Tools).
+         2) Pick price history helpers (the standalone Pick Portfolio
+            tab was retired Oct 22, 2026 — Team Portfolio covers picks).
+         3) Multi-League Command Center — Spotlight layout (Oct 22, 2026).
          4) Playoff Path Explorer in the Season Outlook sub-view.
          Everything here reads the page's existing engines and data —
          no value math of its own. The Explorer reads the connected
@@ -13023,7 +13007,12 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         window.addEventListener("modechange", () => setTimeout(ff4Balancer, 0));
       })();
 
-      /* ================= FEATURE 2 — Pick Portfolio ================= */
+      /* ============ Pick price history (Team Portfolio pick movement) ============
+         window.PICK_HIST is baked weekly by the refresh pipeline. The
+         standalone Pick Portfolio tab was retired on Oct 22, 2026 —
+         Team Portfolio covers picks now — but the history stays: Team
+         Portfolio's pick rows read their week-over-week movement from
+         it, and the Command Center spotlight builds on the same data. */
       function ff4Hist() { return Array.isArray(window.PICK_HIST) ? window.PICK_HIST : []; }
       function ff4HistCell(entry, season, round, tierIdx) {
         if (!entry || !entry.grid) return null;
@@ -13032,85 +13021,22 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const v = g[round - 1][tierIdx];
         return typeof v === "number" ? v : null;
       }
-      const FF4_TIERCLS = { Early: "e", Mid: "m", Late: "l" };
-      function ff4PickCard(pk, extra) {
-        return `<div class="pk-card">
-          <div class="pk-card-top"><span class="pk-slot">${pk.season} ${["", "1st", "2nd", "3rd", "4th"][pk.round] || "Rd " + pk.round}</span><span class="pk-tier ${FF4_TIERCLS[pk.tier] || "m"}">${pk.tier} tier</span></div>
-          <div class="pk-orig">${esc(pk.origName || "")}</div>
-          <div class="pk-val">${fmt(pk.value)}</div>
-          ${extra || ""}
-        </div>`;
-      }
-      function ff4RenderPicks() {
-        const out = document.getElementById("picks-out");
-        if (!out) return;
-        const hist = ff4Hist();
-        const first = hist.length ? hist[0] : null;
-        const guest = !!window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn";
-        const me = !guest && DATA.teams ? DATA.teams.find(t => t.isUser) : null;
-        if (!guest && me && VALMODE !== "redraft") {
-          const picks = (me.picks || []).slice().sort((x, y) => x.season - y.season || x.round - y.round);
-          const total = picks.reduce((s, pk) => s + pickPrice(pk), 0);
-          const byYear = {};
-          picks.forEach(pk => { byYear[pk.season] = (byYear[pk.season] || 0) + 1; });
-          let deltaHtml = "";
-          if (hist.length >= 2) {
-            let then = 0, now = 0, n = 0;
-            picks.forEach(pk => { const t0 = ff4HistCell(first, pk.season, pk.round, pk.tierIdx); if (t0 != null) { then += t0; now += pickPrice(pk); n++; } });
-            if (n) { const d = now - then; deltaHtml = `<div class="pk-delta ${d >= 0 ? "up" : "dn"}">${d >= 0 ? "▲" : "▼"} ${fmt(Math.abs(d))} since ${esc(first.date || "the first reading")}</div>`; }
-          }
-          out.innerHTML = `<div class="pk-wrap">
-            <div class="pk-hero">
-              <div class="pk-hero-main">
-                <div class="pk-kicker">My Pick Portfolio · ${esc(me.name)}</div>
-                <div class="pk-total">${fmt(total)}</div>
-                <div class="pk-sub">total value across ${picks.length} picks ${VALMODE === "redraft" ? "" : ""}</div>
-                ${deltaHtml}
-              </div>
-              <div class="pk-years">${Object.keys(byYear).sort().map(y => `<div class="pk-year"><span>${y}</span><b>${byYear[y]} pick${byYear[y] === 1 ? "" : "s"}</b></div>`).join("")}</div>
-            </div>
-            <div class="pk-cards">${picks.map(pk => ff4PickCard({ ...pk, value: pickPrice(pk) }, pk.orig !== me.rid ? `<div class="pk-note">Acquired via trade</div>` : `<div class="pk-note">Your own pick</div>`)).join("") || `<p class="pk-empty">No future picks on this roster.</p>`}</div>
-            <p class="pk-foot">Each pick is priced off its original team's projected finish — a weak team's early pick is the blue chip, whoever holds it. ${hist.length < 2 ? "Portfolio history starts with this week's reading; week-to-week movement appears as new readings land." : ""}</p>
-          </div>`;
-          return;
-        }
-        /* Guest / redraft: the Pick Price Board. */
-        const years = [...new Set(GUEST_PICKS.map(g => g.year))].sort();
-        out.innerHTML = `<div class="pk-wrap">
-          <div class="pk-hero"><div class="pk-hero-main">
-            <div class="pk-kicker">Pick Price Board</div>
-            <div class="pk-sub" style="font-size:15px;color:var(--ink-2)">${guest ? "Connect your league and this board becomes your personal portfolio — every pick you own, priced and tracked." : "Redraft mode prices this season only, so picks sit on the board instead of in a portfolio."}</div>
-          </div></div>
-          ${years.map(yr => `<h3 class="pk-yearhead">${yr} class</h3><div class="pk-cards">${[1, 2, 3, 4].map(rd => ["Early", "Mid", "Late"].map((tn, ti) => {
-            const gp = GUEST_PICKS.find(g => g.year === yr && g.roundNum === rd && g.tierIdx === ti);
-            if (!gp) return "";
-            let dHtml = "";
-            if (hist.length >= 2) { const t0 = ff4HistCell(first, yr, rd, ti); if (t0 != null) { const d = guestPickValue(gp) - t0; dHtml = `<div class="pk-note ${d >= 0 ? "up" : "dn"}">${d >= 0 ? "▲" : "▼"} ${fmt(Math.abs(d))} since first reading</div>`; } }
-            return ff4PickCard({ season: yr, round: rd, tier: tn, origName: tn + " projected finish", value: guestPickValue(gp) }, dHtml);
-          }).join("")).join("")}</div>`).join("")}
-        </div>`;
-      }
-      window.ff4RenderPicks = ff4RenderPicks;
-      function ff4RenderPkPromo() {
-        const mount = document.getElementById("pk-promo");
-        if (!mount) return;
-        if (window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn" || VALMODE === "redraft") { mount.innerHTML = ""; return; }
-        const me = DATA.teams ? DATA.teams.find(t => t.isUser) : null;
-        if (!me || !me.picks) { mount.innerHTML = ""; return; }
-        const total = me.picks.reduce((s, pk) => s + pickPrice(pk), 0);
-        const byYear = {};
-        me.picks.forEach(pk => { byYear[pk.season] = (byYear[pk.season] || 0) + 1; });
-        mount.innerHTML = `<div class="pk-promo">
-          <div><div class="pk-kicker">Pick Portfolio</div><div class="pk-promo-total">${fmt(total)}</div>
-          <div class="pk-sub">${me.picks.length} picks · ${Object.keys(byYear).sort().map(y => `${byYear[y]} in ${y}`).join(" · ")}</div></div>
-          <button type="button" class="pk-open" id="pk-open-btn">Open portfolio →</button>
-        </div>`;
-        const b = document.getElementById("pk-open-btn");
-        if (b) b.addEventListener("click", () => { activateNav("picks"); window.scrollTo({ top: 0 }); });
-      }
-      window.addEventListener("modechange", () => setTimeout(ff4RenderPkPromo, 0));
 
-      /* ================= FEATURE 3 — Command Center ================= */
+      /* ================= FEATURE 3 — Command Center (Spotlight) =================
+         One league in focus: a playoff-odds ring from the season sim,
+         record, power rank and team value, plus — for the focused
+         league only — the magic number and biggest swing game from
+         the Playoff Path Explorer's conditioned sim runs, and the
+         Team Portfolio value sparkline. The user's other leagues sit
+         in a rail ranked by playoff odds, from the light pass below
+         (reduced sim, sequential with progress states); tapping one
+         swaps it into the spotlight and the full detail pass runs
+         for that league. "Needs you first" aggregates Out/IR
+         starters, bye starters and Doubtful starters across every
+         league — only what each league pass already loaded proves.
+         The magic/swing lines follow the Explorer's fail-closed
+         rule: when a league's playoff format can't be read, they're
+         omitted with a note and the ring still comes from the sim. */
       function ff4CCChips(lg) {
         const fmt = slpFormatOf(lg);
         const chips = [slpLeagueType(lg) === "dynasty" ? "Dynasty" : "Redraft", fmt.sf ? "Superflex" : "1 QB",
@@ -13119,6 +13045,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         chips.push(lg.total_rosters + " teams");
         return chips;
       }
+
       function ff4CCSwap(built) {
         /* Point the shared engines at a built league bundle, the same
            context setConnectedLeague establishes — no chrome changes.
@@ -13143,6 +13070,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         VALMODE = (built.typeOverride || built.leagueType || "dynasty") === "redraft" ? "redraft" : "dynasty";
         recomputeValues();
       }
+
       function ff4CCRestore(cap) {
         (window.CONN_STUB_IDS_CC || []).forEach(id => {
           if (ff4.ccSavedStubs && ff4.ccSavedStubs[id]) PBY[id] = ff4.ccSavedStubs[id];
@@ -13179,82 +13107,370 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         refreshAll();
         if (typeof renderLineup === "function") renderLineup();
       }
+
+      function ff4CCCapture() {
+        return { settings: { ...SETTINGS }, valmode: VALMODE, seasonHtml: document.getElementById("season-out") ? document.getElementById("season-out").innerHTML : null, seasonSim: window.SeasonSim };
+      }
+
+      function ff4CCWeek(lg) {
+        const seasonNum = Number(lg.season);
+        return seasonNum === (typeof slpState !== "undefined" && slpState.season) ? (slpState.week || (lg.settings && lg.settings.leg) || 1) : ((lg.settings && lg.settings.leg) || 1);
+      }
+
+      /* The queue's starting set: a value-optimal fill of the league's
+         starter slots over the full roster. bestBallLineup() can't
+         source it — it deliberately excludes Out/IR players, which are
+         exactly what the queue hunts. The bye check mirrors the old
+         cards: a starter whose NFL team is off in the league's
+         upcoming week. Designations and body parts come from the
+         player pool the page already carries — nothing is invented. */
+      function ff4CCQueueFor(me, wk) {
+        const pool = (me.playerIds || []).map(id => PBY[id]).filter(Boolean).slice().sort((a, b) => dispVal(b) - dispVal(a));
+        const used = new Set(); const starters = [];
+        starterSlots().forEach(s => { for (const p of pool) { if (used.has(p.id) || !s.cands.includes(p.pos)) continue; used.add(p.id); starters.push(p); break; } });
+        const byeWk = wk + 1;
+        const items = [];
+        starters.forEach(p => {
+          if (p.inj === "Out" || p.inj === "IR") items.push({ prio: 0, cls: "out", player: p.name, issue: (p.inj === "IR" ? "Injured reserve" : "Out") + (p.ibp ? " — " + p.ibp : "") });
+          else if (window.TEAM_BYE && window.TEAM_BYE[p.team] === byeWk) items.push({ prio: 1, cls: "bye", player: p.name, issue: "On bye in Week " + byeWk });
+          else if (p.inj === "Doubtful") items.push({ prio: 2, cls: "dbt", player: p.name, issue: "Doubtful" + (p.ibp ? " — " + p.ibp : "") });
+        });
+        return items;
+      }
+
+      /* Light pass (same cost as the old card grid): one league's
+         record, power rank, 1,500-sim odds, status line and queue
+         items, snapshotted under a context swap, then restored. */
       async function ff4CCLoad(lg, idx, user) {
-        const card = document.getElementById("cc-card-" + idx);
+        const snap = { idx, leagueId: String(lg.league_id || ""), leagueName: lg.name || "League", chips: ff4CCChips(lg), failed: false, queueItems: [] };
+        ff4.ccSnaps[idx] = snap;
         try {
-          const seasonNum = Number(lg.season);
-          const week = seasonNum === (typeof slpState !== "undefined" && slpState.season) ? (slpState.week || (lg.settings && lg.settings.leg) || 1) : ((lg.settings && lg.settings.leg) || 1);
+          const week = ff4CCWeek(lg);
           const [league, rosters, users] = await Promise.all([
-            slpGet(`/league/${lg.league_id}`), slpGet(`/league/${lg.league_id}/rosters`), slpGet(`/league/${lg.league_id}/users`),
+            slpGet(`/league/${lg.league_id}`), slpGet(`/league/${lg.league_id}/rosters`), slpGet(`/league/${lg.league_id}/users`)
           ]);
           if (!league || !rosters || !users) throw new Error("bundle");
           const myRoster = rosters.find(r => r.owner_id === user.user_id || (r.co_owners || []).includes(user.user_id));
-          if (!myRoster) { if (card) card.remove(); return; }
+          if (!myRoster) { snap.noTeam = true; ff4CCAfterLight(idx); return; }
           const built = buildConnLeague({ user, league, rosters, users, tradedPicks: [], matchups: null, week, transactions: [] });
-          const cap = { settings: { ...SETTINGS }, valmode: VALMODE, seasonHtml: document.getElementById("season-out") ? document.getElementById("season-out").innerHTML : null, seasonSim: window.SeasonSim };
-          let snap = null;
+          const cap = ff4CCCapture();
           try {
             ff4CCSwap(built);
             const me = DATA.teams.find(t => t.isUser) || DATA.teams.find(t => t.rid === myRoster.roster_id);
-            let odds = null, clinched = false;
+            if (!me) throw new Error("user team not found");
+            snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
-              try { const sim = window.buildSeasonSim({ sims: 1500, seed: 9100 + idx * 17 }); if (sim && sim.results[me.rid]) { odds = sim.results[me.rid].playoff; clinched = !!sim.results[me.rid].clinched; } } catch (e) { /* odds stay blank */ }
+              try { const sim = window.buildSeasonSim({ sims: 1500, seed: 9100 + idx * 17 }); if (sim && sim.results[me.rid]) { snap.odds = sim.results[me.rid].playoff; snap.clinched = !!sim.results[me.rid].clinched; } } catch (e) { /* odds stay blank */ }
             }
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
             const wk = Number(DATA.league.week) || week;
-            const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
+            snap.queueItems = ff4CCQueueFor(me, wk).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name }));
+            const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
             const streak = myRoster.settings && myRoster.settings.streak ? String(myRoster.settings.streak) : null;
-            let status;
-            if (byeNames.length) status = `${byeNames.length} starter${byeNames.length === 1 ? "" : "s"} on bye in Week ${wk + 1}: ${byeNames.slice(0, 3).join(", ")}${byeNames.length > 3 ? "…" : ""}`;
-            else status = `Currently ${standing}${["th", "st", "nd", "rd"][(standing % 100 > 10 && standing % 100 < 14) ? 0 : Math.min(standing % 10, 4)] || "th"} of ${DATA.teams.length}${streak ? ` · ${streak} streak` : ""}`;
-            snap = { teamName: me.name, record: me.record, powerRank: me.powerRank, total: DATA.teams.length, odds, clinched, status };
+            if (byeNames.length) snap.status = `${byeNames.length} starter${byeNames.length === 1 ? "" : "s"} on bye in Week ${wk + 1}: ${byeNames.slice(0, 3).join(", ")}${byeNames.length > 3 ? "…" : ""}`;
+            else snap.status = `Currently ${standing}${["th", "st", "nd", "rd"][(standing % 100 > 10 && standing % 100 < 14) ? 0 : Math.min(standing % 10, 4)] || "th"} of ${DATA.teams.length}${streak ? ` · ${streak} streak` : ""}`;
           } finally { ff4CCRestore(cap); }
-          if (card && snap) {
-            card.querySelector(".cc-body").innerHTML = `
-              <div class="cc-team">${esc(snap.teamName)} <span class="you-tag">Your team</span></div>
-              <div class="cc-stats">
-                <div><span>Record</span><b>${esc(snap.record)}</b></div>
-                <div><span>Power rank</span><b>#${snap.powerRank} of ${snap.total}</b></div>
-                <div><span>Playoff odds</span><b>${snap.odds == null ? "—" : snap.clinched ? "Clinched" : oddsPct(snap.odds)}</b></div>
-              </div>
-              <p class="cc-status">${esc(snap.status)}</p>
-              <button type="button" class="cc-enter" data-cc-enter="${idx}">Open this league →</button>`;
-            const btn = card.querySelector("[data-cc-enter]");
-            if (btn) btn.addEventListener("click", () => slpLoadLeague(lg));
-          }
-        } catch (e) {
-          if (card) { const b = card.querySelector(".cc-body"); if (b) b.innerHTML = `<p class="cc-status">Couldn't load this league's details — tap Open to load it in full.</p><button type="button" class="cc-enter" data-cc-enter="${idx}">Open this league →</button>`; const btn = card.querySelector("[data-cc-enter]"); if (btn) btn.addEventListener("click", () => slpLoadLeague(lg)); }
-        }
+        } catch (e) { snap.failed = true; }
+        ff4CCAfterLight(idx);
       }
+
+      function ff4CCIsActive(lg) {
+        if (window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE || !window.CONN_LEAGUE) return false;
+        try { if (typeof connLeagueKey === "string" && connLeagueKey) return connLeagueKey === "sleeper:" + String(lg.league_id || ""); } catch (e) {}
+        const cl = window.CONN_LEAGUE.league || {};
+        return !!window.CONN_LEAGUE.username && cl.name === (lg && lg.name) && String(cl.season || "") === String((lg && lg.season) || "");
+      }
+
+      /* Magic number + biggest swing game for the user's team in the
+         CURRENT context, replicating the Explorer's default scenario:
+         every game goes to the higher projected scorer, then the win
+         table and single-game flips come off the same conditioned
+         runs (sim.path). */
+      function ff4CCPathLines(sim, me) {
+        const out = { magic: null, swing: null, noPairs: false };
+        const pairs = (sim.path && sim.path.pairs) || [];
+        if (!pairs.length) { out.noPairs = true; return out; }
+        const nameOf = rid => { const t = DATA.teams.find(x => x.rid === rid); return t ? t.name : "Team " + rid; };
+        const win0 = {}; pairs.forEach((pr, i) => { win0[i] = (sim.meansWk[pr[0]] || 0) >= (sim.meansWk[pr[1]] || 0) ? pr[0] : pr[1]; });
+        const fixed = pairs.map((pr, i) => win0[i] === pr[0] ? [pr[0], pr[1]] : [pr[1], pr[0]]);
+        let scen = null;
+        try { scen = sim.path.run(fixed); } catch (e) {}
+        if (!scen || !scen.results[me.rid]) return out;
+        const cur = scen.results[me.rid].playoff;
+        const table = scen.raw && scen.raw[me.rid] ? scen.raw[me.rid].winTable : null;
+        if (table) {
+          const rows = table.filter(r => r.n >= 20 && r.poRate != null);
+          if (rows.length) {
+            const hit = rows.find(r => r.poRate >= 0.90);
+            if (hit) out.magic = { n: hit.addWins, pct: hit.poRate, capped: false };
+            else { const last = rows[rows.length - 1]; out.magic = { n: last.addWins, pct: last.poRate, capped: true }; }
+          }
+        }
+        let best = null;
+        pairs.forEach((pr, i) => {
+          if (pr.includes(me.rid)) return;
+          const flipped = fixed.map((f, j) => j === i ? [f[1], f[0]] : f);
+          try { const r2 = sim.path.run(flipped).results[me.rid]; if (!r2) return; const d = r2.playoff - cur; if (!best || Math.abs(d) > Math.abs(best.d)) best = { a: pr[0], b: pr[1], dog: win0[i] === pr[0] ? pr[1] : pr[0], d }; } catch (e) {}
+        });
+        if (best) out.swing = { aName: nameOf(best.a), bName: nameOf(best.b), dogName: nameOf(best.dog), d: best.d };
+        return out;
+      }
+
+      /* Spotlight detail for the user's team in the CURRENT context —
+         live (the focused league is the loaded one) or swapped. simIn
+         lets the live path reuse window.SeasonSim itself, so the ring
+         and the magic number are the Explorer's own numbers. */
+      function ff4CCDetailHere(idx, chipsIn, simIn, ridFallback) {
+        const me = DATA.teams.find(t => t.isUser) || (ridFallback != null ? DATA.teams.find(t => t.rid === ridFallback) : null);
+        if (!me) return null;
+        const snap = ff4.ccSnaps ? ff4.ccSnaps[idx] : null;
+        const d = { idx, leagueName: DATA.league.name || "", chips: chipsIn || [], teamName: me.name, record: me.record, powerRank: me.powerRank, total: DATA.teams.length, status: snap ? (snap.status || "") : "" };
+        let sim = simIn || null;
+        if (DATA.teams.length === 12) {
+          if (!sim) { try { sim = buildSeasonSim(); } catch (e) { sim = null; } }
+          if (sim && sim.results[me.rid]) {
+            const base = sim.results[me.rid];
+            d.odds = base.playoff; d.clinched = !!base.clinched; d.elim = !!base.elim;
+            const f = playoffFormat();
+            d.fmtValid = !!(f && f.valid);
+            if (d.fmtValid) {
+              if (base.clinched) d.magic = { locked: true };
+              else { const pl = ff4CCPathLines(sim, me); d.magic = pl.magic; d.swing = pl.swing; d.noPairs = pl.noPairs; }
+            }
+          }
+        } else d.noSim = true;
+        try {
+          if (typeof tpBuild === "function") {
+            const teamObj = { name: me.name, rid: me.rid, isUser: true, record: me.record, powerRank: me.powerRank,
+              players: (me.playerIds || []).map(id => PBY[id]).filter(Boolean),
+              picks: (me.picks || []).map(pk => ({ season: pk.season, round: pk.round, tier: pk.tier, tierIdx: pk.tierIdx, origName: pk.origName || "", value: pickPrice(pk) })) };
+            const b2 = tpBuild(teamObj);
+            d.teamValue = b2.total;
+            const rd = typeof tpIsRedraft === "function" && tpIsRedraft();
+            if (!rd && typeof tpChart === "function") d.spark = tpChart(teamObj, b2);
+          }
+        } catch (e) {}
+        if (d.teamValue == null) d.teamValue = (me.totalVal || 0) + (me.picksVal || 0);
+        return d;
+      }
+
+      /* Context swaps are serialized: a detail pass never overlaps a
+         light pass, so a capture/restore pair can't interleave. */
+      async function ff4CCLock() { while (ff4.ccBusy && !ff4.ccDead) { await new Promise(r => setTimeout(r, 120)); } ff4.ccBusy = true; }
+
+      async function ff4CCDetail(idx) {
+        if (ff4.ccDetail[idx] || ff4.ccDetailBusy[idx]) { ff4CCRenderSpot(); return; }
+        const lg = (ff4.ccLeagues || [])[idx];
+        if (!lg) return;
+        ff4.ccDetailBusy[idx] = true;
+        await ff4CCLock();
+        try {
+          if (ff4.ccDead) return;
+          if (ff4CCIsActive(lg)) {
+            ff4.ccDetail[idx] = ff4CCDetailHere(idx, ff4CCChips(lg), window.SeasonSim, null) || { idx, failed: true, leagueName: lg.name || "League", chips: ff4CCChips(lg) };
+            return;
+          }
+          const user = ff4.ccUser;
+          const week = ff4CCWeek(lg);
+          const [league, rosters, users] = await Promise.all([
+            slpGet(`/league/${lg.league_id}`), slpGet(`/league/${lg.league_id}/rosters`), slpGet(`/league/${lg.league_id}/users`)
+          ]);
+          if (!league || !rosters || !users) throw new Error("bundle");
+          let tradedPicks = [];
+          try { tradedPicks = (await slpGet(`/league/${lg.league_id}/traded_picks`)) || []; } catch (e) {}
+          try { const dr = await slpGet(`/league/${lg.league_id}/drafts`); for (const dft of (dr || [])) { try { const tp2 = await slpGet(`/draft/${dft.draft_id}/traded_picks`); if (Array.isArray(tp2)) tradedPicks = tradedPicks.concat(tp2); } catch (e) {} } } catch (e) {}
+          let matchups = null;
+          try { matchups = await slpGet(`/league/${lg.league_id}/matchups/${week}`); } catch (e) {}
+          if (ff4.ccDead) return;
+          const built = buildConnLeague({ user, league, rosters, users, tradedPicks, matchups, week, transactions: [] });
+          const myRoster = rosters.find(r => r.owner_id === user.user_id || (r.co_owners || []).includes(user.user_id));
+          const cap = ff4CCCapture();
+          const savedConn = window.CONN_LEAGUE;
+          let det = null;
+          try {
+            ff4CCSwap(built);
+            window.CONN_LEAGUE = built;
+            det = ff4CCDetailHere(idx, ff4CCChips(lg), null, myRoster ? myRoster.roster_id : null);
+          } finally { window.CONN_LEAGUE = savedConn; ff4CCRestore(cap); }
+          ff4.ccDetail[idx] = det || { idx, failed: true, leagueName: lg.name || "League", chips: ff4CCChips(lg) };
+        } catch (e) { ff4.ccDetail[idx] = { idx, failed: true, leagueName: lg.name || "League", chips: ff4CCChips(lg) }; }
+        finally { ff4.ccBusy = false; ff4.ccDetailBusy[idx] = false; if (ff4.ccFocus === idx) ff4CCRenderSpot(); }
+      }
+
+      function ff4CCAfterLight(idx) {
+        ff4CCRenderQueue(); ff4CCRenderRail();
+        if (ff4.ccFocus != null || ff4.ccDead) return;
+        const lg = (ff4.ccLeagues || [])[idx];
+        if (lg && ff4CCIsActive(lg)) { ff4.ccFocus = idx; ff4CCRenderRail(); ff4CCRenderSpot(); ff4CCDetail(idx); }
+        else if ((ff4.ccDone || 0) + 1 >= (ff4.ccLeagues || []).length) ff4CCPickFocus();
+      }
+
+      function ff4CCPickFocus() {
+        let best = null;
+        Object.values(ff4.ccSnaps || {}).forEach(s => { if (!s || s.failed || s.noTeam) return; const o = s.odds == null ? -1 : s.odds; if (!best || o > best.o) best = { idx: s.idx, o }; });
+        ff4.ccFocus = best ? best.idx : 0;
+        ff4CCRenderRail(); ff4CCRenderSpot();
+        ff4CCDetail(ff4.ccFocus);
+      }
+
+      function ff4CCFocusLeague(idx) {
+        if (ff4.ccFocus === idx && ff4.ccDetail[idx]) return;
+        ff4.ccFocus = idx;
+        ff4CCRenderRail(); ff4CCRenderSpot();
+        if (!ff4.ccDetail[idx]) ff4CCDetail(idx);
+      }
+
+      function ff4CCOpen(idx) {
+        ff4.ccDead = true;
+        const lg = (ff4.ccLeagues || [])[idx];
+        if (!lg || ff4CCIsActive(lg)) { activateNav("league"); window.scrollTo({ top: 0 }); return; }
+        slpLoadLeague(lg);
+      }
+
+      function ff4CCRing(d) {
+        const frac = d.odds == null ? 0 : Math.max(0, Math.min(1, d.odds));
+        const col = frac >= 0.65 ? "#C6FF00" : frac >= 0.35 ? "#00E5FF" : "#FF2E88";
+        const C = 2 * Math.PI * 54;
+        const label = d.odds == null ? "—" : playoffLabel({ playoff: d.odds, clinched: d.clinched });
+        return `<div class="cc-ring"><svg width="132" height="132" viewBox="0 0 132 132" role="img" aria-label="Playoff odds ${esc(label)}"><circle cx="66" cy="66" r="54" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="10"/><circle cx="66" cy="66" r="54" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(frac * C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 66 66)"/></svg><div class="cc-ring-c"><div class="cc-ring-num${label.length > 4 ? " sm" : ""}">${esc(label)}</div><div class="cc-ring-lab">Playoff odds</div></div></div>`;
+      }
+
+      function ff4CCRenderSpot() {
+        const spot = document.getElementById("cc-spot");
+        if (!spot) return;
+        const idx = ff4.ccFocus;
+        if (idx == null) { spot.innerHTML = `<p class="cc-status cc-loading">Loading your leagues…</p>`; return; }
+        const d = ff4.ccDetail[idx];
+        if (!d) { spot.innerHTML = `<p class="cc-status cc-loading">Building this league's full picture — odds ring, magic number, swing game, value trend…</p>`; return; }
+        if (d.failed) {
+          spot.innerHTML = `<div class="cc-name">${esc(d.leagueName || "League")}</div><p class="cc-status">This league couldn't be loaded here. Open it in full to see everything.</p><button type="button" class="cc-enter" data-cc-open="1">Open league →</button>`;
+          const fb = spot.querySelector("[data-cc-open]"); if (fb) fb.addEventListener("click", () => ff4CCOpen(idx));
+          return;
+        }
+        const lines = [];
+        if (d.noSim) lines.push(`<div class="cc-line">Playoff odds need the full-field season sim, which runs on a complete league table — open the league for its full picture.</div>`);
+        else if (d.fmtValid === false) lines.push(`<div class="cc-line">This league's playoff format couldn't be read from its settings, so there's no magic number or swing game here — the odds ring still comes from the season sim.</div>`);
+        else if (d.magic && d.magic.locked) lines.push(`<div class="cc-line"><b>Playoff spot locked up.</b> No magic number needed — the sim puts this team in every time.</div>`);
+        else if (d.magic) lines.push(`<div class="cc-line"><b>Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"}</b> — ${d.magic.capped ? `even winning out tops out at ~${oddsPct(d.magic.pct)} playoff odds` : `that takes playoff odds to ~${oddsPct(d.magic.pct)}`} if the other games go to the favorites.</div>`);
+        if (d.swing) lines.push(`<div class="cc-line"><b>Biggest swing game:</b> ${esc(d.swing.aName)} vs ${esc(d.swing.bName)} — if ${esc(d.swing.dogName)} wins instead, your odds move <span class="cc-delta">${ff4PP(d.swing.d)}</span>.</div>`);
+        else if (d.fmtValid && d.noPairs) lines.push(`<div class="cc-line">No matchup pairings are published for this league this week, so there's no swing game to call.</div>`);
+        if (d.status) lines.push(`<div class="cc-line">${esc(d.status)}</div>`);
+        spot.innerHTML = `<div class="cc-spot-top"><div>
+            <div class="cc-spot-team">${esc(d.teamName)} <span class="you-tag">Your team</span></div>
+            <div class="cc-spot-league">${esc(d.leagueName)}</div>
+            <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
+          </div><button type="button" class="cc-enter" data-cc-open="1">Open league →</button></div>
+          <div class="cc-spot-mid">${ff4CCRing(d)}
+            <div class="cc-spot-stats">
+              <div><span>Record</span><b>${esc(d.record || "—")}</b></div>
+              <div><span>Power rank</span><b>#${d.powerRank} of ${d.total}</b></div>
+              <div><span>Team value</span><b>${fmt(d.teamValue || 0)}</b></div>
+            </div>
+          </div>
+          ${lines.length ? `<div class="cc-lines">${lines.join("")}</div>` : ""}
+          ${d.spark ? `<div class="cc-spark">${d.spark}</div>` : ""}`;
+        const ob = spot.querySelector("[data-cc-open]"); if (ob) ob.addEventListener("click", () => ff4CCOpen(idx));
+      }
+
+      function ff4CCRenderRail() {
+        const rail = document.getElementById("cc-rail");
+        if (!rail) return;
+        const leagues = ff4.ccLeagues || [];
+        const order = leagues.map((lg, i) => i).filter(i => !(ff4.ccSnaps[i] && ff4.ccSnaps[i].noTeam)).sort((a, b) => {
+          const sa = ff4.ccSnaps[a], sb = ff4.ccSnaps[b];
+          const la = sa ? 1 : 0, lb = sb ? 1 : 0;
+          if (la !== lb) return lb - la;
+          const oa = sa && !sa.failed && sa.odds != null ? sa.odds : -1, ob = sb && !sb.failed && sb.odds != null ? sb.odds : -1;
+          if (oa !== ob) return ob - oa;
+          return a - b;
+        });
+        rail.innerHTML = `<div class="cc-rail-h">Your leagues · by playoff odds</div>` + order.map(i => {
+          const lg = leagues[i]; const s = ff4.ccSnaps[i]; const on = ff4.ccFocus === i;
+          if (!s) return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}"><div class="cc-rail-top"><span class="cc-rail-team cc-loading">Loading…</span></div><div class="cc-rail-lg">${esc(lg.name || "League")}</div></button>`;
+          if (s.failed) return `<button type="button" class="cc-rail-it" data-cc-open="${i}"><div class="cc-rail-top"><span class="cc-rail-team">Couldn't load</span></div><div class="cc-rail-lg">${esc(s.leagueName)} — tap to open it in full</div></button>`;
+          return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}">
+            <div class="cc-rail-top"><span class="cc-rail-team">${esc(s.teamName || "Your team")}</span><span class="cc-rail-odds">${s.odds == null ? "—" : s.clinched ? "Clinched" : oddsPct(s.odds)}</span></div>
+            <div class="cc-rail-sub">${esc(s.record || "")} · Power #${s.powerRank} of ${s.total || 12}</div>
+            <div class="cc-rail-lg">${esc(s.leagueName)}</div>
+            <div class="cc-chips">${(s.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
+          </button>`;
+        }).join("");
+        rail.querySelectorAll("[data-cc-focus]").forEach(b => b.addEventListener("click", () => ff4CCFocusLeague(+b.dataset.ccFocus)));
+        rail.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
+      }
+
+      function ff4CCRenderQueue() {
+        const q = document.getElementById("cc-queue");
+        if (!q) return;
+        const leagues = ff4.ccLeagues || [];
+        if ((ff4.ccDone || 0) < leagues.length) {
+          q.className = "cc-queue";
+          q.innerHTML = `<div class="cc-queue-h">Needs you first</div><p class="cc-queue-note cc-loading">Checking your starters in every league…</p>`;
+          return;
+        }
+        const items = [];
+        Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.queueItems) items.push(...s.queueItems); });
+        items.sort((a, b) => a.prio - b.prio || a.idx - b.idx);
+        if (!items.length) {
+          q.className = "cc-queue clean";
+          q.innerHTML = `<div class="cc-queue-h">Needs you first</div><p class="cc-queue-note">Nothing needs you — all leagues are clean.</p>`;
+          return;
+        }
+        q.className = "cc-queue";
+        q.innerHTML = `<div class="cc-queue-h">Needs you first</div>` + items.map(it => `<button type="button" class="cc-queue-it" data-cc-open="${it.idx}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(it.leagueName)}</span></button>`).join("");
+        q.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
+      }
+
       function ff4RenderCC() {
         const out = document.getElementById("cc-out");
         if (!out) return;
+        ff4.ccDead = false; ff4.ccBusy = false;
         const st = (typeof slpState !== "undefined") ? slpState : null;
         const leagues = st && Array.isArray(st.leagues) ? st.leagues : [];
         const user = st && st.user ? st.user : null;
         if (!leagues.length || !user) {
           if (window.CONN_LEAGUE && window.CURRENT_LEAGUE === "conn" && !window.GUEST_MODE) {
-            const me = DATA.teams.find(t => t.isUser);
-            const sim = window.SeasonSim;
-            const sr = sim && me ? sim.results[me.rid] : null;
-            out.innerHTML = `<div class="cc-grid"><article class="cc-card"><div class="cc-name">${esc(window.CONN_LEAGUE.league.name)}</div>
-              <div class="cc-body"><div class="cc-team">${esc(me ? me.name : "")} <span class="you-tag">Your team</span></div>
-              <div class="cc-stats"><div><span>Record</span><b>${esc(me ? me.record : "—")}</b></div><div><span>Power rank</span><b>${me ? "#" + me.powerRank + " of " + DATA.teams.length : "—"}</b></div><div><span>Playoff odds</span><b>${sr ? playoffLabel(sr) : "—"}</b></div></div>
-              <p class="cc-status">Connected league. Look your Sleeper username up once and every league on the account lines up here.</p></div></article></div>`;
-          } else {
-            out.innerHTML = `<div class="cc-empty"><p>Connect with your Sleeper username and every league where you hold a roster lines up here — record, power rank and playoff odds on one screen.</p><button type="button" class="locked-cta" id="cc-connect">Connect your league</button></div>`;
-            const b = document.getElementById("cc-connect");
-            if (b) b.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
+            /* A league is loaded but there's no Sleeper league list
+               (e.g. an ESPN league): spotlight the loaded league alone. */
+            ff4.ccLeagues = []; ff4.ccUser = null; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = 0; ff4.ccDone = 0;
+            out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-spot" id="cc-spot"></div>`;
+            const me = DATA.teams.find(t => t.isUser) || null;
+            const items = me ? ff4CCQueueFor(me, Number(DATA.league.week) || 1) : [];
+            const q = document.getElementById("cc-queue");
+            q.className = "cc-queue" + (items.length ? "" : " clean");
+            q.innerHTML = `<div class="cc-queue-h">Needs you first</div>` + (items.length
+              ? items.map(it => `<div class="cc-queue-it static"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(me.name)} · ${esc(DATA.league.name || "")}</span></div>`).join("")
+              : `<p class="cc-queue-note">Nothing needs you — all leagues are clean.</p>`);
+            const chips = [];
+            const cl = window.CONN_LEAGUE || {};
+            if (cl.leagueType) chips.push(cl.leagueType === "dynasty" ? "Dynasty" : "Redraft");
+            const f = cl.format || {};
+            if (f.sf) chips.push("Superflex");
+            if (f.ppr === 1) chips.push("Full PPR"); else if (f.ppr === 0.5) chips.push("Half PPR"); else if (f.ppr === 0) chips.push("Standard");
+            if (f.tePremium) chips.push("TE Premium");
+            chips.push(DATA.teams.length + " teams");
+            ff4.ccDetail[0] = ff4CCDetailHere(0, chips, window.SeasonSim, null) || { idx: 0, failed: true, leagueName: DATA.league.name || "League", chips };
+            ff4CCRenderSpot();
+            return;
           }
+          out.innerHTML = `<div class="cc-empty"><p>Connect with your Sleeper username and every league where you hold a roster lines up here — record, power rank and playoff odds on one screen.</p><button type="button" class="locked-cta" id="cc-connect">Connect your league</button></div>`;
+          const b = document.getElementById("cc-connect");
+          if (b) b.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
           return;
         }
-        out.innerHTML = `<div class="cc-grid">${leagues.map((lg, i) => `<article class="cc-card" id="cc-card-${i}">
-          <div class="cc-name">${esc(lg.name || "League")}</div>
-          <div class="cc-chips">${ff4CCChips(lg).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
-          <div class="cc-body"><p class="cc-status cc-loading">Loading record, power rank and odds…</p></div>
-        </article>`).join("")}</div>`;
-        (async () => { for (let i = 0; i < leagues.length; i++) { await ff4CCLoad(leagues[i], i, user); } })();
+        ff4.ccLeagues = leagues; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
+        out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div class="cc-rail" id="cc-rail"></div></div>`;
+        ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
+        (async () => {
+          for (let i = 0; i < leagues.length; i++) {
+            if (ff4.ccDead) break;
+            await ff4CCLock();
+            try { await ff4CCLoad(leagues[i], i, user); } finally { ff4.ccBusy = false; }
+            ff4.ccDone++;
+            ff4CCRenderQueue();
+          }
+        })();
       }
       window.ff4RenderCC = ff4RenderCC;
 
@@ -13359,9 +13575,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (typeof orig === "function") {
           window.activateNav = function (k, a) {
             const r = orig(k, a);
-            if (k === "picks") ff4RenderPicks();
-            if (k === "command") ff4RenderCC();
-            if (k === "league") setTimeout(() => { ff4RenderPkPromo(); ff4RenderPP(); }, 40);
+                if (k === "command") ff4RenderCC();
+            if (k === "league") setTimeout(ff4RenderPP, 40);
             return r;
           };
         }
@@ -13716,7 +13931,6 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             <thead><tr><th>Holding</th><th class="tp-c-trend">${rd ? "Dynasty trend" : "Trend"}</th><th class="num">${sortBtn("wk", "Week Δ")}</th><th class="num">${sortBtn("value", "Value")}</th></tr></thead>
             <tbody>${rowHtml || `<tr><td colspan="4" class="pk-empty">No holdings on this roster.</td></tr>`}</tbody>
           </table></div>
-          ${rd ? "" : `<button type="button" class="tp-open-picks" id="tp-open-picks">Open the full Pick Portfolio →</button>`}
           <p class="tp-foot">${rd
             ? "Redraft prices are rest-of-season only and re-set with each weekly update, so no weekly move is shown; each row's sparkline is the player's dynasty value history — the same one his player panel shows."
             : `Prices are the board's own — the same values and weekly snapshots behind Player Values and the Risers &amp; Fallers board. The trend line prices today's roster at each past snapshot, so it tracks what this group of players was worth week to week, not the roster this team actually held then.${built.pickSteps ? "" : " Picks count in the total at today's prices and sit flat in the weekly change — weekly pick price history starts with the current snapshot, and pick movement joins the weekly change as new readings land."}`}</p>
@@ -13729,8 +13943,6 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           else { tpState.sort = k; tpState.dir = 1; }
           tpRender();
         }));
-        const op = document.getElementById("tp-open-picks");
-        if (op) op.addEventListener("click", () => { window.activateNav("picks"); window.scrollTo({ top: 0 }); });
       }
       window.tpRender = tpRender;
       function tpRenderPromo() {
