@@ -10126,6 +10126,22 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         });
         const tradeCount = pid => (byPlayer[pid] || []).length;
 
+        /* ---------- mode wall ----------
+           The calculator-context surfaces in this block (the
+           "Recently traded for" strip and the "What should I offer?"
+           guide) select real trades through these helpers ONLY, and
+           the selection is strictly by the ACTIVE mode: dynasty mode
+           sees dynasty trades, redraft mode sees redraft trades.
+           There is no cross-format fallback anywhere below — a player
+           with no same-format trades simply has none here. (The Real
+           Trades explorer further down is a separate database browser
+           with its own user-controlled format filter and a format
+           badge on every card; it is not a mode surface and does not
+           use these helpers.) */
+        const modeFmt = () => (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "r" : "d";
+        const modeName = () => (modeFmt() === "r" ? "redraft" : "dynasty");
+        const modeIdx = pid => (byPlayer[pid] || []).filter(i => RT.trades[i].f === modeFmt());
+
         /* ---------- stats header (computed, so a fresh dataset stays true) ---------- */
         (function stats() {
           const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
@@ -10393,7 +10409,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           }));
           const blocks = [];
           pids.forEach(pid => {
-            const idxs = byPlayer[pid];
+            const idxs = modeIdx(pid);
             if (!idxs || !idxs.length) return;
             const info = RT.players[pid] || ["Unknown player", "", ""];
             const v = ourVal(pid);
@@ -10408,8 +10424,8 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           stripEl.innerHTML = blocks.join("");
           stripEl.hidden = false;
           stripEl.querySelectorAll("[data-rt-goto]").forEach(btn => btn.addEventListener("click", () => {
-            state.filter = "all";
-            if (filterEl) filterEl.querySelectorAll("[data-rtf]").forEach(b => b.setAttribute("aria-pressed", b.dataset.rtf === "all" ? "true" : "false"));
+            state.filter = modeFmt();
+            if (filterEl) filterEl.querySelectorAll("[data-rtf]").forEach(b => b.setAttribute("aria-pressed", b.dataset.rtf === state.filter ? "true" : "false"));
             selectPlayer(btn.dataset.rtGoto);
             activateNav("realtrades");
             window.scrollTo({ top: 0 });
@@ -10470,10 +10486,13 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           return out;
         }
         function poolFor(pid) {
-          const fmt = (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "r" : "d";
-          let pkgs = returnPkgs(pid, fmt);
-          if (pkgs.length < MIN_POOL) pkgs = returnPkgs(pid, null);
-          return pkgs;
+          /* The mode wall, strictly: only the active format's deals
+             ever enter an offer pool. A thin same-format pool is NOT
+             topped up with the other format's trades — a redraft
+             price says nothing about a dynasty market, or the
+             reverse. offerStats widens to same-format comparables
+             instead, and says so when it does. */
+          return returnPkgs(pid, modeFmt());
         }
         function offerStats(pid) {
           const pkgs = poolFor(pid);
@@ -10705,7 +10724,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             const headHtml = `<div class="rt-strip-h"><span class="rt-strip-tag">Real-trade guide</span><h4>${hsImg({ id: head }, "phs-sm")}What should I offer for ${esc(name)}?</h4><span class="rt-strip-val">Our value: <strong>${fmt(Math.round(headV))}</strong></span></div>`;
             if (stats.source === "none" || !stats.pkgs.length) {
               offerEl.innerHTML = `<div class="rt-offer-card">${headHtml}
-                <p class="rt-offer-line">Not enough clean real-trade history at ${esc(name)}'s price yet — no completed deals for him, or for players priced within ±10% of him, in the database. His board price is the guide: a fair offer starts right around <strong>${fmt(Math.round(headV))}</strong> of value.</p>
+                <p class="rt-offer-line">Not enough clean ${modeName()} real-trade history at ${esc(name)}'s price yet — no completed ${modeName()} deals for him, or for players priced within ±10% of him, in the database. His board price is the guide: a fair offer starts right around <strong>${fmt(Math.round(headV))}</strong> of value.</p>
               </div>`;
               offerEl.hidden = false;
               return;
@@ -10715,8 +10734,8 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             const arch = archetypeOf(stats.pkgs);
             const n = stats.pkgs.length;
             const basis = stats.source === "direct"
-              ? `Across <strong>${n}</strong> real ${esc(name)} trades in our database — he moved as the only player on his side — the typical return is <strong>${esc(arch.label)}</strong>: median package <strong>${fmt(Math.round(med))}</strong> on today's values, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`
-              : `${esc(name)} has no clean trade history of his own yet, so this reads off <strong>${n}</strong> real trades of ${stats.peers} players priced within ±10% of him: the typical return is <strong>${esc(arch.label)}</strong> — median package <strong>${fmt(Math.round(med))}</strong>, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`;
+              ? `Across <strong>${n}</strong> real ${modeName()} trades for ${esc(name)} in our database — he moved as the only player on his side — the typical return is <strong>${esc(arch.label)}</strong>: median package <strong>${fmt(Math.round(med))}</strong> on today's values, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`
+              : `${esc(name)} has no clean trade history of his own yet, so this reads off <strong>${n}</strong> real ${modeName()} trades of ${stats.peers} players priced within ±10% of him: the typical return is <strong>${esc(arch.label)}</strong> — median package <strong>${fmt(Math.round(med))}</strong>, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`;
             const offerSide = headSide === "A" ? "B" : "A";
             const guest = !!window.GUEST_MODE;
             const rid = guest ? null : calc[offerSide].team;
