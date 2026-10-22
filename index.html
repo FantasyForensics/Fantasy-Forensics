@@ -8378,9 +8378,10 @@ ${rdP ? "" : `
            then the sim's projected finish after the connect-time
            re-stamp: a weak team's 1st is worth
            more whoever holds it. via[key] records the picks Sleeper
-           says actually changed hands, so labels and notes can say
-           "via Team X" instead of implying the holder is the original
-           team. */
+           says actually changed hands. A pick's LABEL names its
+           ORIGINAL team after "via" (a pick is identified by whose
+           pick it is); the slot note names the current holder who
+           owns it via trade. */
         const via = {}; // key -> current owner rid, only for picks that moved
         (b.tradedPicks || []).forEach(tp => {
           const key = `${tp.season}-${tp.round}-${tp.roster_id}`;
@@ -8396,13 +8397,14 @@ ${rdP ? "" : `
           const tier = pickTierFromRank(pfRank[orig], n);
           const value = SLP_LADDER[dy][rd - 1][{ Early: 0, Mid: 1, Late: 2 }[tier]];
           const holder = byRid[own[key]];
-          const viaName = via[key] != null && holder ? holder.name : null;
+          const holderName = via[key] != null && holder ? holder.name : null;
+          const origName = byRid[orig] ? byRid[orig].name : "Team " + orig;
           const pk = {
-            key, season: yr, round: rd, orig, origName: byRid[orig] ? byRid[orig].name : "Team " + orig,
+            key, season: yr, round: rd, orig, origName,
             value, baseValue: value, tier, tierIdx: { Early: 0, Mid: 1, Late: 2 }[tier],
-            label: viaName ? `${yr} ${RD_ORD[rd] || "Round " + rd} (via ${viaName})` : `${yr} Round ${rd}`,
-            slotNote: viaName
-              ? `owned by ${viaName} via trade; orig. team projects ${tier.toLowerCase()} (sits ${slpOrd(pfRank[orig] || 0)} of ${n} by points through Week ${week})`
+            label: holderName ? `${yr} ${RD_ORD[rd] || "Round " + rd} (via ${origName})` : `${yr} Round ${rd}`,
+            slotNote: holderName
+              ? `owned by ${holderName} via trade; orig. team projects ${tier.toLowerCase()} (sits ${slpOrd(pfRank[orig] || 0)} of ${n} by points through Week ${week})`
               : `projects ${tier.toLowerCase()} (orig. team sits ${slpOrd(pfRank[orig] || 0)} of ${n} by points through Week ${week})`,
           };
           if (holder) holder.picks.push(pk);
