@@ -2489,7 +2489,7 @@
         <button role="tab" type="button" data-nav="values" aria-selected="true">Player Values</button>
         <button role="tab" type="button" data-nav="league" aria-selected="false">League Analyzer<span class="nav-lock" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2" fill="currentColor" stroke="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
         <button role="tab" type="button" data-nav="trades" aria-selected="false">Trade Calculator</button>
-        <button role="tab" type="button" data-nav="targets" id="nav-targets" aria-selected="false">Player Targets</button>
+        <button role="tab" type="button" data-nav="targets" id="nav-targets" aria-selected="false">Player Targets<span class="launch-badge">Free during launch</span></button>
         <div class="tools-wrap">
           <button type="button" class="tools-btn" data-nav="tools" aria-selected="false" aria-haspopup="true" aria-expanded="false">Fantasy Tools <span class="tools-caret" aria-hidden="true">▾</span></button>
           <div class="tools-menu" id="tools-menu" role="menu" aria-label="Fantasy Tools" hidden>
@@ -2500,9 +2500,9 @@
           <button type="button" class="tool-entry" data-tool="realtrades" role="menuitem"><span class="tool-name">Real Trades</span><span class="tool-desc">What real leagues actually paid</span></button>
           <button type="button" class="tool-entry" data-tool="tradeboard" role="menuitem"><span class="tool-name">Trade Board</span><span class="tool-desc">Every offer waiting on you, graded</span></button>
           <button type="button" class="tool-entry" data-tool="teamport" role="menuitem"><span class="tool-name">Team Portfolio</span><span class="tool-desc">Your whole roster — players and picks — priced like a portfolio</span></button>
-          <button type="button" class="tool-entry" data-tool="command" role="menuitem"><span class="tool-name">Command Center</span><span class="tool-desc">Every league you play in, on one screen</span></button>
-          <button type="button" class="tool-entry" data-tool="radar" role="menuitem"><span class="tool-name">Opportunity Radar</span><span class="tool-desc">Starter-sized workloads whose scoring hasn't caught up — with the measured record</span></button>
-          <button type="button" class="tool-entry" data-tool="ppath" role="menuitem"><span class="tool-name">Playoff Path Explorer</span><span class="tool-desc">Your magic number, and the games that swing your playoff odds</span></button>
+          <button type="button" class="tool-entry" data-tool="command" role="menuitem"><span class="tool-name">Command Center<span class="launch-badge">Free during launch</span></span><span class="tool-desc">Every league you play in, on one screen</span></button>
+          <button type="button" class="tool-entry" data-tool="radar" role="menuitem"><span class="tool-name">Opportunity Radar<span class="launch-badge">Free during launch</span></span><span class="tool-desc">Starter-sized workloads whose scoring hasn't caught up — with the measured record</span></button>
+          <button type="button" class="tool-entry" data-tool="ppath" role="menuitem"><span class="tool-name">Playoff Path Explorer<span class="launch-badge">Free during launch</span></span><span class="tool-desc">Your magic number, and the games that swing your playoff odds</span></button>
           <button type="button" class="tool-entry" data-tool="psched" role="menuitem"><span class="tool-name">Playoff Schedule Difficulty</span><span class="tool-desc">How soft each team's Weeks 15–17 playoff path really is</span></button>
           </div>
         </div>
@@ -2716,7 +2716,7 @@
       </section>
 
       <section class="tab" id="tab-targets" role="tabpanel">
-        <h2 class="block-title">Personalized Player Targets</h2>
+        <h2 class="block-title">Personalized Player Targets<span class="launch-badge">Free during launch</span></h2>
         <p class="tab-intro">Deals built for your team, not generic advice: your roster, your window, and your picks — matched against every other roster in your league. Rebuilders sell their aging veterans to the contenders who need them; contenders buy the veterans who raise their lineup. Every offer is graded Fair or Close before it is shown.</p>
         <div class="finder-controls finder-part">
           <label for="finder-team"><strong>Find trades for:</strong></label>
@@ -2787,7 +2787,7 @@
       </section>
 
       <section class="tab" id="tab-command" role="tabpanel">
-        <h2 class="block-title">Command Center</h2>
+        <h2 class="block-title">Command Center<span class="launch-badge">Free during launch</span></h2>
         <p class="tab-intro">Every league on your Sleeper account where you hold a roster. One league sits in the spotlight — playoff odds, the magic number, the swing game that matters most, and your team-value trend — with the rest ranked beside it and the players who need you first up top. Tap a league to bring it into focus, or open it for the full breakdown.</p>
         <div id="cc-out"></div>
       </section>
@@ -9421,6 +9421,15 @@ ${rdP ? "" : `
         document.body.style.overflow = "";
       }
 
+      /* GA4 funnel events (Oct 23): league_connect fires exactly
+         once per SUCCESSFUL connect, from inside the apply path of
+         each platform's loader — never on a click, never on a
+         failure (both loaders surface failures in their catch and
+         never reach this call). Platform only: no usernames, league
+         names or league IDs are sent as event parameters. */
+      function ffTrackConnect(platform) {
+        try { if (typeof gtag === "function") gtag("event", "league_connect", { platform: platform }); } catch (e) { /* analytics must never block a connect */ }
+      }
       async function slpFindLeagues() {
         const inp = slpEl("slp-username");
         const name = (inp.value || "").trim();
@@ -9546,6 +9555,7 @@ ${rdP ? "" : `
           applyMode(false);
           setConnectedLeague();
           slpClose();
+          ffTrackConnect("sleeper");
           /* Land at the TOP of the League Analyzer — the Your Team
              spotlight first. No section anchor here: activateNav's
              deferred anchor jump used to fire after this scroll-to-top
@@ -10009,6 +10019,7 @@ ${rdP ? "" : `
           applyMode(false);
           setConnectedLeague();
           slpClose();
+          ffTrackConnect("espn");
           /* Land at the TOP of the League Analyzer — the Your Team
              spotlight first. No section anchor here: activateNav's
              deferred anchor jump used to fire after this scroll-to-top
@@ -13984,11 +13995,11 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn") { mount.innerHTML = ""; return; }
         const fmt = typeof window.playoffFormat === "function" ? window.playoffFormat() : null;
         if (!fmt || !fmt.valid) {
-          mount.innerHTML = `<div class="pp-box"><h3>Playoff Path Explorer</h3><p class="pp-note">Playoff format couldn't be read for this league — the Explorer is unavailable here rather than guessing at a format.</p></div>`;
+          mount.innerHTML = `<div class="pp-box"><h3>Playoff Path Explorer<span class="launch-badge">Free during launch</span></h3><p class="pp-note">Playoff format couldn't be read for this league — the Explorer is unavailable here rather than guessing at a format.</p></div>`;
           return;
         }
         const sim = window.SeasonSim;
-        if (!sim || !sim.results || !sim.path) { mount.innerHTML = `<div class="pp-box"><h3>Playoff Path Explorer</h3><p class="pp-note">Simulating this season… the Explorer opens when the outlook lands.</p></div>`; return; }
+        if (!sim || !sim.results || !sim.path) { mount.innerHTML = `<div class="pp-box"><h3>Playoff Path Explorer<span class="launch-badge">Free during launch</span></h3><p class="pp-note">Simulating this season… the Explorer opens when the outlook lands.</p></div>`; return; }
         const key = (DATA.league.name || "") + "@" + DATA.league.week;
         const me = DATA.teams.find(t => t.isUser);
         if (ff4.ppKey !== key) {
@@ -14017,7 +14028,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         }
         const fmtBits = [`${fmt.teams} playoff teams`, `starts Week ${fmt.start}`, fmt.byes > 0 ? `top ${fmt.byes} seed${fmt.byes === 1 ? "" : "s"} get a bye` : "no byes", `round type ${fmt.roundType}`, `seed type ${fmt.seedType}`, fmt.avgMatch ? "median game on" : "median game off", fmt.divisions ? `${fmt.divisions} divisions` : "no divisions"];
         mount.innerHTML = `<div class="pp-box">
-          <h3>Playoff Path Explorer</h3>
+          <h3>Playoff Path Explorer<span class="launch-badge">Free during launch</span></h3>
           <p class="pp-fmt">Format read from this league: ${fmtBits.map(esc).join(" · ")}</p>
           <div class="pp-teamrow"><label for="pp-team">Team</label><select id="pp-team">${DATA.teams.map(t => `<option value="${t.rid}" ${String(t.rid) === String(rid) ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("")}</select></div>
           <div class="pp-base">
@@ -14740,7 +14751,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             `<text x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="#83839C" font-family="Space Grotesk, sans-serif">${wkLbl(i)}${isLast ? " · now" : ""}</text>`;
         }).join("");
         return `<div class="vh">
-          <div class="vh-head"><span class="vh-title">Team value — the current roster at each weekly snapshot</span><span class="vh-delta ${dCls}">${dTxt}</span></div>
+          <div class="vh-head"><span class="vh-title">Team value — the current roster at each weekly snapshot<span class="launch-badge">Free during launch</span></span><span class="vh-delta ${dCls}">${dTxt}</span></div>
           <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Team value history chart for ${esc(team.name)}: ${fmt(sums[0])} at ${wkLbl(0)} to ${fmt(sums[n - 1])} now">
             <path d="${area}" fill="rgba(198,255,0,.10)"/>
             <polyline points="${line}" fill="none" stroke="#C6FF00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
