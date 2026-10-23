@@ -2383,6 +2383,20 @@
       .tb-mini b { color: var(--ink); font-family: "Space Grotesk", sans-serif; }
       /* ---------- Opportunity Radar ---------- */
       .launch-badge { display: inline-block; vertical-align: middle; margin-left: 10px; font-family: "Space Grotesk", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0A0A1A; background: var(--accent); border-radius: 999px; padding: 3px 10px; }
+      /* ---------- founding waitlist band ---------- */
+      .waitlist-band { display: flex; align-items: center; gap: 14px 22px; flex-wrap: wrap; margin: 18px 0 4px; padding: 14px 18px; background: #14122B; border: 1px solid var(--line); border-radius: 14px; }
+      .waitlist-band.foot { margin: 26px 0 14px; }
+      .wl-txt { flex: 1 1 320px; min-width: 240px; }
+      .wl-kicker { display: block; font-family: "Space Grotesk", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
+      .wl-line { display: block; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
+      .wl-line strong { color: var(--ink); }
+      .wl-form { display: flex; gap: 8px; flex: 0 1 auto; }
+      .wl-form input[type="email"] { width: 230px; max-width: 62vw; background: #0D0B20; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); padding: 10px 12px; font: inherit; font-size: 14px; }
+      .wl-form input[type="email"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+      .wl-form button { background: var(--accent); color: #0A0A1A; border: 0; border-radius: 10px; padding: 10px 16px; font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px; cursor: pointer; white-space: nowrap; }
+      .wl-msg { flex: 1 1 100%; font-size: 13px; color: var(--ink-2); min-height: 1em; }
+      .wl-msg.ok { color: var(--accent); font-weight: 600; }
+      .wl-msg.err { color: #FF7A9E; }
       .radar-meta { color: var(--ink-3); font-size: 13px; margin: -4px 0 14px; }
       .radar-filters { margin: 4px 0 16px; }
       .rd-strip-h { font-family: "Space Grotesk", sans-serif; font-size: 17px; margin: 20px 0 10px; color: var(--ink); }
@@ -2525,6 +2539,14 @@
             <p class="hc-note">No password — Sleeper's public API only ever sees your username.</p>
             <button type="button" class="hc-browse" id="hero-browse">Browse without a league →</button>
           </div>
+        </div>
+        <div class="waitlist-band ">
+          <div class="wl-txt"><span class="wl-kicker">Founding members</span><span class="wl-line"><strong>Free during launch.</strong> Join the founding list and lock in launch pricing when premium opens.</span></div>
+          <form class="wl-form" id="wl-form-hero" novalidate>
+            <input type="email" name="email" autocomplete="email" placeholder="you@email.com" aria-label="Email address for the founding list" />
+            <button type="submit">Join the list</button>
+          </form>
+          <p class="wl-msg" role="status" aria-live="polite"></p>
         </div>
         <div id="team-strip"></div>
         <div class="strip-utility"><button type="button" class="fmt-link" id="to-format">League format →</button><span class="fmt-quick" id="fmt-quick">Superflex · PPR · TE +0.75 · 6-pt TD</span></div>
@@ -3276,7 +3298,15 @@
 <div class="toast" id="toast"></div>
       </section>
 
-      <footer id="page-footer"></footer>
+      <div class="waitlist-band foot">
+          <div class="wl-txt"><span class="wl-kicker">Founding members</span><span class="wl-line"><strong>Free during launch.</strong> Join the founding list and lock in launch pricing when premium opens.</span></div>
+          <form class="wl-form" id="wl-form-foot" novalidate>
+            <input type="email" name="email" autocomplete="email" placeholder="you@email.com" aria-label="Email address for the founding list" />
+            <button type="submit">Join the list</button>
+          </form>
+          <p class="wl-msg" role="status" aria-live="polite"></p>
+        </div>
+        <footer id="page-footer"></footer>
     </div>
 
     <script>window.GUEST_MODE = true;</script>
@@ -14886,6 +14916,38 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         tpRender();
         tpRenderPromo();
       })();
+    </script>
+    <script>
+      /* ---------- founding waitlist (Oct 23) ----------
+         Storage: a Google Form + response Sheet under the Fantasy
+         Forensics Google account (private; signups are never in this
+         file or the public repo). ACTIVATION: fill the two constants
+         from the form (see hidden_files/ff-waitlist/README.md).
+         Until then the form declines honestly instead of dropping
+         addresses. Signup count = rows in the response Sheet. */
+      var FF_WAITLIST_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdMl9c3v3X-0rND1Eb96CFDJQ9CGeYNTYQVRrJ1DfWKVE_1JA/formResponse";
+      var FF_WAITLIST_ENTRY_ID = "entry.313868252";
+      document.querySelectorAll(".wl-form").forEach(function (form) {
+        form.addEventListener("submit", function (ev) {
+          ev.preventDefault();
+          var band = form.closest(".waitlist-band");
+          var msg = band ? band.querySelector(".wl-msg") : null;
+          var input = form.querySelector('input[type="email"]');
+          var email = (input.value || "").trim();
+          function say(text, cls) { if (msg) { msg.textContent = text; msg.className = "wl-msg " + (cls || ""); } }
+          if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { say("Enter a valid email address.", "err"); input.focus(); return; }
+          if (!FF_WAITLIST_URL || !FF_WAITLIST_ENTRY_ID) { say("The founding list opens shortly — check back soon.", "err"); return; }
+          var fd = new FormData();
+          fd.append(FF_WAITLIST_ENTRY_ID, email);
+          fetch(FF_WAITLIST_URL, { method: "POST", mode: "no-cors", body: fd }).then(function () {
+            form.reset();
+            say("You're on the founding list — watch your inbox when premium opens.", "ok");
+            try { if (typeof gtag === "function") gtag("event", "waitlist_signup"); } catch (e) { /* analytics only */ }
+          }).catch(function () {
+            say("Couldn't reach the list just now — try again in a minute.", "err");
+          });
+        });
+      });
     </script>
   </body>
 </html>
