@@ -592,6 +592,12 @@
       }
       .pick-add button:hover { border-color: rgba(198,255,0,.45); }
       .pick-add .gp-year { font-size: 12px; font-weight: 700; color: var(--ink-2); margin: 8px 0 5px; }
+      .src-toggle { display: flex; gap: 6px; margin-bottom: 8px; }
+      .src-toggle button {
+        flex: 1; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px;
+        background: rgba(0,0,0,.35); color: var(--ink-2); font-weight: 700; font-size: 13.5px; cursor: pointer;
+      }
+      .src-toggle button[aria-pressed="true"] { background: rgba(198,255,0,.12); border-color: rgba(198,255,0,.55); color: var(--accent); }
       .verdict {
         margin-top: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
         padding: 18px 20px;
@@ -4443,9 +4449,12 @@ ${rdP ? "" : `
       "use strict";
       /* ================= Trade calculator ================= */
       const calc = {
-        A: { team: 4, assets: [] },   // asset: {kind:'player', id} | {kind:'pick', key}
-        B: { team: 7, assets: [] },
+        A: { team: 4, src: "team", assets: [] },   // asset: {kind:'player', id} | {kind:'pick', key}
+        B: { team: 7, src: "team", assets: [] },
       };
+      /* Each side's src is "team" (pick from the chosen team's roster —
+         the connected default) or "any" (Any Player: the full priced
+         pool, guest-style). See sideIsAny below. */
 
       /* Guest mode has no rosters to own picks, so the calculator offers
          the standard rookie pick slots instead: 2027–2029, rounds 1–4,
@@ -4490,6 +4499,21 @@ ${rdP ? "" : `
         return pk ? pk.label : "Pick";
       }
       function sideTotal(side) { return assetsOf(side).reduce((s, a) => s + assetValue(a), 0); }
+
+      /* Any Player mode (Eric, Oct 23): a connected side can drop its
+         team and pick from the full priced pool, guest-style — but the
+         prices stay this league's: assetValue() runs through the same
+         dispVal() the connected calculator already uses, so an Any
+         Player build grades identically to the same assets priced for
+         that league. Switching a side's source clears that side's
+         assets; switching leagues or disconnecting resets both sides
+         to "team". */
+      function sideIsAny(side) { return calc[side].src === "any"; }
+      /* Display name for a side: team sides speak in team names;
+         guest and Any Player sides use the guest phrasing. */
+      function calcSideName(side) {
+        return (window.GUEST_MODE || sideIsAny(side)) ? "Side " + side : teamName(calc[side].team);
+      }
 
       /* Value adjustment: raw sums understate the side of a deal
          whose production is concentrated into fewer, better assets
@@ -4660,19 +4684,24 @@ ${rdP ? "" : `
         const st = calc[side];
         const el = document.getElementById(side === "A" ? "side-a" : "side-b");
         const guest = !!window.GUEST_MODE;
+        const anyMode = !guest && st.src === "any";
         const teamOpts = DATA.teams.map(t =>
           `<option value="${t.rid}" ${String(st.team) === String(t.rid) ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("") +
           `<option value="FA" ${st.team === "FA" ? "selected" : ""}>Free Agents</option>`;
-        const picks = !guest && VALMODE !== "redraft" && st.team !== "FA" ? TBY[st.team].picks.filter(pk => pk.value >= 150).sort((x, y) => pickPrice(y) - pickPrice(x)) : [];
-        const guestPickHtml = guest && VALMODE !== "redraft" ? `<div class="pick-add"><div class="lbl">Add a draft pick</div>
+        const picks = !guest && !anyMode && VALMODE !== "redraft" && st.team !== "FA" ? TBY[st.team].picks.filter(pk => pk.value >= 150).sort((x, y) => pickPrice(y) - pickPrice(x)) : [];
+        const guestPickHtml = (guest || anyMode) && VALMODE !== "redraft" ? `<div class="pick-add"><div class="lbl">Add a draft pick</div>
           ${[2027, 2028, 2029].map(yr => `<div class="gp-year">${yr} rookie picks</div>` +
             GUEST_PICKS.filter(pk => pk.key.startsWith(yr + "-")).map(pk =>
               `<button data-gpick="${pk.key}">${esc(pk.label.slice(5))} · ${fmt(guestPickValue(pk))}</button>`).join("")).join("")}
           </div>` : "";
         el.innerHTML = `
           <h3>Side ${side} gives</h3>
-          ${guest ? "" : `<select id="team-${side}" aria-label="Team for side ${side}">${teamOpts}</select>`}
-          <input type="search" id="search-${side}" placeholder="${guest ? "Search any player…" : "Search this team's players…"}" aria-label="Search players for side ${side}" />
+          ${guest ? "" : `<div class="src-toggle" role="group" aria-label="Player source for side ${side}">
+            <button type="button" data-srcsel="team" aria-pressed="${!anyMode}">Team roster</button>
+            <button type="button" data-srcsel="any" aria-pressed="${anyMode}">Any Player</button>
+          </div>`}
+          ${guest || anyMode ? "" : `<select id="team-${side}" aria-label="Team for side ${side}">${teamOpts}</select>`}
+          <input type="search" id="search-${side}" placeholder="${guest || anyMode ? "Search any player…" : "Search this team's players…"}" aria-label="Search players for side ${side}" />
           <div class="results" id="results-${side}"></div>
           ${guestPickHtml}
           ${picks.length ? `<div class="pick-add"><div class="lbl">Add a pick owned by ${esc(teamName(st.team))}</div>
@@ -4686,6 +4715,15 @@ ${rdP ? "" : `
           st.team = e.target.value === "FA" ? "FA" : Number(e.target.value);
           st.assets = [];
           renderSide(side); renderVerdict();
+        });
+        el.querySelectorAll("[data-srcsel]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const v = btn.dataset.srcsel;
+            if ((v === "any") === (st.src === "any")) return;
+            st.src = v;
+            st.assets = [];
+            renderSide(side); renderVerdict();
+          });
         });
         const searchEl = document.getElementById("search-" + side);
         searchEl.addEventListener("input", () => renderResults(side));
@@ -4714,7 +4752,7 @@ ${rdP ? "" : `
       function candidatePlayers(side) {
         const st = calc[side];
         let list;
-        if (window.GUEST_MODE) list = [...DATA.players];
+        if (window.GUEST_MODE || st.src === "any") list = [...DATA.players];
         else if (st.team === "FA") list = DATA.players.filter(p => !p.owner);
         else list = TBY[st.team].playerIds.map(id => PBY[id]).filter(Boolean);
         const chosen = new Set(st.assets.filter(a => a.kind === "player").map(a => a.id));
@@ -4782,6 +4820,7 @@ ${rdP ? "" : `
         const other = side === "A" ? "B" : "A";
         const notes = [];
         if (window.GUEST_MODE) return [{ cls: "", txt: "Pure value comparison — guest mode has no rosters to fit. Connect a league for roster-fit notes and title-odds impact." }];
+        if (st.src === "any") return [{ cls: "", txt: "Any Player side — no roster behind it, so there is no fit to judge; this side stands on pure value." }];
         if (st.team === "FA") return ["Free-agent side: no roster fit to evaluate."];
         const t = TBY[st.team];
         const incoming = assetsOf(other), outgoing = assetsOf(side);
@@ -4824,7 +4863,7 @@ ${rdP ? "" : `
         // adjustment — not raw sums alone. See valueAdjustmentFor above.
         const ea = sideAdjTotal("A"), eb = sideAdjTotal("B");
         const guest = !!window.GUEST_MODE;
-        const nameA = guest ? "Side A" : teamName(calc.A.team), nameB = guest ? "Side B" : teamName(calc.B.team);
+        const nameA = calcSideName("A"), nameB = calcSideName("B");
         if (!a && !b) {
           el.innerHTML = `<h3>No assets yet</h3><p style="color:var(--ink-2)">Add players${VALMODE === "redraft" ? "" : " or picks"} on either side to see the verdict.</p>`;
           return;
@@ -4849,7 +4888,7 @@ ${rdP ? "" : `
           const lighter = ea < eb ? "A" : "B";
           const otherSide = lighter === "A" ? "B" : "A";
           const lt = calc[lighter].team;
-          if (lt !== "FA") {
+          if (lt !== "FA" && calc[lighter].src !== "any") {
             const gapWith = pk => {
               const mine = assetsOf(lighter).map(assetValue).concat([pickPrice(pk)]);
               const theirs = assetsOf(otherSide).map(assetValue);
@@ -4944,6 +4983,7 @@ ${rdP ? "" : `
          roster-built sides and re-renders standalone — any player on
          either side, plus the standard pick slots, pure value verdict. */
       window.addEventListener("modechange", () => {
+        calc.A.src = "team"; calc.B.src = "team";
         calc.A.assets = []; calc.B.assets = [];
         renderSide("A"); renderSide("B"); renderVerdict();
       });
@@ -4951,7 +4991,7 @@ ${rdP ? "" : `
       /* ================= Share-a-trade links =================
          "Share this trade" encodes both sides into the URL fragment:
          #trade=<sideA>~<sideB>[~r] — each side is "<team>:<assets>",
-         team a roster id or FA; an asset is a player id, or "pk" +
+         team a roster id, FA, or ANY for an Any Player side; an asset is a player id, or "pk" +
          pick key + "@" + owning roster id for a pick ("@G" instead of
          a roster id for a standard guest pick slot); "~r" marks a
          redraft-mode trade. Opening the link rebuilds the trade in the
@@ -4963,7 +5003,9 @@ ${rdP ? "" : `
       function encodeTradeSide(side) {
         const st = calc[side];
         const toks = st.assets.map(a => a.kind === "player" ? String(a.id) : "pk" + a.key + "@" + a.fromTeam);
-        return String(st.team) + ":" + toks.join(",");
+        // An Any Player side encodes as "ANY" so the link reopens with
+        // the side team-less instead of silently adopting its last team.
+        return String(!window.GUEST_MODE && st.src === "any" ? "ANY" : st.team) + ":" + toks.join(",");
       }
       function currentTradeUrl() {
         const frag = "#trade=" + encodeTradeSide("A") + "~" + encodeTradeSide("B") + (VALMODE === "redraft" ? "~r" : "");
@@ -4996,7 +5038,7 @@ ${rdP ? "" : `
           const head = document.querySelector("#verdict h3");
           const guest = !!window.GUEST_MODE;
           const text = (head && head.textContent ? head.textContent + " — " : "") +
-            `${guest ? "Side A" : teamName(calc.A.team)} sends ${fmt(sideTotal("A"))} · ${guest ? "Side B" : teamName(calc.B.team)} sends ${fmt(sideTotal("B"))}. Full trade and verdict:`;
+            `${calcSideName("A")} sends ${fmt(sideTotal("A"))} · ${calcSideName("B")} sends ${fmt(sideTotal("B"))}. Full trade and verdict:`;
           navigator.share({ title: "Fantasy Forensics — trade check", text, url }).catch(() => {});
         } else copyTradeLink();
       });
@@ -5010,6 +5052,7 @@ ${rdP ? "" : `
         if (!guest) {
           const teamTok = str.slice(0, i);
           if (teamTok === "FA") team = "FA";
+          else if (teamTok === "ANY") team = "ANY";
           else if (TBY[teamTok]) team = Number(teamTok);
           if (team === null) return null;
         }
@@ -5021,8 +5064,9 @@ ${rdP ? "" : `
             if (at < 0) return;
             const key = t.slice(2, at);
             if (t.slice(at + 1) === "G") {
-              // standard guest pick slot — resolves in guest mode only
-              if (!guest || !GPBY[key]) return;
+              // standard guest pick slot — resolves in guest mode, and
+              // on the Any Player side of a connected link
+              if ((!guest && team !== "ANY") || !GPBY[key]) return;
               const dk = "pk" + key + "@G";
               if (seen.has(dk)) return; seen.add(dk);
               assets.push({ kind: "pick", key, fromTeam: "G" });
@@ -5057,7 +5101,10 @@ ${rdP ? "" : `
         // A link carrying standard guest pick slots ("pk…@G") was built
         // in guest mode — enter guest mode first, so the picks resolve
         // instead of dropping against league rosters on a cold open.
-        if (!window.GUEST_MODE && /@G(?:,|~|$)/.test(raw) && typeof routeMode === "function") {
+        // Exception: a link with an "ANY" side was built by a connected
+        // Any Player side (its ladder picks are "@G" too) — that link
+        // stays in the connected league.
+        if (!window.GUEST_MODE && /@G(?:,|~|$)/.test(raw) && !/(^|~)ANY:/.test(raw) && typeof routeMode === "function") {
           routeMode("guest");
         }
         // Switch value mode before parsing, so a redraft link drops its
@@ -5069,8 +5116,10 @@ ${rdP ? "" : `
         if (!pa || !pb) return;
         if (!pa.assets.length && !pb.assets.length) return;
         if (!window.GUEST_MODE) {
-          if (pa.team !== null) calc.A.team = pa.team;
-          if (pb.team !== null) calc.B.team = pb.team;
+          if (pa.team === "ANY") calc.A.src = "any";
+          else if (pa.team !== null) { calc.A.team = pa.team; calc.A.src = "team"; }
+          if (pb.team === "ANY") calc.B.src = "any";
+          else if (pb.team !== null) { calc.B.team = pb.team; calc.B.src = "team"; }
         }
         calc.A.assets = pa.assets; calc.B.assets = pb.assets;
         renderSide("A"); renderSide("B"); renderVerdict();
@@ -5903,6 +5952,7 @@ ${rdP ? "" : `
         try { payload = JSON.parse(decodeURIComponent(btn.dataset.grade)); } catch (err) { payload = null; }
         if (!payload || typeof calc === "undefined") return;
         calc.A.team = String(payload.a); calc.B.team = String(payload.b);
+        calc.A.src = "team"; calc.B.src = "team";
         calc.A.assets = payload.give; calc.B.assets = payload.get;
         renderSide("A"); renderSide("B"); renderVerdict();
         activateNav("trades"); window.scrollTo({ top: 0 });
@@ -6640,7 +6690,7 @@ ${rdP ? "" : `
 
         function calcImpactHtml() {
           const A = calc.A, B = calc.B;
-          if (window.GUEST_MODE || A.team === "FA" || B.team === "FA" || A.team === B.team) return "";
+          if (window.GUEST_MODE || A.src === "any" || B.src === "any" || A.team === "FA" || B.team === "FA" || A.team === B.team) return "";
           const outA = A.assets.filter(a => a.kind === "player").map(a => a.id);
           const outB = B.assets.filter(a => a.kind === "player").map(a => a.id);
           if (!outA.length && !outB.length)
@@ -8355,6 +8405,8 @@ ${rdP ? "" : `
         boardState.shown = 60;
         calc.A.team = "FA";
         calc.B.team = "FA";
+        calc.A.src = "team";
+        calc.B.src = "team";
         calc.A.assets = [];
         calc.B.assets = [];
         document.getElementById("teams-intro").innerHTML = TEAMS_INTRO_DEMO;
@@ -9262,6 +9314,8 @@ ${rdP ? "" : `
         boardState.shown = 60;
         calc.A.team = user.rid;
         calc.B.team = (DATA.teams.find(t => t.rid !== user.rid) || DATA.teams[0]).rid;
+        calc.A.src = "team";
+        calc.B.src = "team";
         calc.A.assets = [];
         calc.B.assets = [];
         const isEspn = C.platform === "espn";
@@ -10969,7 +11023,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
               : `${esc(name)} has no clean trade history of his own yet, so this reads off <strong>${n}</strong> real ${modeName()} trades of ${stats.peers} players priced within ±10% of him: the typical return is <strong>${esc(arch.label)}</strong> — median package <strong>${fmt(Math.round(med))}</strong>, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`;
             const offerSide = headSide === "A" ? "B" : "A";
             const guest = !!window.GUEST_MODE;
-            const rid = guest ? null : calc[offerSide].team;
+            const rid = guest || calc[offerSide].src === "any" ? null : calc[offerSide].team;
             let pkgHtml = "", suggestion = null;
             if (rid != null && rid !== "FA") {
               const tr = translateOffer(rid, head, headV, arch, offerSide, name);
@@ -11714,7 +11768,8 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         if (!a && !b) return;
         const ea = sideAdjTotal("A"), eb = sideAdjTotal("B");
         const guest = !!window.GUEST_MODE;
-        const nameA = guest ? "Side A" : teamName(calc.A.team), nameB = guest ? "Side B" : teamName(calc.B.team);
+        const nameA = typeof calcSideName === "function" ? calcSideName("A") : (guest ? "Side A" : teamName(calc.A.team)),
+              nameB = typeof calcSideName === "function" ? calcSideName("B") : (guest ? "Side B" : teamName(calc.B.team));
         const diff = Math.abs(ea - eb), pct = diff / Math.max(ea, eb, 1);
         const favored = ea > eb ? nameB : nameA;
         let headline;
@@ -13143,7 +13198,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const trail = aA <= aB ? "A" : "B";
         const lead = trail === "A" ? "B" : "A";
         const guest = !!window.GUEST_MODE;
-        const tName = s => guest ? "Side " + s : teamName(calc[s].team);
+        const tName = s => guest || calc[s].src === "any" ? "Side " + s : teamName(calc[s].team);
         if (pct <= 0.05) {
           mount.innerHTML = `<div class="bal-box bal-done"><div class="bal-head">Balance this trade</div><p class="bal-note">This trade is already balanced — the two sides sit within the fair range, so there's nothing to add.</p></div>`;
           return;
@@ -13153,12 +13208,12 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const inTradeK = new Set([...assetsOf("A"), ...assetsOf("B")].filter(x => x.kind === "pick").map(x => x.key + "@" + x.fromTeam));
         const cands = [];
         if (VALMODE !== "redraft") {
-          if (!guest && calc[trail].team !== "FA") {
+          if (!guest && calc[trail].team !== "FA" && calc[trail].src !== "any") {
             (TBY[calc[trail].team].picks || []).forEach(pk => {
               if (inTradeK.has(pk.key + "@" + calc[trail].team)) return;
               cands.push({ kind: "pick", key: pk.key, fromTeam: calc[trail].team, label: pk.label, value: pickPrice(pk), pref: 0 });
             });
-          } else if (guest) {
+          } else if (guest || calc[trail].src === "any") {
             GUEST_PICKS.forEach(gp => {
               if (inTradeK.has(gp.key + "@G")) return;
               cands.push({ kind: "pick", key: gp.key, fromTeam: "G", label: gp.label, value: guestPickValue(gp), pref: 0 });
@@ -13166,12 +13221,13 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           }
         }
         /* Players: the trailing side's own roster when a league is
-           connected, the full board in guest mode. Positions where the
+           connected, the full board in guest mode — and for an Any
+           Player side (guest behavior). Positions where the
            roster carries more than the standard depth are surplus and
            sort first. */
         let pool = [];
-        if (!guest && calc[trail].team !== "FA") pool = (TBY[calc[trail].team].playerIds || []).map(id => PBY[id]).filter(Boolean);
-        else if (guest) pool = DATA.players.slice();
+        if (!guest && calc[trail].team !== "FA" && calc[trail].src !== "any") pool = (TBY[calc[trail].team].playerIds || []).map(id => PBY[id]).filter(Boolean);
+        else if (guest || calc[trail].src === "any") pool = DATA.players.slice();
         else if (!guest && calc[trail].team === "FA") pool = DATA.players.filter(p => !p.owner);
         const counts = {};
         pool.forEach(p => { counts[p.pos] = (counts[p.pos] || 0) + 1; });
@@ -14237,15 +14293,15 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           let fit = [];
           try {
             if (giveCalc.length || getCalc.length) {
-              const savedA = { team: calc.A.team, assets: calc.A.assets.map(a => ({ ...a })) };
-              const savedB = { team: calc.B.team, assets: calc.B.assets.map(a => ({ ...a })) };
+              const savedA = { team: calc.A.team, src: calc.A.src, assets: calc.A.assets.map(a => ({ ...a })) };
+              const savedB = { team: calc.B.team, src: calc.B.src, assets: calc.B.assets.map(a => ({ ...a })) };
               try {
-                calc.A.team = myRid; calc.A.assets = giveCalc.slice();
-                calc.B.team = otherRids[0]; calc.B.assets = getCalc.slice();
+                calc.A.team = myRid; calc.A.src = "team"; calc.A.assets = giveCalc.slice();
+                calc.B.team = otherRids[0]; calc.B.src = "team"; calc.B.assets = getCalc.slice();
                 fit = fitNotes("A").filter(nt => nt && typeof nt === "object" && (nt.cls === "good" || nt.cls === "warn")).slice(0, 2).map(nt => nt.txt);
               } finally {
-                calc.A.team = savedA.team; calc.A.assets = savedA.assets;
-                calc.B.team = savedB.team; calc.B.assets = savedB.assets;
+                calc.A.team = savedA.team; calc.A.src = savedA.src; calc.A.assets = savedA.assets;
+                calc.B.team = savedB.team; calc.B.src = savedB.src; calc.B.assets = savedB.assets;
               }
             }
           } catch (e) { fit = []; }
@@ -14367,8 +14423,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           if (connLeagueKey !== "sleeper:" + o.leagueId) return;
         }
         try {
-          calc.A.team = o.myRid; calc.A.assets = o.giveCalc.map(a => ({ ...a }));
-          calc.B.team = o.otherRids[0]; calc.B.assets = o.getCalc.map(a => ({ ...a }));
+          calc.A.team = o.myRid; calc.A.src = "team"; calc.A.assets = o.giveCalc.map(a => ({ ...a }));
+          calc.B.team = o.otherRids[0]; calc.B.src = "team"; calc.B.assets = o.getCalc.map(a => ({ ...a }));
           renderSide("A"); renderSide("B"); renderVerdict();
         } catch (e) { return; }
         activateNav("trades");
