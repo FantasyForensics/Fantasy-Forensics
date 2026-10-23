@@ -2275,6 +2275,7 @@
       .cc-q-issue { color: #FF7EB6; font-weight: 600; font-size: 14.5px; }
       .cc-q-issue.bye { color: #00E5FF; }
       .cc-q-issue.dbt { color: var(--ink-2); }
+      .cc-q-issue.fyi { color: var(--ink-2); font-weight: 500; }
       .cc-q-where { color: var(--ink-3); font-size: 13px; margin-left: auto; }
       .cc-queue-note { color: var(--ink-2); font-size: 14.5px; margin: 6px 0 2px; }
       @media (max-width: 860px) {
@@ -13149,25 +13150,54 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         return seasonNum === (typeof slpState !== "undefined" && slpState.season) ? (slpState.week || (lg.settings && lg.settings.leg) || 1) : ((lg.settings && lg.settings.leg) || 1);
       }
 
-      /* The queue's starting set: a value-optimal fill of the league's
-         starter slots over the full roster. bestBallLineup() can't
-         source it — it deliberately excludes Out/IR players, which are
-         exactly what the queue hunts. The bye check mirrors the old
-         cards: a starter whose NFL team is off in the league's
-         upcoming week. Designations and body parts come from the
-         player pool the page already carries — nothing is invented. */
-      function ff4CCQueueFor(me, wk) {
+      /* The queue's "starters" are the roster's ACTUAL set lineup —
+         the built team's `lineup`, which buildConnLeague sources
+         from Sleeper's rosters[].starters — whenever it names
+         anyone. Only when no set lineup is available (guest / demo)
+         does the queue fall back to a value-optimal fill of the
+         league's starter slots over the full roster (bestBallLineup()
+         can't source that fill — it deliberately excludes Out/IR
+         players, which are exactly what the queue hunts).
+         Critical items are provable problems in that set, and only
+         these: a starter who is Out or on IR, a starter who is
+         Doubtful, or a starter on bye in the CURRENT week (wk — the
+         site's active NFL week). A future week's bye never queues,
+         Questionable never queues, and a bench player never queues:
+         bench Out/IR players surface only as the soft FYI in
+         ff4CCFYIFor, and only for leagues with nothing critical.
+         Designations and body parts come from the player pool the
+         page already carries — nothing is invented. */
+      function ff4CCStarters(me) {
+        const set = (me.lineup || []).map(l => PBY[l.id]).filter(Boolean);
+        if (set.length) return set;
         const pool = (me.playerIds || []).map(id => PBY[id]).filter(Boolean).slice().sort((a, b) => dispVal(b) - dispVal(a));
         const used = new Set(); const starters = [];
         starterSlots().forEach(s => { for (const p of pool) { if (used.has(p.id) || !s.cands.includes(p.pos)) continue; used.add(p.id); starters.push(p); break; } });
-        const byeWk = wk + 1;
+        return starters;
+      }
+
+      function ff4CCQueueFor(me, wk) {
         const items = [];
-        starters.forEach(p => {
+        ff4CCStarters(me).forEach(p => {
           if (p.inj === "Out" || p.inj === "IR") items.push({ prio: 0, cls: "out", player: p.name, issue: (p.inj === "IR" ? "Injured reserve" : "Out") + (p.ibp ? " — " + p.ibp : "") });
-          else if (window.TEAM_BYE && window.TEAM_BYE[p.team] === byeWk) items.push({ prio: 1, cls: "bye", player: p.name, issue: "On bye in Week " + byeWk });
+          else if (window.TEAM_BYE && window.TEAM_BYE[p.team] === wk) items.push({ prio: 1, cls: "bye", player: p.name, issue: "On bye in Week " + wk });
           else if (p.inj === "Doubtful") items.push({ prio: 2, cls: "dbt", player: p.name, issue: "Doubtful" + (p.ibp ? " — " + p.ibp : "") });
         });
         return items;
+      }
+
+      /* Soft FYI for a league with nothing critical: the most
+         valuable Out/IR player on the roster who is NOT in the
+         starting set. A hurt set starter is critical instead, so by
+         construction this is a bench player — awareness only, no
+         move needed. */
+      function ff4CCFYIFor(me) {
+        const inSet = new Set(ff4CCStarters(me).map(p => p.id));
+        const out = (me.playerIds || []).map(id => PBY[id]).filter(p => p && (p.inj === "Out" || p.inj === "IR") && !inSet.has(p.id));
+        if (!out.length) return null;
+        out.sort((a, b) => dispVal(b) - dispVal(a));
+        const p = out[0];
+        return { player: p.name, issue: (p.inj === "IR" ? "Injured reserve" : "Out") + (p.ibp ? " — " + p.ibp : "") + " · on your bench, no move needed" };
       }
 
       /* Light pass (same cost as the old card grid): one league's
@@ -13198,6 +13228,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
             const wk = Number(DATA.league.week) || week;
             snap.queueItems = ff4CCQueueFor(me, wk).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name }));
+            const fyi0 = ff4CCFYIFor(me);
+            snap.fyiItem = fyi0 ? { ...fyi0, idx, leagueName: snap.leagueName, teamName: me.name } : null;
             const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
             const streak = myRoster.settings && myRoster.settings.streak ? String(myRoster.settings.streak) : null;
             if (byeNames.length) snap.status = `${byeNames.length} starter${byeNames.length === 1 ? "" : "s"} on bye in Week ${wk + 1}: ${byeNames.slice(0, 3).join(", ")}${byeNames.length > 3 ? "…" : ""}`;
@@ -13444,13 +13476,20 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const items = [];
         Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.queueItems) items.push(...s.queueItems); });
         items.sort((a, b) => a.prio - b.prio || a.idx - b.idx);
-        if (!items.length) {
+        /* One soft FYI per league with nothing critical: its most
+           valuable bench Out/IR player, awareness only. */
+        const fyis = [];
+        Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.fyiItem && !(s.queueItems && s.queueItems.length)) fyis.push(s.fyiItem); });
+        fyis.sort((a, b) => a.idx - b.idx);
+        if (!items.length && !fyis.length) {
           q.className = "cc-queue clean";
           q.innerHTML = `<div class="cc-queue-h">Needs you first</div><p class="cc-queue-note">Nothing needs you — all leagues are clean.</p>`;
           return;
         }
-        q.className = "cc-queue";
-        q.innerHTML = `<div class="cc-queue-h">Needs you first</div>` + items.map(it => `<button type="button" class="cc-queue-it" data-cc-open="${it.idx}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(it.leagueName)}</span></button>`).join("");
+        q.className = items.length ? "cc-queue" : "cc-queue clean";
+        q.innerHTML = `<div class="cc-queue-h">Needs you first</div>`
+          + items.map(it => `<button type="button" class="cc-queue-it" data-cc-open="${it.idx}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(it.leagueName)}</span></button>`).join("")
+          + fyis.map(it => `<div class="cc-queue-it static"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue fyi">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(it.leagueName)}</span></div>`).join("");
         q.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
       }
 
@@ -13469,11 +13508,14 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-spot" id="cc-spot"></div>`;
             const me = DATA.teams.find(t => t.isUser) || null;
             const items = me ? ff4CCQueueFor(me, Number(DATA.league.week) || 1) : [];
+            const fyi = me && !items.length ? ff4CCFYIFor(me) : null;
             const q = document.getElementById("cc-queue");
             q.className = "cc-queue" + (items.length ? "" : " clean");
             q.innerHTML = `<div class="cc-queue-h">Needs you first</div>` + (items.length
               ? items.map(it => `<div class="cc-queue-it static"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(me.name)} · ${esc(DATA.league.name || "")}</span></div>`).join("")
-              : `<p class="cc-queue-note">Nothing needs you — all leagues are clean.</p>`);
+              : fyi
+                ? `<div class="cc-queue-it static"><span class="cc-q-player">${esc(fyi.player)}</span><span class="cc-q-issue fyi">${esc(fyi.issue)}</span><span class="cc-q-where">${esc(me.name)} · ${esc(DATA.league.name || "")}</span></div>`
+                : `<p class="cc-queue-note">Nothing needs you — all leagues are clean.</p>`);
             const chips = [];
             const cl = window.CONN_LEAGUE || {};
             if (cl.leagueType) chips.push(cl.leagueType === "dynasty" ? "Dynasty" : "Redraft");
