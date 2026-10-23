@@ -2580,7 +2580,7 @@
         <div id="season-out"></div>
         <details class="how-box inseason">
           <summary>How this works</summary>
-          <p class="tab-intro">A <strong>separate engine</strong> that answers a different question: not what your players are worth, but what your team does <strong>this season</strong>. Every player is re-priced as a <strong>rest-of-season projection</strong> — a redraft lens: this year’s points only, no age curves, no dynasty value. Each team’s best lineup is projected, then the rest of the season is <strong>simulated 10,000 times</strong> (the remaining regular-season weeks, plus the six-team playoffs). Nothing here feeds the dynasty values, the power score, or the trade calculator’s verdict — those stay exactly as they were. What it does feed is <strong>trade advice</strong>: Player Targets and the calculator show each deal’s title-odds swing next to its dynasty math, because a deal can be fair on value and still wrong for your window. Projections use <strong>this league’s actual scoring</strong> and do not move with the League format explorer.</p>
+          <p class="tab-intro">A <strong>separate engine</strong> that answers a different question: not what your players are worth, but what your team does <strong>this season</strong>. Every player is re-priced as a <strong>rest-of-season projection</strong> — a redraft lens: this year’s remaining points. Each team’s best lineup is projected, then the rest of the season is <strong>simulated 10,000 times</strong> (the remaining regular-season weeks, plus the six-team playoffs). Nothing here feeds the dynasty values, the power score, or the trade calculator’s verdict — those stay exactly as they were. What it does feed is <strong>trade advice</strong>: Player Targets and the calculator show each deal’s title-odds swing next to its dynasty math, because a deal can be fair on value and still wrong for your window. Projections use <strong>this league’s actual scoring</strong> and do not move with the League format explorer.</p>
         </details>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
@@ -2851,7 +2851,7 @@
     </button>
     <button class="hmode cy" data-setmode="snake" aria-pressed="false">
       <span class="hm-t">Snake Draft<small>REDRAFT</small></span>
-      <span class="hm-s">Rest-of-season values only — no age curves, no rookie picks. A live snake board with per-pick recommendations.</span>
+      <span class="hm-s">Rest-of-season values. A live snake board with per-pick recommendations.</span>
     </button>
     <button class="hmode mg" data-setmode="mock" aria-pressed="false">
       <span class="hm-t">Mock Draft<small>VS AI</small></span>
@@ -2867,7 +2867,7 @@
   <div class="hero" id="heroSnake" hidden>
     <span class="kicker" style="color:var(--cyan); border-color:rgba(0,229,255,.4); background:rgba(0,229,255,.06)">Fantasy Forensics · Draft Room</span>
     <h1>OWN THE<br /><span style="color:var(--cyan); text-shadow:0 0 34px rgba(0,229,255,.45)">SNAKE DRAFT.</span></h1>
-    <p>Every player priced on <b>rest-of-season value only</b> — the same redraft value scale as Fantasy Forensics' Redraft mode. No age curves, no draft picks, no next year. A <b>live snake board</b> with per-pick recommendations, tier-cliff and positional-run alerts, and a room code your co-owner can follow.</p>
+    <p>Every player priced on <b>rest-of-season value</b> — the same redraft value scale as Fantasy Forensics' Redraft mode. A <b>live snake board</b> with per-pick recommendations, tier-cliff and positional-run alerts, and a room code your co-owner can follow.</p>
   </div>
 
   <div class="hero" id="heroMock" hidden>
@@ -3028,7 +3028,7 @@
   <!-- ============ S1. REDRAFT BOARD ============ -->
   <section id="sboard">
     <div class="sec-head"><span class="tag" style="color:var(--cyan)">01 · The Board</span><h2>Redraft value board</h2></div>
-    <p class="sec-sub">The full player pool re-priced for redraft: <b>rest-of-season value only</b>, on the same scale as the <a href="../dynasty-analyzer/">Fantasy Forensics</a> Redraft mode. <b>No age curves</b> — a producing 32-year-old outprices a 21-year-old stash — and <b>no draft picks</b>, because in redraft this year is the only year. The muted column is each player's dynasty price, so you can see exactly what the format change does to him.</p>
+    <p class="sec-sub">The full player pool re-priced for redraft: <b>rest-of-season value</b>, on the same scale as the <a href="../dynasty-analyzer/">Fantasy Forensics</a> Redraft mode. Production is the whole price — a producing 32-year-old outprices a 21-year-old stash. The muted column is each player's dynasty price, so you can see exactly what the format change does to him.</p>
 
     <div class="stats">
       <div class="stat"><div class="v num">1.69×</div><div class="l">Derrick Henry's redraft premium — 6,767 vs a 3,994 dynasty price at age 32. Production now beats youth in this mode</div></div>
@@ -3197,7 +3197,7 @@
 
   <footer>
     <p style="margin:0 0 6px"><b style="color:var(--ink)">Fantasy Forensics — Draft Room</b> — the rookie-draft companion to <a href="../dynasty-analyzer/">Fantasy Forensics</a>, where the full value board, trade calculator, and season simulator live.</p>
-    <p style="margin:0">Player values: our proprietary dynasty value algorithm, snapshot Oct 17, 2026 (NFL Week 6). Redraft values: the Fantasy Forensics rest-of-season engine — the same prices as the main site's Redraft mode, no age curves, no picks. Pick ladder: the Fantasy Forensics value algorithm, Oct 17, 2026. Draft overlay: ADP, SUPERFLEX auction values (per ESPN), expert-consensus ranks, and ownership (per ESPN), snapshot Oct 20, 2026 — market context shown next to our values; it does not change any price, recommendation, or grade. Demo league: Demo League — a dynasty league on Sleeper. Grades score each pick against the ladder value of its slot — a pick is a steal when the player beats the slot, a reach when the slot beats the player.</p>
+    <p style="margin:0">Player values: our proprietary dynasty value algorithm, snapshot Oct 17, 2026 (NFL Week 6). Redraft values: the Fantasy Forensics rest-of-season engine — the same prices as the main site's Redraft mode. Pick ladder: the Fantasy Forensics value algorithm, Oct 17, 2026. Draft overlay: ADP, SUPERFLEX auction values (per ESPN), expert-consensus ranks, and ownership (per ESPN), snapshot Oct 20, 2026 — market context shown next to our values; it does not change any price, recommendation, or grade. Demo league: Demo League — a dynasty league on Sleeper. Grades score each pick against the ladder value of its slot — a pick is a steal when the player beats the slot, a reach when the slot beats the player.</p>
   </footer>
 </div>
 <div class="toast" id="toast"></div>
@@ -4815,7 +4815,7 @@ ${rdP ? "" : `
           ? `<p class="bonus-note v-core">Both sides' pieces are 80%+ started — core pieces, not depth.</p>` : "";
         el.innerHTML = `
           <h3>${esc(headline)}</h3>
-          ${VALMODE === "redraft" ? `<p style="color:var(--ink-2);margin:8px 0 0">Redraft values · rest of season — this verdict prices only the rest of this year. No picks, no future seasons.</p>` : ""}
+          ${VALMODE === "redraft" ? `<p style="color:var(--ink-2);margin:8px 0 0">Redraft values · rest of season — this verdict prices the rest of this year.</p>` : ""}
           <div class="diffbar"><div class="a" style="width:${shareA}%"></div><div class="b" style="width:${100 - shareA}%"></div></div>
           ${(() => {
             // Fairness meter: shows where the trade sits on the acceptable-margin scale
@@ -5668,7 +5668,7 @@ ${rdP ? "" : `
           : mine.arch === "rebuilder"
             ? `Window strategy: <strong>sell veterans</strong>. Every idea below converts a veteran starter into picks and players 24 or younger at full value or better, with contenders shopped first. The cost in this season's projected pts/week — from a <strong>${Math.round(basePpg)}</strong> baseline — is printed on each deal, because that's the trade being made on purpose.`
             : `Window strategy: <strong>your call</strong>. Your roster sits between windows at a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline — close enough to contend, old enough to reset. So you get a <strong>choice, not a blend</strong>: two labeled paths below, <em>Go Win-Now ⏳</em> and <em>Go Rebuilder 🔨</em>. Pick a direction, and every deal on that path is held to that window's rules.`;
-        if (VALMODE === "redraft") strat = `Window strategy: <strong>win now — the only window there is</strong>. This is a redraft league, so every idea below is a buy: bench depth goes out, a producer comes in, and each was checked against the rest-of-season projections — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown. No draft picks change hands; picks don't exist in redraft.`;
+        if (VALMODE === "redraft") strat = `Window strategy: <strong>win now</strong>. Every idea below is a buy: bench depth goes out, a producer comes in, and each was checked against the rest-of-season projections — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown.`;
         const standing = (() => {
           if (VALMODE === "redraft") return "";
           const bits = [`Power rank <strong>#${mine.powerRank} of ${DATA.teams.length}</strong>`];
@@ -5756,7 +5756,7 @@ ${rdP ? "" : `
             windowLine = VALMODE === "redraft"
               ? s.needLine
                 ? `<span class="dir-tag">Positional swap</span>One-for-one, value-matched: your ${s.swapFrom} depth covers the outgoing piece, your ${s.swapTo} hole gets a starter-caliber fix, and your optimal lineup moves <strong>${dTxt} projected pts/week</strong>.`
-                : `<span class="dir-tag">Win-now buy</span>Redraft rules: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, never a starter. There is no next season to save for.`
+                : `<span class="dir-tag">Win-now buy</span>Redraft rules: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, never a starter.`
               : mine.arch === "win-now"
               ? `<span class="dir-tag">Win-now buy</span>You're win-now: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, not a starter.`
               : mine.arch === "dynasty" && s.nearMiss
@@ -5765,10 +5765,10 @@ ${rdP ? "" : `
               ? `<span class="dir-tag">Dynasty buy</span>A clear upgrade — the only kind a Dynasty 👑 core makes: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc}. Your young starters stay home.`
               : `<span class="dir-tag">Win-now move</span>Buys production now: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc} — future capital spent on this season.`;
             why.push(VALMODE === "redraft"
-              ? `${esc(t.name)} ${lineupSet(s.partner.rid).has(t.id) ? "starts for" : "is depth on"} ${esc(s.partner.name)} — in redraft there are no windows to match, only lineups to raise.`
+              ? `${esc(t.name)} ${lineupSet(s.partner.rid).has(t.id) ? "starts for" : "is depth on"} ${esc(s.partner.name)} — in redraft, a pure lineup fit.`
               : `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be trading production for future capital.`);
             why.push(`${esc(t.name)} projects <strong>${rosProj(t).toFixed(1)} pts/wk</strong> the rest of the way and lifts your optimal lineup ${Math.round(s.basePpg)} → ${Math.round(s.basePpg + s.dPpg)} projected pts/week.`);
-            if (VALMODE === "redraft") why.push(`Priced on rest-of-season production alone: the ${rosProj(t).toFixed(1)} projected pts/wk is the whole price — no age curve, no youth premium, no future seasons.`);
+            if (VALMODE === "redraft") why.push(`Priced on rest-of-season production alone: the ${rosProj(t).toFixed(1)} projected pts/wk is the whole price.`);
             else if ((t.age ?? 99) <= 24) why.push(`Premium price: at ${t.age}, ${esc(t.name)} is young <em>and</em> producing — the most expensive profile in dynasty, so the offer stacks ${s.pkg.length} asset${s.pkg.length > 1 ? "s" : ""} to reach his price.`);
             else if ((t.age ?? 0) >= 29) why.push(`Discount aisle: ${t.age}-year-old production — the same weekly points a young player costs a fortune for, at a fraction of the price. Exactly the arbitrage a win-now window should hunt.`);
             else why.push(`At ${t.age ?? "—"}, ${esc(t.name)} is priced between the young-stud premium and the veteran discount — proven production without the youth markup — so the offer is built to match that price.`);
@@ -5940,8 +5940,8 @@ ${rdP ? "" : `
         </div>`;
       }
       function redraftWhy(p) {
-        const base = `Redraft value — rest of season only, in the scoring format set in the League Format tool. No age curve, no future seasons, no draft picks: the price is this year's remaining production — ${(p.ros || 0).toFixed(1)} projected pts/wk from Week ${DATA.league.week} on.`;
-        if (p.inj === "IR" || p.inj === "PUP") return base + ` He is on ${p.inj === "IR" ? "injured reserve" : "the PUP list"} with no return date the data can stand behind, so his redraft price is 0 — a redraft manager owns only this season, and he isn't playing it.`;
+        const base = `Redraft value — this year's remaining production, priced in the scoring format set in the League Format tool — ${(p.ros || 0).toFixed(1)} projected pts/wk from Week ${DATA.league.week} on.`;
+        if (p.inj === "IR" || p.inj === "PUP") return base + ` He is on ${p.inj === "IR" ? "injured reserve" : "the PUP list"} with no return date the data can stand behind, so his redraft price is 0 — he isn't playing this season.`;
         return base;
       }
       function renderTeamStrip() {
@@ -6161,7 +6161,7 @@ ${rdP ? "" : `
         <h2>The injury feed — what it shows, and what it won't</h2>
         <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The honesty rule: <strong>no free source publishes a reliable expected-return date</strong>, so the board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
         <h2>Power rankings &amp; the team tags</h2>
-        <p>Power score combines starters value and rest-of-season projected points, each as a league percentile. Points scored so far don't enter it — a September box score isn't a forecast. In redraft mode the score is projected points alone: this season is all there is, so there is no future to price. <strong>Starters value is best-ball:</strong> the value of each team's best possible lineup under its league's slots, filled by dynasty value the way the Lineup Analyzer's optimizer fills its slots — never the lineup the manager happens to have set on Sleeper. Bye weeks are ignored (a star on bye counts at full value — this measures roster strength, not one week), while players on IR / PUP or listed Out stay excluded, exactly as the optimizer treats them. The <strong>projected-points half</strong> is the Season Outlook engine's number: the same best-possible lineup construction, scored by rest-of-season projected points per week — the identical optimal-lineup total that drives the playoff odds, so the ranking and the odds can never disagree about how strong a lineup projects.</p> The team tag reads that ranking together with the age of each team's starting core. The top third splits by core age: a veteran core is tagged <strong>Win-Now ⏳</strong> — its window is this season — and a young core <strong>Dynasty 👑</strong>, built to contend now and for years. The middle third is <strong>Crossroads 🔀</strong>: close enough to contend, one decision from either direction. The bottom third is <strong>Rebuilder 🔨</strong>, playing for next year. The tags drive Player Targets: contenders see buys, rebuilders see sells, and Crossroads teams pick a path.</p>
+        <p>Power score combines starters value and rest-of-season projected points, each as a league percentile. Points scored so far don't enter it — a September box score isn't a forecast. In redraft mode the score is projected points alone — this season's projected production. <strong>Starters value is best-ball:</strong> the value of each team's best possible lineup under its league's slots, filled by dynasty value the way the Lineup Analyzer's optimizer fills its slots — never the lineup the manager happens to have set on Sleeper. Bye weeks are ignored (a star on bye counts at full value — this measures roster strength, not one week), while players on IR / PUP or listed Out stay excluded, exactly as the optimizer treats them. The <strong>projected-points half</strong> is the Season Outlook engine's number: the same best-possible lineup construction, scored by rest-of-season projected points per week — the identical optimal-lineup total that drives the playoff odds, so the ranking and the odds can never disagree about how strong a lineup projects.</p> The team tag reads that ranking together with the age of each team's starting core. The top third splits by core age: a veteran core is tagged <strong>Win-Now ⏳</strong> — its window is this season — and a young core <strong>Dynasty 👑</strong>, built to contend now and for years. The middle third is <strong>Crossroads 🔀</strong>: close enough to contend, one decision from either direction. The bottom third is <strong>Rebuilder 🔨</strong>, playing for next year. The tags drive Player Targets: contenders see buys, rebuilders see sells, and Crossroads teams pick a path.</p>
         <h2>Honest limits</h2>
         <ul>
           <li><strong>It's a snapshot.</strong> Rosters, standings, algorithm prices, and ranks are as of ${DATA.league.snapshot} (NFL Week ${DATA.league.week}). Later news is not priced in.</li>
@@ -8344,8 +8344,8 @@ ${rdP ? "" : `
          risers &amp; fallers board keeps dynasty prices in both modes
          (it tracks the dynasty board's weekly recompute). Mode is
          in-memory only. */
-      const RD_BOARD_INTRO = `Redraft values · rest of season. Every price on this board is a <strong>rest-of-season price</strong>: each player's expected points from Week ${DATA.league.week} on, converted into a value on the same scale as the dynasty board. <strong>No age curves</strong> — a producing 30-year-old outprices a 22-year-old stash — and <strong>no draft picks</strong>: in redraft, this year is the only year. The scoring format in the <strong>League Format</strong> tool re-prices this board exactly as it does the dynasty board, and the <strong>trade calculator</strong> works in this mode too. Tap “Why?” on any player for his projection and his dynasty value history.`;
-      const RD_CALC_INTRO = `Build a deal with <strong>rest-of-season values</strong> — both sides are priced with the same rest-of-season values as the board, so a win-now rental and a fading name carry the prices they'd carry in a redraft league. <strong>No draft picks change hands in this mode</strong>: picks aren't assets mid-season. The <strong>value adjustment</strong> applies here too — the side whose value sits concentrated in its best players earns an adjustment because a stud's production in one spot outweighs the same production spread over extra bodies, so depth doesn't outweigh a stud just by adding up. Roster-fit notes and title-odds impact still apply in a connected league.`;
+      const RD_BOARD_INTRO = `Redraft values · rest of season. Every price on this board is a <strong>rest-of-season price</strong>: each player's expected points from Week ${DATA.league.week} on, converted into a value on the same scale as the dynasty board. Production is the whole price — a producing 30-year-old outprices a 22-year-old stash. The scoring format in the <strong>League Format</strong> tool re-prices this board exactly as it does the dynasty board, and the <strong>trade calculator</strong> works in this mode too. Tap “Why?” on any player for his projection and his dynasty value history.`;
+      const RD_CALC_INTRO = `Build a deal with <strong>rest-of-season values</strong> — both sides are priced with the same rest-of-season values as the board, so a win-now rental and a fading name carry the prices they'd carry in a redraft league. The <strong>value adjustment</strong> applies here too — the side whose value sits concentrated in its best players earns an adjustment because a stud's production in one spot outweighs the same production spread over extra bodies, so depth doesn't outweigh a stud just by adding up. Roster-fit notes and title-odds impact still apply in a connected league.`;
 
       function syncModeChrome() {
         const rd = VALMODE === "redraft";
@@ -8356,7 +8356,7 @@ ${rdP ? "" : `
         const kt = document.getElementById("hero-kicker-txt");
         if (kt) kt.textContent = rd ? "REDRAFT VALUES · REST OF SEASON" : "DYNASTY VALUE ALGORITHM";
         const fn = document.getElementById("format-note");
-        if (fn) fn.textContent = rd ? "Redraft prices — rest of season only, no picks" : "Dynasty prices — long-term value, picks count";
+        if (fn) fn.textContent = rd ? "Redraft prices — rest of season" : "Dynasty prices — long-term value, picks count";
         const note = document.getElementById("board-mode-note");
         if (note) note.hidden = !rd;
         const th = document.getElementById("board-trend-th");
@@ -8408,7 +8408,7 @@ ${rdP ? "" : `
       const rdMethodEl = document.getElementById("method-body");
       if (rdMethodEl) rdMethodEl.innerHTML += `
         <h2>Redraft mode — rest-of-season values</h2>
-        <p>The <strong>Format toggle (Dynasty / Redraft)</strong> at the top of the page re-prices the values board and the trade calculator for a redraft lens: <strong>this season only</strong>. A redraft value starts from the market's rest-of-season price for the player, re-based for the format set in the League Format block the same way the dynasty board is. Our own lean comes from the <strong>Season Outlook projections</strong>: a player projected to outscore his market price sits above it, and a player projected for less sits below — by a bounded lean, never a doubling, the identical discipline to the dynasty board. <strong>No age curves</strong> are applied — a redraft price has no future seasons to discount — and <strong>draft picks carry no value in this mode</strong>: the calculator drops them entirely. Players without a market price are priced from their projection alone, the same treatment as the dynasty board's players outside the core board. Team grades, Player Targets, and waiver targets follow whichever mode is live — redraft prices in redraft mode. Only the risers &amp; fallers board keeps dynasty prices in both modes: it tracks the dynasty board's weekly update, which has no redraft equivalent.</p>
+        <p>The <strong>Format toggle (Dynasty / Redraft)</strong> at the top of the page re-prices the values board and the trade calculator for a redraft lens: <strong>every price on rest-of-season value</strong>. A redraft value starts from the market's rest-of-season price for the player, re-based for the format set in the League Format block the same way the dynasty board is. Our own lean comes from the <strong>Season Outlook projections</strong>: a player projected to outscore his market price sits above it, and a player projected for less sits below — by a bounded lean, never a doubling, the identical discipline to the dynasty board. Players without a market price are priced from their projection alone, the same treatment as the dynasty board's players outside the core board. Team grades, Player Targets, and waiver targets follow whichever mode is live — redraft prices in redraft mode. Only the risers &amp; fallers board keeps dynasty prices in both modes: it tracks the dynasty board's weekly update, which has no redraft equivalent.</p>
         <h2>Value history charts</h2>
         <p>Every row on the values board expands (“Why?”) to a chart of the player's <strong>stored weekly dynasty values</strong> — one point per week, shown at the format set in the League Format block so the line always ends at the price on the board. In redraft mode the chart stays up, labeled as dynasty history — a player's rest-of-season price has no past to chart yet, and his dynasty trend is the honest context. Where the current snapshot carries an <strong>injury or designation status</strong>, it is marked on the current point; dated injury history isn't published by any free source, so earlier weeks are never marked retroactively.</p>`;
     </script>
@@ -11212,9 +11212,9 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
          redraft-only Improve Your Odds panel. syncModeChrome calls
          window.applyLeagueModeChrome at the end of every mode
          transition, so none of this can drift from the toggle. */
-      const RD_FINDER_INTRO = `Pick a team and the finder hunts <strong>production</strong>. This is a redraft league — there is no next year — so every idea is a <strong>win-now buy</strong>: bench depth goes out, a player who raises the optimal lineup's projected points per week comes in, and a deal that lowers projected points per week <strong>never appears</strong>, however the values balance. <strong>No draft picks change hands</strong> — picks don't exist here. Targets are priced on rest-of-season production alone, and every other roster is a potential partner. Where a roster is <strong>lopsided</strong> — stacked at one position, thin at another, by projected starter points against the league — the finder leads with <strong>positional swaps</strong>: one surplus player flipped one-for-one for a comparable player at the thin position, value-matched, each with the reasoning spelled out on the card.`;
-      const RD_TEAMS_INTRO = `Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 10,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong>. Below it, the <strong>Improve Your Odds</strong> panel prices the moves that most raise your title odds. Every roster below is graded on <strong>starting-lineup strength, total roster value, and points scored</strong> — in <strong>redraft prices</strong> throughout: rest of season only, no picks, no age curves. In a redraft league every team is a contender or a spoiler; there are no rebuilders. Tap a team to see its full roster.`;
-      const RD_WAIVER_INTRO = `Every unrostered player in the snapshot, ranked for the team you pick — not by name value, but by <strong>what he would do for that lineup</strong>. Each target is ranked by what he would add over the weakest starter he'd have to beat at his position, flex and superflex slots included — his projected points per week against that starter's. In redraft there is no stash list — a pickup either helps this season or he isn't worth the roster spot.`;
+      const RD_FINDER_INTRO = `Pick a team and the finder hunts <strong>production</strong>. Every idea is a <strong>win-now buy</strong>: bench depth goes out, a player who raises the optimal lineup's projected points per week comes in, and a deal that lowers projected points per week <strong>never appears</strong>, however the values balance. Targets are priced on rest-of-season production alone, and every other roster is a potential partner. Where a roster is <strong>lopsided</strong> — stacked at one position, thin at another, by projected starter points against the league — the finder leads with <strong>positional swaps</strong>: one surplus player flipped one-for-one for a comparable player at the thin position, value-matched, each with the reasoning spelled out on the card.`;
+      const RD_TEAMS_INTRO = `Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 10,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong>. Below it, the <strong>Improve Your Odds</strong> panel prices the moves that most raise your title odds. Every roster below is graded on <strong>starting-lineup strength, total roster value, and points scored</strong> — in <strong>redraft prices</strong> throughout: rest-of-season production, priced for this year. In a redraft league every team is a contender or a spoiler. Tap a team to see its full roster.`;
+      const RD_WAIVER_INTRO = `Every unrostered player in the snapshot, ranked for the team you pick — not by name value, but by <strong>what he would do for that lineup</strong>. Each target is ranked by what he would add over the weakest starter he'd have to beat at his position, flex and superflex slots included — his projected points per week against that starter's. In redraft, a pickup earns his roster spot by helping this season.`;
 
       window.applyLeagueModeChrome = function (rd) {
         const C = window.CONN_LEAGUE;
@@ -11236,9 +11236,9 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             const over = C.typeOverride && C.typeOverride !== det;
             fn.textContent = (eff === "redraft" ? "Redraft" : "Dynasty")
               + (over ? ` — your switch (league detected as ${det === "redraft" ? "Redraft" : "Dynasty"})` : " — detected from your league")
-              + (eff === "redraft" ? " · rest-of-season prices, no picks" : " · long-term value, picks count");
+              + (eff === "redraft" ? " · rest-of-season prices" : " · long-term value, picks count");
           } else {
-            fn.textContent = rd ? "Redraft prices — rest of season only, no picks" : "Dynasty prices — long-term value, picks count";
+            fn.textContent = rd ? "Redraft prices — rest of season" : "Dynasty prices — long-term value, picks count";
           }
         }
         const fl = document.getElementById("format-label");
@@ -13955,7 +13955,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
               <div class="pk-total">${fmt(built.total)}</div>
               <div class="pk-sub">${team.players.length} players · ${fmt(built.playersTotal)}${rd ? "" : ` &nbsp;+&nbsp; ${team.picks.length} picks · ${fmt(built.picksTotal)}`}</div>
               ${rd
-                ? `<div class="tp-rdnote">Redraft portfolio — players only. Redraft leagues hold no future picks, so picks sit this one out.</div>`
+                ? `<div class="tp-rdnote">Redraft portfolio — your players, priced on rest-of-season value.</div>`
                 : `<div class="pk-delta ${dCls}">${dArrow} ${fmt(Math.abs(built.wkD))} (${built.wkPct > 0 ? "+" : built.wkPct < 0 ? "−" : ""}${Math.abs(built.wkPct).toFixed(1)}%) this week</div>`}
             </div>
             <div class="tp-side">${selHtml}</div>
