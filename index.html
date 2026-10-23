@@ -632,6 +632,18 @@
       .verdict-assets li { margin-bottom: 4px; font-size: 14px; }
       .v-started { font-size: 12.5px; color: var(--ink-3); font-weight: 500; }
       .v-core { margin-top: 12px; }
+      /* in-depth analysis: everything under the fairness meter, folded away until asked for */
+      .verdict-more { margin-top: 16px; border-top: 1px solid var(--line); }
+      .verdict-more > summary {
+        cursor: pointer; list-style: none; padding: 13px 2px 2px;
+        font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 13.5px;
+        letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-2);
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      }
+      .verdict-more > summary::-webkit-details-marker { display: none; }
+      .verdict-more > summary::after { content: "+"; color: var(--accent); font-size: 19px; font-weight: 700; line-height: 1; }
+      .verdict-more[open ] > summary { color: var(--ink); }
+      .verdict-more[open ] > summary::after { content: "–"; }
 
       /* ---------- the receipt (values trust strip) ---------- */
       .receipt {
@@ -2639,8 +2651,8 @@
           <span class="share-note" id="share-note" role="status" aria-live="polite"></span>
         </div>
         <div class="shared-flag" id="shared-flag">Opened from a shared link — this exact trade was restored from the URL, and the verdict below is computed from the current values.</div>
-        <div class="verdict" id="verdict"></div>
         <div id="balancer"></div>
+        <div class="verdict" id="verdict"></div>
         <div id="rt-calc-strip" hidden></div>
         <div id="rt-offer" hidden></div>
         <details class="how-box">
@@ -4846,6 +4858,8 @@ ${rdP ? "" : `
             <div class="fm-hint">Add or remove players to move the marker — green is the target zone.</div>
           </div>`;
           })()}
+          <details class="verdict-more">
+          <summary>See in-depth analysis</summary>
           <div style="display:flex;justify-content:space-between;font-weight:600">
             <span>${esc(nameA)} sends ${fmt(a)}</span><span>${esc(nameB)} sends ${fmt(b)}</span>
           </div>
@@ -4864,9 +4878,12 @@ ${rdP ? "" : `
             <div><h4>Fit for ${esc(nameB)}</h4><ul>${notesB.map(noteHtml).join("")}</ul></div>
           </div>
           ${window.SeasonSim ? window.SeasonSim.calcImpactHtml() : ""}
-          <div class="share-row"><button type="button" class="share-btn" id="share-verdict">Share verdict as image</button></div>`;
+          <div class="share-row"><button type="button" class="share-btn" id="share-verdict">Share verdict as image</button></div>
+          </details>`;
         const sv = document.getElementById("share-verdict");
         if (sv) sv.addEventListener("click", () => { if (typeof window.shareVerdictImage === "function") window.shareVerdictImage(); });
+        const vm = el.querySelector(".verdict-more");
+        if (vm) vm.addEventListener("toggle", () => { const s = vm.querySelector("summary"); if (s) s.textContent = vm.open ? "Hide in-depth analysis" : "See in-depth analysis"; });
       }
       renderSide("A"); renderSide("B"); renderVerdict();
       /* Guest mode: the league switcher (final script) flips
@@ -12963,7 +12980,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
 <script>
       "use strict";
       /* ================= Four-feature batch (Eric, Oct 21–22, 2026) =================
-         1) Offer Balancer under the trade calculator's verdict.
+         1) Offer Balancer above the trade calculator's verdict (moved up Oct 23, 2026; the verdict's in-depth analysis folds into a "See in-depth analysis" details region under the fairness meter).
          2) Pick price history helpers (the standalone Pick Portfolio
             tab was retired Oct 22, 2026 — Team Portfolio covers picks).
          3) Multi-League Command Center — Spotlight layout (Oct 22, 2026).
@@ -12980,7 +12997,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
       function ff4PP(x) { const v = Math.round(x * 100); return (v > 0 ? "+" : "") + v + " pp"; }
 
       /* ================= FEATURE 1 — Offer Balancer =================
-         Lives in its own mount under #verdict and re-renders whenever
+         Lives in its own mount above #verdict and re-renders whenever
          the verdict does (MutationObserver — the same pattern the
          Real Trades calculator strip uses). The gap it balances is
          the gap between the two sides' trade values exactly as the
