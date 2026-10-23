@@ -6614,7 +6614,13 @@ ${rdP ? "" : `
            baked points-allowed table (window.NFLDEF: points allowed
            per game to each position, Weeks 1-5, this league's
            scoring; rank 1 = softest). A team's rating is the mean
-           softness of its starter-weeks across the three games, 0-100. */
+           softness of its starter-weeks across the three games, 0-100.
+           DISPLAY (Eric, Oct 23): the rating is shown as a difficulty
+           out of 10 — higher = HARDER — via the DIFF_ANCHORS map in
+           playoffSection(); the old band edges (43/47/53/57) anchor
+           the map so the old labels' semantics carry over (old
+           "Brutal" lands at 7-10, old "Soft path" at 0-3) and team
+           ordering never changes. */
         function playoffSection() {
           const DEF = window.NFLDEF, PO = window.NFLPO;
           if (!DEF || !PO || !DATA.teams.length) return "";
@@ -6629,13 +6635,32 @@ ${rdP ? "" : `
             });
             return cells;
           };
-          const label = s => s >= 57 ? "Soft path" : s >= 53 ? "Favorable" : s >= 47 ? "Neutral" : s >= 43 ? "Tough" : "Brutal";
+          /* Difficulty display (Eric, Oct 23): the internal rating
+             above runs 0-100 with HIGHER = SOFTER, which reads
+             backwards as a "difficulty". Convert it to a difficulty
+             out of 10 (higher = harder) with a monotone piecewise map
+             anchored on the old label band edges — 57 (Soft path)
+             lands at the easy end, 43/40 (Tough/Brutal) land in
+             Tough/Impossible territory — so team ordering and the old
+             labels' semantics carry over. */
+          const DIFF_ANCHORS = [[30, 10], [40, 9], [43, 8], [47, 6], [53, 3.4], [57, 2.2], [62, 1], [68, 0]];
+          const diffOf = s => {
+            if (s <= DIFF_ANCHORS[0][0]) return 10;
+            for (let i = 1; i < DIFF_ANCHORS.length; i++) {
+              if (s <= DIFF_ANCHORS[i][0]) {
+                const [x0, y0] = DIFF_ANCHORS[i - 1], [x1, y1] = DIFF_ANCHORS[i];
+                return Math.round(y0 + (y1 - y0) * (s - x0) / (x1 - x0));
+              }
+            }
+            return 0;
+          };
+          const label = d => d <= 3 ? "Favorable schedule" : d <= 6 ? "Neutral schedule" : d <= 8 ? "Tough schedule" : "Impossible schedule";
           const rows = DATA.teams.map(t => {
             const cells = cellsOf(t);
             const score = cells.length ? Math.round(100 * cells.reduce((s, c) => s + c.soft, 0) / cells.length) : null;
             const softest = cells.slice().sort((a, b) => a.rank - b.rank)[0];
             const toughest = cells.slice().sort((a, b) => b.rank - a.rank)[0];
-            return { t, cells, score, softest, toughest };
+            return { t, cells, score, diff: score == null ? null : diffOf(score), softest, toughest };
           }).filter(r => r.score != null).sort((a, b) => b.score - a.score);
           if (!rows.length) return "";
           const ord = n => n === 1 ? "softest" : n === 2 ? "2nd-softest" : n === 3 ? "3rd-softest" : `#${n}-softest`;
@@ -6661,19 +6686,19 @@ ${rdP ? "" : `
           const table = rows.map((r, i) => `<tr${r.t.isUser ? ' class="mine-row"' : ""}>
             <td>${i + 1}</td>
             <td><span class="p-name">${esc(r.t.name)}</span>${r.t.isUser ? ' <span class="you-tag">Your team</span>' : ""}<div class="p-sub">${esc(r.t.record)}</div></td>
-            <td><b>${r.score}</b> · ${label(r.score)}</td>
+            <td><b>${r.diff}/10</b> · ${label(r.diff)}</td>
             <td>${cellTxt(r.softest)}<div class="p-sub">allows ${r.softest ? r.softest.ppg.toFixed(1) : "—"}/g</div></td>
             <td>${cellTxt(r.toughest)}<div class="p-sub">allows ${r.toughest ? r.toughest.ppg.toFixed(1) : "—"}/g</div></td>
           </tr>`).join("");
           return `<div class="team-card playoff-card">
             <h3 style="font-size:20px">Playoff schedule difficulty — Weeks 15–17</h3>
             ${(() => { const ps = playoffStartWeek(); return (ps && ps !== 15) ? `<p class="expl"><strong>Playoff-window note:</strong> this league's fantasy playoffs start in <strong>Week ${ps}</strong>, not Week 15 — so its real championship path runs ${ps < 15 ? "a week earlier" : "a week later"} than the window graded below. The grades use the Weeks 15–17 NFL schedule (the window the underlying data covers); read them as the December path, shifted by that week.</p>` : ""; })()}
-            <p class="expl">The fantasy bracket isn't set yet, but the NFL half of it is. Every team's projected starters are graded against the defenses they'll actually face in Weeks 15–17 — defenses ranked by fantasy points allowed per game to each position (this season's results, in the snapshot's scoring). 100 is the softest possible path, 0 the hardest. A brutal path at your strongest position is a reason to deal before the deadline; a soft one argues for buying.</p>
+            <p class="expl">The fantasy bracket isn't set yet, but the NFL half of it is. Every team's projected starters are graded against the defenses they'll actually face in Weeks 15–17 — defenses ranked by fantasy points allowed per game to each position (this season's results, in the snapshot's scoring). Difficulty runs 0–10: 0 is the softest possible path, 10 the hardest. A tough path at your strongest position is a reason to deal before the deadline; a soft one argues for buying.</p>
             ${mine ? `<div class="playoff-mine">
-              <div class="po-score"><div class="bs-num">${mine.score}</div><div class="bs-lbl">${label(mine.score)} — your playoff path</div></div>
+              <div class="po-score"><div class="bs-num">${mine.diff}/10</div><div class="bs-lbl">${label(mine.diff)} — your playoff path</div></div>
               <ul class="po-insights">${insights(mine).map(s => `<li>${s}</li>`).join("") || "<li>No extreme matchups on your path — it's the strength of your lineup, not the schedule, that decides your December.</li>"}</ul>
             </div>
-            ${mine.score < 47 ? `<p class="expl">That's a below-average path — if you're buying, buy the positions this schedule picks on; if you're on the fence about selling a starter with a December gauntlet, this is the case for it.</p>` : mine.score >= 53 ? `<p class="expl">That's a better-than-average path — your starters' December matchups do some of the work for you, which strengthens the case for a win-now move.</p>` : ""}` : ""}
+            ${mine.diff >= 7 ? `<p class="expl">That's a below-average path — if you're buying, buy the positions this schedule picks on; if you're on the fence about selling a starter with a December gauntlet, this is the case for it.</p>` : mine.diff <= 3 ? `<p class="expl">That's a better-than-average path — your starters' December matchups do some of the work for you, which strengthens the case for a win-now move.</p>` : ""}` : ""}
             <div class="po-scroll"><table class="mini po-table"><thead><tr><th>#</th><th>Team</th><th>Difficulty</th><th>Softest starter matchup</th><th>Toughest starter matchup</th></tr></thead><tbody>${table}</tbody></table></div>
           </div>`;
         }
