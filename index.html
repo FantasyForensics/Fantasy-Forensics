@@ -5519,12 +5519,12 @@ ${rdP ? "" : `
         const list = arr => arr.slice(0, 2).map(tag).join(" and ");
         if (read.surplus.length && read.needs.length) {
           return swapCount
-            ? `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> but <strong>thin at ${list(read.needs)}</strong> by projected starter points. The <strong>positional swaps</strong> up top flip surplus depth into the thin spot — one-for-one, value-matched — and the standard win-now buys follow below.`
-            : `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> but <strong>thin at ${list(read.needs)}</strong> by projected starter points — but no value-matched one-for-one swap also cleared the lineup check, so the ideas below are the standard win-now buys.`;
+            ? `Positional read: your roster is <strong>stacked at ${list(read.surplus)}</strong> but <strong>thin at ${list(read.needs)}</strong> by projected starter points. The <strong>positional swaps</strong> up top flip surplus depth into the thin spot — one-for-one, value-matched — and the standard win-now buys follow below.`
+            : `Positional read: your roster is <strong>stacked at ${list(read.surplus)}</strong> but <strong>thin at ${list(read.needs)}</strong> by projected starter points — but no value-matched one-for-one swap also cleared the lineup check, so the ideas below are the standard win-now buys.`;
         }
-        if (read.surplus.length) return `Positional read: this roster is <strong>stacked at ${list(read.surplus)}</strong> by projected starter points, but no position is thin enough to demand a fix — so the ideas below are the standard win-now buys, not forced swaps.`;
-        if (read.needs.length) return `Positional read: this roster is <strong>thin at ${list(read.needs)}</strong> by projected starter points, but no position is deep enough to pay for the fix out of surplus — the ideas below are the standard win-now buys.`;
-        return `Positional read: this roster is <strong>balanced</strong> — no position sits clearly above or below the league in projected starter points, so there's no surplus to flip. The ideas below are the standard win-now buys.`;
+        if (read.surplus.length) return `Positional read: your roster is <strong>stacked at ${list(read.surplus)}</strong> by projected starter points, but no position is thin enough to demand a fix — so the ideas below are the standard win-now buys, not forced swaps.`;
+        if (read.needs.length) return `Positional read: your roster is <strong>thin at ${list(read.needs)}</strong> by projected starter points, but no position is deep enough to pay for the fix out of surplus — the ideas below are the standard win-now buys.`;
+        return `Positional read: your roster is <strong>balanced</strong> — no position sits clearly above or below the league in projected starter points, so there's no surplus to flip. The ideas below are the standard win-now buys.`;
       }
 
       /* The calculator's fairness meter, applied to a finder offer:
@@ -5664,10 +5664,10 @@ ${rdP ? "" : `
         let strat = mine.arch === "win-now"
           ? `Window strategy: <strong>buy production</strong>. Every idea below sends picks, prospects or bench depth out and brings a player in — and each was checked against the rest-of-season projections: from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown. You never take a pick back, and you never send out a starter.`
           : mine.arch === "dynasty"
-            ? `Window strategy: <strong>buy only clear upgrades</strong>. This core is young and already contending, so the bar sits higher than a win-now team's: a deal must add at least <strong>+3.0 projected pts/week</strong> to your optimal lineup — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline — and the price stays pick-led, so the young starters who make this a dynasty never get stripped for a marginal gain. If nothing clears that bar, nothing shows.`
+            ? `Window strategy: <strong>buy only clear upgrades</strong>. Your core is young and already contending, so the bar sits higher than a win-now team's: a deal must add at least <strong>+3.0 projected pts/week</strong> to your optimal lineup — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline — and the price stays pick-led, so the young starters who make this a dynasty never get stripped for a marginal gain. If nothing clears that bar, nothing shows.`
           : mine.arch === "rebuilder"
             ? `Window strategy: <strong>sell veterans</strong>. Every idea below converts a veteran starter into picks and players 24 or younger at full value or better, with contenders shopped first. The cost in this season's projected pts/week — from a <strong>${Math.round(basePpg)}</strong> baseline — is printed on each deal, because that's the trade being made on purpose.`
-            : `Window strategy: <strong>your call</strong>. This roster sits between windows at a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline — close enough to contend, old enough to reset. So you get a <strong>choice, not a blend</strong>: two labeled paths below, <em>Go Win-Now ⏳</em> and <em>Go Rebuilder 🔨</em>. Pick a direction, and every deal on that path is held to that window's rules.`;
+            : `Window strategy: <strong>your call</strong>. Your roster sits between windows at a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline — close enough to contend, old enough to reset. So you get a <strong>choice, not a blend</strong>: two labeled paths below, <em>Go Win-Now ⏳</em> and <em>Go Rebuilder 🔨</em>. Pick a direction, and every deal on that path is held to that window's rules.`;
         if (VALMODE === "redraft") strat = `Window strategy: <strong>win now — the only window there is</strong>. This is a redraft league, so every idea below is a buy: bench depth goes out, a producer comes in, and each was checked against the rest-of-season projections — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown. No draft picks change hands; picks don't exist in redraft.`;
         const standing = (() => {
           if (VALMODE === "redraft") return "";
@@ -5683,9 +5683,9 @@ ${rdP ? "" : `
           <p>${VALMODE === "redraft" ? "" : `Tagged <strong>${archTag(mine.arch)}</strong>. `}${strat}${want ? ` Targeting: <strong>${esc(wantName)}</strong>.` : ""}</p>${standing}${posNote ? `<p>${posNote}</p>` : ""}</div>`;
         if (!suggestions.length) {
           const why = VALMODE === "redraft"
-            ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every producer who would raise this lineup either can't be priced fairly with this team's bench depth, or the deal would cost a starter to make the values balance. Try another position, or build the deal by hand in the calculator.`
+            ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every producer who would raise this lineup either can't be priced fairly with your bench depth, or the deal would cost a starter to make the values balance. Try another position, or build the deal by hand in the calculator.`
             : mine.arch === "win-now"
-            ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every available producer who would raise this lineup either plays for another contender — not a window fit — or can't be priced fairly with this team's picks and depth. Try another position, or build the deal by hand in the calculator.`
+            ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every available producer who would raise this lineup either plays for another contender — not a window fit — or can't be priced fairly with your picks and depth. Try another position, or build the deal by hand in the calculator.`
             : mine.arch === "dynasty"
               ? `No buy cleared the Dynasty bar${want ? ` at ${esc(wantName)}` : ""}: this core only trades for clear upgrades — at least +3.0 projected pts/week, paid for with draft capital — and no available producer met it at a fair price today. That is the strategy working as designed; build the deal by hand in the calculator if you see one we don't.`
             : mine.arch === "rebuilder"
@@ -5776,10 +5776,10 @@ ${rdP ? "" : `
           } else {
             const v = s.vet;
             windowLine = mine.arch === "rebuilder"
-              ? `<span class="dir-tag sell">Rebuilder sell</span>Rebuilder move: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season — production this roster isn't contending with, converted into picks and youth.`
+              ? `<span class="dir-tag sell">Rebuilder sell</span>Rebuilder move: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season — production your roster isn't contending with, converted into picks and youth.`
               : `<span class="dir-tag sell">Rebuild move</span>Sells a veteran for the future: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season.`;
             why.push(`${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be paying future capital for production now.`);
-            why.push(`${esc(v.name)} (age ${v.age ?? "—"}) still produces — ${rosProj(v).toFixed(1)} projected pts/wk — but his value peaks before this roster's window opens. The return is all picks and players 24 or younger.`);
+            why.push(`${esc(v.name)} (age ${v.age ?? "—"}) still produces — ${rosProj(v).toFixed(1)} projected pts/wk — but his value peaks before your roster's window opens. The return is all picks and players 24 or younger.`);
             why.push(s.dPpg >= -0.05
               ? `It barely touches this season: your optimal lineup holds at ~${Math.round(s.basePpg + s.dPpg)} projected pts/week without him.`
               : `The honest cost: your optimal lineup drops ${Math.round(s.basePpg)} → ${Math.round(s.basePpg + s.dPpg)} projected pts/week this season. That's the rebuild trade — future value up, this year down.`);
@@ -5807,7 +5807,7 @@ ${rdP ? "" : `
           const buys = suggestions.filter(s => s.dir === "buy");
           const sells = suggestions.filter(s => s.dir === "sell");
           html += `<h3 class="path-head">Go Win-Now ⏳</h3><p class="path-desc">Chase this season: production comes in, picks and youth go out — every deal below raises your projected points per week.</p>`;
-          html += buys.length ? buys.map(cardFor).join("") : `<div class="diag"><p>No win-now buy cleared the bar right now — every producer who would raise this lineup either plays for another contender, or can't be priced fairly with this team's picks and depth.</p></div>`;
+          html += buys.length ? buys.map(cardFor).join("") : `<div class="diag"><p>No win-now buy cleared the bar right now — every producer who would raise this lineup either plays for another contender, or can't be priced fairly with your picks and depth.</p></div>`;
           html += `<h3 class="path-head">Go Rebuilder 🔨</h3><p class="path-desc">Play for next year: your aging veterans go to contenders, and picks and young players come back — this season gets worse on purpose.</p>`;
           html += sells.length ? sells.map(cardFor).join("") : `<div class="diag"><p>No rebuild sell cleared the bar right now — no contender can pay full value for your veterans in picks and youth today.</p></div>`;
         } else {
@@ -6692,7 +6692,7 @@ ${rdP ? "" : `
               ? `Playoff berth clinched — mathematically locked in, no matter how the rest of the season breaks. ${titlePct(r)} to win it all — projected lineup #${meanRank[t.rid]} of ${DATA.teams.length} the rest of the way.`
               : r.elim
                 ? `${oddsPct(r.playoff)} to make the playoffs, ${oddsPct(r.champ)} to win it all — projected lineup #${meanRank[t.rid]} of ${DATA.teams.length} the rest of the way.`
-                : `${oddsPct(r.playoff)} to make the playoffs — and if they get in, ${titlePct(r)} to win it all (${oddsPct(r.champ)} overall) — projected lineup #${meanRank[t.rid]} of ${DATA.teams.length} the rest of the way.`;
+                : `${oddsPct(r.playoff)} to make the playoffs — and if ${t.isUser ? "you" : "they"} get in, ${titlePct(r)} to win it all (${oddsPct(r.champ)} overall) — projected lineup #${meanRank[t.rid]} of ${DATA.teams.length} the rest of the way.`;
             if (r.champ >= 0.2) s += " A championship favorite — one of the teams the title runs through.";
             else if (r.clinched) s += " The only question left is seeding — and the first-round bye that comes with it.";
             else if (r.playoff >= 0.9) s += " A near-lock for the postseason; the title race is where the variance lives.";
@@ -7110,13 +7110,13 @@ ${rdP ? "" : `
         const dropBadge = dropDrops > 0
           ? ` <span class="sig fall">safely droppable — trending down nationally</span>` : "";
         let html = `<div class="diag"><h3>${esc(team.name)} — the bar a pickup has to clear</h3>
-          <p>By rest-of-season projection, a pickup starts for this team only if he beats: ${barTxt} pts/wk.</p>
+          <p>By rest-of-season projection, a pickup starts for your team only if he beats: ${barTxt} pts/wk.</p>
           <p>${startable.length
             ? `<strong>${startable.length} player${startable.length === 1 ? "" : "s"}</strong> on the wire clear${startable.length === 1 ? "s" : ""} that bar right now — they're the must-adds below.`
             : (typeof VALMODE !== "undefined" && VALMODE === "redraft")
-              ? `Nobody on the wire clears that bar for this team this week — the wire's value here is depth, not starts, and the list below is ranked accordingly.`
-              : `Nobody on the wire clears that bar for this team this week — the wire's value here is stash value, not starts, and the stash list below is ranked accordingly.`}</p>
-          ${drop ? `<p>Easiest roster spot to open: <strong>${esc(drop.name)}</strong>${dropBadge} (${drop.pos}, ${typeof VALMODE !== "undefined" && VALMODE === "redraft" ? "redraft" : "dynasty"} value ${fmt(dispVal(drop))}) — this team's lowest-value bench player.${dropDrops > 0 ? ` He's also among the most-dropped players nationally in the last 24h (${dropDrops.toLocaleString()} drops across Sleeper).` : ""}</p>` : ""}
+              ? `Nobody on the wire clears that bar for your team this week — the wire's value here is depth, not starts, and the list below is ranked accordingly.`
+              : `Nobody on the wire clears that bar for your team this week — the wire's value here is stash value, not starts, and the stash list below is ranked accordingly.`}</p>
+          ${drop ? `<p>Easiest roster spot to open: <strong>${esc(drop.name)}</strong>${dropBadge} (${drop.pos}, ${typeof VALMODE !== "undefined" && VALMODE === "redraft" ? "redraft" : "dynasty"} value ${fmt(dispVal(drop))}) — your lowest-value bench player.${dropDrops > 0 ? ` He's also among the most-dropped players nationally in the last 24h (${dropDrops.toLocaleString()} drops across Sleeper).` : ""}</p>` : ""}
         </div>`;
 
         const row = m => {
@@ -7147,13 +7147,13 @@ ${rdP ? "" : `
           return `<div class="wv-card"><h3>${title}</h3><p class="wv-sub">${sub}</p>${l.map(m => row(m)).join("")}</div>`;
         };
         html += section("Startable now — must-adds",
-          "Projects to outscore the weakest starter in this team's best-ball lineup at his position. In a league this deep, this list is empty most weeks — when it isn't, move fast.",
+          "Projects to outscore the weakest starter in your best-ball lineup at his position. In a league this deep, this list is empty most weeks — when it isn't, move fast.",
           startable);
         html += section("Stash targets",
           "Age 24 or younger with a rising role — or no 2026 snaps yet, where the bet is the depth chart. Ranked by dynasty value; these are next month's starters, not this week's.",
           stash);
         html += section("Best of the rest",
-          "Everyone else on the wire, ranked by projected points per week, boosted where a player sits close to this team's bar at his position.",
+          "Everyone else on the wire, ranked by projected points per week, boosted where a player sits close to your bar at his position.",
           rest);
         /* Streaming: one-week fill-ins, ranked by this week's matchup-aware
            projection (wkProj — ESPN/Rotowire weekly projections, already
@@ -7178,7 +7178,7 @@ ${rdP ? "" : `
           const top = cand.slice(0, 8);
           if (!top.length) return punt;
           const wk = typeof window.ESPN_WK !== "undefined" ? window.ESPN_WK : "";
-          const sub = `One-week fill-ins at this team's weakest spots (${weakOrder.slice(0, 2).join(" / ")}), ranked by projected Week ${wk} points — matchup-aware weekly projections, not rest-of-season value. Grab one for a bye or an injury, then put them back.`;
+          const sub = `One-week fill-ins at your weakest spots (${weakOrder.slice(0, 2).join(" / ")}), ranked by projected Week ${wk} points — matchup-aware weekly projections, not rest-of-season value. Grab one for a bye or an injury, then put them back.`;
           const rows = (waiverState.pos === "ALL" ? top : top.filter(e => e.p.pos === waiverState.pos)).map(({ p, wk: w }) => {
             const matchTxt = w.sos ? ` · ${w.sos.pct > 0 ? "soft" : "tough"} matchup ${w.sos.pct > 0 ? "+" : "−"}${Math.abs(w.sos.pct)}% vs ${esc(w.sos.opp)}` : "";
             return `<div class="wv-row">
@@ -7627,7 +7627,7 @@ ${rdP ? "" : `
               byeHtml = `<div class="mv-card"><h3>Bye-week planner — ${esc(team.name)} full roster</h3>
                 <p class="wv-sub">Every rostered player's NFL bye at a glance — the best lineup first, then the bench you'd cover with. Gold cells are future byes to plan around${VW >= 5 && VW <= 14 ? `; the highlighted column is ${isNext ? `Week ${VW}` : "this week"}` : ""}; a faded BYE is already behind you.</p>
                 <table class="bye-grid"><thead><tr><th class="bye-name">Player</th>${wks.map(w => `<th${w === VW ? ' class="wk-now"' : ""}>${w}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table>
-                ${crunch.length ? `<p class="expl" style="margin-top:10px">${crunch.map(c => `<strong>Week ${c.w} crunch:</strong> ${c.out.length} starters on bye — ${c.out.map(r => esc(r.p.name)).join(", ")}. Line up cover before the wire gets picked over.`).join("<br>")}</p>` : `<p class="expl" style="margin-top:10px">No future week takes out more than one starter from the best lineup — this roster's byes are spread kindly.</p>`}
+                ${crunch.length ? `<p class="expl" style="margin-top:10px">${crunch.map(c => `<strong>Week ${c.w} crunch:</strong> ${c.out.length} starters on bye — ${c.out.map(r => esc(r.p.name)).join(", ")}. Line up cover before the wire gets picked over.`).join("<br>")}</p>` : `<p class="expl" style="margin-top:10px">No future week takes out more than one starter from the best lineup — your byes are spread kindly.</p>`}
               </div>`;
             }
           }
@@ -7818,7 +7818,7 @@ ${rdP ? "" : `
             ${swings.join("") || '<p class="expl">No close calls — the optimal lineup wins every slot comfortably.</p>'}
           </article>`;
         } else {
-          matchHtml = `<div class="diag"><h3>Week ${LU_WEEK} matchup</h3><p>No opponent pairing is published for this team in the snapshot, so there is no honest preview to show — the optimizer above still applies.</p></div>`;
+          matchHtml = `<div class="diag"><h3>Week ${LU_WEEK} matchup</h3><p>No opponent pairing is published for your team in the snapshot, so there is no honest preview to show — the optimizer above still applies.</p></div>`;
         }
 
 
@@ -11379,7 +11379,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
                 <div class="odds-rank">${i + 1}</div>
                 <div class="odds-main"><div class="odds-title"><span class="odds-kind">${m.kind}</span>${esc(m.title)}</div><div class="odds-sub">${esc(m.sub)}</div></div>
                 <div class="odds-delta">+${(m.dChamp * 100).toFixed(1)}%<small>overall title odds</small></div>
-              </div>`).join("") : `<p class="odds-none">No move on the board raises this team's title odds right now — the set lineup is already the optimal one, nobody on the wire clears the bar, and no trade that helps this season prices fairly. Standing pat is the move.</p>`}
+              </div>`).join("") : `<p class="odds-none">No move on the board raises your title odds right now — the set lineup is already the optimal one, nobody on the wire clears the bar, and no trade that helps this season prices fairly. Standing pat is the move.</p>`}
           </div>`;
       };
 
@@ -12808,8 +12808,8 @@ function gradeMock(){
   sw.push('<li>Best pick: <b>'+esc(mine.best.name)+'</b> at '+mine.best.slot+' — <span class="steal">'+Math.round((mine.best.ratio - 1) * 100)+'% over slot value</span>.</li>');  sw.push('<li>Biggest reach: <b>'+esc(mine.worst.name)+'</b> at '+mine.worst.slot+" — "+(mine.worst.ratio >= 1
     ? '<span class="steal">'+Math.round((mine.worst.ratio - 1) * 100)+'% over</span>'
     : '<span class="reach">'+Math.round((1 - mine.worst.ratio) * 100)+'% under slot value</span>')+".</li>");
-  if(lineupHole > 0 && mine.capped) sw.unshift("<li><b>Grade capped at C+</b> — this roster leaves "+lineupHole+" starting slot"+(lineupHole > 1 ? "s" : "")+" unfilled, so it can't actually take the field as drafted. Value hoarded at one position doesn't start on Sunday.</li>");
-  else if(lineupHole > 0) sw.unshift("<li><b>Unfinished lineup</b> — this roster leaves "+lineupHole+" starting slot"+(lineupHole > 1 ? "s" : "")+" unfilled, so it can't actually take the field as drafted. Value hoarded at one position doesn't start on Sunday.</li>");
+  if(lineupHole > 0 && mine.capped) sw.unshift("<li><b>Grade capped at C+</b> — your roster leaves "+lineupHole+" starting slot"+(lineupHole > 1 ? "s" : "")+" unfilled, so it can't actually take the field as drafted. Value hoarded at one position doesn't start on Sunday.</li>");
+  else if(lineupHole > 0) sw.unshift("<li><b>Unfinished lineup</b> — your roster leaves "+lineupHole+" starting slot"+(lineupHole > 1 ? "s" : "")+" unfilled, so it can't actually take the field as drafted. Value hoarded at one position doesn't start on Sunday.</li>");
   const gCls = g => g[0] === "A" ? "gA" : g[0] === "B" ? "gB" : g[0] === "C" ? "gC" : "gD";
   $("#mockResults").innerHTML =
     '<div class="card glow" style="margin-bottom:14px"><div style="display:flex; align-items:center; gap:14px"><div class="grade '+gCls(mine.g)+'" style="width:72px; height:72px; font-size:34px">'+mine.g+"</div>"
@@ -13383,8 +13383,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const lines = [];
         if (d.noSim) lines.push(`<div class="cc-line">Playoff odds need the full-field season sim, which runs on a complete league table — open the league for its full picture.</div>`);
         else if (d.fmtValid === false) lines.push(`<div class="cc-line">This league's playoff format couldn't be read from its settings, so there's no magic number or swing game here — the odds ring still comes from the season sim.</div>`);
-        else if (d.magic && d.magic.locked) lines.push(`<div class="cc-line"><b>Playoff spot locked up.</b> No magic number needed — the sim puts this team in every time.</div>`);
-        else if (d.magic) lines.push(`<div class="cc-line"><b>Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"}</b> — ${d.magic.capped ? `even winning out tops out at ~${oddsPct(d.magic.pct)} playoff odds` : `that takes playoff odds to ~${oddsPct(d.magic.pct)}`} if the other games go to the favorites.</div>`);
+        else if (d.magic && d.magic.locked) lines.push(`<div class="cc-line"><b>Playoff spot locked up.</b> No magic number needed — the sim puts you in every time.</div>`);
+        else if (d.magic) lines.push(`<div class="cc-line"><b>Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"}</b> — ${d.magic.capped ? `even winning out, your playoff odds top out at ~${oddsPct(d.magic.pct)}` : `that takes your playoff odds to ~${oddsPct(d.magic.pct)}`} if the other games go to the favorites.</div>`);
         if (d.swing) lines.push(`<div class="cc-line"><b>Biggest swing game:</b> ${esc(d.swing.aName)} vs ${esc(d.swing.bName)} — if ${esc(d.swing.dogName)} wins instead, your odds move <span class="cc-delta">${ff4PP(d.swing.d)}</span>.</div>`);
         else if (d.fmtValid && d.noPairs) lines.push(`<div class="cc-line">No matchup pairings are published for this league this week, so there's no swing game to call.</div>`);
         if (d.status) lines.push(`<div class="cc-line">${esc(d.status)}</div>`);
@@ -13543,10 +13543,12 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         /* Magic number from the (scenario) outcome distribution. */
         let magicHtml = "";
         if (scenTable && scenTable.length) {
+          const selT = ff4Team(rid);
+          const subj = selT && selT.isUser ? "you" : (selT ? esc(selT.name) : "them");
           const rows = scenTable.filter(r => r.n >= 20 && r.poRate != null);
           const hit = rows.find(r => r.poRate >= 0.90);
-          if (hit) magicHtml = `<div class="pp-magic"><span>Magic number</span><b>${hit.addWins} more win${hit.addWins === 1 ? "" : "s"} puts them at ~${oddsPct(hit.poRate)}</b></div>`;
-          else if (rows.length) { const mx = rows[rows.length - 1]; magicHtml = `<div class="pp-magic"><span>Magic number</span><b>No win total reaches 90% — winning out (${mx.addWins} more) tops out at ~${oddsPct(mx.poRate)}</b></div>`; }
+          if (hit) magicHtml = `<div class="pp-magic"><span>Magic number</span><b>${hit.addWins} more win${hit.addWins === 1 ? "" : "s"} puts ${subj} at ~${oddsPct(hit.poRate)}</b></div>`;
+          else if (rows.length) { const mx = rows[rows.length - 1]; magicHtml = `<div class="pp-magic"><span>Magic number</span><b>No win total gets ${subj} to 90% — winning out (${mx.addWins} more) tops out at ~${oddsPct(mx.poRate)}</b></div>`; }
         }
         const fmtBits = [`${fmt.teams} playoff teams`, `starts Week ${fmt.start}`, fmt.byes > 0 ? `top ${fmt.byes} seed${fmt.byes === 1 ? "" : "s"} get a bye` : "no byes", `round type ${fmt.roundType}`, `seed type ${fmt.seedType}`, fmt.avgMatch ? "median game on" : "median game off", fmt.divisions ? `${fmt.divisions} divisions` : "no divisions"];
         mount.innerHTML = `<div class="pp-box">
@@ -13965,7 +13967,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           </table></div>
           <p class="tp-foot">${rd
             ? "Redraft prices are rest-of-season only and re-set with each weekly update, so no weekly move is shown; each row's sparkline is the player's dynasty value history — the same one his player panel shows."
-            : `Prices are the board's own — the same values and weekly snapshots behind Player Values and the Risers &amp; Fallers board. The trend line prices today's roster at each past snapshot, so it tracks what this group of players was worth week to week, not the roster this team actually held then.${built.pickSteps ? "" : " Picks count in the total at today's prices and sit flat in the weekly change — weekly pick price history starts with the current snapshot, and pick movement joins the weekly change as new readings land."}`}</p>
+            : `Prices are the board's own — the same values and weekly snapshots behind Player Values and the Risers &amp; Fallers board. The trend line prices today's roster at each past snapshot, so it tracks what this group of players was worth week to week, ${team.isUser && !team.demo ? "not the roster you actually held then" : "not the roster this team actually held then"}.${built.pickSteps ? "" : " Picks count in the total at today's prices and sit flat in the weekly change — weekly pick price history starts with the current snapshot, and pick movement joins the weekly change as new readings land."}`}</p>
         </div>`;
         const sel = document.getElementById("tp-team-sel");
         if (sel) sel.addEventListener("change", () => { tpState.rid = sel.value; tpState.ctx = tpCtxKey(); tpRender(); });
