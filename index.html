@@ -652,8 +652,7 @@
       .verdict-more[open ] > summary::after { content: "–"; }
 
       /* ---------- the receipt: REMOVED 2026-10-23 (Eric) — the trust
-         strip's claims predated the current engine; the scorecard
-         itself lives on in How Values Work. ---------- */
+         strip's claims predated the current engine. ---------- */
 
       /* ---------- the wire (news ticker) ---------- */
       .ticker {
@@ -1152,11 +1151,6 @@
       .lu-delta.up { color: var(--accent); }
       .lu-delta.dn { color: var(--red); }
       .lu-total td { font-weight: 700; border-top: 2px solid var(--line); }
-      table.acc-trades { table-layout: fixed; width: 100%; }
-      table.acc-trades td, table.acc-trades th { overflow-wrap: anywhere; }
-      table.acc-trades th:nth-child(1), table.acc-trades td:nth-child(1) { width: 11%; }
-      table.acc-trades th:nth-child(2), table.acc-trades td:nth-child(2) { width: 30%; }
-      table.acc-trades th:nth-child(3), table.acc-trades td:nth-child(3) { width: 30%; }
       .vs-names { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
       .vs-names .team-name { font-size: 21px; }
 
@@ -8192,63 +8186,17 @@ ${rdP ? "" : `
       })();
       renderLineup();
 
-      /* ================= Batch 3: the site grades itself =================
-         The accuracy tracker grades the engine's own trade calls against
-         real completed trades pulled from Sleeper's public transaction
-         histories, on two bases: pre-trade values vs today's values (the
-         B3 set below), and pre-trade projections vs the production the
-         players actually posted the rest of the season (kept as
-         aggregates). Only aggregates and anonymized packages are
-         published — the grades are the point, not whose trades they
-         were. */
+      /* ================= Season phase (How Values Work) =================
+         Appends the seasonal-phase explainer to the methodology body.
+         (The “site grades itself” scorecard that used to ride along
+         here was REMOVED 2026-10-23 on Eric's call — its published track
+         record was earned by the pre-Oct-21 engine. The accuracy bakes
+         stay in the file as measurement-only data.) */
       const accEl = document.getElementById("method-body");
       if (accEl) {
-        const A = B3.tradeAgg, BT = B3.backtest;
-        const A2 = { n: 5, within10: 1, favored: 4, hits: 3, pickOnly: 4 };
-        const GN = A.n + A2.n, GF = A.favored + A2.favored, GH = A.hits + A2.hits;
-        const GW = A.within10 + A2.within10, GP = A.pickOnly + A2.pickOnly;
-        const GRate = GF ? Math.round(GH / GF * 100) : 0;
-        const sideTxt = (label, got, then, now) => `<strong>${label}</strong> got ${got.map(esc).join(" + ") || "—"}<div class="p-sub">${fmt(then)} then → ${fmt(now)} now</div>`;
-        const tradeRows = B3.trades.filter(r => r.players).map(r => {
-          const gapPct = (Math.max(r.ta, r.tb) - Math.min(r.ta, r.tb)) / Math.max(r.ta, r.tb);
-          let call;
-          if (gapPct <= 0.10) {
-            const lead = r.na === r.nb ? "dead even" : `${r.na > r.nb ? "Side A" : "Side B"} ahead by ${fmt(Math.abs(r.na - r.nb))}`;
-            call = `Called even (±10%). Now: ${lead}.`;
-          } else {
-            const favA = r.ta > r.tb;
-            const aheadNow = (r.na > r.nb) === favA;
-            call = `Favored ${favA ? "Side A" : "Side B"} by ${Math.round(gapPct * 100)}% — ${aheadNow ? "still ahead today ✓" : "flipped since ✗"}.`;
-          }
-          if (r.unp > 0) call += ` Excludes ${r.unp} unpriced 2026 startup pick${r.unp === 1 ? "" : "s"}.`;
-          return `<tr><td>Wk ${r.wk}</td><td>${sideTxt("Side A", r.ga, r.ta, r.na)}</td><td>${sideTxt("Side B", r.gb, r.tb, r.nb)}</td><td>${call}</td></tr>`;
-        }).join("");
-        const btRows = BT.weeks.map(w => `<tr><td>Week ${w.wk}</td><td class="num">${w.n}</td><td class="num">${w.mae.toFixed(1)}</td><td class="num">${w.teamMae != null ? w.teamMae.toFixed(1) : "—"}</td><td class="num">${w.teams}/12</td></tr>`).join("");
-        const basisRows = [
-          { basis: "Pre-trade values vs today's values", agg: A },
-          { basis: "Pre-trade projection vs realized rest-of-season production", agg: A2 },
-        ].map(t2 => `<tr><td>${t2.basis}</td><td class="num">${t2.agg.n}</td><td class="num">${t2.agg.favored}</td><td class="num">${t2.agg.hits}</td><td class="num">${t2.agg.favored ? Math.round(t2.agg.hits / t2.agg.favored * 100) + "%" : "—"}</td></tr>`).join("");
         accEl.innerHTML += `
-          <h2>The site grades itself — trade calls</h2>
-          <p>Nobody else in this space publishes their own scorecard, so here is ours. We pulled <strong>complete Sleeper transaction histories</strong> from real dynasty leagues and graded every completed trade that moved at least one player (${GN} of them; the other ${GP} completed deals were startup-draft pick swaps from the leagues' founding drafts — those moved startup picks, which this engine deliberately does not price, so they are excluded rather than graded on a number we don't stand behind). For each deal we compare what our values said <strong>at the time</strong> — the stored value history, end of the week before the trade; Week 1 deals are graded against post–Week 1 values, the earliest the engine stored — with what the same packages are worth <strong>today</strong>. Picks inside a deal are priced at today's algorithm value on both sides, since picks carry no weekly value history. FAAB is not priced.</p>
-          <p><strong>The headline:</strong> in the <strong>${GF} trades where our pre-trade grades favored one side by more than 10%</strong>, that side is still ahead today in <strong>${GH} of ${GF}</strong>. Only <strong>${GW} of ${GN}</strong> deals were within 10% on value at the time — real trades usually aren't value-even, because managers pay for fit, scarcity, and their window. So the fairness rate is not the grade; whether the side we said won actually won is. Small samples, stated plainly. The misses stay in the table.</p>
-          <table class="mini acc-trades"><thead><tr><th>When</th><th>Side A received</th><th>Side B received</th><th>The call, then and now</th></tr></thead><tbody>${tradeRows}</tbody></table>
-          <h2>Two grading bases, one scorecard</h2>
-          <p>Value grades can drift with the market, so the tracker also grades a second set of trades on <strong>production alone</strong>: each package's pre-trade projection against what the players involved actually scored the rest of the season after the deal. Both bases, combined:</p>
-          <table class="mini"><thead><tr><th>Grading basis</th><th class="num">Trades graded</th><th class="num">Favored calls</th><th class="num">Hits</th><th class="num">Hit rate</th></tr></thead><tbody>${basisRows}<tr><td><strong>Combined</strong></td><td class="num"><strong>${GN}</strong></td><td class="num"><strong>${GF}</strong></td><td class="num"><strong>${GH}</strong></td><td class="num"><strong>${GRate}%</strong></td></tr></tbody></table>
-          <h2>The site grades itself — projection accuracy</h2>
-          <p>The projection engine's core is a player's scoring average in the format's exact settings. We backtested that core <strong>out of sample</strong>: for each week, project every starter using only his per-game average from the weeks <em>before</em> it — no current-week information — and compare with what he actually scored. (The live engine combines that average with a single-season prior, which should only help; this table grades the harder, prior-free version.)</p>
-          <table class="mini"><thead><tr><th>Week</th><th class="num">Starters graded</th><th class="num">Mean abs. error (pts)</th><th class="num">Team-total MAE</th><th class="num">Full teams</th></tr></thead><tbody>${btRows}</tbody></table>
-          <p>Across Weeks 2–${LU_WEEK - 1} that is a mean absolute error of <strong>${BT.mae.toFixed(1)} points per starter</strong> (${BT.n} starter-weeks) and <strong>${BT.teamMae.toFixed(1)} points per team total</strong> (${BT.teamN} team-weeks where all eleven starters had a prior game to project from). Week 2 is the worst week because one game of history is nearly noise; by Weeks ${LU_WEEK - 2}–${LU_WEEK - 1} the error settles. A fantasy projection that is off by ~8 points on a player scoring ~12 a week is not a crystal ball — it is a ranking tool, and the honest error bar is why the matchup preview shows a probability, never a lock.</p>
           <h2>Season phase — currently “${SEASON_PHASE}”</h2>
           <p>Values run on one of three seasonal phases, chosen by the calendar, so the site stays right in January the way it is in October. <strong>Regular (Weeks 1–14):</strong> the full model, exactly as documented above. <strong>Playoffs (Weeks 15–17):</strong> in-season form stops moving dynasty values — values move on injury and news only, so two hot playoff weeks can't reprice a career. <strong>Offseason:</strong> prices rest on the algorithm's long-term view of each player; rookie draft picks tend to <em>appreciate</em> from January to the NFL draft, as the incoming class gets scouted and landing spots firm up — and the Season Outlook tab flips to a rookie board for the incoming class. This snapshot (Week ${LU_WEEK}) sits squarely in <strong>regular</strong>.</p>`;
-
-        /* "The Receipt" trust strip REMOVED (Eric, 2026-10-23): the
-           banner's headline claims were earned by the pre-Oct-21
-           engine and went stale when the values changed, so the strip
-           leaves the Values board. The full scorecard above stays in
-           How Values Work, where it is reachable on its own. */
-
       }
     </script>
     <script>
