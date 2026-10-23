@@ -2322,6 +2322,52 @@
       .pp-swingrow b { font-family: "Space Grotesk", sans-serif; color: #00E5FF; font-size: 17px; }
       .pp-swingrow small { color: var(--ink-3); }
       @media (max-width: 640px) { .pk-total { font-size: 40px; } .cc-spot-stats b { font-size: 18px; } .cc-spot { padding: 16px; } }
+      /* ---------- Trade Board ---------- */
+      .cc-tb { margin-bottom: 16px; }
+      .cc-tb:not(:empty) { border: 1px solid rgba(0,229,255,.35); border-radius: 16px; padding: 14px 18px; background: linear-gradient(150deg, rgba(0,229,255,.05), rgba(255,255,255,.012)); }
+      .tb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 12px; }
+      .tb-count { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 17px; }
+      .tb-refresh, .tb-open-board { font: inherit; font-size: 13px; font-weight: 700; color: var(--accent); background: none; border: 1px solid rgba(198,255,0,.45); border-radius: 999px; padding: 5px 13px; cursor: pointer; }
+      .tb-open-board { margin-top: 12px; }
+      .tb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 12px; }
+      .tb-card { border: 1px solid rgba(255,255,255,.13); border-radius: 14px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); }
+      .tb-card.compact { margin-top: 10px; }
+      .tb-card-top { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
+      .tb-league { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15.5px; color: var(--ink); }
+      .tb-when { color: var(--ink-3); font-size: 12.5px; }
+      .tb-parties { font-size: 14.5px; color: var(--ink-2); margin-bottom: 10px; }
+      .tb-parties b { color: var(--ink); }
+      .tb-multi { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--cyan); border: 1px solid rgba(0,229,255,.4); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
+      .tb-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+      @media (max-width: 520px) { .tb-cols { grid-template-columns: 1fr; } }
+      .tb-col-h { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 5px; margin-bottom: 6px; }
+      .tb-asset { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; padding: 3px 0; }
+      .tb-asset-main { display: flex; flex-direction: column; min-width: 0; }
+      .tb-asset-name { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+      .tb-asset-sub { font-size: 12px; color: var(--ink-3); line-height: 1.35; }
+      .tb-val { font-family: "Space Grotesk", sans-serif; font-size: 14px; color: var(--ink); white-space: nowrap; }
+      .tb-val.na { font-family: "Inter", sans-serif; font-size: 12px; color: var(--ink-3); }
+      .tb-none { color: var(--ink-3); font-size: 13.5px; padding: 3px 0; }
+      .tb-verdict { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; border-radius: 10px; padding: 9px 12px; margin-top: 12px; font-size: 14px; line-height: 1.45; }
+      .tb-verdict b { font-family: "Space Grotesk", sans-serif; font-size: 15px; }
+      .tb-verdict.good { background: rgba(198,255,0,.09); border: 1px solid rgba(198,255,0,.4); }
+      .tb-verdict.good b { color: var(--accent); }
+      .tb-verdict.bad { background: rgba(255,46,136,.08); border: 1px solid rgba(255,46,136,.4); }
+      .tb-verdict.bad b { color: #FF7EB6; }
+      .tb-verdict.fair { background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.4); }
+      .tb-verdict.fair b { color: var(--cyan); }
+      .tb-verdict.na { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.18); }
+      .tb-verdict.na b { color: var(--ink-2); }
+      .tb-fit { margin: 10px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 13.5px; line-height: 1.5; }
+      .tb-note, .tb-espn { color: var(--ink-3); font-size: 13px; line-height: 1.5; margin: 10px 0 0; }
+      .tb-actions { margin-top: 12px; }
+      .tb-calc-btn { font: inherit; font-size: 13.5px; font-weight: 700; color: #0A0A1A; background: var(--accent); border: 0; border-radius: 999px; padding: 7px 15px; cursor: pointer; }
+      .tb-empty { color: var(--ink-2); font-size: 15px; line-height: 1.55; border: 1px dashed rgba(255,255,255,.2); border-radius: 14px; padding: 18px; }
+      .tb-empty p { margin: 0 0 10px; }
+      .tb-loading { color: var(--ink-2); font-size: 15px; }
+      .tb-subh { font-family: "Space Grotesk", sans-serif; font-size: 18px; margin: 24px 0 10px; }
+      .tb-mini { display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
+      .tb-mini b { color: var(--ink); font-family: "Space Grotesk", sans-serif; }
       /* ---------- Opportunity Radar ---------- */
       .launch-badge { display: inline-block; vertical-align: middle; margin-left: 10px; font-family: "Space Grotesk", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0A0A1A; background: var(--accent); border-radius: 999px; padding: 3px 10px; }
       .radar-meta { color: var(--ink-3); font-size: 13px; margin: -4px 0 14px; }
@@ -2435,6 +2481,7 @@
           <button type="button" class="tool-entry" data-tool="bye" role="menuitem"><span class="tool-name">Bye Week Planner</span><span class="tool-desc">Every bye week coming, and where your roster has holes</span></button>
           <button type="button" class="tool-entry" data-tool="waivers" role="menuitem"><span class="tool-name">Waiver Targets</span><span class="tool-desc">The adds that actually improve your lineup</span></button>
           <button type="button" class="tool-entry" data-tool="realtrades" role="menuitem"><span class="tool-name">Real Trades</span><span class="tool-desc">What real leagues actually paid</span></button>
+          <button type="button" class="tool-entry" data-tool="tradeboard" role="menuitem"><span class="tool-name">Trade Board</span><span class="tool-desc">Every offer waiting on you, graded</span></button>
           <button type="button" class="tool-entry" data-tool="teamport" role="menuitem"><span class="tool-name">Team Portfolio</span><span class="tool-desc">Your whole roster — players and picks — priced like a portfolio</span></button>
           <button type="button" class="tool-entry" data-tool="command" role="menuitem"><span class="tool-name">Command Center</span><span class="tool-desc">Every league you play in, on one screen</span></button>
           <button type="button" class="tool-entry" data-tool="radar" role="menuitem"><span class="tool-name">Opportunity Radar</span><span class="tool-desc">Starter-sized workloads whose scoring hasn't caught up — with the measured record</span></button>
@@ -2719,6 +2766,12 @@
         </details>
       </section>
 
+
+      <section class="tab" id="tab-tradeboard" role="tabpanel">
+        <h2 class="block-title">Trade Board</h2>
+        <p class="tab-intro">Every proposed trade still waiting on an answer, from every Sleeper league you play in — each one graded with the same engine as the Trade Calculator, picks priced by where they're projected to land. One screen, every decision: clear them here instead of league by league.</p>
+        <div id="tb-out"></div>
+      </section>
 
       <section class="tab" id="tab-teamport" role="tabpanel">
         <h2 class="block-title">Team Portfolio</h2>
@@ -4104,8 +4157,8 @@
         "Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot; injuries and news after that date are not priced in.";
 
       /* ---------- tabs ---------- */
-      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how" };
-      const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, teamport: 1, command: 1, radar: 1, format: 1, how: 1 };
+      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how" };
+      const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, tradeboard: 1, teamport: 1, command: 1, radar: 1, format: 1, how: 1 };
       function activateNav(key, arg) {
         const viewKey = key === "risk" ? "lineup" : key;
         document.querySelectorAll("nav.mainnav > button, nav.mainnav .tools-btn").forEach(b => {
@@ -13818,7 +13871,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (espnEntry) entries.push(espnEntry);
         ff4.ccMixed = entries.length > leagues.length;
         ff4.ccLeagues = entries; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
-        out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div class="cc-rail" id="cc-rail"></div></div>`;
+        out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div class="cc-rail" id="cc-rail"></div></div>`;
         ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
         (async () => {
           for (let i = 0; i < entries.length; i++) {
@@ -13832,6 +13885,11 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             ff4CCRenderQueue();
           }
         })();
+        /* The Trade Board's compact section rides the same league
+           set: its pass is independent (own fetches, own swaps,
+           serialized through the same context lock) and fills
+           #cc-tb when it lands. */
+        ff4TBEnsure(false);
       }
       window.ff4RenderCC = ff4RenderCC;
 
@@ -13932,6 +13990,392 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         window.addEventListener("modechange", () => setTimeout(ff4RenderPP, 80));
       })();
 
+      /* ================= Trade Board (Oct 23, 2026) =================
+         Every pending (proposed, unanswered) trade across the user's
+         connected Sleeper leagues, graded on the spot by the same
+         engine as the Trade Calculator. Sleeper's per-week
+         transactions feed carries trades across their lifecycle; a
+         pending offer is status "pending" (slpWireItems discards
+         those — the board is where they live). The pass mirrors the
+         Command Center's light pass: per league, fetch the bundle,
+         scan the current week plus a look-back (pending offers
+         persist until resolved; dedupe by transaction_id), build
+         the league, swap context, grade, restore. Picks in a pending
+         offer price off the ladder with the tier taken from the
+         ORIGINAL team's sim-projected finish (projFinishRanks +
+         pickTierFromRank, the site's one canonical mapping), stated
+         on the card; FAAB in a deal is shown as dollars, never
+         folded into the value totals. ESPN pending offers are NOT
+         retrievable (the data sits behind ESPN's credentialed API
+         and this site collects no ESPN credentials), so a connected
+         ESPN league gets one honest line — never fabricated data. */
+      function ff4TBState() {
+        if (!ff4.tb) ff4.tb = { loading: false, loaded: false, sig: "", incoming: [], sent: [], espnNote: false, failed: 0 };
+        return ff4.tb;
+      }
+      function ff4TBWhen(ts) {
+        if (!ts) return "this week";
+        const d = Math.floor((Date.now() - ts) / 86400000);
+        return d <= 0 ? "today" : d === 1 ? "1d ago" : d + "d ago";
+      }
+      function ff4TBEnsure(force) {
+        const tb = ff4TBState();
+        const slp = (typeof slpState !== "undefined") ? slpState : null;
+        const user = slp && slp.user ? slp.user : null;
+        const leagues = slp && Array.isArray(slp.leagues) ? slp.leagues : [];
+        if (!user || !leagues.length) { ff4RenderTB(); ff4RenderCCTB(); return; }
+        const espnEntry = ff4CCEspnEntry();
+        const sig = user.user_id + "|" + leagues.map(l => l.league_id).join(",") + "|" + (espnEntry ? espnEntry.leagueId : "");
+        if (!force && (tb.loading || (tb.loaded && tb.sig === sig))) { ff4RenderTB(); ff4RenderCCTB(); return; }
+        /* The loading flag flips BEFORE any render: ff4RenderTB
+           calls back into ff4TBEnsure when it finds the board
+           unloaded, and it must see the pass already running. */
+        tb.loading = true; tb.sig = sig;
+        ff4RenderTB(); ff4RenderCCTB();
+        (async () => {
+          const incoming = [], sent = [];
+          let failed = 0;
+          for (let i = 0; i < leagues.length; i++) {
+            try {
+              const offers = await ff4TBLeague(leagues[i], user);
+              offers.forEach(o => (o.sent ? sent : incoming).push(o));
+            } catch (e) { failed++; }
+          }
+          /* Worst-for-you first among the offers waiting on an
+             answer (margin = your adjusted edge; negative means the
+             deal costs you) — the ones to decide sit on top. Offers
+             you sent sort newest first. */
+          incoming.sort((a, b) => a.margin - b.margin || (b.created || 0) - (a.created || 0));
+          sent.sort((a, b) => (b.created || 0) - (a.created || 0));
+          const cur = ff4TBState();
+          if (cur.sig !== sig) return; /* a newer pass owns the state */
+          cur.incoming = incoming; cur.sent = sent; cur.failed = failed;
+          cur.espnNote = !!ff4CCEspnEntry();
+          cur.loading = false; cur.loaded = true;
+          ff4RenderTB(); ff4RenderCCTB();
+        })();
+      }
+
+      async function ff4TBLeague(lg, user) {
+        const week = ff4CCWeek(lg);
+        const [league, rosters, users] = await Promise.all([
+          slpGet(`/league/${lg.league_id}`), slpGet(`/league/${lg.league_id}/rosters`), slpGet(`/league/${lg.league_id}/users`)
+        ]);
+        if (!league || !rosters || !users) throw new Error("bundle");
+        const myRoster = rosters.find(r => r.owner_id === user.user_id || (r.co_owners || []).includes(user.user_id));
+        if (!myRoster) return [];
+        const myRid = myRoster.roster_id;
+        const wks = [];
+        for (let w = week; w >= Math.max(1, week - 7); w--) wks.push(w);
+        const arrs = await Promise.all(wks.map(w => slpGet(`/league/${lg.league_id}/transactions/${w}`).catch(() => [])));
+        const seen = new Set();
+        const pending = [];
+        arrs.flat().filter(Boolean).forEach(tx => {
+          if (!tx || tx.type !== "trade" || (tx.status !== "pending" && tx.status !== "proposed")) return;
+          if (tx.transaction_id) { if (seen.has(tx.transaction_id)) return; seen.add(tx.transaction_id); }
+          if (!(tx.roster_ids || []).includes(myRid)) return;
+          pending.push(tx);
+        });
+        if (!pending.length) return [];
+        /* Real pick ownership for the build, same two-leg merge as
+           the full connect: the pending offer's picks still sit with
+           their current holders, and the calculator deep-link needs
+           the pick objects minted on the right teams. */
+        let tradedPicks = [];
+        try { tradedPicks = (await slpGet(`/league/${lg.league_id}/traded_picks`)) || []; } catch (e) { /* default ownership stands */ }
+        if (league.draft_id) {
+          try { const d = await slpGet(`/draft/${league.draft_id}/traded_picks`); if (Array.isArray(d)) tradedPicks = tradedPicks.concat(d); } catch (e) { /* league leg stands */ }
+        }
+        const built = buildConnLeague({ user, league, rosters, users, tradedPicks, matchups: null, week, transactions: [] });
+        await ff4CCLock();
+        let graded = [];
+        try {
+          const cap = ff4CCCapture();
+          try {
+            ff4CCSwap(built);
+            const me = DATA.teams.find(t => t.isUser) || DATA.teams.find(t => t.rid === myRid);
+            if (!me) return [];
+            let ranks = null;
+            if (DATA.teams.length === 12) {
+              try { const sim = window.buildSeasonSim({ sims: 1500, seed: 7300 + (parseInt(lg.league_id, 10) % 997) }); ranks = projFinishRanks(sim); } catch (e) { ranks = null; }
+            }
+            graded = pending.map(tx => ff4TBGrade(tx, { lg, me, myRid, user, ranks })).filter(Boolean);
+          } finally { ff4CCRestore(cap); }
+        } finally { ff4.ccBusy = false; }
+        /* The fit-note pass borrowed the calculator's state (see
+           ff4TBGrade); it was restored silently in-context, so
+           re-render the calculator once here, under the restored
+           active league, to leave its UI exactly as it was. */
+        try { renderSide("A"); renderSide("B"); renderVerdict(); } catch (e) { /* calculator not mounted yet */ }
+        return graded;
+      }
+
+      /* Grade one pending trade inside the swapped league context.
+         The verdict follows the calculator's own convention: each
+         side's total is what that side GIVES (raw sum + value
+         adjustment via vaPair), and in a multi-team deal the other
+         side is everything flowing to the user — so the user's
+         gives are priced against the user's gets, exactly. */
+      function ff4TBGrade(tx, ctx) {
+        try {
+          const { lg, me, myRid, user, ranks } = ctx;
+          const rids = tx.roster_ids || [];
+          const otherRids = rids.filter(r => r !== myRid);
+          if (!otherRids.length) return null;
+          const sentByMe = tx.creator != null && String(tx.creator) === String(user.user_id);
+          const seasonNum = Number(DATA.league.season) || Number(lg.season) || 2026;
+          const n = DATA.teams.length;
+          const RD_ORD = { 1: "1st", 2: "2nd", 3: "3rd", 4: "4th" };
+          const TIDX = { Early: 0, Mid: 1, Late: 2 };
+          const give = [], get = [], giveVals = [], getVals = [], giveCalc = [], getCalc = [];
+          let unpricedNote = false, unpricedPick = false;
+
+          const playerRow = pid => {
+            const p = PBY[pid];
+            if (!p) return { label: "Player " + pid, sub: "", value: 0 };
+            if (p.unpriced) unpricedNote = true;
+            return {
+              label: p.name,
+              sub: [p.pos + (p.posRank || ""), p.team].filter(Boolean).join(" · "),
+              value: dispVal(p),
+            };
+          };
+          const adds = tx.adds || {}, drops = tx.drops || {};
+          const handled = new Set();
+          Object.entries(adds).forEach(([pid, dest]) => {
+            handled.add(pid);
+            const row = playerRow(pid);
+            if (dest === myRid) { get.push(row); getVals.push(row.value); getCalc.push({ kind: "player", id: pid }); }
+            else if (drops[pid] === myRid || (me.playerIds || []).includes(pid)) { give.push(row); giveVals.push(row.value); giveCalc.push({ kind: "player", id: pid }); }
+          });
+          Object.entries(drops).forEach(([pid, from]) => {
+            if (handled.has(pid)) return;
+            handled.add(pid);
+            if (from === myRid) { const row = playerRow(pid); give.push(row); giveVals.push(row.value); giveCalc.push({ kind: "player", id: pid }); }
+          });
+
+          (tx.draft_picks || []).forEach(dp => {
+            const toMe = dp.owner_id === myRid, fromMe = dp.previous_owner_id === myRid;
+            if (!toMe && !fromMe) return; /* moves inside the other side of a multi-team deal */
+            const season = Number(dp.season), round = Number(dp.round);
+            const origTeam = TBY[dp.roster_id];
+            const origName = origTeam ? origTeam.name : "Team " + dp.roster_id;
+            const key = `${season}-${round}-${dp.roster_id}`;
+            /* The pick object lives on its current holder's list
+               (real ownership from traded_picks) — normally the
+               roster Sleeper names as previous owner, but the key
+               is unique league-wide, so scan every team rather than
+               assume where it sits. */
+            let pk = null, pkHolder = null;
+            for (const t of DATA.teams) { const f = (t.picks || []).find(p => p.key === key); if (f) { pk = f; pkHolder = t; break; } }
+            let tier = null, value = null;
+            if (ranks && ranks[dp.roster_id]) tier = pickTierFromRank(ranks[dp.roster_id], n);
+            else if (pk) tier = tierOfPick(pk);
+            if (tier) {
+              const dy = Math.min(Math.max(season - seasonNum, 1), 3);
+              const row = SLP_LADDER[dy] && SLP_LADDER[dy][round - 1];
+              if (row) value = Math.round(row[TIDX[tier]] * pickScalar(SETTINGS, season, round, tier));
+            }
+            if (value == null && pk) value = pickPrice(pk);
+            if (value == null) unpricedPick = true;
+            const rowOut = {
+              label: `${season} ${RD_ORD[round] || "Round " + round}` + (tier ? ` · ${tier.toUpperCase()}` : "") + ` · via ${origName}`,
+              sub: tier ? (ranks && ranks[dp.roster_id]
+                ? `Tier from ${origName}'s projected finish (${typeof slpOrd === "function" ? slpOrd(ranks[dp.roster_id]) : ranks[dp.roster_id]} of ${n})`
+                : `Tier from ${origName}'s current standing`) : "",
+              value,
+            };
+            if (pk) (toMe ? getCalc : giveCalc).push({ kind: "pick", key, fromTeam: pkHolder.rid });
+            if (toMe) { get.push(rowOut); if (value != null) getVals.push(value); }
+            else { give.push(rowOut); if (value != null) giveVals.push(value); }
+          });
+
+          const budgets = tx.waiver_budget ? (Array.isArray(tx.waiver_budget) ? tx.waiver_budget : [tx.waiver_budget]) : [];
+          budgets.forEach(wb => {
+            const amt = Number(wb && wb.amount) || 0;
+            if (!amt) return;
+            const rowOut = { label: `$${amt} FAAB`, sub: "Waiver budget — shown, not priced into the totals", value: null };
+            if (wb.receiver === myRid) get.push(rowOut);
+            else if (wb.sender === myRid) give.push(rowOut);
+          });
+
+          if (!give.length && !get.length) return null;
+          const giveRaw = giveVals.reduce((s, v) => s + v, 0);
+          const getRaw = getVals.reduce((s, v) => s + v, 0);
+          const [adjGive, adjGet] = vaPair(giveVals, getVals);
+          const giveAdj = giveRaw + adjGive, getAdj = getRaw + adjGet;
+          const diff = getAdj - giveAdj;
+          const pct = Math.abs(diff) / Math.max(giveAdj, getAdj, 1);
+          const otherName = otherRids.map(r => (TBY[r] ? TBY[r].name : "Team " + r)).join(" + ");
+          const pctTxt = Math.max(1, Math.round(pct * 100));
+          let band, head, line;
+          if (!(giveRaw + getRaw > 0)) {
+            band = "ungraded"; head = "Can't grade this one";
+            line = "The pieces in this offer sit outside the priced pool, so there's no honest number to put on it.";
+          } else if (pct <= 0.05) {
+            band = "fair"; head = "Fair trade";
+            line = `Values are within 5% — you'd give ${fmt(giveAdj)} for ${fmt(getAdj)}.`;
+          } else if (pct <= 0.10) {
+            band = diff > 0 ? "closeyou" : "closethem";
+            head = diff > 0 ? "Close — slight edge to you" : `Close — slight edge to ${otherName}`;
+            line = diff > 0
+              ? `You'd come out ahead by ${fmt(Math.abs(diff))} — about ${pctTxt}% in your favor.`
+              : `You'd give up ${fmt(Math.abs(diff))} more than you get back — about ${pctTxt}% against you.`;
+          } else {
+            band = diff > 0 ? "you" : "them";
+            head = diff > 0 ? "Edge to you" : `Edge to ${otherName}`;
+            line = diff > 0
+              ? `You'd come out ahead by ${fmt(Math.abs(diff))} — about ${pctTxt}% in your favor.`
+              : `You'd come out behind by ${fmt(Math.abs(diff))} — about ${pctTxt}% against you.`;
+          }
+
+          /* Fit notes for the user's side, from the calculator's own
+             fit logic: borrow calc state with the offer loaded (you
+             on side A), read fitNotes("A"), then put the state back
+             untouched. The calculator UI re-renders later, under the
+             restored league (see ff4TBLeague). */
+          let fit = [];
+          try {
+            if (giveCalc.length || getCalc.length) {
+              const savedA = { team: calc.A.team, assets: calc.A.assets.map(a => ({ ...a })) };
+              const savedB = { team: calc.B.team, assets: calc.B.assets.map(a => ({ ...a })) };
+              try {
+                calc.A.team = myRid; calc.A.assets = giveCalc.slice();
+                calc.B.team = otherRids[0]; calc.B.assets = getCalc.slice();
+                fit = fitNotes("A").filter(nt => nt && typeof nt === "object" && (nt.cls === "good" || nt.cls === "warn")).slice(0, 2).map(nt => nt.txt);
+              } finally {
+                calc.A.team = savedA.team; calc.A.assets = savedA.assets;
+                calc.B.team = savedB.team; calc.B.assets = savedB.assets;
+              }
+            }
+          } catch (e) { fit = []; }
+
+          return {
+            id: String(tx.transaction_id || (lg.league_id + ":" + (tx.created || "") + ":" + otherRids.join("-"))),
+            leagueId: String(lg.league_id), leagueName: lg.name || DATA.league.name || "League",
+            chips: ff4CCChips(lg), sent: sentByMe, created: tx.created || 0, when: ff4TBWhen(tx.created),
+            otherRids, otherName, multi: rids.length > 2, myRid,
+            give, get, giveAdj, getAdj, diff, pct,
+            margin: diff / Math.max(giveAdj, getAdj, 1),
+            hasAdj: giveAdj !== giveRaw || getAdj !== getRaw,
+            band, head, line, fit, unpricedNote, unpricedPick,
+            giveCalc, getCalc,
+          };
+        } catch (e) { return null; }
+      }
+
+      function ff4TBRowHtml(row) {
+        const val = row.value == null ? `<span class="tb-val na">not priced</span>` : `<span class="tb-val num">${fmt(row.value)}</span>`;
+        return `<div class="tb-asset"><div class="tb-asset-main"><span class="tb-asset-name">${esc(row.label)}</span>${row.sub ? `<span class="tb-asset-sub">${esc(row.sub)}</span>` : ""}</div>${val}</div>`;
+      }
+
+      function ff4TBCardHtml(o, compact) {
+        const bandCls = { fair: "fair", closeyou: "good", you: "good", closethem: "bad", them: "bad", ungraded: "na" }[o.band] || "fair";
+        const parties = o.sent ? `You → <b>${esc(o.otherName)}</b>` : `<b>${esc(o.otherName)}</b> → you`;
+        const multi = o.multi ? ` <span class="tb-multi">${o.otherRids.length + 1}-team deal</span>` : "";
+        if (compact) {
+          return `<article class="tb-card compact">
+            <div class="tb-card-top"><span class="tb-league">${esc(o.leagueName)}</span><span class="tb-when">${o.sent ? "You sent this" : "Sent to you"} · ${esc(o.when)}</span></div>
+            <div class="tb-parties">${parties}${multi}</div>
+            <div class="tb-mini"><span>You give <b>${fmt(o.giveAdj)}</b>: ${esc(o.give.map(r => r.label).join(", ") || "—")}</span><span>You get <b>${fmt(o.getAdj)}</b>: ${esc(o.get.map(r => r.label).join(", ") || "—")}</span></div>
+            <div class="tb-verdict ${bandCls}"><b>${esc(o.head)}</b><span>${esc(o.line)}</span></div>
+            <div class="tb-actions"><button type="button" class="tb-calc-btn" data-tb-calc="${esc(o.id)}">Open in calculator</button></div>
+          </article>`;
+        }
+        return `<article class="tb-card">
+          <div class="tb-card-top"><span class="tb-league">${esc(o.leagueName)}</span><span class="tb-when">${o.sent ? "You sent this" : "Sent to you"} · ${esc(o.when)}</span></div>
+          <div class="tb-parties">${parties}${multi}</div>
+          <div class="cc-chips">${(o.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
+          <div class="tb-cols">
+            <div class="tb-col"><div class="tb-col-h">You give · ${fmt(o.giveAdj)}</div>${o.give.map(ff4TBRowHtml).join("") || `<div class="tb-none">Nothing</div>`}</div>
+            <div class="tb-col"><div class="tb-col-h">You get · ${fmt(o.getAdj)}</div>${o.get.map(ff4TBRowHtml).join("") || `<div class="tb-none">Nothing</div>`}</div>
+          </div>
+          <div class="tb-verdict ${bandCls}"><b>${esc(o.head)}</b><span>${esc(o.line)}</span></div>
+          ${o.fit && o.fit.length ? `<ul class="tb-fit">${o.fit.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
+          ${o.hasAdj ? `<p class="tb-note">Totals are the adjusted totals, the same ones the calculator's verdict uses — open it there for the full breakdown.</p>` : ""}
+          ${o.unpricedNote ? `<p class="tb-note">Includes a player outside the priced pool — he counts as 0 in the totals.</p>` : ""}
+          ${o.unpricedPick ? `<p class="tb-note">Includes a pick outside the priced window — it isn't counted in the totals.</p>` : ""}
+          <div class="tb-actions"><button type="button" class="tb-calc-btn" data-tb-calc="${esc(o.id)}">Open in calculator</button></div>
+        </article>`;
+      }
+
+      function ff4RenderTB() {
+        const out = document.getElementById("tb-out");
+        if (!out) return;
+        const slp = (typeof slpState !== "undefined") ? slpState : null;
+        const user = slp && slp.user ? slp.user : null;
+        const tb = ff4TBState();
+        if (!user) {
+          const espn = ff4CCEspnEntry();
+          out.innerHTML = `<div class="tb-empty"><p>${espn
+            ? "You're connected with an ESPN league. The Trade Board reads pending offers from Sleeper — ESPN doesn't share them with outside tools, so there's nothing it can grade from an ESPN league."
+            : "Connect with your Sleeper username and every trade offer waiting on you, in every league you play in, lands here — graded, so you can clear them from one screen."}</p><button type="button" class="locked-cta" id="tb-connect">Connect your league</button></div>`;
+          const b = document.getElementById("tb-connect");
+          if (b) b.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
+          return;
+        }
+        if (tb.loading || !tb.loaded) {
+          out.innerHTML = `<p class="tb-loading">Pulling every league's pending offers and grading them…</p>`;
+          if (!tb.loading) ff4TBEnsure(false);
+          return;
+        }
+        const parts = [];
+        parts.push(`<div class="tb-head"><span class="tb-count">${tb.incoming.length} offer${tb.incoming.length === 1 ? "" : "s"} waiting on you</span><button type="button" class="tb-refresh" id="tb-refresh">Re-check offers</button></div>`);
+        if (tb.espnNote) parts.push(`<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>`);
+        if (tb.failed) parts.push(`<p class="tb-espn">${tb.failed} league${tb.failed === 1 ? "" : "s"} couldn't be checked just now — hit Re-check to try again.</p>`);
+        if (tb.incoming.length) parts.push(`<div class="tb-grid">${tb.incoming.map(o => ff4TBCardHtml(o, false)).join("")}</div>`);
+        else parts.push(`<div class="tb-empty"><p>No trades waiting on you — nothing needs an answer in any of your leagues.</p></div>`);
+        if (tb.sent.length) {
+          parts.push(`<h3 class="tb-subh">Waiting on them — offers you sent</h3><div class="tb-grid">${tb.sent.map(o => ff4TBCardHtml(o, false)).join("")}</div>`);
+        }
+        out.innerHTML = parts.join("");
+        const rb = document.getElementById("tb-refresh");
+        if (rb) rb.addEventListener("click", () => ff4TBEnsure(true));
+        out.querySelectorAll("[data-tb-calc]").forEach(b => b.addEventListener("click", () => ff4TBOpenCalc(b.dataset.tbCalc)));
+      }
+
+      function ff4RenderCCTB() {
+        const el = document.getElementById("cc-tb");
+        if (!el) return;
+        const slp = (typeof slpState !== "undefined") ? slpState : null;
+        const user = slp && slp.user ? slp.user : null;
+        if (!user) { el.innerHTML = ""; return; }
+        const tb = ff4TBState();
+        if (tb.loading || !tb.loaded) {
+          el.innerHTML = `<div class="cc-queue-h">Trade Board</div><p class="cc-queue-note cc-loading">Grading the offers waiting on you…</p>`;
+          return;
+        }
+        if (!tb.incoming.length && !tb.espnNote) { el.innerHTML = ""; return; }
+        el.innerHTML = `<div class="cc-queue-h">Trade Board · ${tb.incoming.length} waiting on you</div>`
+          + (tb.incoming.length ? tb.incoming.map(o => ff4TBCardHtml(o, true)).join("") : `<p class="cc-queue-note">No trades waiting on you.</p>`)
+          + (tb.espnNote ? `<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>` : "")
+          + `<button type="button" class="tb-open-board" id="cc-tb-open">Open the Trade Board →</button>`;
+        const ob = document.getElementById("cc-tb-open");
+        if (ob) ob.addEventListener("click", () => { activateNav("tradeboard"); window.scrollTo({ top: 0 }); });
+        el.querySelectorAll("[data-tb-calc]").forEach(b => b.addEventListener("click", () => ff4TBOpenCalc(b.dataset.tbCalc)));
+      }
+
+      async function ff4TBOpenCalc(id) {
+        const tb = ff4TBState();
+        const o = [...tb.incoming, ...tb.sent].find(x => x.id === id);
+        if (!o) return;
+        if (connLeagueKey !== "sleeper:" + o.leagueId) {
+          const slp = (typeof slpState !== "undefined") ? slpState : null;
+          const lg = slp && (slp.leagues || []).find(l => String(l.league_id) === o.leagueId);
+          if (!lg) return;
+          try { await slpLoadLeague(lg); } catch (e) { return; }
+          if (connLeagueKey !== "sleeper:" + o.leagueId) return;
+        }
+        try {
+          calc.A.team = o.myRid; calc.A.assets = o.giveCalc.map(a => ({ ...a }));
+          calc.B.team = o.otherRids[0]; calc.B.assets = o.getCalc.map(a => ({ ...a }));
+          renderSide("A"); renderSide("B"); renderVerdict();
+        } catch (e) { return; }
+        activateNav("trades");
+        window.scrollTo({ top: 0 });
+      }
+      window.ff4TBEnsure = ff4TBEnsure;
+
       /* ---------------- nav wiring ---------------- */
       (function () {
         const orig = window.activateNav;
@@ -13939,6 +14383,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           window.activateNav = function (k, a) {
             const r = orig(k, a);
                 if (k === "command") ff4RenderCC();
+            if (k === "tradeboard") ff4TBEnsure(false);
             if (k === "league") setTimeout(ff4RenderPP, 40);
             return r;
           };
