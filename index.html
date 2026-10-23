@@ -9028,8 +9028,15 @@ ${rdP ? "" : `
               league: lg,
             });
           });
-          if (C.platform === "espn") {
-            items.push({ key: "espn:" + C.leagueId, name: C.league.name, meta: "ESPN", league: null });
+          /* The session's ESPN league rides along whenever one was
+             connected this session — not only while it's the active
+             league — so Sleeper and ESPN pills coexist and either can
+             be re-activated from here. */
+          const storedEspn = (typeof espnStoredConn === "function") ? espnStoredConn() : null;
+          if (storedEspn) {
+            items.push({ key: "espn:" + storedEspn.leagueId, name: storedEspn.name || "ESPN league", meta: "ESPN", league: null, espn: true });
+          } else if (C.platform === "espn") {
+            items.push({ key: "espn:" + C.leagueId, name: C.league.name, meta: "ESPN", league: null, espn: true });
           }
         }
         if (!items.length) { wrap.hidden = true; pills.innerHTML = ""; return; }
@@ -9040,7 +9047,25 @@ ${rdP ? "" : `
         }).join("");
         pills.querySelectorAll("[data-ls]").forEach(btn => btn.addEventListener("click", () => {
           const it = items[Number(btn.dataset.ls)];
-          if (!it || !it.league || it.key === connLeagueKey) return;
+          if (!it || it.key === connLeagueKey) return;
+          if (it.espn) {
+            /* The ESPN pill reloads the stored connection, exactly
+               like a Sleeper pill runs the Sleeper load path. If the
+               stored payload can't be re-applied, land in the ESPN
+               step of the connect dialog with the reason. */
+            pills.querySelectorAll(".ls-pill").forEach(p => { p.disabled = true; });
+            btn.textContent = "Loading " + it.name + "…";
+            Promise.resolve(typeof espnActivateStored === "function" ? espnActivateStored() : false)
+              .then(ok => { if (!ok) throw new Error("nostore"); })
+              .catch(() => {
+                renderLeagueSwitcher();
+                if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
+                slpSetPlatform("espn");
+                slpError("That ESPN league couldn't be reloaded — paste its URL to reconnect it.");
+              });
+            return;
+          }
+          if (!it.league) return;
           pills.querySelectorAll(".ls-pill").forEach(p => { p.disabled = true; });
           btn.textContent = "Loading " + it.name + "…";
           slpLoadLeague(it.league);
@@ -9736,7 +9761,45 @@ ${rdP ? "" : `
         };
       }
 
-      const espnState = { raw: null, leagueId: null };
+      /* The session's ESPN connection, kept after espnConnect applies
+         it: the raw payload, the league id, the season it came from,
+         the league name, and which team is the visitor's (null when
+         they chose Browse). The header switcher and the Command
+         Center read this so an ESPN league stays in the session
+         alongside the Sleeper leagues and can be re-activated without
+         pasting the URL again. `connected` flips true only when a
+         connect actually completed — a league that was merely loaded
+         to the pick-your-team step doesn't count. */
+      const espnState = { raw: null, leagueId: null, yourRid: null, season: null, name: null, connected: false };
+
+      function espnStoredConn() {
+        if (!espnState.connected || !espnState.leagueId) return null;
+        return { leagueId: String(espnState.leagueId), yourRid: espnState.yourRid, season: espnState.season, name: espnState.name || null };
+      }
+      window.espnStoredConn = espnStoredConn;
+
+      /* Re-activate the stored ESPN connection (switcher pill,
+         Command Center "open"): rebuild from the stored payload while
+         it's still in memory; refetch only when it isn't. */
+      async function espnActivateStored() {
+        const stored = espnStoredConn();
+        if (!stored) return false;
+        if (!espnState.raw || String(espnState.leagueId) !== stored.leagueId) {
+          let raw = null, lastErr = null;
+          const seasons = [];
+          [stored.season, 2026, 2025].forEach(s => { if (s != null && !seasons.includes(Number(s))) seasons.push(Number(s)); });
+          for (const season of seasons) {
+            try { raw = await espnGetLeague(stored.leagueId, season); break; }
+            catch (e) { lastErr = e; if (e.message !== "notfound") throw e; }
+          }
+          if (!raw) throw lastErr || new Error("notfound");
+          espnState.raw = raw;
+          espnState.leagueId = stored.leagueId;
+        }
+        espnConnect(stored.yourRid);
+        return true;
+      }
+      window.espnActivateStored = espnActivateStored;
 
       async function espnLoad() {
         const inp = slpEl("espn-input");
@@ -9760,6 +9823,12 @@ ${rdP ? "" : `
           if (!raw) throw lastErr || new Error("notfound");
           espnState.raw = raw;
           espnState.leagueId = id;
+          /* A freshly loaded league hasn't been connected yet: the
+             stored team/name belong to whichever league was connected
+             before, so they reset until espnConnect runs for this one. */
+          espnState.yourRid = null;
+          espnState.name = null;
+          espnState.connected = false;
           espnRenderTeamPick(raw);
           slpShowStep("espnteam");
         } catch (e) {
@@ -9798,6 +9867,13 @@ ${rdP ? "" : `
         let staged = false;
         try {
           const built = buildEspnLeague(espnState.raw, espnState.leagueId, yourRid);
+          /* Remember the connection for the session (switcher pill +
+             Command Center) before the apply runs — the switcher
+             re-renders from inside setConnectedLeague. */
+          espnState.yourRid = yourRid;
+          espnState.season = Number(espnState.raw && espnState.raw.seasonId) || espnState.season || null;
+          espnState.name = built.league.name || null;
+          espnState.connected = true;
           stashConnOverride();
           connLeagueKey = "espn:" + espnState.leagueId;
           if (typeOverrideByLeague[connLeagueKey]) built.typeOverride = typeOverrideByLeague[connLeagueKey];
@@ -13106,7 +13182,11 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
          in a rail ranked by playoff odds, from the light pass below
          (reduced sim, sequential with progress states); tapping one
          swaps it into the spotlight and the full detail pass runs
-         for that league. "Needs you first" aggregates Out/IR
+         for that league. Combined sessions (Oct 23, 2026): the set
+         is the Sleeper lookup's leagues PLUS the session's stored
+         ESPN league (ff4CCEspnEntry / ff4CCLoadEspn, built through
+         the real ESPN builder), and in a mixed set every card and
+         queue row carries its platform. "Needs you first" aggregates Out/IR
          starters, bye starters and Doubtful starters across every
          league — only what each league pass already loaded proves.
          The magic/swing lines follow the Explorer's fail-closed
@@ -13139,7 +13219,15 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         DATA.players.forEach(p => { p.owner = om[p.id] != null ? om[p.id] : null; });
         Object.keys(TBY).forEach(k => delete TBY[k]);
         DATA.teams.forEach(t => { TBY[t.rid] = t; });
-        applyLeagueProjections("cc");
+        if (built.platform === "espn") {
+          /* An ESPN league's per-game rates are its own live
+             projections (CONN_PROJ), not the baked stat means — point
+             the refresh at them for the duration of the swap.
+             ff4CCRestore puts the active league's projection state
+             back from the capture. */
+          window.CONN_PROJ = built.proj || null;
+          applyLeagueProjections("conn");
+        } else applyLeagueProjections("cc");
         window.OPP6 = built.opp6 || null;
         Object.assign(SETTINGS, built.format);
         VALMODE = (built.typeOverride || built.leagueType || "dynasty") === "redraft" ? "redraft" : "dynasty";
@@ -13147,6 +13235,11 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
       }
 
       function ff4CCRestore(cap) {
+        /* The active league's projection state goes back BEFORE the
+           re-point below re-runs applyLeagueProjections: an ESPN
+           swap replaced CONN_PROJ with its own league's projections,
+           and the restored league must read its own again. */
+        window.CONN_PROJ = cap.connProj;
         (window.CONN_STUB_IDS_CC || []).forEach(id => {
           if (ff4.ccSavedStubs && ff4.ccSavedStubs[id]) PBY[id] = ff4.ccSavedStubs[id];
           else if (PBY[id] && PBY[id].unpriced) delete PBY[id];
@@ -13184,7 +13277,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
       }
 
       function ff4CCCapture() {
-        return { settings: { ...SETTINGS }, valmode: VALMODE, seasonHtml: document.getElementById("season-out") ? document.getElementById("season-out").innerHTML : null, seasonSim: window.SeasonSim };
+        return { settings: { ...SETTINGS }, valmode: VALMODE, seasonHtml: document.getElementById("season-out") ? document.getElementById("season-out").innerHTML : null, seasonSim: window.SeasonSim, connProj: window.CONN_PROJ || null };
       }
 
       function ff4CCWeek(lg) {
@@ -13246,7 +13339,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
          record, power rank, 1,500-sim odds, status line and queue
          items, snapshotted under a context swap, then restored. */
       async function ff4CCLoad(lg, idx, user) {
-        const snap = { idx, leagueId: String(lg.league_id || ""), leagueName: lg.name || "League", chips: ff4CCChips(lg), failed: false, queueItems: [] };
+        const snap = { idx, leagueId: String(lg.league_id || ""), leagueName: lg.name || "League", platform: "Sleeper", chips: ff4CCChips(lg), failed: false, queueItems: [] };
         ff4.ccSnaps[idx] = snap;
         try {
           const week = ff4CCWeek(lg);
@@ -13269,9 +13362,9 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
             const wk = Number(DATA.league.week) || week;
-            snap.queueItems = ff4CCQueueFor(me, wk).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name }));
+            snap.queueItems = ff4CCQueueFor(me, wk).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper" }));
             const fyi0 = ff4CCFYIFor(me);
-            snap.fyiItem = fyi0 ? { ...fyi0, idx, leagueName: snap.leagueName, teamName: me.name } : null;
+            snap.fyiItem = fyi0 ? { ...fyi0, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper" } : null;
             const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
             const streak = myRoster.settings && myRoster.settings.streak ? String(myRoster.settings.streak) : null;
             if (byeNames.length) snap.status = `${byeNames.length} starter${byeNames.length === 1 ? "" : "s"} on bye in Week ${wk + 1}: ${byeNames.slice(0, 3).join(", ")}${byeNames.length > 3 ? "…" : ""}`;
@@ -13281,7 +13374,112 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         ff4CCAfterLight(idx);
       }
 
+      /* ================= Command Center — ESPN league =================
+         The session's stored ESPN connection joins the same league
+         set as the Sleeper lookup's leagues (combined sessions only:
+         ff4RenderCC adds the entry when a Sleeper user is present;
+         an ESPN-only session keeps the single-league spotlight it has
+         always had). Entries are descriptors, not Sleeper league
+         objects: {kind:"espn", leagueId, yourRid, name, season}.
+         Every pass builds the league through the REAL ESPN builder
+         (buildEspnLeague over the stored payload — refetched through
+         espnGetLeague only if the payload is gone), so the numbers
+         are the ESPN league's own: its live projections price the
+         sim, and its pick capital stays the disclosed own-picks
+         assumption the builder mints. */
+      function ff4CCIsEspn(lg) { return !!(lg && lg.kind === "espn"); }
+      function ff4CCPlatform(lg) { return ff4CCIsEspn(lg) ? "ESPN" : "Sleeper"; }
+      /* League name as rendered on cards, queue rows and the
+         spotlight: in a combined session every league carries its
+         platform ("League · ESPN" / "League · Sleeper" — the
+         switcher's meta language); single-platform sessions render
+         exactly the bare name they always have. */
+      function ff4CCLgLabel(name, platform) { return ff4.ccMixed && platform ? (name || "League") + " · " + platform : (name || "League"); }
+
+      function ff4CCEspnEntry() {
+        const es = (typeof espnState !== "undefined") ? espnState : null;
+        if (!es || !es.connected || !es.leagueId) return null;
+        return {
+          kind: "espn", leagueId: String(es.leagueId),
+          yourRid: es.yourRid != null ? es.yourRid : null,
+          name: es.name || (es.raw && es.raw.settings && es.raw.settings.name) || "ESPN league",
+          season: es.season || (es.raw && Number(es.raw.seasonId)) || null,
+        };
+      }
+
+      async function ff4CCEspnRaw(entry) {
+        const es = (typeof espnState !== "undefined") ? espnState : null;
+        if (es && es.raw && String(es.leagueId) === entry.leagueId) return es.raw;
+        let raw = null, lastErr = null;
+        const seasons = [];
+        [entry.season, 2026, 2025].forEach(s => { if (s != null && !seasons.includes(Number(s))) seasons.push(Number(s)); });
+        for (const season of seasons) {
+          try { raw = await espnGetLeague(entry.leagueId, season); break; }
+          catch (e) { lastErr = e; if (e.message !== "notfound") throw e; }
+        }
+        if (!raw) throw lastErr || new Error("notfound");
+        if (es) { es.raw = raw; es.leagueId = entry.leagueId; }
+        return raw;
+      }
+
+      /* Chips for an ESPN entry, from its built bundle (the Sleeper
+         chips read the league-list metadata, which ESPN doesn't
+         have — the built format is the same information). */
+      function ff4CCEspnChips(entry, built) {
+        const chips = [];
+        const lt = built ? (built.typeOverride || built.leagueType || "redraft") : "redraft";
+        chips.push(lt === "dynasty" ? "Dynasty" : "Redraft");
+        const f = (built && built.format) || {};
+        chips.push(f.sf ? "Superflex" : "1 QB");
+        chips.push(f.ppr === 1 ? "Full PPR" : f.ppr === 0.5 ? "Half PPR" : f.ppr === 0 ? "Standard" : f.ppr + " PPR");
+        if (f.tep > 0) chips.push("TE +" + f.tep);
+        if (built && built.teams) chips.push(built.teams.length + " teams");
+        return chips;
+      }
+
+      /* Light pass for the ESPN entry — the same snapshot contract
+         as ff4CCLoad, off the ESPN builder instead of Sleeper
+         fetches. Browse mode (no team picked) is the no-team case,
+         exactly like a Sleeper league where the user holds no
+         roster. */
+      async function ff4CCLoadEspn(entry, idx) {
+        const snap = { idx, leagueId: "espn:" + entry.leagueId, leagueName: entry.name || "ESPN league", platform: "ESPN", chips: [], failed: false, queueItems: [] };
+        ff4.ccSnaps[idx] = snap;
+        try {
+          if (entry.yourRid == null) { snap.noTeam = true; ff4CCAfterLight(idx); return; }
+          const raw = await ff4CCEspnRaw(entry);
+          const built = buildEspnLeague(raw, entry.leagueId, entry.yourRid);
+          snap.leagueName = built.league.name || snap.leagueName;
+          snap.chips = ff4CCEspnChips(entry, built);
+          const cap = ff4CCCapture();
+          try {
+            ff4CCSwap(built);
+            const me = DATA.teams.find(t => t.isUser);
+            if (!me) throw new Error("user team not found");
+            snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
+            if (DATA.teams.length === 12) {
+              try { const sim = window.buildSeasonSim({ sims: 1500, seed: 9100 + idx * 17 }); if (sim && sim.results[me.rid]) { snap.odds = sim.results[me.rid].playoff; snap.clinched = !!sim.results[me.rid].clinched; } } catch (e) { /* odds stay blank */ }
+            }
+            const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
+            const standing = standings.findIndex(t => t.rid === me.rid) + 1;
+            const wk = Number(DATA.league.week) || 1;
+            snap.queueItems = ff4CCQueueFor(me, wk).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "ESPN" }));
+            const fyi0 = ff4CCFYIFor(me);
+            snap.fyiItem = fyi0 ? { ...fyi0, idx, leagueName: snap.leagueName, teamName: me.name, platform: "ESPN" } : null;
+            const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
+            if (byeNames.length) snap.status = `${byeNames.length} starter${byeNames.length === 1 ? "" : "s"} on bye in Week ${wk + 1}: ${byeNames.slice(0, 3).join(", ")}${byeNames.length > 3 ? "…" : ""}`;
+            else snap.status = `Currently ${standing}${["th", "st", "nd", "rd"][(standing % 100 > 10 && standing % 100 < 14) ? 0 : Math.min(standing % 10, 4)] || "th"} of ${DATA.teams.length}`;
+          } finally { ff4CCRestore(cap); }
+        } catch (e) { snap.failed = true; }
+        ff4CCAfterLight(idx);
+      }
+
       function ff4CCIsActive(lg) {
+        if (ff4CCIsEspn(lg)) {
+          if (window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE || !window.CONN_LEAGUE) return false;
+          try { if (typeof connLeagueKey === "string" && connLeagueKey) return connLeagueKey === "espn:" + String(lg.leagueId || ""); } catch (e) {}
+          return window.CONN_LEAGUE.platform === "espn" && String(window.CONN_LEAGUE.leagueId || "") === String(lg.leagueId || "");
+        }
         if (window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE || !window.CONN_LEAGUE) return false;
         try { if (typeof connLeagueKey === "string" && connLeagueKey) return connLeagueKey === "sleeper:" + String(lg.league_id || ""); } catch (e) {}
         const cl = window.CONN_LEAGUE.league || {};
@@ -13373,8 +13571,31 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         await ff4CCLock();
         try {
           if (ff4.ccDead) return;
+          if (ff4CCIsEspn(lg)) {
+            try {
+              if (ff4CCIsActive(lg)) {
+                ff4.ccDetail[idx] = ff4CCDetailHere(idx, ff4CCEspnChips(lg, window.CONN_LEAGUE), window.SeasonSim, null)
+                  || { idx, failed: true, leagueName: lg.name || "League", chips: ff4CCEspnChips(lg, window.CONN_LEAGUE) };
+              } else {
+                const raw = await ff4CCEspnRaw(lg);
+                const built = buildEspnLeague(raw, lg.leagueId, lg.yourRid);
+                const cap = ff4CCCapture();
+                const savedConn = window.CONN_LEAGUE;
+                let det = null;
+                try {
+                  ff4CCSwap(built);
+                  window.CONN_LEAGUE = built;
+                  det = ff4CCDetailHere(idx, ff4CCEspnChips(lg, built), null, lg.yourRid);
+                } finally { window.CONN_LEAGUE = savedConn; ff4CCRestore(cap); }
+                ff4.ccDetail[idx] = det || { idx, failed: true, leagueName: lg.name || "League", chips: ff4CCEspnChips(lg, built) };
+              }
+              if (ff4.ccDetail[idx]) ff4.ccDetail[idx].platform = "ESPN";
+            } catch (e) { ff4.ccDetail[idx] = { idx, failed: true, leagueName: lg.name || "League", chips: ff4CCEspnChips(lg, null), platform: "ESPN" }; }
+            return;
+          }
           if (ff4CCIsActive(lg)) {
             ff4.ccDetail[idx] = ff4CCDetailHere(idx, ff4CCChips(lg), window.SeasonSim, null) || { idx, failed: true, leagueName: lg.name || "League", chips: ff4CCChips(lg) };
+            if (ff4.ccDetail[idx]) ff4.ccDetail[idx].platform = "Sleeper";
             return;
           }
           const user = ff4.ccUser;
@@ -13400,7 +13621,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             det = ff4CCDetailHere(idx, ff4CCChips(lg), null, myRoster ? myRoster.roster_id : null);
           } finally { window.CONN_LEAGUE = savedConn; ff4CCRestore(cap); }
           ff4.ccDetail[idx] = det || { idx, failed: true, leagueName: lg.name || "League", chips: ff4CCChips(lg) };
-        } catch (e) { ff4.ccDetail[idx] = { idx, failed: true, leagueName: lg.name || "League", chips: ff4CCChips(lg) }; }
+          if (ff4.ccDetail[idx]) ff4.ccDetail[idx].platform = "Sleeper";
+        } catch (e) { ff4.ccDetail[idx] = { idx, failed: true, leagueName: lg.name || "League", chips: ff4CCChips(lg), platform: "Sleeper" }; }
         finally { ff4.ccBusy = false; ff4.ccDetailBusy[idx] = false; if (ff4.ccFocus === idx) ff4CCRenderSpot(); }
       }
 
@@ -13431,6 +13653,16 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         ff4.ccDead = true;
         const lg = (ff4.ccLeagues || [])[idx];
         if (!lg || ff4CCIsActive(lg)) { activateNav("league"); window.scrollTo({ top: 0 }); return; }
+        if (ff4CCIsEspn(lg)) {
+          /* Reload the stored ESPN connection (it lands on the
+             League Analyzer, like a Sleeper open). If the stored
+             payload can't be re-applied, fall back to the connect
+             dialog rather than a dead tap. */
+          if (typeof window.espnActivateStored === "function") {
+            window.espnActivateStored().catch(() => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
+          } else if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
+          return;
+        }
         slpLoadLeague(lg);
       }
 
@@ -13450,7 +13682,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const d = ff4.ccDetail[idx];
         if (!d) { spot.innerHTML = `<p class="cc-status cc-loading">Building this league's full picture — odds ring, magic number, swing game, value trend…</p>`; return; }
         if (d.failed) {
-          spot.innerHTML = `<div class="cc-name">${esc(d.leagueName || "League")}</div><p class="cc-status">This league couldn't be loaded here. Open it in full to see everything.</p><button type="button" class="cc-enter" data-cc-open="1">Open league →</button>`;
+          spot.innerHTML = `<div class="cc-name">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div><p class="cc-status">This league couldn't be loaded here. Open it in full to see everything.</p><button type="button" class="cc-enter" data-cc-open="1">Open league →</button>`;
           const fb = spot.querySelector("[data-cc-open]"); if (fb) fb.addEventListener("click", () => ff4CCOpen(idx));
           return;
         }
@@ -13464,7 +13696,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (d.status) lines.push(`<div class="cc-line">${esc(d.status)}</div>`);
         spot.innerHTML = `<div class="cc-spot-top"><div>
             <div class="cc-spot-team">${esc(d.teamName)} <span class="you-tag">Your team</span></div>
-            <div class="cc-spot-league">${esc(d.leagueName)}</div>
+            <div class="cc-spot-league">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div>
             <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
           </div><button type="button" class="cc-enter" data-cc-open="1">Open league →</button></div>
           <div class="cc-spot-mid">${ff4CCRing(d)}
@@ -13493,12 +13725,12 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         });
         rail.innerHTML = `<div class="cc-rail-h">Your leagues · by playoff odds</div>` + order.map(i => {
           const lg = leagues[i]; const s = ff4.ccSnaps[i]; const on = ff4.ccFocus === i;
-          if (!s) return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}"><div class="cc-rail-top"><span class="cc-rail-team cc-loading">Loading…</span></div><div class="cc-rail-lg">${esc(lg.name || "League")}</div></button>`;
-          if (s.failed) return `<button type="button" class="cc-rail-it" data-cc-open="${i}"><div class="cc-rail-top"><span class="cc-rail-team">Couldn't load</span></div><div class="cc-rail-lg">${esc(s.leagueName)} — tap to open it in full</div></button>`;
+          if (!s) return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}"><div class="cc-rail-top"><span class="cc-rail-team cc-loading">Loading…</span></div><div class="cc-rail-lg">${esc(ff4CCLgLabel(lg.name, ff4CCPlatform(lg)))}</div></button>`;
+          if (s.failed) return `<button type="button" class="cc-rail-it" data-cc-open="${i}"><div class="cc-rail-top"><span class="cc-rail-team">Couldn't load</span></div><div class="cc-rail-lg">${esc(ff4CCLgLabel(s.leagueName, s.platform))} — tap to open it in full</div></button>`;
           return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}">
             <div class="cc-rail-top"><span class="cc-rail-team">${esc(s.teamName || "Your team")}</span><span class="cc-rail-odds">${s.odds == null ? "—" : s.clinched ? "Clinched" : oddsPct(s.odds)}</span></div>
             <div class="cc-rail-sub">${esc(s.record || "")} · Power #${s.powerRank} of ${s.total || 12}</div>
-            <div class="cc-rail-lg">${esc(s.leagueName)}</div>
+            <div class="cc-rail-lg">${esc(ff4CCLgLabel(s.leagueName, s.platform))}</div>
             <div class="cc-chips">${(s.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
           </button>`;
         }).join("");
@@ -13530,15 +13762,15 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         }
         q.className = items.length ? "cc-queue" : "cc-queue clean";
         q.innerHTML = `<div class="cc-queue-h">Needs you first</div>`
-          + items.map(it => `<button type="button" class="cc-queue-it" data-cc-open="${it.idx}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(it.leagueName)}</span></button>`).join("")
-          + fyis.map(it => `<div class="cc-queue-it static"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue fyi">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(it.leagueName)}</span></div>`).join("");
+          + items.map(it => `<button type="button" class="cc-queue-it" data-cc-open="${it.idx}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></button>`).join("")
+          + fyis.map(it => `<div class="cc-queue-it static"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue fyi">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></div>`).join("");
         q.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
       }
 
       function ff4RenderCC() {
         const out = document.getElementById("cc-out");
         if (!out) return;
-        ff4.ccDead = false; ff4.ccBusy = false;
+        ff4.ccDead = false; ff4.ccBusy = false; ff4.ccMixed = false;
         const st = (typeof slpState !== "undefined") ? slpState : null;
         const leagues = st && Array.isArray(st.leagues) ? st.leagues : [];
         const user = st && st.user ? st.user : null;
@@ -13575,14 +13807,27 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           if (b) b.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
           return;
         }
-        ff4.ccLeagues = leagues; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
+        /* Combined sessions: the Sleeper lookup's leagues plus the
+           session's stored ESPN league, one set. Single-platform
+           sessions never see the ESPN entry (it only joins when a
+           Sleeper user is present), so Sleeper-only behavior is
+           untouched; the mixed flag is what turns on the platform
+           labels in the renderers. */
+        const entries = leagues.slice();
+        const espnEntry = ff4CCEspnEntry();
+        if (espnEntry) entries.push(espnEntry);
+        ff4.ccMixed = entries.length > leagues.length;
+        ff4.ccLeagues = entries; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
         out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div class="cc-rail" id="cc-rail"></div></div>`;
         ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
         (async () => {
-          for (let i = 0; i < leagues.length; i++) {
+          for (let i = 0; i < entries.length; i++) {
             if (ff4.ccDead) break;
             await ff4CCLock();
-            try { await ff4CCLoad(leagues[i], i, user); } finally { ff4.ccBusy = false; }
+            try {
+              if (ff4CCIsEspn(entries[i])) await ff4CCLoadEspn(entries[i], i);
+              else await ff4CCLoad(entries[i], i, user);
+            } finally { ff4.ccBusy = false; }
             ff4.ccDone++;
             ff4CCRenderQueue();
           }
