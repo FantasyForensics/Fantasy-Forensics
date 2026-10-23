@@ -9,6 +9,25 @@
       gtag('js', new Date());
       gtag('config', 'G-0LN6ZHJN6C');
     </script>
+    <script>
+      /* Entry scroll position (Eric, 2026-10-23): a fresh entry must
+         land at the very top with The Wire fully visible. The browser's
+         automatic scroll restoration resurrected whatever offset a
+         previous visit ended at, and the page's load-time growth then
+         left that offset pointing mid-header — brand on screen, Wire
+         scrolled off. Restoration is manual now (every in-app nav
+         already scrolls to top itself). Deep links that carry their
+         own landing (#trade=, #/insights…, draft-room codes) are
+         excluded from the belt-and-braces reset below — their own
+         handlers position the page. */
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+      document.addEventListener("DOMContentLoaded", function () {
+        var h = location.hash || "";
+        var deepLink = /(?:^#|[#&])trade=/.test(h) || h.indexOf("#/insights") === 0 ||
+          /(^#|[#&])(report|room|snake|mock)=/.test(h);
+        if (!deepLink) window.scrollTo(0, 0);
+      });
+    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark" />
@@ -658,6 +677,14 @@
       .ticker {
         display: flex; align-items: stretch;
         margin: 0 -20px;
+        /* Reserve the bar's full height from first paint (Eric,
+           2026-10-23): the track is empty until renderWire runs, and
+           an unreserved bar grew ~18px -> full height mid-load, which
+           shifted everything under it and compounded the browser's
+           scroll restoration into a cut-off Wire on entry. The floor
+           matches the rendered height (38px desktop; 45px where the
+           44px touch-target items apply, see the <=1024px block). */
+        box-sizing: border-box; min-height: 38px;
         background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02));
         border-bottom: 1px solid var(--line);
         overflow: hidden;
@@ -1403,6 +1430,7 @@
         a.xlink { min-height: 44px; display: inline-flex; align-items: center; }
         #lineup-team, #waiver-team { min-height: 44px; }
         .tk-item { min-height: 44px; }
+        .ticker { min-height: 45px; } /* reserved entry height — see .ticker */
         .switch { padding: 8px 0; }
         input[type="range"] { padding: 13px 0; background-clip: content-box; }
       }
