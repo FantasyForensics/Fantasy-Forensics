@@ -2751,7 +2751,7 @@
         </div>
         <button class="show-more" id="board-more">Show more players</button>
         <div class="inj-note" id="inj-note" hidden>
-          <strong id="inj-note-count"></strong> Every chip shows the designation plus the detail Sleeper's player feed carries — body part, and a note where the feed has one. <strong>No free source publishes a reliable expected-return date, so this board never prints one</strong> — where the feed has no more detail, the designation stands alone. For the latest reporting on a player, tap “Why?” on his row for a <strong>Latest news</strong> link to his ESPN player page, or browse <a href="https://www.espn.com/nfl/injuries" target="_blank" rel="noopener">ESPN's NFL injuries page ↗</a>.
+          <strong id="inj-note-count"></strong> Every chip shows the designation plus the detail Sleeper's player feed carries — body part, and a note where the feed has one. Where the feed has no more detail, the designation stands alone. For the latest reporting on a player, tap “Why?” on his row for a <strong>Latest news</strong> link to his ESPN player page, or browse <a href="https://www.espn.com/nfl/injuries" target="_blank" rel="noopener">ESPN's NFL injuries page ↗</a>.
         </div>
         <div class="movers-strip" id="movers-strip">
           <div class="ms-head">
@@ -3521,11 +3521,10 @@
     <script>
       /* Injury detail (the injury feed, baked Oct 21, 2026 from the same
          Sleeper player pull as the designations in DATA): per designated
-         player [injury_body_part, injury_notes, espn_id]. Sleeper's feed is
-         the free source that carries the body part and note; no free source
-         publishes a reliable expected-return date, so none is ever shown —
-         the ESPN news link on each injured player's row is the return
-         source. Players whose record carries no espn_id link out to ESPN's
+         player [injury_body_part, injury_notes, espn_id]. Sleeper's feed
+         carries the body part and note; the ESPN news link on each
+         injured player's row is the return source. Players whose record
+         carries no espn_id link out to ESPN's
          league-wide injuries page instead of a fabricated player URL.
          Designations ride the Tuesday rebuild; the daily injury check
          (see "Staying current" in More) refreshes them between Tuesdays. */
@@ -4352,8 +4351,7 @@
       /* ---------- injury feed ----------
          Label = designation + Sleeper detail ("Out · Calf (Strain)").
          Where the feed carries no body part or note, the designation stands
-         alone — and a return date is never shown, because no free source
-         publishes a reliable one. The news link is the return source. */
+         alone. The news link is the return source. */
       function injLabel(p) {
         if (!p.inj) return "";
         let s = p.inj;
@@ -4385,7 +4383,7 @@
       }
       function injBlock(p) { // expanded-row injury panel: chip + honest framing + news deep link
         if (!p.inj) return "";
-        return `<div class="inj-block"><span class="inj-chip sev-${injSev(p)}">${esc(injLabel(p))}</span><span class="inj-block-txt">Designation and detail from Sleeper's player feed, Week ${DATA.league.week} snapshot. No free source publishes a reliable expected-return date, so none is shown — for the latest reporting on his status and return: <a class="news-link" href="${espnNewsUrl(p)}" target="_blank" rel="noopener">Latest news ↗</a></span></div>`;
+        return `<div class="inj-block"><span class="inj-chip sev-${injSev(p)}">${esc(injLabel(p))}</span><span class="inj-block-txt">Designation and detail from Sleeper's player feed, Week ${DATA.league.week} snapshot. For the latest reporting on his status and return: <a class="news-link" href="${espnNewsUrl(p)}" target="_blank" rel="noopener">Latest news ↗</a></span></div>`;
       }
 
       /* ---------- header ---------- */
@@ -6551,7 +6549,7 @@ ${rdP ? "" : `
         <h2>What is the value adjustment?</h2>
         <p>When a trade sends fewer players one way than the other, the team taking back fewer players ends up with open roster spots — and production concentrated into fewer spots is worth more than the same production spread across extra bodies you have to roster. The value adjustment is how the calculator prices that concentration. The best player in a deal carries value beyond his raw price: one great player producing from a single spot is worth more than the same production spread across extra bodies you have to roster, and the two sides' trade values are set by the amount that balances that difference. It follows concentration, not headcount: the side whose production is packed into the fewest, best players sets the terms — in any trade shape, even when both sides send the same number of players — and a deal whose value is spread just as evenly on both sides has no difference to balance. A straight 1-for-1 earns none either: one player a side, there is no concentration to price, so the raw difference is the whole gap.</p>
         <h2>The injury feed — what it shows, and what it won't</h2>
-        <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The honesty rule: <strong>no free source publishes a reliable expected-return date</strong>, so the board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
+        <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
         <h2>Power rankings &amp; the team tags</h2>
         <p>Power score combines starters value and rest-of-season projected points, each as a league percentile. Points scored so far don't enter it — a September box score isn't a forecast. In redraft mode the score is projected points alone — this season's projected production. <strong>Starters value is best-ball:</strong> the value of each team's best possible lineup under its league's slots, filled by dynasty value the way the Lineup Analyzer's optimizer fills its slots — never the lineup the manager happens to have set on Sleeper. Bye weeks are ignored (a star on bye counts at full value — this measures roster strength, not one week), while players on IR / PUP or listed Out stay excluded, exactly as the optimizer treats them. The <strong>projected-points half</strong> is the Season Outlook engine's number: the same best-possible lineup construction, scored by rest-of-season projected points per week — the identical optimal-lineup total that drives the playoff odds, so the ranking and the odds can never disagree about how strong a lineup projects.</p> The team tag reads that ranking together with the age of each team's starting core. The top third splits by core age: a veteran core is tagged <strong>Win-Now ⏳</strong> — its window is this season — and a young core <strong>Dynasty 👑</strong>, built to contend now and for years. The middle third is <strong>Crossroads 🔀</strong>: close enough to contend, one decision from either direction. The bottom third is <strong>Rebuilder 🔨</strong>, playing for next year. The tags drive Player Targets: contenders see buys, rebuilders see sells, and Crossroads teams pick a path.</p>
         <h2>Honest limits</h2>
