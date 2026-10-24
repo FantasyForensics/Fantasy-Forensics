@@ -31,8 +31,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark" />
-    <link rel="icon" href="data:," />
-    <title>Fantasy Forensics — Player Values</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <title>Fantasy Forensics — Fantasy Football Trade Analyzer &amp; League Analyzer</title>
     <meta name="description" content="The one-stop shop for dynasty fantasy football: trade calculator, player values, 3,000-sim season projections, lineup optimizer, and draft room. Free." />
     <!-- Open Graph -->
     <meta property="og:title" content="Fantasy Forensics — Price Every Player. Win Every Trade." />
@@ -372,7 +373,9 @@
         font-size: clamp(22px, 5.6vw, 27px); font-weight: 700; letter-spacing: 0.13em;
         text-transform: uppercase; color: var(--accent);
         text-shadow: 0 0 18px rgba(198,255,0,.35);
+        display: flex; align-items: center; gap: 10px;
       }
+      .ff-brand-mark { width: 30px; height: 30px; border-radius: 7px; flex: none; }
       header.league h1 { font-size: clamp(19px, 3.6vw, 24px); font-weight: 700; line-height: 1.08; margin-top: 2px; text-transform: uppercase; letter-spacing: -0.01em; }
       .league-sub { color: var(--ink-2); margin: 3px 0 0; font-size: 12px; line-height: 1.45; }
       .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
@@ -2648,7 +2651,7 @@
       </div>
       <header class="league">
         <div class="ff-acct-row"><span class="ff-acct-slot" id="ff-acct-slot"></span></div>
-        <div class="league-kicker">Fantasy Forensics</div>
+        <div class="league-kicker"><img class="ff-brand-mark" src="/favicon.png" alt="Fantasy Forensics logo" width="30" height="30" />Fantasy Forensics</div>
         <h1 id="league-name">Fantasy Player Values</h1>
         <p class="league-sub" id="league-sub"></p>
         <div class="league-switcher" id="league-switcher" hidden>
