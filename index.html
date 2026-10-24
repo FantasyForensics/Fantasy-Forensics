@@ -1593,6 +1593,15 @@
       @media (max-width: 640px) {
         .wrap { padding: 0 14px 128px; }
 
+        /* phones: the league switcher wraps — the Command Center pill
+           shares the label row while the league strip drops to its own
+           full-width row, so the strip is never squeezed to a peephole
+           by a 134px button on a 390px screen and swipes land on the
+           strip itself. The button stays in normal flow (never fixed
+           or sticky) and one tap away. */
+        .league-switcher { flex-wrap: wrap; }
+        .league-switcher .ls-pills { flex: 1 1 100%; }
+
         /* bottom tab bar replaces the top strip — the five full labels
            keep their natural width and never wrap; the bar scrolls
            sideways instead of crushing them together (scrollbar hidden;
