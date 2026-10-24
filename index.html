@@ -8981,9 +8981,9 @@ ${rdP ? "" : `
     </div>
     <div class="slp-overlay" id="ff-auth-overlay" hidden>
       <div class="slp-dialog" role="dialog" aria-modal="true" aria-labelledby="ff-auth-title">
-        <button type="button" class="slp-x" id="ff-auth-close" aria-label="Close sign in">&times;</button>
-        <h3 id="ff-auth-title">Sign in</h3>
-        <p class="slp-sub">One account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email.</p>
+        <button type="button" class="slp-x" id="ff-auth-close" aria-label="Close account dialog">&times;</button>
+        <h3 id="ff-auth-title">Log in / Sign up</h3>
+        <p class="slp-sub" id="ff-auth-sub">One account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email.</p>
         <button type="button" class="ff-google-btn" id="ff-google-btn">Continue with Google</button>
         <div class="ff-or"><span>or</span></div>
         <label class="slp-label" for="ff-email">Email address</label>
@@ -11118,7 +11118,7 @@ ${rdP ? "" : `
             menuFootEl.hidden = false;
           } else if (authState.available) {
             var si = document.createElement("button");
-            si.type = "button"; si.className = "ff-menu-signin"; si.textContent = "Sign in";
+            si.type = "button"; si.className = "ff-menu-signin"; si.textContent = "Log in / Sign up";
             si.addEventListener("click", function () {
               closeMenu();
               if (window.__ffAuth && window.__ffAuth.openPanel) window.__ffAuth.openPanel();
@@ -11392,7 +11392,22 @@ ${rdP ? "" : `
           }
           function showErr(msg) { if (errEl) { errEl.textContent = msg; errEl.hidden = false; } if (msgEl) msgEl.hidden = true; }
           function showMsg(msg) { if (msgEl) { msgEl.textContent = msg; msgEl.hidden = false; } if (errEl) errEl.hidden = true; }
-          function openPanel() { if (overlay) { overlay.hidden = false; document.body.style.overflow = "hidden"; } }
+          function openPanel(mode) {
+            if (overlay) { overlay.hidden = false; document.body.style.overflow = "hidden"; }
+            /* Context-aware titles only — Google and email-link auth
+               work identically for new and returning users, so there
+               is no sign-up vs sign-in mode; the title just matches
+               where the dialog was opened from. */
+            var t = document.getElementById("ff-auth-title");
+            var s = document.getElementById("ff-auth-sub");
+            if (mode === "signup") {
+              if (t) t.textContent = "Create your account";
+              if (s) s.textContent = "One free account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email.";
+            } else {
+              if (t) t.textContent = "Log in / Sign up";
+              if (s) s.textContent = "One account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email.";
+            }
+          }
           function closePanel() { if (overlay) { overlay.hidden = true; document.body.style.overflow = ""; } }
 
           /* The header control + profile menu live on the local
@@ -17013,7 +17028,7 @@ window.__lifeline = (function () {
                   var pb = document.createElement("button");
                   pb.type = "button";
                   pb.textContent = "Create a free account";
-                  pb.addEventListener("click", function () { try { window.__ffAuth.openPanel(); } catch (e) { /* dialog unavailable */ } });
+                  pb.addEventListener("click", function () { try { window.__ffAuth.openPanel("signup"); } catch (e) { /* dialog unavailable */ } });
                   pr.appendChild(pb);
                   band.appendChild(pr);
                 }
