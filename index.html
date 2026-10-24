@@ -253,6 +253,18 @@
         font-size: 14.5px; font-weight: 600; padding: 8px 6px; border-radius: 8px; min-height: 40px;
       }
       .ff-menu button:hover { background: rgba(255, 255, 255, .06); }
+      .ff-menu-label {
+        color: var(--ink-2); font-size: 11.5px; font-weight: 700; letter-spacing: .08em;
+        text-transform: uppercase; padding: 6px 6px 4px;
+      }
+      .ff-menu-label[hidden] { display: none; }
+      .ff-menu-leagues { display: flex; flex-direction: column; margin-bottom: 4px; }
+      .ff-menu-league { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+      .ff-menu-league-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ff-menu-tag {
+        flex: none; font-size: 11px; font-weight: 700; letter-spacing: .05em; color: var(--ink-2);
+        border: 1px solid rgba(255, 255, 255, .16); border-radius: 999px; padding: 2px 8px;
+      }
       .ff-saved { margin: 0 0 18px; }
       .ff-saved[hidden] { display: none; }
       .ff-saved-title {
@@ -10551,17 +10563,18 @@ ${rdP ? "" : `
           document.body.style.overflow = "";
         }
         function reconnect(entry, manual) {
-          if (!entry) return;
+          if (!entry) return Promise.resolve(false);
           api.record(entry); /* a use bumps lastUsed (and syncs when signed in) */
           if (entry.platform === "espn") {
             if (window.__ffReconnectEspn) window.__ffReconnectEspn(entry.leagueId);
-            return;
+            return Promise.resolve(true);
           }
-          if (!window.__ffReconnectSleeper) return;
-          window.__ffReconnectSleeper(entry.username, entry.leagueId, entry.season).then(function (ok) {
+          if (!window.__ffReconnectSleeper) return Promise.resolve(false);
+          return window.__ffReconnectSleeper(entry.username, entry.leagueId, entry.season).then(function (ok) {
             if (!ok && !manual) closeOverlayQuietly();
             if (!ok && manual) { /* the loader already surfaced its own error in the dialog */ }
-          }).catch(function () { if (!manual) closeOverlayQuietly(); });
+            return !!ok;
+          }).catch(function () { if (!manual) closeOverlayQuietly(); return false; });
         }
         var api = {
           onChange: null,
@@ -10585,9 +10598,12 @@ ${rdP ? "" : `
           },
           replaceAll: function (list) { persist(sorted(list || []), true); },
           render: render,
+          reconnectEntry: function (entry) { return reconnect(entry, true); },
+          apply: function () { applySavedLeagues(); },
         };
         window.__ffSaved = api;
         window.__ffSavedRecord = function (entry) { api.record(entry); };
+        window.__ffApplySavedLeagues = function () { applySavedLeagues(); };
         render();
 
         /* Quiet auto-reconnect: most recent saved league, Sleeper
@@ -10596,16 +10612,33 @@ ${rdP ? "" : `
            one click away in the connect dialog). A failed attempt
            stays in guest mode and closes the dialog the loader may
            have opened to show its error. */
+        var autoInFlight = false;
         function maybeAutoReconnect() {
           try {
+            if (autoInFlight) return; /* page load and post-sign-in can both ask; one attempt at a time */
             var list = sorted(read());
             if (!list.length) return;
             if (window.CURRENT_LEAGUE === "conn") return;
             if (location.hash && location.hash.length > 1) return; /* share links win */
             var e = list[0];
             if (e.platform !== "sleeper") return;
-            reconnect(e, false);
-          } catch (err) { /* guest mode stands */ }
+            autoInFlight = true;
+            var release = function () { autoInFlight = false; };
+            var p = reconnect(e, false);
+            if (p && typeof p.then === "function") { p.then(release, release); setTimeout(release, 30000); }
+            else release();
+          } catch (err) { autoInFlight = false; /* guest mode stands */ }
+        }
+        /* The one "apply the saved leagues" step, shared by page load
+           (through the timer below) and by the accounts layer after a
+           sign-in merge lands: re-render the connect dialog's list,
+           then run the same guarded auto-reconnect. The Google popup
+           sign-in never reloads the page, so without this step the
+           merged leagues only took effect on a manual refresh
+           (Eric, 2026-10-24). */
+        function applySavedLeagues() {
+          render();
+          maybeAutoReconnect();
         }
         /* Armed on DOMContentLoaded, NOT window load: load waits for
            every headshot and logo image, which would leave a
@@ -10665,6 +10698,8 @@ ${rdP ? "" : `
           const msgEl = document.getElementById("ff-auth-msg");
           let currentUid = null;
           let pendingNewUser = false;
+          let menuLabelEl = null;
+          let menuLeaguesEl = null;
 
           function track(name) {
             try { if (typeof gtag === "function") gtag("event", name, {}); } catch (e) { /* analytics never blocks auth */ }
@@ -10678,6 +10713,7 @@ ${rdP ? "" : `
             if (!slot) return;
             slot.innerHTML = "";
             if (!user) {
+              menuLabelEl = null; menuLeaguesEl = null;
               const b = document.createElement("button");
               b.type = "button"; b.className = "ff-signin-btn"; b.textContent = "Sign in";
               b.addEventListener("click", openPanel);
@@ -10698,18 +10734,57 @@ ${rdP ? "" : `
             menu.className = "ff-menu"; menu.hidden = true;
             const em = document.createElement("div");
             em.className = "ff-menu-email"; em.textContent = user.email || "";
+            const lgLabel = document.createElement("div");
+            lgLabel.className = "ff-menu-label"; lgLabel.textContent = "Your leagues";
+            const lgBox = document.createElement("div");
+            lgBox.className = "ff-menu-leagues";
+            const add = document.createElement("button");
+            add.type = "button"; add.textContent = "Add a league…";
+            add.addEventListener("click", () => {
+              menu.hidden = true;
+              if (window.openSleeperConnect) window.openSleeperConnect();
+            });
             const out = document.createElement("button");
             out.type = "button"; out.textContent = "Sign out";
             out.addEventListener("click", async () => {
               menu.hidden = true;
               try { await authMod.signOut(auth); } catch (e) { /* state listener re-renders either way */ }
             });
-            menu.appendChild(em); menu.appendChild(out);
-            btn.addEventListener("click", () => { menu.hidden = !menu.hidden; });
+            menu.appendChild(em); menu.appendChild(lgLabel); menu.appendChild(lgBox); menu.appendChild(add); menu.appendChild(out);
+            menuLabelEl = lgLabel; menuLeaguesEl = lgBox;
+            fillMenuLeagues();
+            btn.addEventListener("click", () => { fillMenuLeagues(); menu.hidden = !menu.hidden; });
             document.addEventListener("click", (e) => {
               if (!slot.contains(e.target)) menu.hidden = true;
             });
             slot.appendChild(btn); slot.appendChild(menu);
+          }
+
+          /* Profile-menu league picker (Eric, 2026-10-24): the saved
+             leagues one click from the avatar, through the same
+             reconnect paths the connect dialog uses. Refreshed every
+             time the menu opens and again after the sign-in merge
+             lands; with zero saved leagues the section is just the
+             "Add a league…" item under the (hidden) label. */
+          function fillMenuLeagues() {
+            if (!menuLeaguesEl) return;
+            const list = saved ? saved.list().slice().sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0)) : [];
+            if (menuLabelEl) menuLabelEl.hidden = !list.length;
+            menuLeaguesEl.innerHTML = "";
+            list.forEach((e) => {
+              const b = document.createElement("button");
+              b.type = "button"; b.className = "ff-menu-league";
+              const nm = document.createElement("span");
+              nm.className = "ff-menu-league-name"; nm.textContent = e.name || ("League " + e.leagueId);
+              const tag = document.createElement("span");
+              tag.className = "ff-menu-tag"; tag.textContent = e.platform === "espn" ? "ESPN" : "Sleeper";
+              b.appendChild(nm); b.appendChild(tag);
+              b.addEventListener("click", () => {
+                const m = menuLeaguesEl.closest(".ff-menu"); if (m) m.hidden = true;
+                if (saved && saved.reconnectEntry) saved.reconnectEntry(e);
+              });
+              menuLeaguesEl.appendChild(b);
+            });
           }
 
           function clean(e) {
@@ -10810,6 +10885,20 @@ ${rdP ? "" : `
             }
           } catch (e) { /* expired/invalid link: the signed-out state below just stands */ }
 
+          /* The popup sign-in never reloads the page, so once the
+             merge lands the saved leagues must be APPLIED, not just
+             stored: the shared apply step re-renders the dialog list
+             and — when no league is connected yet — runs the same
+             Sleeper auto-reconnect page load runs; the menu picker
+             re-fills with the merged list. Without this, a fresh
+             sign-in sat on the "enter Sleeper" prompt until a manual
+             refresh (Eric, 2026-10-24). A league already connected
+             (guest connected first, then signed in) is left alone —
+             the apply step's own guard sees CURRENT_LEAGUE "conn". */
+          function afterSignInApplied() {
+            try { if (window.__ffApplySavedLeagues) window.__ffApplySavedLeagues(); } catch (e) { /* apply is best-effort */ }
+            fillMenuLeagues();
+          }
           authMod.onAuthStateChanged(auth, (user) => {
             window.__ffAuth.user = user || null;
             window.__ffAuth.stateResolved = true;
@@ -10817,13 +10906,18 @@ ${rdP ? "" : `
             if (user && user.uid !== currentUid) {
               currentUid = user.uid;
               const nu = pendingNewUser; pendingNewUser = false;
-              syncOnSignIn(user, nu);
+              syncOnSignIn(user, nu).then(afterSignInApplied, afterSignInApplied);
+            } else if (!user && currentUid) {
+              currentUid = null;
+              /* Signed out: the local list stays on this device —
+                 just refresh its UI against the (unchanged) list. */
+              if (saved) { try { saved.render(); } catch (e) { /* best-effort */ } }
             }
-            if (!user) currentUid = null;
           });
           window.__ffAuth = {
             ready: true, stateResolved: false, user: null,
             signOut: () => authMod.signOut(auth),
+            applySavedLeagues: () => { if (window.__ffApplySavedLeagues) window.__ffApplySavedLeagues(); },
           };
         } catch (e) {
           /* Accounts layer stays off: no control is rendered, the
