@@ -224,6 +224,82 @@
         .slp-dialog h3 { font-size: 21px; }
       }
 
+
+      /* ---------- Accounts + saved leagues (2026-10-24) ---------- */
+      .ff-acct-row { display: flex; justify-content: flex-end; }
+      .ff-acct-slot { position: relative; display: inline-flex; align-items: center; }
+      .ff-signin-btn {
+        background: transparent; color: var(--ink-2); border: none; padding: 2px 2px 6px;
+        font-size: 13.5px; font-weight: 600; letter-spacing: .02em;
+      }
+      .ff-signin-btn:hover { color: var(--accent); }
+      .ff-avatar-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 32px; height: 32px; border-radius: 50%; overflow: hidden; padding: 0;
+        background: var(--chip); border: 1px solid rgba(198, 255, 0, .45); color: var(--accent);
+        font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px;
+      }
+      .ff-avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .ff-menu {
+        position: absolute; top: calc(100% + 6px); right: 0; z-index: 240; min-width: 220px;
+        background: linear-gradient(180deg, #14142a 0%, #0c0c1c 100%);
+        border: 1px solid rgba(255, 255, 255, .12); border-radius: 14px; padding: 12px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, .55);
+      }
+      .ff-menu[hidden] { display: none; }
+      .ff-menu-email { color: var(--ink-2); font-size: 13px; padding: 2px 6px 10px; word-break: break-all; }
+      .ff-menu button {
+        width: 100%; text-align: left; background: none; border: none; color: var(--ink);
+        font-size: 14.5px; font-weight: 600; padding: 8px 6px; border-radius: 8px; min-height: 40px;
+      }
+      .ff-menu button:hover { background: rgba(255, 255, 255, .06); }
+      .ff-saved { margin: 0 0 18px; }
+      .ff-saved[hidden] { display: none; }
+      .ff-saved-title {
+        font-size: 12.5px; font-weight: 700; color: var(--ink-2);
+        letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px;
+      }
+      .ff-saved-list { display: flex; flex-direction: column; gap: 8px; }
+      .ff-saved-row { display: flex; gap: 8px; align-items: stretch; }
+      .ff-saved-item {
+        flex: 1; text-align: left; padding: 11px 13px; min-height: 48px; border-radius: 12px; cursor: pointer;
+        background: var(--surface); border: 1px solid var(--line); color: var(--ink);
+      }
+      .ff-saved-item:hover, .ff-saved-item:focus-visible { border-color: rgba(198, 255, 0, .55); background: var(--surface-2); }
+      .ff-saved-name { display: block; font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15px; }
+      .ff-saved-meta { display: block; margin-top: 2px; color: var(--ink-2); font-size: 12.5px; }
+      .ff-saved-x {
+        width: 42px; border-radius: 12px; background: transparent; border: 1px solid var(--line);
+        color: var(--ink-2); font-size: 17px; line-height: 1;
+      }
+      .ff-saved-x:hover { color: #FF7EB3; border-color: rgba(255, 46, 136, .4); }
+      .ff-google-btn {
+        width: 100%; margin-top: 20px; min-height: 52px; border-radius: 12px; cursor: pointer;
+        background: #fff; color: #1a1a2e; border: none; font-weight: 700; font-size: 16px;
+      }
+      .ff-google-btn:disabled { opacity: .55; }
+      .ff-or { display: flex; align-items: center; gap: 12px; margin: 18px 0 0; color: var(--ink-2); font-size: 12.5px; }
+      .ff-or::before, .ff-or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+      #ff-email {
+        width: 100%; margin-top: 8px; min-height: 52px; padding: 0 16px; font-size: 16px;
+        background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .14); border-radius: 12px; color: var(--ink);
+      }
+      #ff-email:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+      .ff-auth-msg {
+        margin: 14px 0 0; padding: 11px 14px; border-radius: 10px; font-size: 14.5px;
+        background: rgba(198, 255, 0, .10); color: var(--accent); border: 1px solid rgba(198, 255, 0, .35);
+      }
+      .ff-auth-msg[hidden] { display: none; }
+      .ff-priv p { color: var(--ink-2); font-size: 14.5px; margin: 10px 0 0; }
+      .ff-priv p strong { color: var(--ink); }
+      .ff-priv a { color: var(--cyan); }
+      .ff-foot-links { margin-top: 10px; }
+      .ff-foot-link {
+        background: none; border: none; padding: 4px 2px; color: var(--ink-3);
+        font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px;
+      }
+      .ff-foot-link:hover { color: var(--ink); }
+
       /* ---------- compact header (shrunk 2026-10-23, Eric: content
          first — the brand is the big type now; league name, meta,
          pills and the mode row compress around it) ---------- */
@@ -2493,6 +2569,7 @@
         <div class="ticker-view"><div class="ticker-track" id="ticker-track"></div></div>
       </div>
       <header class="league">
+        <div class="ff-acct-row"><span class="ff-acct-slot" id="ff-acct-slot"></span></div>
         <div class="league-kicker">Fantasy Forensics</div>
         <h1 id="league-name">Fantasy Player Values</h1>
         <p class="league-sub" id="league-sub"></p>
@@ -3325,6 +3402,7 @@
           <p class="wl-msg" role="status" aria-live="polite"></p>
         </div>
         <footer id="page-footer"></footer>
+        <div class="ff-foot-links"><button type="button" class="ff-foot-link" id="ff-privacy-open">Privacy</button></div>
     </div>
 
     <script>window.GUEST_MODE = true;</script>
@@ -8731,6 +8809,10 @@ ${rdP ? "" : `
     <div class="slp-overlay" id="slp-overlay" hidden>
       <div class="slp-dialog" role="dialog" aria-modal="true" aria-labelledby="slp-title">
         <button type="button" class="slp-x" id="slp-close" aria-label="Close dialog">&times;</button>
+        <div class="ff-saved" id="ff-saved" hidden>
+          <div class="ff-saved-title">Your leagues</div>
+          <div class="ff-saved-list" id="ff-saved-list"></div>
+        </div>
         <div class="slp-tabs" id="slp-tabs" role="tablist" aria-label="League platform">
           <button type="button" id="slp-tab-sleeper" role="tab" aria-selected="true">Sleeper</button>
           <button type="button" id="slp-tab-espn" role="tab" aria-selected="false">ESPN</button>
@@ -8772,6 +8854,32 @@ ${rdP ? "" : `
         <p class="slp-err" id="slp-err" hidden></p>
       </div>
     </div>
+    <div class="slp-overlay" id="ff-auth-overlay" hidden>
+      <div class="slp-dialog" role="dialog" aria-modal="true" aria-labelledby="ff-auth-title">
+        <button type="button" class="slp-x" id="ff-auth-close" aria-label="Close sign in">&times;</button>
+        <h3 id="ff-auth-title">Sign in</h3>
+        <p class="slp-sub">One account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email.</p>
+        <button type="button" class="ff-google-btn" id="ff-google-btn">Continue with Google</button>
+        <div class="ff-or"><span>or</span></div>
+        <label class="slp-label" for="ff-email">Email address</label>
+        <input id="ff-email" type="email" autocomplete="email" placeholder="you@email.com" />
+        <button type="button" class="slp-go" id="ff-email-btn">Email me a sign-in link</button>
+        <p class="ff-auth-msg" id="ff-auth-msg" hidden></p>
+        <p class="slp-err" id="ff-auth-err" hidden></p>
+      </div>
+    </div>
+    <div class="slp-overlay" id="ff-privacy-overlay" hidden>
+      <div class="slp-dialog ff-priv" role="dialog" aria-modal="true" aria-labelledby="ff-privacy-title">
+        <button type="button" class="slp-x" id="ff-privacy-close" aria-label="Close privacy">&times;</button>
+        <h3 id="ff-privacy-title">Privacy</h3>
+        <p><strong>If you create an account,</strong> we store your email address and your league identifiers — your Sleeper username and league IDs, or your ESPN league ID — so your saved leagues follow you between devices. That is all an account stores.</p>
+        <p><strong>If you don't have an account,</strong> your saved leagues live only in this browser, on this device. Clear your browser data and they're gone — nothing about them ever reaches us.</p>
+        <p><strong>We never collect passwords.</strong> Sleeper connects with your public username and ESPN with your league ID. Neither platform shares a password with us, and we never ask for one.</p>
+        <p><strong>Analytics:</strong> we use Google Analytics to count anonymous usage — which tools get opened and where visitors come from.</p>
+        <p><strong>Deleting your data:</strong> remove any saved league with the &times; next to it, any time. To delete your account and everything stored with it, email <a href="mailto:thefantasyforensics@gmail.com">thefantasyforensics@gmail.com</a>.</p>
+      </div>
+    </div>
+
     <script>
       "use strict";
       /* ================= Connect your Sleeper league =================
@@ -9776,6 +9884,7 @@ ${rdP ? "" : `
           setConnectedLeague();
           slpClose();
           ffTrackConnect("sleeper");
+          try { window.__ffSavedRecord({ platform: "sleeper", leagueId: String(lg.league_id), name: lg.name || null, username: (slpState.user && slpState.user.username) || null, season: Number(lg.season) || null }); } catch (e) { /* saved leagues are best-effort */ }
           /* Land at the TOP of the League Analyzer — the Your Team
              spotlight first. No section anchor here: activateNav's
              deferred anchor jump used to fire after this scroll-to-top
@@ -10272,6 +10381,7 @@ ${rdP ? "" : `
           setConnectedLeague();
           slpClose();
           ffTrackConnect("espn");
+          try { window.__ffSavedRecord({ platform: "espn", leagueId: String(espnState.leagueId), name: espnState.name || null, season: espnState.season || null }); } catch (e) { /* saved leagues are best-effort */ }
           /* Land at the TOP of the League Analyzer — the Your Team
              spotlight first. No section anchor here: activateNav's
              deferred anchor jump used to fire after this scroll-to-top
@@ -10318,7 +10428,411 @@ ${rdP ? "" : `
         if (eBrowse) eBrowse.addEventListener("click", () => espnConnect(null));
       }
 
+      /* ---- Saved-league reconnect hooks (accounts build) ------
+         The local saved-leagues layer (next script) calls these to
+         reconnect a saved entry through the exact loaders a manual
+         connect runs. Sleeper resolves username -> leagues -> league
+         id; ESPN has no username, so its reconnect pre-fills the
+         paste-an-ID flow and lands on the pick-your-team step. */
+      window.__ffReconnectSleeper = async function (username, leagueId, season) {
+        /* One retry on the RESOLUTION stage only: a transient miss
+           on the user/league lookup (Sleeper answers a bare null for
+           a beat, a network blip) must not abandon the reconnect for
+           the whole visit — the manual flow has the user as its
+           retry, the auto-reconnect has nobody. Once slpLoadLeague
+           itself has run, its own outcome stands (no double-apply). */
+        const first = await ffTryReconnectSleeper(username, leagueId, season);
+        if (first !== "retry") return first === "ok";
+        await new Promise(res => setTimeout(res, 1500));
+        const second = await ffTryReconnectSleeper(username, leagueId, season);
+        return second === "ok";
+      };
+      async function ffTryReconnectSleeper(username, leagueId, season) {
+        try {
+          if (!username || !leagueId) return "done";
+          const user = await slpGet("/user/" + encodeURIComponent(username));
+          if (!user || !user.user_id) return "retry";
+          slpState.user = user;
+          if (!slpState.season) {
+            try {
+              const st = await slpGet("/state/nfl");
+              if (st && st.season) { slpState.season = Number(st.season); slpState.week = st.display_week || st.week || null; }
+            } catch (e) { /* defaults below */ }
+            if (!slpState.season) slpState.season = 2026;
+          }
+          const seasons = [];
+          [season, slpState.season, slpState.season - 1].forEach(s => { const n = Number(s); if (n && !seasons.includes(n)) seasons.push(n); });
+          for (const s of seasons) {
+            let leagues = null;
+            try { leagues = await slpGet(`/user/${user.user_id}/leagues/nfl/${s}`); } catch (e) { leagues = null; }
+            const lg = leagues && leagues.find(l => String(l.league_id) === String(leagueId));
+            if (lg) {
+              slpState.leagues = leagues;
+              slpState.usedSeason = s;
+              await slpLoadLeague(lg);
+              return window.CURRENT_LEAGUE === "conn" ? "ok" : "done";
+            }
+          }
+          return "retry";
+        } catch (e) { return "retry"; }
+      }
+      window.__ffReconnectEspn = function (leagueId) {
+        try {
+          const inp = slpEl("espn-input");
+          if (inp) inp.value = String(leagueId || "");
+          window.openSleeperConnect();
+          slpSetPlatform("espn");
+          espnLoad();
+          return true;
+        } catch (e) { return false; }
+      };
+
     </script>
+    <script>
+      "use strict";
+      /* ================= Saved leagues (local layer) =================
+         Every connected league is remembered in this browser
+         (localStorage "ff_saved_leagues"), listed at the top of the
+         connect dialog, and the most recent one quietly reconnects on
+         the next visit. This layer has ZERO dependency on the accounts
+         backend: it is a plain script, it runs signed-out, and the
+         Firebase module below only mirrors it into the signed-in
+         user's doc through the onChange hook — if that module never
+         loads, everything here still works exactly as written. */
+      (function () {
+        var KEY = "ff_saved_leagues";
+        function escHtml(s) {
+          return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+          });
+        }
+        function read() {
+          try {
+            var v = JSON.parse(localStorage.getItem(KEY) || "[]");
+            return Array.isArray(v) ? v.filter(function (e) { return e && e.platform && e.leagueId; }) : [];
+          } catch (e) { return []; }
+        }
+        function persist(list, silent) {
+          try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { /* private mode: list lives for the render only */ }
+          render();
+          if (!silent && api.onChange) { try { api.onChange(list); } catch (e) { /* sync is best-effort */ } }
+        }
+        function keyOf(e) { return e.platform + ":" + e.leagueId; }
+        function sorted(list) {
+          return list.slice().sort(function (a, b) { return (b.lastUsed || 0) - (a.lastUsed || 0); });
+        }
+        function render() {
+          var wrap = document.getElementById("ff-saved");
+          var listEl = document.getElementById("ff-saved-list");
+          if (!wrap || !listEl) return;
+          var list = sorted(read());
+          wrap.hidden = !list.length;
+          listEl.innerHTML = list.map(function (e, i) {
+            var meta = (e.platform === "espn" ? "ESPN" : "Sleeper") + (e.season ? " · " + e.season + " season" : "");
+            return '<div class="ff-saved-row">' +
+              '<button type="button" class="ff-saved-item" data-ff-saved="' + i + '">' +
+              '<span class="ff-saved-name">' + escHtml(e.name || "League " + e.leagueId) + '</span>' +
+              '<span class="ff-saved-meta">' + escHtml(meta) + '</span></button>' +
+              '<button type="button" class="ff-saved-x" data-ff-saved-x="' + i + '" aria-label="Remove ' + escHtml(e.name || "league") + '">&times;</button></div>';
+          }).join("");
+          listEl.querySelectorAll("[data-ff-saved]").forEach(function (btn) {
+            btn.addEventListener("click", function () { reconnect(list[Number(btn.dataset.ffSaved)], true); });
+          });
+          listEl.querySelectorAll("[data-ff-saved-x]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var e = list[Number(btn.dataset.ffSavedX)];
+              if (e) api.remove(e.platform, e.leagueId);
+            });
+          });
+        }
+        function closeOverlayQuietly() {
+          var ov = document.getElementById("slp-overlay");
+          if (ov) ov.hidden = true;
+          document.body.style.overflow = "";
+        }
+        function reconnect(entry, manual) {
+          if (!entry) return;
+          api.record(entry); /* a use bumps lastUsed (and syncs when signed in) */
+          if (entry.platform === "espn") {
+            if (window.__ffReconnectEspn) window.__ffReconnectEspn(entry.leagueId);
+            return;
+          }
+          if (!window.__ffReconnectSleeper) return;
+          window.__ffReconnectSleeper(entry.username, entry.leagueId, entry.season).then(function (ok) {
+            if (!ok && !manual) closeOverlayQuietly();
+            if (!ok && manual) { /* the loader already surfaced its own error in the dialog */ }
+          }).catch(function () { if (!manual) closeOverlayQuietly(); });
+        }
+        var api = {
+          onChange: null,
+          list: read,
+          record: function (entry) {
+            if (!entry || !entry.platform || !entry.leagueId) return;
+            var e = {
+              platform: entry.platform,
+              leagueId: String(entry.leagueId),
+              name: entry.name || null,
+              season: entry.season != null && entry.season !== "" ? Number(entry.season) : null,
+              lastUsed: Date.now(),
+            };
+            if (entry.platform === "sleeper") e.username = entry.username || null;
+            var list = read().filter(function (x) { return keyOf(x) !== keyOf(e); });
+            list.unshift(e);
+            persist(list, false);
+          },
+          remove: function (platform, leagueId) {
+            persist(read().filter(function (x) { return keyOf(x) !== platform + ":" + leagueId; }), false);
+          },
+          replaceAll: function (list) { persist(sorted(list || []), true); },
+          render: render,
+        };
+        window.__ffSaved = api;
+        window.__ffSavedRecord = function (entry) { api.record(entry); };
+        render();
+
+        /* Quiet auto-reconnect: most recent saved league, Sleeper
+           only (an ESPN reconnect lands on a pick-your-team step, so
+           auto-opening it on every visit would nag; the entry waits
+           one click away in the connect dialog). A failed attempt
+           stays in guest mode and closes the dialog the loader may
+           have opened to show its error. */
+        function maybeAutoReconnect() {
+          try {
+            var list = sorted(read());
+            if (!list.length) return;
+            if (window.CURRENT_LEAGUE === "conn") return;
+            if (location.hash && location.hash.length > 1) return; /* share links win */
+            var e = list[0];
+            if (e.platform !== "sleeper") return;
+            reconnect(e, false);
+          } catch (err) { /* guest mode stands */ }
+        }
+        /* Armed on DOMContentLoaded, NOT window load: load waits for
+           every headshot and logo image, which would leave a
+           returning user staring at the guest board on a slow
+           connection. Everything the reconnect needs (the connect
+           script above) has already parsed by DOMContentLoaded. */
+        if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { setTimeout(maybeAutoReconnect, 1200); });
+        else setTimeout(maybeAutoReconnect, 1200);
+
+        /* Privacy view (no backend dependency — wired here). */
+        var pOpen = document.getElementById("ff-privacy-open");
+        var pOv = document.getElementById("ff-privacy-overlay");
+        var pClose = document.getElementById("ff-privacy-close");
+        function pShow() { if (pOv) { pOv.hidden = false; document.body.style.overflow = "hidden"; } }
+        function pHide() { if (pOv) { pOv.hidden = true; document.body.style.overflow = ""; } }
+        if (pOpen) pOpen.addEventListener("click", pShow);
+        if (pClose) pClose.addEventListener("click", pHide);
+        if (pOv) pOv.addEventListener("click", function (e) { if (e.target === pOv) pHide(); });
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") pHide(); });
+      })();
+    </script>
+
+    <script type="module">
+      /* ================= Accounts (Firebase Auth + Firestore) ======
+         Fail-soft by construction: the SDK loads by dynamic import
+         inside one try/catch, so a blocked CDN, a bad config, or any
+         Firebase error leaves the site — and the local saved-leagues
+         layer above — exactly as it was. The header sign-in control
+         is rendered ONLY after the SDK is confirmed alive, so a dead
+         backend never leaves a dead button on the page. The config
+         below is a public client identifier; access control lives in
+         the Firestore rules (users/{uid} is owner-only). */
+      const firebaseConfig = {
+        apiKey: "AIzaSyDdmk-BdudyUKttURUNgkJW64Gp6RRRmB4",
+        authDomain: "fantasy-forensics-bbeb3.firebaseapp.com",
+        projectId: "fantasy-forensics-bbeb3",
+        storageBucket: "fantasy-forensics-bbeb3.firebasestorage.app",
+        messagingSenderId: "965698275784",
+        appId: "1:965698275784:web:5b93d80c579aa76e6a98fd",
+      };
+      window.__ffAuth = { ready: false, stateResolved: false, user: null };
+      (async () => {
+        try {
+          const FB = "https://www.gstatic.com/firebasejs/10.12.5/";
+          const [appMod, authMod, fsMod] = await Promise.all([
+            import(FB + "firebase-app.js"),
+            import(FB + "firebase-auth.js"),
+            import(FB + "firebase-firestore.js"),
+          ]);
+          const app = appMod.initializeApp(firebaseConfig);
+          const auth = authMod.getAuth(app);
+          const db = fsMod.getFirestore(app);
+          const saved = window.__ffSaved || null;
+          const slot = document.getElementById("ff-acct-slot");
+          const overlay = document.getElementById("ff-auth-overlay");
+          const errEl = document.getElementById("ff-auth-err");
+          const msgEl = document.getElementById("ff-auth-msg");
+          let currentUid = null;
+          let pendingNewUser = false;
+
+          function track(name) {
+            try { if (typeof gtag === "function") gtag("event", name, {}); } catch (e) { /* analytics never blocks auth */ }
+          }
+          function showErr(msg) { if (errEl) { errEl.textContent = msg; errEl.hidden = false; } if (msgEl) msgEl.hidden = true; }
+          function showMsg(msg) { if (msgEl) { msgEl.textContent = msg; msgEl.hidden = false; } if (errEl) errEl.hidden = true; }
+          function openPanel() { if (overlay) { overlay.hidden = false; document.body.style.overflow = "hidden"; } }
+          function closePanel() { if (overlay) { overlay.hidden = true; document.body.style.overflow = ""; } }
+
+          function renderControl(user) {
+            if (!slot) return;
+            slot.innerHTML = "";
+            if (!user) {
+              const b = document.createElement("button");
+              b.type = "button"; b.className = "ff-signin-btn"; b.textContent = "Sign in";
+              b.addEventListener("click", openPanel);
+              slot.appendChild(b);
+              return;
+            }
+            const btn = document.createElement("button");
+            btn.type = "button"; btn.className = "ff-avatar-btn";
+            btn.setAttribute("aria-label", "Account menu");
+            if (user.photoURL) {
+              const img = document.createElement("img");
+              img.src = user.photoURL; img.alt = ""; img.referrerPolicy = "no-referrer";
+              btn.appendChild(img);
+            } else {
+              btn.textContent = (user.email || "?").trim().charAt(0).toUpperCase() || "?";
+            }
+            const menu = document.createElement("div");
+            menu.className = "ff-menu"; menu.hidden = true;
+            const em = document.createElement("div");
+            em.className = "ff-menu-email"; em.textContent = user.email || "";
+            const out = document.createElement("button");
+            out.type = "button"; out.textContent = "Sign out";
+            out.addEventListener("click", async () => {
+              menu.hidden = true;
+              try { await authMod.signOut(auth); } catch (e) { /* state listener re-renders either way */ }
+            });
+            menu.appendChild(em); menu.appendChild(out);
+            btn.addEventListener("click", () => { menu.hidden = !menu.hidden; });
+            document.addEventListener("click", (e) => {
+              if (!slot.contains(e.target)) menu.hidden = true;
+            });
+            slot.appendChild(btn); slot.appendChild(menu);
+          }
+
+          function clean(e) {
+            if (!e || !e.platform || !e.leagueId) return null;
+            const out = {
+              platform: String(e.platform), leagueId: String(e.leagueId),
+              name: e.name || null,
+              season: e.season != null && e.season !== "" ? Number(e.season) : null,
+              lastUsed: Number(e.lastUsed) || 0,
+            };
+            if (out.platform === "sleeper") out.username = e.username || null;
+            return out;
+          }
+          async function pushDoc(user, leagues) {
+            try {
+              await fsMod.setDoc(fsMod.doc(db, "users", user.uid), {
+                email: user.email || null,
+                leagues: (leagues || []).map(clean).filter(Boolean),
+                updatedAt: new Date().toISOString(),
+              });
+            } catch (e) { /* offline/rules hiccup: local mirror stands */ }
+          }
+          async function syncOnSignIn(user, isNewUser) {
+            let remote = [], existed = false;
+            try {
+              const snap = await fsMod.getDoc(fsMod.doc(db, "users", user.uid));
+              if (snap.exists()) {
+                existed = true;
+                const d = snap.data();
+                if (d && Array.isArray(d.leagues)) remote = d.leagues.map(clean).filter(Boolean);
+              }
+            } catch (e) { /* treat as no remote doc; the merge below still lands local */ }
+            const local = saved ? saved.list().map(clean).filter(Boolean) : [];
+            const byKey = new Map();
+            [...remote, ...local].forEach((e) => {
+              const k = e.platform + ":" + e.leagueId;
+              const prev = byKey.get(k);
+              if (!prev || (e.lastUsed || 0) >= (prev.lastUsed || 0)) byKey.set(k, e);
+            });
+            const merged = [...byKey.values()].sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
+            if (saved) saved.replaceAll(merged);
+            await pushDoc(user, merged);
+            track(isNewUser || !existed ? "account_signup" : "account_signin");
+          }
+          if (saved) {
+            saved.onChange = (list) => {
+              if (auth.currentUser) pushDoc(auth.currentUser, list);
+            };
+          }
+
+          const closeBtn = document.getElementById("ff-auth-close");
+          if (closeBtn) closeBtn.addEventListener("click", closePanel);
+          if (overlay) overlay.addEventListener("click", (e) => { if (e.target === overlay) closePanel(); });
+          document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
+
+          const googleBtn = document.getElementById("ff-google-btn");
+          if (googleBtn) googleBtn.addEventListener("click", async () => {
+            googleBtn.disabled = true;
+            try {
+              const res = await authMod.signInWithPopup(auth, new authMod.GoogleAuthProvider());
+              const info = authMod.getAdditionalUserInfo(res);
+              pendingNewUser = !!(info && info.isNewUser);
+              closePanel();
+            } catch (e) {
+              if (e && e.code === "auth/popup-closed-by-user") { /* they changed their mind — no error */ }
+              else showErr("Google sign-in didn't go through — try again, or use the email link below.");
+            } finally { googleBtn.disabled = false; }
+          });
+          const emailBtn = document.getElementById("ff-email-btn");
+          const emailInp = document.getElementById("ff-email");
+          if (emailBtn && emailInp) emailBtn.addEventListener("click", async () => {
+            const email = (emailInp.value || "").trim();
+            if (!/.+@.+\..+/.test(email)) { showErr("Enter your email address first."); return; }
+            emailBtn.disabled = true;
+            try {
+              await authMod.sendSignInLinkToEmail(auth, email, { url: "https://thefantasyforensics.com/", handleCodeInApp: true });
+              try { localStorage.setItem("ff_email_for_signin", email); } catch (e) { /* link still sent */ }
+              showMsg("Check your inbox — we emailed you a sign-in link for " + email + ".");
+            } catch (e) {
+              showErr("That email link couldn't be sent — check the address and try again.");
+            } finally { emailBtn.disabled = false; }
+          });
+
+          /* Email-link return trip: complete sign-in, then strip the
+             auth params from the URL so a refresh doesn't retry. */
+          try {
+            if (authMod.isSignInWithEmailLink(auth, window.location.href)) {
+              let email = null;
+              try { email = localStorage.getItem("ff_email_for_signin"); } catch (e) { /* asked below */ }
+              if (!email) email = window.prompt("Enter the email the sign-in link was sent to:");
+              if (email) {
+                const res = await authMod.signInWithEmailLink(auth, email, window.location.href);
+                const info = authMod.getAdditionalUserInfo(res);
+                pendingNewUser = !!(info && info.isNewUser);
+                try { localStorage.removeItem("ff_email_for_signin"); } catch (e) { /* ignore */ }
+                try { history.replaceState(null, "", window.location.pathname); } catch (e) { /* ignore */ }
+              }
+            }
+          } catch (e) { /* expired/invalid link: the signed-out state below just stands */ }
+
+          authMod.onAuthStateChanged(auth, (user) => {
+            window.__ffAuth.user = user || null;
+            window.__ffAuth.stateResolved = true;
+            renderControl(user);
+            if (user && user.uid !== currentUid) {
+              currentUid = user.uid;
+              const nu = pendingNewUser; pendingNewUser = false;
+              syncOnSignIn(user, nu);
+            }
+            if (!user) currentUid = null;
+          });
+          window.__ffAuth = {
+            ready: true, stateResolved: false, user: null,
+            signOut: () => authMod.signOut(auth),
+          };
+        } catch (e) {
+          /* Accounts layer stays off: no control is rendered, the
+             local saved-leagues layer above is untouched. */
+          window.__ffAuth = { ready: false, stateResolved: true, user: null, error: String(e && e.message || e) };
+        }
+      })();
+    </script>
+
     <script>
       "use strict";
       /* ================= Teams tab — your-team spotlight =================
