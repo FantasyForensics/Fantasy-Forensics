@@ -3296,10 +3296,9 @@
   <!-- ============ S1. REDRAFT BOARD ============ -->
   <section id="sboard">
     <div class="sec-head"><span class="tag" style="color:var(--cyan)">01 · The Board</span><h2>Redraft value board</h2></div>
-    <p class="sec-sub">The full player pool re-priced for redraft: <b>rest-of-season value</b>, on the same scale as the <a href="../dynasty-analyzer/">Fantasy Forensics</a> Redraft mode. Production is the whole price — a producing 32-year-old outprices a 21-year-old stash. The muted column is each player's dynasty price, so you can see exactly what the format change does to him.</p>
+    <p class="sec-sub">The full player pool re-priced for redraft: <b>rest-of-season value</b>, on the same scale as the <a href="../dynasty-analyzer/">Fantasy Forensics</a> Redraft mode. The muted column is each player's dynasty price, so you can see exactly what the format change does to him.</p>
 
     <div class="stats">
-      <div class="stat"><div class="v num">1.69×</div><div class="l">Derrick Henry's redraft premium — 6,767 vs a 3,994 dynasty price at age 32. Production now beats youth in this mode</div></div>
       <div class="stat"><div class="v cy num">0</div><div class="l">Draft picks on this board. Every one of the 180 slots in a snake draft is a player producing this season</div></div>
       <div class="stat"><div class="v mg num">0.35×</div><div class="l">Jeremiyah Love's price ratio — 1,879 redraft vs 5,305 dynasty. The rookie premium evaporates when only this season counts</div></div>
     </div>
@@ -8661,7 +8660,7 @@ ${rdP ? "" : `
           : n >= 1000 ? Math.floor(n / 1000) + "K" : String(n);
         box.innerHTML = `<h3>Trending now<span class="tr-sub">most-added across Sleeper leagues · last 24h</span></h3>` +
           `<div class="tr-row">` + top.map(({ p, adds }) =>
-            `<span class="tr-chip">${(typeof window.hsImg === "function") ? window.hsImg(p, "phs-sm") : ""}<span class="who">${esc(p.name)}</span> <span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${p.posRank}</span><span class="tr-team">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team || "")}</span><span class="tr-adds">+${fmtK(adds)} adds · 24h</span></span>`
+            `<span class="tr-chip">${(typeof window.hsImg === "function") ? window.hsImg(p, "phs-sm") : ""}<span class="who">${esc(p.name)}</span> <span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${p.posRank}</span><span class="tr-team">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team || "")}</span><span class="tr-adds">+${fmtK(adds)} adds</span></span>`
           ).join("") + `</div>`;
         box.hidden = false;
       };
