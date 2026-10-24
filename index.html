@@ -6940,7 +6940,20 @@ ${rdP ? "" : `
         }
 
         const results = simulate(means, meansWk, SIMS, BASE_SEED);
-        const deltaBase = simulate(means, meansWk, DELTA_SIMS, DELTA_SEED);
+        /* Lazy delta base (perf, 2026-10-24): the paired 3,000-sim
+           base used to anchor trade/scenario deltas ran EAGERLY at
+           every sim build — doubling the build from 3,000 to 6,000
+           sims — even though it is only read by on-demand trade and
+           scenario evaluations (impact/oddsWithMeans below), which
+           already run a 3,000-sim simAfter each. Same seed, same
+           inputs, memoized: the numbers are identical, the cost
+           moves from every league switch to the first trade
+           evaluation of the session. */
+        let deltaBase = null;
+        function getDeltaBase() {
+          if (!deltaBase) deltaBase = simulate(means, meansWk, DELTA_SIMS, DELTA_SEED);
+          return deltaBase;
+        }
         const cache = new Map();
         function impact(ridA, idsA, ridB, idsB) {
           const key = ridA + ":" + idsA.slice().sort().join(",") + "|" + (ridB == null ? "-" : ridB + ":" + idsB.slice().sort().join(","));
@@ -6961,10 +6974,10 @@ ${rdP ? "" : `
           const adj = {};
           DATA.teams.forEach(t => {
             const r = t.rid;
-            let poA = Math.min(1, Math.max(0, results[r].playoff + (simAfter[r].playoff - deltaBase[r].playoff)));
+            let poA = Math.min(1, Math.max(0, results[r].playoff + (simAfter[r].playoff - getDeltaBase()[r].playoff)));
             if (!results[r].elim && poA <= 0) poA = 0.005;
             adj[r] = {
-              expWins: results[r].expWins + (simAfter[r].expWins - deltaBase[r].expWins),
+              expWins: results[r].expWins + (simAfter[r].expWins - getDeltaBase()[r].expWins),
               playoff: poA,
               // Same decomposition as the headline odds, priced on the
               // post-trade sim: title = playoff × bracket-win, so an
@@ -6997,10 +7010,10 @@ ${rdP ? "" : `
           const adj = {};
           DATA.teams.forEach(t => {
             const r = t.rid;
-            let poA = Math.min(1, Math.max(0, results[r].playoff + (simAfter[r].playoff - deltaBase[r].playoff)));
+            let poA = Math.min(1, Math.max(0, results[r].playoff + (simAfter[r].playoff - getDeltaBase()[r].playoff)));
             if (!results[r].elim && poA <= 0) poA = 0.005;
             adj[r] = {
-              expWins: results[r].expWins + (simAfter[r].expWins - deltaBase[r].expWins),
+              expWins: results[r].expWins + (simAfter[r].expWins - getDeltaBase()[r].expWins),
               playoff: poA,
               champ: poA * simAfter[r].bracket,
               bracket: simAfter[r].bracket,
@@ -7302,10 +7315,10 @@ ${rdP ? "" : `
           const adj = {};
           DATA.teams.forEach(t => {
             const r = t.rid;
-            let poA = Math.min(1, Math.max(0, results[r].playoff + (simAfter[r].playoff - deltaBase[r].playoff)));
+            let poA = Math.min(1, Math.max(0, results[r].playoff + (simAfter[r].playoff - getDeltaBase()[r].playoff)));
             if (!results[r].elim && poA <= 0) poA = 0.005;
             adj[r] = {
-              expWins: results[r].expWins + (simAfter[r].expWins - deltaBase[r].expWins),
+              expWins: results[r].expWins + (simAfter[r].expWins - getDeltaBase()[r].expWins),
               playoff: poA,
               champ: poA * simAfter[r].bracket,
               bracket: simAfter[r].bracket,
@@ -9757,6 +9770,11 @@ ${rdP ? "" : `
 
       /* ================= Dialog + flow ================= */
       const slpState = { user: null, season: null, week: null, leagues: [], usedSeason: null };
+      /* Draft ids memoized per league (switch perf, 2026-10-24): a
+         league's draft never changes, so a repeat switch can start
+         its traded-pick fetch with the bundle instead of waiting for
+         the bundle to reveal the draft id first. */
+      const slpDraftIdByLeague = {};
       const slpEl = id => document.getElementById(id);
 
       const SLP_STEPS = { user: "slp-step-user", leagues: "slp-step-leagues", loading: "slp-step-loading", espn: "espn-step-input", espnteam: "espn-step-team" };
@@ -9906,20 +9924,51 @@ ${rdP ? "" : `
           const week = seasonNum === slpState.season
             ? (slpState.week || (lg.settings && lg.settings.leg) || 1)
             : ((lg.settings && lg.settings.leg) || 1);
-          const [league, rosters, users, traded, matchups] = await Promise.all([
+          /* Switch perf (2026-10-24): transactions used to wait for
+             the whole bundle, and the draft-pick fetch then waited
+             for transactions — three sequential round trips before
+             the league could render. The transaction fetches only
+             need league id + week, both known up front, so they start
+             with the bundle. The draft fetch needs draft_id from the
+             bundle — except on a repeat switch, where the memoized id
+             lets it start with the bundle too. */
+          const txnP = (async () => {
+            try {
+              const wks = [week, week - 1, week - 2].filter(w => w >= 1);
+              const arrs = await Promise.all(wks.map(w => slpGet(`/league/${lg.league_id}/transactions/${w}`).catch(() => [])));
+              return arrs.flat().filter(Boolean);
+            } catch (e) { return []; }
+          })();
+          const draftMemo = slpDraftIdByLeague[lg.league_id];
+          const draftP = draftMemo ? slpGet(`/draft/${draftMemo}/traded_picks`).catch(() => []) : null;
+          const bundleP = Promise.all([
             slpGet(`/league/${lg.league_id}`),
             slpGet(`/league/${lg.league_id}/rosters`),
             slpGet(`/league/${lg.league_id}/users`),
             slpGet(`/league/${lg.league_id}/traded_picks`).catch(() => []),
             slpGet(`/league/${lg.league_id}/matchups/${week}`).catch(() => null),
           ]);
-          if (!league || !rosters || !users) throw new Error("bundle");
-          let txns = [];
+          /* Schedule prefetch (perf, 2026-10-24): the season sim and
+             the Lifeline both need weeks [week, max(playoff start, 15))
+             from the shared schedule cache, and they used to start
+             that fetch only when the odds view rendered — so the sim
+             built once on random pairings and rebuilt when the fetch
+             landed, and the Lifeline waited behind it. Starting the
+             same cached, deduped fetch with the bundle (fire-and-
+             forget; it never blocks the bundle) means real pairings
+             are usually in hand when the sim first builds. The cache
+             key matches the Lifeline/sim key exactly for standard
+             leagues; a mismatch only costs the same refetch as today. */
           try {
-            const wks = [week, week - 1, week - 2].filter(w => w >= 1);
-            const arrs = await Promise.all(wks.map(w => slpGet(`/league/${lg.league_id}/transactions/${w}`).catch(() => [])));
-            txns = arrs.flat().filter(Boolean);
-          } catch (e) { /* wire is best-effort */ }
+            const ps = (lg.settings && lg.settings.playoff_week_start) || 15;
+            const sEnd = Math.max(ps, 15);
+            if (typeof window.__ffSchedEnsure === "function" && week >= 1 && sEnd > week) {
+              window.__ffSchedEnsure(lg.league_id, week, sEnd).catch(function () {});
+            }
+          } catch (e) { /* schedule prefetch is best-effort */ }
+          const [league, rosters, users, traded, matchups] = await bundleP;
+          if (!league || !rosters || !users) throw new Error("bundle");
+          const txns = await txnP;
           /* Real pick ownership, two legs: the league-level traded_picks
              endpoint is the authoritative source for future seasons'
              picks (Sleeper's docs: "all traded picks in a league,
@@ -9932,10 +9981,12 @@ ${rdP ? "" : `
              stands alone; both failing degrades to the default
              ownership below (owner = original team). */
           let draftTraded = [];
-          if (league.draft_id) {
+          if (draftP) draftTraded = (await draftP) || [];
+          else if (league.draft_id) {
             try { draftTraded = (await slpGet(`/draft/${league.draft_id}/traded_picks`)) || []; }
             catch (e) { draftTraded = []; }
           }
+          if (league.draft_id) slpDraftIdByLeague[lg.league_id] = league.draft_id;
           const allTraded = [...draftTraded, ...(traded || [])];
           const built = buildConnLeague({
             user: slpState.user, league, rosters, users,
@@ -9954,7 +10005,6 @@ ${rdP ? "" : `
           setConnectedLeague();
           slpClose();
           ffTrackConnect("sleeper");
-          try { window.__ffSavedRecord({ platform: "sleeper", leagueId: String(lg.league_id), name: lg.name || null, username: (slpState.user && slpState.user.username) || null, season: Number(lg.season) || null }); } catch (e) { /* saved leagues are best-effort */ }
           /* Manual connects land at the TOP of the League Analyzer
              — the Your Team spotlight first. No section anchor here:
              activateNav's deferred anchor jump used to fire after
@@ -9968,6 +10018,16 @@ ${rdP ? "" : `
             activateNav("league");
             window.scrollTo({ top: 0 });
           }
+          /* Saved-record write runs AFTER the landing, deferred a
+             tick (switch perf, 2026-10-24): its localStorage write,
+             menu re-render, and Firestore mirror used to run before
+             the landing and sit on the render path. A failed switch
+             records nothing — lastUsed only advances on a successful
+             load, so a failed switch can never become "most recent". */
+          /* Literal call shape kept deliberately: the build gate
+             counts the saved-record calls (one per platform) as
+             proof both connect paths record. */
+          setTimeout(function () { try { window.__ffSavedRecord({ platform: "sleeper", leagueId: String(lg.league_id), name: lg.name || null, username: (slpState.user && slpState.user.username) || null, season: Number(lg.season) || null }); } catch (e) { /* saved leagues are best-effort */ } }, 0);
         } catch (e) {
           /* Never leave a half-applied connection behind: roll back to
              the clean guest state, then show the failure here in the
@@ -10534,6 +10594,25 @@ ${rdP ? "" : `
       async function ffTryReconnectSleeper(username, leagueId, season, opts) {
         try {
           if (!username || !leagueId) return "done";
+          /* Session shortcut (switch perf, 2026-10-24): the profile
+             menu and the connect dialog both route through here, and
+             a switch between two leagues of the same account
+             re-fetched the user + leagues list every time — two
+             round trips before the bundle even started — even though
+             this session already resolved both. If the session's user
+             matches and its leagues list already contains the target,
+             skip straight to the load. A target the session list
+             lacks falls through to the resolution loop below. */
+          if (slpState.user && slpState.user.username
+              && String(slpState.user.username).toLowerCase() === String(username).toLowerCase()
+              && Array.isArray(slpState.leagues)) {
+            const hit = slpState.leagues.find(l => String(l.league_id) === String(leagueId));
+            if (hit) {
+              if (!slpState.usedSeason && hit.season) slpState.usedSeason = Number(hit.season);
+              await slpLoadLeague(hit, opts);
+              return window.CURRENT_LEAGUE === "conn" ? "ok" : "done";
+            }
+          }
           /* User lookup and NFL state are independent: fetch them in
              parallel instead of sequentially (saves a round trip on
              every cold open; the state result is only consumed when
@@ -10791,7 +10870,12 @@ ${rdP ? "" : `
         }
         function reconnect(entry, manual) {
           if (!entry) return Promise.resolve(false);
-          api.record(entry); /* a use bumps lastUsed (and syncs when signed in) */
+          /* No upfront record (switch perf, 2026-10-24): recording
+             here ran a localStorage write + full menu re-render +
+             Firestore mirror on the click path, before any fetch,
+             and bumped lastUsed even when the switch then failed.
+             The successful load records itself, after its landing
+             (slpLoadLeague) or after its apply (espnConnect). */
           if (entry.platform === "espn") {
             if (window.__ffReconnectEspn) window.__ffReconnectEspn(entry.leagueId);
             return Promise.resolve(true);
@@ -13206,6 +13290,17 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         if (!wrap || !out) return;
         let cache = { key: "", html: "" }; // session cache: completed-week data is final
         let seq = 0;
+        /* In-flight dedup (switch perf, 2026-10-24): renderWeekThatWas
+           runs inside every refreshAll, and a switch fires several
+           refreshAlls in quick succession. The seq guard only stopped
+           stale chains from RENDERING — every chain still fetched
+           (league + up to 3 matchup weeks each), ~10 redundant league
+           fetches per switch clogging the browser's 6-connection
+           pool and delaying the Lifeline batch behind them. A fetch
+           already running for this league suppresses duplicates; it
+           renders when it lands. Cleared conditionally so a newer
+           chain for another league never wipes this chain's marker. */
+        let pending = null;
 
         function wtwHide() {
           wrap.hidden = true;
@@ -13307,11 +13402,13 @@ const groups = {};
           cache = { key: lid, week: week, html: out.innerHTML };
         }
         async function wtwFetch(lid, mySeq) {
+          pending = lid;
+          const clearPending = function () { if (pending === lid) pending = null; };
           const C = window.CONN_LEAGUE;
           let cand = 0;
           try {
             const lg = await slpGet("/league/" + lid);
-            if (mySeq !== seq || !window.CONN_LEAGUE || window.CURRENT_LEAGUE !== "conn") return;
+            if (mySeq !== seq || !window.CONN_LEAGUE || window.CURRENT_LEAGUE !== "conn") { clearPending(); return; }
             if (lg && lg.settings && Number(lg.settings.last_scored_leg) > 0) cand = Number(lg.settings.last_scored_leg);
           } catch (e) { /* fall back to the site's own week below */ }
           const siteWeek = Number(C && C.league && C.league.week) || 0;
@@ -13320,14 +13417,16 @@ const groups = {};
           for (let tries = 0; cand >= 1 && tries < 3; tries++, cand--) {
             let ms = null;
             try { ms = await slpGet("/league/" + lid + "/matchups/" + cand); } catch (e) { ms = null; }
-            if (mySeq !== seq || !window.CONN_LEAGUE || window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE) return;
+            if (mySeq !== seq || !window.CONN_LEAGUE || window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE) { clearPending(); return; }
             if (Array.isArray(ms) && ms.some(m => m && isFinite(wtwScoreOf(m)) && wtwScoreOf(m) > 0)) {
               wtwRender(lid, cand, ms);
+              clearPending();
               return;
             }
           }
           /* Nothing played yet (Week 1 preseason) — leave the tab as it was. */
           wtwHide();
+          clearPending();
         }
         window.renderWeekThatWas = function () {
                     if (typeof window.snapshotStale === "function" && window.snapshotStale()) { wtwHide(); return; }
@@ -13353,6 +13452,11 @@ if (!wrap || !out) return;
             if (wtTitleEl2 && cache.week) wtTitleEl2.textContent = "Week " + cache.week + " Results";
             return;
           }
+          /* Same league, fetch already running: the in-flight chain
+             renders when it lands. Do NOT bump seq here — bumping
+             would abort the pending chain's render and leave the
+             strip empty until yet another refresh. */
+          if (pending === lid) return;
           seq++;
           const mySeq = seq;
           out.innerHTML = "";
