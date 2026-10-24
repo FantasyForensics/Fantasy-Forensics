@@ -9871,7 +9871,17 @@ ${rdP ? "" : `
           btn.addEventListener("click", () => slpLoadLeague(slpState.leagues[Number(btn.dataset.slpLeague)])));
       }
 
-      async function slpLoadLeague(lg) {
+      async function slpLoadLeague(lg, opts) {
+        /* opts.quiet (auto-reconnect only): apply the league silently.
+           A manual connect lands the user on the League Analyzer at
+           the top of the page — that is the expected payoff for an
+           explicit action. An AUTOMATIC reconnect must never do it:
+           yanking the tab and the scroll position out from under a
+           user who is already reading the guest board is the
+           "slower and glitchy" feeling (Eric, 2026-10-24). Quiet
+           mode also never opens the connect dialog on failure: a
+           failed background reconnect stays a clean guest page. */
+        const quiet = !!(opts && opts.quiet);
         slpClearError();
         slpShowStep("loading");
         const skName = slpEl("slp-loading-name");
@@ -9938,26 +9948,37 @@ ${rdP ? "" : `
           slpClose();
           ffTrackConnect("sleeper");
           try { window.__ffSavedRecord({ platform: "sleeper", leagueId: String(lg.league_id), name: lg.name || null, username: (slpState.user && slpState.user.username) || null, season: Number(lg.season) || null }); } catch (e) { /* saved leagues are best-effort */ }
-          /* Land at the TOP of the League Analyzer — the Your Team
-             spotlight first. No section anchor here: activateNav's
-             deferred anchor jump used to fire after this scroll-to-top
-             and strand redraft landings mid-page at Season Outlook. */
-          window.__subnavNext = window.__subnavNext || {};
-          window.__subnavNext.league = "power";
-          activateNav("league");
-          window.scrollTo({ top: 0 });
+          /* Manual connects land at the TOP of the League Analyzer
+             — the Your Team spotlight first. No section anchor here:
+             activateNav's deferred anchor jump used to fire after
+             this scroll-to-top and strand redraft landings mid-page
+             at Season Outlook. Quiet (auto) connects skip the landing
+             entirely: the data swaps in place and the user stays
+             exactly where they were reading. */
+          if (!quiet) {
+            window.__subnavNext = window.__subnavNext || {};
+            window.__subnavNext.league = "power";
+            activateNav("league");
+            window.scrollTo({ top: 0 });
+          }
         } catch (e) {
           /* Never leave a half-applied connection behind: roll back to
              the clean guest state, then show the failure here in the
              dialog rather than as silently empty tabs. */
           if (staged) { try { slpDisconnect(); } catch (e2) { /* best effort */ } }
-          const ov = slpEl("slp-overlay");
-          if (ov && ov.hidden) { ov.hidden = false; document.body.style.overflow = "hidden"; }
-          renderLeagueSwitcher();
-          slpShowStep("leagues");
-          slpError(staged
-            ? "That league loaded from Sleeper but couldn't be applied — try again; if it keeps failing, this league's format may not be supported yet."
-            : "Sleeper isn't responding — try again in a minute.");
+          /* Quiet failures stay silent: the dialog never opens, no
+             error is rendered into it — a failed background
+             reconnect leaves a clean guest page (the overlay used to
+             flash open with the error and then close again). */
+          if (!quiet) {
+            const ov = slpEl("slp-overlay");
+            if (ov && ov.hidden) { ov.hidden = false; document.body.style.overflow = "hidden"; }
+            renderLeagueSwitcher();
+            slpShowStep("leagues");
+            slpError(staged
+              ? "That league loaded from Sleeper but couldn't be applied — try again; if it keeps failing, this league's format may not be supported yet."
+              : "Sleeper isn't responding — try again in a minute.");
+          }
         }
       }
 
@@ -10487,30 +10508,37 @@ ${rdP ? "" : `
          connect runs. Sleeper resolves username -> leagues -> league
          id; ESPN has no username, so its reconnect pre-fills the
          paste-an-ID flow and lands on the pick-your-team step. */
-      window.__ffReconnectSleeper = async function (username, leagueId, season) {
+      window.__ffReconnectSleeper = async function (username, leagueId, season, opts) {
         /* One retry on the RESOLUTION stage only: a transient miss
            on the user/league lookup (Sleeper answers a bare null for
            a beat, a network blip) must not abandon the reconnect for
            the whole visit — the manual flow has the user as its
            retry, the auto-reconnect has nobody. Once slpLoadLeague
-           itself has run, its own outcome stands (no double-apply). */
-        const first = await ffTryReconnectSleeper(username, leagueId, season);
+           itself has run, its own outcome stands (no double-apply).
+           opts.quiet (auto-reconnect only): slpLoadLeague applies the
+           league silently — no tab switch, no scroll yank, and a
+           failure never opens the connect dialog (see slpLoadLeague). */
+        const first = await ffTryReconnectSleeper(username, leagueId, season, opts);
         if (first !== "retry") return first === "ok";
         await new Promise(res => setTimeout(res, 1500));
-        const second = await ffTryReconnectSleeper(username, leagueId, season);
+        const second = await ffTryReconnectSleeper(username, leagueId, season, opts);
         return second === "ok";
       };
-      async function ffTryReconnectSleeper(username, leagueId, season) {
+      async function ffTryReconnectSleeper(username, leagueId, season, opts) {
         try {
           if (!username || !leagueId) return "done";
-          const user = await slpGet("/user/" + encodeURIComponent(username));
+          /* User lookup and NFL state are independent: fetch them in
+             parallel instead of sequentially (saves a round trip on
+             every cold open; the state result is only consumed when
+             slpState.season is still unset). */
+          const userP = slpGet("/user/" + encodeURIComponent(username));
+          const stateP = !slpState.season ? slpGet("/state/nfl").catch(() => null) : Promise.resolve(null);
+          const user = await userP;
           if (!user || !user.user_id) return "retry";
           slpState.user = user;
           if (!slpState.season) {
-            try {
-              const st = await slpGet("/state/nfl");
-              if (st && st.season) { slpState.season = Number(st.season); slpState.week = st.display_week || st.week || null; }
-            } catch (e) { /* defaults below */ }
+            const st = await stateP;
+            if (st && st.season) { slpState.season = Number(st.season); slpState.week = st.display_week || st.week || null; }
             if (!slpState.season) slpState.season = 2026;
           }
           const seasons = [];
@@ -10522,7 +10550,7 @@ ${rdP ? "" : `
             if (lg) {
               slpState.leagues = leagues;
               slpState.usedSeason = s;
-              await slpLoadLeague(lg);
+              await slpLoadLeague(lg, opts);
               return window.CURRENT_LEAGUE === "conn" ? "ok" : "done";
             }
           }
@@ -10762,7 +10790,10 @@ ${rdP ? "" : `
             return Promise.resolve(true);
           }
           if (!window.__ffReconnectSleeper) return Promise.resolve(false);
-          return window.__ffReconnectSleeper(entry.username, entry.leagueId, entry.season).then(function (ok) {
+          /* Auto (non-manual) reconnects run quiet: silent data swap,
+             no tab/scroll yank, no dialog flash on failure. */
+          var opts = manual ? undefined : { quiet: true };
+          return window.__ffReconnectSleeper(entry.username, entry.leagueId, entry.season, opts).then(function (ok) {
             if (!ok && !manual) closeOverlayQuietly();
             return !!ok;
           }).catch(function () { if (!manual) closeOverlayQuietly(); return false; });
@@ -10945,6 +10976,11 @@ ${rdP ? "" : `
         function renderAll() { render(); renderControl(); renderMenuHead(); renderMenuGroups(); }
         function openMenu() {
           if (!acctMenu) return;
+          /* First interaction with the profile control loads the
+             accounts SDK immediately (it otherwise waits for idle) —
+             so the Sign in row appears as soon as Firebase resolves,
+             without the menu ever blocking on it. */
+          try { if (window.__ffAuthLoad) window.__ffAuthLoad(); } catch (e) { /* menu stands on local state */ }
           renderMenu(); /* once, synchronously, from in-memory state */
           acctMenu.hidden = false;
           groupEntries(list()).forEach(function (g) {
@@ -11034,13 +11070,18 @@ ${rdP ? "" : `
            only (an ESPN reconnect lands on a pick-your-team step, so
            auto-opening it on every visit would nag; the entry waits
            one click away in the connect dialog and the profile menu).
-           Single-flight per league: the session latch records the
-           league an attempt STARTED for, so the page-load timer, a
-           Firebase session restore, and a manual sign-in can all run
-           the apply step and the connect path still fires exactly
-           once for that league — and the CURRENT_LEAGUE guard means
-           it never reconnects over a league already connected. */
+           Single-flight per league while an attempt is IN FLIGHT:
+           the session latch records the league an attempt STARTED
+           for, so the page-load timer, a Firebase session restore,
+           and a manual sign-in can all run the apply step and the
+           connect path still fires exactly once for that league —
+           and the CURRENT_LEAGUE guard means it never reconnects
+           over a league already connected. A FAILED attempt releases
+           the latch (see below) so one transient miss can't strand
+           the league for the whole visit. */
         var autoAttemptedKey = null;
+        var autoRetryTimer = null;
+        var autoRetryDone = false;
         function maybeAutoReconnect() {
           try {
             var entries = list();
@@ -11051,7 +11092,24 @@ ${rdP ? "" : `
             if (e.platform !== "sleeper") return;
             if (autoAttemptedKey === normKey(e)) return;
             autoAttemptedKey = normKey(e);
-            reconnect(e, false);
+            reconnect(e, false).then(function (ok) {
+              if (ok) return;
+              /* A failed attempt must NOT strand the league for the
+                 whole visit: release the latch so a later apply (the
+                 post-sign-in path, or the retry below) can try again.
+                 The old latch survived failures, so one transient
+                 miss at cold open silently left the user unconnected
+                 until a reload (Eric, 2026-10-24). Single-flight for
+                 in-flight attempts is unchanged — the latch only
+                 clears once the attempt has resolved as failed. */
+              if (autoAttemptedKey === normKey(e)) autoAttemptedKey = null;
+              if (autoRetryDone || autoRetryTimer) return;
+              autoRetryDone = true;
+              autoRetryTimer = setTimeout(function () {
+                autoRetryTimer = null;
+                try { maybeAutoReconnect(); } catch (err) { /* guest stands */ }
+              }, 30000);
+            });
           } catch (err) { /* guest mode stands */ }
         }
         /* The one "apply the saved leagues" step, shared by page load
@@ -11106,7 +11164,50 @@ ${rdP ? "" : `
         appId: "1:965698275784:web:5b93d80c579aa76e6a98fd",
       };
       window.__ffAuth = { ready: false, stateResolved: false, user: null };
-      (async () => {
+      /* Deferred off the critical path (perf, 2026-10-24): the SDK
+         chunks used to start downloading at parse end, ahead of
+         first paint, and compete with the page's own render on a
+         phone connection. Now the load starts only AFTER first
+         contentful paint (PerformanceObserver on paint entries, so
+         an already-fired FCP still counts via buffered entries),
+         or immediately on first interaction with the profile
+         control (openMenu calls window.__ffAuthLoad). Idle alone
+         was NOT enough: in a headless run the idle callback fired
+         at ~190ms, ahead of FCP at ~288ms. Fallbacks keep a
+         backgrounded tab (no paint ever) from starving the load:
+         window load + 500ms, and a hard 8s cap. Until the SDK
+         resolves, the header control stays in its neutral state —
+         never a blocker, never a spinner. The one exception is a
+         restored Firebase session: onAuthStateChanged still runs
+         the merge -> apply chain the moment the SDK loads; that is
+         a background event, never a render block. */
+      let fbStarted = false;
+      function startFirebase() {
+        if (fbStarted) return;
+        fbStarted = true;
+        loadFirebase();
+      }
+      window.__ffAuthLoad = startFirebase;
+      (function scheduleFirebase() {
+        let done = false;
+        const kick = () => { if (!done) { done = true; startFirebase(); } };
+        try {
+          if (typeof PerformanceObserver === "function") {
+            const po = new PerformanceObserver((list) => {
+              for (const entry of list.getEntries()) {
+                if (entry.name === "first-contentful-paint") { po.disconnect(); kick(); }
+              }
+            });
+            po.observe({ type: "paint", buffered: true });
+            window.addEventListener("load", () => setTimeout(kick, 500));
+            setTimeout(kick, 8000);
+            return;
+          }
+        } catch (e) { /* fall through to the idle/timeout schedule */ }
+        if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(kick, { timeout: 4000 });
+        else setTimeout(kick, 2000);
+      })();
+      async function loadFirebase() {
         try {
           const FB = "https://www.gstatic.com/firebasejs/10.12.5/";
           const [appMod, authMod, fsMod] = await Promise.all([
@@ -11288,7 +11389,7 @@ ${rdP ? "" : `
           try { if (window.__ffProfile) window.__ffProfile.authUnavailable(); } catch (e2) { /* ignore */ }
           window.__ffAuth = { ready: false, stateResolved: true, user: null, error: String(e && e.message || e) };
         }
-      })();
+      }
     </script>
 
     <script>
