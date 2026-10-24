@@ -1132,6 +1132,23 @@
       .po-insights li { margin: 3px 0; }
       .po-table tr.mine-row td { background: var(--accent-soft); }
       .po-scroll { overflow-x: auto; }
+      /* ---------- playoff lifeline ---------- */
+      .lf-sub { color: var(--ink-2); font-size: 14.5px; line-height: 1.55; margin: 0 0 12px; max-width: 760px; }
+      .lf-card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px 10px; margin: 0 0 26px; }
+      .lf-note { color: var(--ink-2); font-size: 15px; line-height: 1.55; margin: 0; padding-bottom: 8px; }
+      .lf-mine { border: 1px solid rgba(198,255,0,.35); background: linear-gradient(135deg, rgba(198,255,0,.07), rgba(0,229,255,.04)); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+      .lf-mine-label { color: var(--ink-3); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+      .lf-mine-sentence { font-size: 16.5px; font-weight: 600; line-height: 1.5; margin: 3px 0 0; }
+      .lf-pips { display: flex; gap: 3px; margin-top: 5px; }
+      .lf-pip { width: 15px; height: 6px; border-radius: 3px; background: var(--bar-track); }
+      .lf-pip.on { background: var(--accent); box-shadow: 0 0 6px rgba(198,255,0,.45); }
+      .lf-pip.kill { background: var(--mag); box-shadow: 0 0 6px rgba(255,46,136,.45); }
+      .lf-chip { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; border-radius: 999px; padding: 2px 9px; border: 1px solid var(--line); color: var(--ink-2); white-space: nowrap; }
+      .lf-chip.clinched { color: var(--accent); border-color: rgba(198,255,0,.5); }
+      .lf-chip.controls { color: var(--cyan); border-color: rgba(0,229,255,.45); }
+      .lf-chip.needs-help { color: var(--gold); border-color: rgba(255,176,32,.45); }
+      .lf-chip.brink { color: var(--mag); border-color: rgba(255,46,136,.5); }
+      .lf-chip.eliminated { color: var(--ink-3); }
       /* ---------- bye-week planner ---------- */
       .bye-grid { border-collapse: collapse; width: 100%; font-size: 12px; }
       .bye-grid th, .bye-grid td { padding: 4px 2px; text-align: center; border-bottom: 1px solid var(--line); }
@@ -2674,6 +2691,7 @@
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
         <div id="lg-odds" data-subview="odds">
+        <div id="lifeline-panel"></div>
         <div id="odds-panel"></div>
         <div id="pp-explorer"></div>
         <div id="po-sched"></div>
@@ -4281,6 +4299,7 @@
              odds subview, then let activateNav scroll to the section. */
           if (k === "ppath" && typeof window.ff4RenderPP === "function") window.ff4RenderPP();
           if (k === "psched" && typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
+          if (typeof window.renderLifeline === "function") window.renderLifeline();
           window.__subnavNext.league = "odds";
           activateNav("league", k === "ppath" ? "#pp-explorer" : "#po-sched");
         }
@@ -9299,6 +9318,7 @@ ${rdP ? "" : `
           restampPickTiers();
           window.SeasonSim.renderSeason();
           if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
+          if (typeof window.renderLifeline === "function") window.renderLifeline();
         } else {
           window.SeasonSim = null;
           const so = document.getElementById("season-out");
@@ -9319,6 +9339,7 @@ ${rdP ? "" : `
                 renderVerdict();
                 if (typeof window.renderOddsPanel === "function") window.renderOddsPanel();
                 if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
+                if (typeof window.renderLifeline === "function") window.renderLifeline();
               } catch (e) {
                 const so2 = document.getElementById("season-out");
                 if (so2) so2.innerHTML = `<div class="diag"><h3>Season sim couldn't be built for this league</h3><p>Everything else on this page is fully live on ${esc(C.league.name)}.</p></div>`;
@@ -11567,6 +11588,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         }
         if (typeof window.renderOddsPanel === "function") window.renderOddsPanel();
         if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
+        if (typeof window.renderLifeline === "function") window.renderLifeline();
         if (typeof window.renderInjFresh === "function") window.renderInjFresh();
       };
 
@@ -14105,8 +14127,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
       window.ff4RenderPP = ff4RenderPP;
       (function () {
         const so = document.getElementById("season-out");
-        if (so && "MutationObserver" in window) { let t = null; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { ff4RenderPP(); if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched(); }, 60); }).observe(so, { childList: true }); }
-        window.addEventListener("modechange", () => setTimeout(ff4RenderPP, 80));
+        if (so && "MutationObserver" in window) { let t = null; new MutationObserver(() => { clearTimeout(t); t = setTimeout(() => { ff4RenderPP(); if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched(); if (typeof window.renderLifeline === "function") window.renderLifeline(); }, 60); }).observe(so, { childList: true }); }
+        window.addEventListener("modechange", () => { setTimeout(ff4RenderPP, 80); setTimeout(() => { if (typeof window.renderLifeline === "function") window.renderLifeline(); }, 80); });
       })();
 
       /* ================= Trade Board (Oct 23, 2026) =================
@@ -14503,7 +14525,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             const r = orig(k, a);
                 if (k === "command") ff4RenderCC();
             if (k === "tradeboard") ff4TBEnsure(false);
-            if (k === "league") setTimeout(ff4RenderPP, 40);
+            if (k === "league") { setTimeout(ff4RenderPP, 40); setTimeout(() => { if (typeof window.renderLifeline === "function") window.renderLifeline(); }, 40); }
             return r;
           };
         }
@@ -14515,6 +14537,518 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           b.addEventListener("click", () => { window.activateNav("command"); window.scrollTo({ top: 0 }); });
           wrap.appendChild(b);
         }
+      })();
+    </script>
+    <script>
+/*__LIFELINE_MATH_BEGIN__*/
+window.__lifeline = (function () {
+  "use strict";
+  /* ================= Playoff Lifeline — pure clinch/elimination math =================
+     Deterministic; no simulation. Inputs are plain data:
+       teams: [{ id, w }]            current wins per team
+       games: [[i, j], ...]          ALL remaining regular-season games (team indices)
+       K:                            playoff field size
+     Conservative promise-keeping throughout: a rival who finishes TIED
+     with the subject team on wins counts as AHEAD of the subject
+     (points tiebreakers can never be promised), so every number below
+     is the safe bound: "win this many and no result anywhere can keep
+     you out; lose this many and no result anywhere can save you."
+
+     Core feasibility test = circulation with lower bounds (Dinic).
+     The subject team T is a node like any other, with an exact-win
+     edge to the sink: T must collect exactly (W - w0) wins from its
+     games, so the T-loss budget (opponents may take the rest) is
+     enforced by the flow itself — no game is ever double-counted and
+     rivals' wins against T draw on the same caps as their other wins. */
+
+  var INF = 100000;
+
+  function Dinic(n) {
+    this.n = n;
+    this.adj = [];
+    for (var i = 0; i < n; i++) this.adj.push([]);
+  }
+  Dinic.prototype.addEdge = function (u, v, cap) {
+    var fwd = { to: v, rev: this.adj[v].length, cap: cap };
+    var rev = { to: u, rev: this.adj[u].length, cap: 0 };
+    this.adj[u].push(fwd); this.adj[v].push(rev);
+  };
+  Dinic.prototype.maxflow = function (s, t) {
+    var n = this.n, adj = this.adj, flow = 0, INFLL = 1e9;
+    var level = new Array(n), it = new Array(n);
+    function bfs() {
+      level.fill(-1); level[s] = 0;
+      var q = [s];
+      for (var h = 0; h < q.length; h++) {
+        var u = q[h];
+        for (var i = 0; i < adj[u].length; i++) {
+          var e = adj[u][i];
+          if (e.cap > 0 && level[e.to] < 0) { level[e.to] = level[u] + 1; q.push(e.to); }
+        }
+      }
+      return level[t] >= 0;
+    }
+    function dfs(u, f) {
+      if (u === t) return f;
+      for (; it[u] < adj[u].length; it[u]++) {
+        var e = adj[u][it[u]];
+        if (e.cap > 0 && level[e.to] === level[u] + 1) {
+          var d = dfs(e.to, Math.min(f, e.cap));
+          if (d > 0) {
+            e.cap -= d;
+            adj[e.to][e.rev].cap += d;
+            return d;
+          }
+        }
+      }
+      return 0;
+    }
+    while (bfs()) {
+      it.fill(0);
+      var f;
+      while ((f = dfs(s, INFLL)) > 0) flow += f;
+    }
+    return flow;
+  };
+
+  /* Feasible circulation with lower bounds. edges: [u, v, lo, hi].
+     Reduce via cap' = hi - lo and node demand D(v) = loOut(v) - loIn(v)
+     (the net inflow the residual flow g must deliver at v): D > 0 gets
+     an edge v -> superSink, D < 0 gets superSource -> v; feasible iff
+     maxflow saturates the total positive demand. */
+  function feasibleCirculation(n, edges) {
+    var SS = n, TT = n + 1;
+    var din = new Dinic(n + 2);
+    var D = new Array(n).fill(0);
+    var i, e;
+    for (i = 0; i < edges.length; i++) {
+      e = edges[i];
+      if (e[3] > e[2]) din.addEdge(e[0], e[1], e[3] - e[2]);
+      D[e[0]] += e[2];
+      D[e[1]] -= e[2];
+    }
+    var need = 0;
+    for (i = 0; i < n; i++) {
+      if (D[i] > 0) { din.addEdge(i, TT, D[i]); need += D[i]; }
+      else if (D[i] < 0) { din.addEdge(SS, i, -D[i]); }
+    }
+    if (need === 0) return true;
+    return din.maxflow(SS, TT) >= need;
+  }
+
+  /* Build the shared game-assignment edge list.
+     Node layout: 0..n-1 teams, n..n+G-1 game nodes, Z = n+G (hub).
+     Every game node receives exactly 1 unit from Z and passes it to
+     one of its two participants; team p passes what it collects on to
+     Z within caps[p] = [lo, hi]. */
+  function gameEdges(n, games, caps) {
+    var Z = n + games.length;
+    var edges = [];
+    for (var g = 0; g < games.length; g++) {
+      var gn = n + g, a = games[g][0], b = games[g][1];
+      edges.push([Z, gn, 1, 1]);
+      edges.push([gn, a, 0, 1]);
+      edges.push([gn, b, 0, 1]);
+    }
+    for (var p = 0; p < n; p++) {
+      var c = caps[p] || [0, INF];
+      edges.push([p, Z, c[0], c[1]]);
+    }
+    return { edges: edges, nodes: Z + 1 };
+  }
+
+  function combinations(arr, k) {
+    var out = [];
+    if (k < 0 || k > arr.length) return out;
+    if (k === 0) return [[]];
+    (function rec(start, cur) {
+      if (cur.length === k) { out.push(cur.slice()); return; }
+      for (var i = start; i <= arr.length - (k - cur.length); i++) {
+        cur.push(arr[i]); rec(i + 1, cur); cur.pop();
+      }
+    })(0, []);
+    return out;
+  }
+
+  /* Predicate factory over one fixed (teams, games, K) position. */
+  function makePredicates(teams, games, K) {
+    var n = teams.length;
+    var wins = teams.map(function (t) { return t.w; });
+    var rem = new Array(n).fill(0);
+    games.forEach(function (g) { rem[g[0]]++; rem[g[1]]++; });
+
+    /* ALIVE core: exists a completion of `glist` games (on win vector
+       `wv`) with at most K-1 rivals finishing >= W. subj = the team
+       whose exact-win edge applies (collects exactly subjWins of its
+       games in glist), or -1 when the subject has no games in glist
+       (residual checks, where its final total is the threshold W). */
+    function aliveCore(wv, glist, W, subj, subjWins) {
+      var fixed = 0, fixedSet = {};
+      var p;
+      for (p = 0; p < n; p++) {
+        if (p === subj) continue;
+        if (wv[p] >= W) { fixed++; fixedSet[p] = true; }
+      }
+      if (fixed > K - 1) return false;
+      var remIn = new Array(n).fill(0);
+      glist.forEach(function (g) { remIn[g[0]]++; remIn[g[1]]++; });
+      var pool = [];
+      for (p = 0; p < n; p++) {
+        if (p === subj || fixedSet[p]) continue;
+        var cap = (W - 1) - wv[p];
+        if (cap < remIn[p]) pool.push(p);
+      }
+      pool.sort(function (x, y) { return wv[y] - wv[x]; });
+      var budget = (K - 1) - fixed;
+      function tryWith(extra) {
+        var inA = {};
+        extra.forEach(function (p) { inA[p] = true; });
+        var caps = {};
+        for (var p2 = 0; p2 < n; p2++) {
+          if (p2 === subj) { caps[p2] = [subjWins, subjWins]; continue; }
+          if (fixedSet[p2] || inA[p2]) { caps[p2] = [0, INF]; continue; }
+          caps[p2] = [0, Math.max(0, (W - 1) - wv[p2])];
+        }
+        var built = gameEdges(n, glist, caps);
+        return feasibleCirculation(built.nodes, built.edges);
+      }
+      if (tryWith([])) return true;
+      for (var sz = 1; sz <= budget; sz++) {
+        var combos = combinations(pool, sz);
+        for (var ci = 0; ci < combos.length; ci++) {
+          if (tryWith(combos[ci])) return true;
+        }
+      }
+      return false;
+    }
+
+    function aliveAt(T, W) {
+      return aliveCore(wins, games, W, T, W - wins[T]);
+    }
+
+    /* CLINCHED at W: no subset of K rivals can ALL finish >= W while
+       T finishes on exactly W wins (T's losses spread adversarially —
+       S members may collect them, through the same exact-win edge). */
+    function clinchedAt(T, W) {
+      var aWins = W - wins[T];
+      var cands = [];
+      for (var p = 0; p < n; p++) {
+        if (p === T) continue;
+        if (wins[p] + rem[p] >= W) cands.push(p);
+      }
+      if (cands.length < K) return true;
+      var subsets = combinations(cands, K);
+      for (var si = 0; si < subsets.length; si++) {
+        var S = subsets[si], inS = {};
+        S.forEach(function (p) { inS[p] = true; });
+        var caps = {};
+        for (var p2 = 0; p2 < n; p2++) {
+          if (p2 === T) { caps[p2] = [aWins, aWins]; continue; }
+          if (inS[p2]) caps[p2] = [Math.max(0, W - wins[p2]), INF];
+          else caps[p2] = [0, INF];
+        }
+        var built = gameEdges(n, games, caps);
+        if (feasibleCirculation(built.nodes, built.edges)) return false;
+      }
+      return true;
+    }
+
+    return { aliveAt: aliveAt, clinchedAt: clinchedAt, aliveCore: aliveCore, wins: wins, rem: rem };
+  }
+
+  /* analyze(teams, games, K) -> per-team results aligned with `teams`:
+     { w, R, maxW, clinchA, minAliveA, lossesLeft, status }
+     clinchA: additional wins that GUARANTEE a berth (0 = already in,
+     null = even winning out doesn't lock it). minAliveA: additional
+     wins below which no path exists at all (null = eliminated).
+     lossesLeft: further losses the team can absorb — placed against
+     it in the most damaging way — and still have a path (null when
+     eliminated). status: clinched | controls | needs-help | brink |
+     eliminated. */
+  function analyze(teams, games, K) {
+    var n = teams.length;
+    var wins = teams.map(function (t) { return t.w; });
+    var rem = new Array(n).fill(0);
+    var gamesOf = teams.map(function () { return []; });
+    games.forEach(function (g, gi) {
+      rem[g[0]]++; rem[g[1]]++;
+      gamesOf[g[0]].push(gi); gamesOf[g[1]].push(gi);
+    });
+    var pred = makePredicates(teams, games, K);
+
+    function lossesLeftFor(T, minAliveA) {
+      if (minAliveA == null) return null;
+      var myGames = gamesOf[T].map(function (gi) { return games[gi]; });
+      var R = myGames.length;
+      /* Rank T's game instances by the opponent's max-possible final
+         wins (desc; opponent index asc breaks ties) — the deterministic
+         most-damaging order to hand T its L losses. */
+      var ranked = myGames.map(function (g) {
+        var opp = g[0] === T ? g[1] : g[0];
+        return { opp: opp, maxW: wins[opp] + rem[opp] };
+      }).sort(function (x, y) { return (y.maxW - x.maxW) || (x.opp - y.opp); });
+      var rest = games.filter(function (g) { return g[0] !== T && g[1] !== T; });
+      for (var L = R; L >= 0; L--) {
+        var wv = wins.slice();
+        for (var i = 0; i < L; i++) wv[ranked[i].opp]++;
+        var Wp = wins[T] + (R - L);
+        /* residual: T's games are decided (it won the other R-L);
+           does any completion of the rest keep <= K-1 rivals >= Wp? */
+        if (pred.aliveCore(wv, rest, Wp, -1, 0)) return L;
+      }
+      return 0;
+    }
+
+    var results = [];
+    for (var T = 0; T < n; T++) {
+      var w0 = wins[T], R = rem[T], maxW = w0 + R;
+      var aliveMemo = {}, clinchMemo = {};
+      function aAt(W) { if (!(W in aliveMemo)) aliveMemo[W] = pred.aliveAt(T, W); return aliveMemo[W]; }
+      function cAt(W) { if (!(W in clinchMemo)) clinchMemo[W] = pred.clinchedAt(T, W); return clinchMemo[W]; }
+      var minAliveA = null, clinchA = null, lo, hi, mid;
+      if (aAt(maxW)) {
+        lo = 0; hi = R;
+        while (lo < hi) { mid = (lo + hi) >> 1; if (aAt(w0 + mid)) hi = mid; else lo = mid + 1; }
+        minAliveA = lo;
+      }
+      if (cAt(maxW)) {
+        lo = 0; hi = R;
+        while (lo < hi) { mid = (lo + hi) >> 1; if (cAt(w0 + mid)) hi = mid; else lo = mid + 1; }
+        clinchA = lo;
+      }
+      var lossesLeft = lossesLeftFor(T, minAliveA);
+      var status;
+      if (minAliveA == null) status = "eliminated";
+      else if (clinchA === 0) status = "clinched";
+      else if (lossesLeft != null && lossesLeft <= 1) status = "brink";
+      else if (clinchA != null) status = "controls";
+      else status = "needs-help";
+      results.push({
+        w: w0, R: R, maxW: maxW,
+        clinchA: clinchA, minAliveA: minAliveA,
+        lossesLeft: lossesLeft, status: status,
+      });
+    }
+    return results;
+  }
+
+  return {
+    analyze: analyze,
+    _predicates: makePredicates,
+    _feasibleCirculation: feasibleCirculation,
+  };
+})();
+/*__LIFELINE_MATH_END__*/
+    </script>
+<script>
+      (function () {
+        "use strict";
+        /* ================= Playoff Lifeline (Oct 23, 2026) =================
+           Deterministic clinch/elimination math at the TOP of the
+           Playoff Odds subview — no simulation. The math itself is the
+           pure window.__lifeline module above (max-flow feasibility;
+           a tie on wins counts against the subject, so every number
+           shown is a promise the page can keep). This block owns the
+           schedule fetch + the render, and re-renders on the same
+           triggers as the Playoff Path Explorer / Schedule Difficulty
+           (league nav activation, the season-out observer, modechange,
+           league connect).
+
+           Data rules, matching the site's honesty pattern elsewhere:
+             - Sleeper only: the remaining schedule comes from
+               Sleeper's published future matchups, weeks
+               [current week .. playoff start). ESPN publishes no
+               future pairings here -> one honest note, never a guess.
+             - Field size and start week come from the league's own
+               settings (playoffField / playoffStartWeek); unreadable
+               -> unavailable note, never an assumed format.
+             - A weekly league-average (median) game adds wins the
+               published schedule doesn't carry, so median leagues get
+               the note too — the sim odds below still cover them.
+             - Cache is keyed by league + current week + start week
+               and refetched on league change or after 15 minutes. */
+        var LF_TTL = 15 * 60 * 1000;
+        var lfCache = {};    // key -> { at, state: "ok"|"empty"|"error", games: [[ridA, ridB], ...] }
+        var lfPending = {};  // key -> true while a fetch is in flight
+
+        function lfCtx() {
+          if (window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn") return null;
+          var C = window.CONN_LEAGUE;
+          if (!C || !C.league || typeof DATA === "undefined" || !DATA || !DATA.teams || !DATA.teams.length) return null;
+          var key = null;
+          try { key = (typeof connLeagueKey !== "undefined" && connLeagueKey) ? String(connLeagueKey) : null; } catch (e) { key = null; }
+          var platform = null, leagueId = null;
+          if (C.platform === "espn" || (key && key.indexOf("espn:") === 0)) platform = "espn";
+          else if (key && key.indexOf("sleeper:") === 0) { platform = "sleeper"; leagueId = key.slice("sleeper:".length); }
+          return { platform: platform, leagueId: leagueId, week: Number(DATA.league.week) };
+        }
+
+        function lfFetchSchedule(leagueId, week, start) {
+          var weeks = [];
+          for (var wk = week; wk < start; wk++) weeks.push(wk);
+          var base = "https://api.sleeper.app/v1/league/" + encodeURIComponent(leagueId) + "/matchups/";
+          return Promise.all(weeks.map(function (wk) {
+            return fetch(base + wk).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+          })).then(function (perWeek) {
+            var games = [], anyEmpty = false, anyError = false;
+            perWeek.forEach(function (entries) {
+              if (!Array.isArray(entries)) { anyError = true; return; }
+              var groups = {};
+              entries.forEach(function (m) {
+                if (m && m.matchup_id != null && m.roster_id != null) {
+                  (groups[m.matchup_id] = groups[m.matchup_id] || []).push(m.roster_id);
+                }
+              });
+              var pairs = Object.keys(groups).map(function (k) { return groups[k]; }).filter(function (g) { return g.length === 2; });
+              if (!pairs.length) anyEmpty = true;
+              pairs.forEach(function (pr) { games.push([pr[0], pr[1]]); });
+            });
+            if (anyError) return { state: "error", games: [] };
+            if (anyEmpty) return { state: "empty", games: [] };
+            return { state: "ok", games: games };
+          });
+        }
+
+        var LF_STATUS_ORDER = { clinched: 0, controls: 1, "needs-help": 2, brink: 3, eliminated: 4 };
+        var LF_STATUS_LABEL = { clinched: "Clinched", controls: "Controls destiny", "needs-help": "Needs help", brink: "On the brink", eliminated: "Eliminated" };
+
+        function lfOrd(n) {
+          var s = ["th", "st", "nd", "rd"], v = n % 100;
+          return n + (s[(v - 20) % 10] || s[v] || s[0]);
+        }
+
+        function lfSentence(r) {
+          if (r.status === "clinched") return "You're in. Even losing out can't knock you out.";
+          if (r.status === "eliminated") return "No path remains — even winning out isn't enough.";
+          var parts = [];
+          if (r.clinchA != null) parts.push("Win " + r.clinchA + " of your last " + r.R + " and you're in — no help needed.");
+          else parts.push("Winning out still isn't a lock — you'll need help.");
+          if (r.lossesLeft != null) {
+            if (r.lossesLeft <= 0) parts.push("One more loss and the path closes.");
+            else { var nth = r.lossesLeft + 1; parts.push("You can afford " + r.lossesLeft + " more loss" + (r.lossesLeft === 1 ? "" : "es") + "; " + (nth === 8 || nth === 11 || nth === 18 ? "an " : "a ") + lfOrd(nth) + " ends it."); }
+          }
+          return parts.join(" ");
+        }
+
+        function lfPips(r) {
+          var out = "";
+          for (var i = 0; i < r.R; i++) {
+            var cls = "lf-pip";
+            if (r.lossesLeft != null) {
+              if (i < r.lossesLeft) cls += " on";
+              else if (i === r.lossesLeft) cls += " kill";
+            }
+            out += '<span class="' + cls + '"></span>';
+          }
+          return '<div class="lf-pips" aria-hidden="true">' + out + "</div>";
+        }
+
+        function lfSection(inner) {
+          return '<h2 class="block-title">Playoff Lifeline</h2>' +
+            '<p class="lf-sub">The hard math — no sims. What locks you in, and what knocks you out. A tie on wins counts against you: points tiebreakers can\'t be promised.</p>' + inner;
+        }
+        function lfNote(html) {
+          return lfSection('<div class="lf-card"><p class="lf-note">' + html + "</p></div>");
+        }
+
+        function lfPaint(mount, K, cached) {
+          if (cached.state === "error") {
+            mount.innerHTML = lfNote("Couldn't pull this league's remaining schedule just now — the Lifeline retries when you come back to this view. The sim odds below are unaffected.");
+            return;
+          }
+          if (cached.state === "empty") {
+            mount.innerHTML = lfNote("This league's future schedule isn't published yet, so the hard math isn't available — the sim odds below still work.");
+            return;
+          }
+          var idxByRid = {};
+          DATA.teams.forEach(function (t, i) { idxByRid[t.rid] = i; });
+          var gameIdx = [];
+          cached.games.forEach(function (pr) {
+            var a = idxByRid[pr[0]], b = idxByRid[pr[1]];
+            if (a != null && b != null && a !== b) gameIdx.push([a, b]);
+          });
+          /* Records come from the same standings the season sim reads:
+             wins are the first field of each team's record string. */
+          var lite = DATA.teams.map(function (t) { return { id: t.rid, w: Number(String(t.record || "0").split("-")[0]) || 0 }; });
+          var results = window.__lifeline.analyze(lite, gameIdx, K);
+          var rows = DATA.teams.map(function (t, i) { return { t: t, r: results[i] }; });
+          var me = null;
+          rows.forEach(function (x) { if (x.t.isUser) me = x; });
+          var sorted = rows.slice().sort(function (x, y) {
+            return (LF_STATUS_ORDER[x.r.status] - LF_STATUS_ORDER[y.r.status]) || (y.r.w - x.r.w) || (x.t.name < y.t.name ? -1 : 1);
+          });
+          var body = "";
+          if (me) {
+            body += '<div class="lf-mine"><div class="lf-mine-label">Your path — ' + esc(me.t.name) + " · " + esc(me.t.record) + '</div><p class="lf-mine-sentence">' + esc(lfSentence(me.r)) + "</p></div>";
+          }
+          body += '<div class="po-scroll"><table class="mini po-table"><thead><tr><th>Team</th><th class="num">Left</th><th>Can lose</th><th>Lock it in</th><th>Status</th></tr></thead><tbody>' +
+            sorted.map(function (x) {
+              var r = x.r;
+              var lock = r.status === "clinched" ? "In"
+                : r.status === "eliminated" ? "—"
+                : r.clinchA != null ? "Win " + r.clinchA + " of " + r.R
+                : "Needs help";
+              var canLose = r.lossesLeft == null ? "—" : String(r.lossesLeft);
+              return '<tr' + (x.t.isUser ? ' class="mine-row"' : "") + ">" +
+                '<td><span class="p-name">' + esc(x.t.name) + "</span>" + (x.t.isUser ? ' <span class="you-tag">Your team</span>' : "") + '<div class="p-sub">' + esc(x.t.record) + "</div></td>" +
+                '<td class="num">' + r.R + "</td>" +
+                "<td>" + canLose + lfPips(r) + "</td>" +
+                "<td>" + lock + "</td>" +
+                '<td><span class="lf-chip ' + r.status + '">' + LF_STATUS_LABEL[r.status] + "</span></td></tr>";
+            }).join("") + "</tbody></table></div>";
+          mount.innerHTML = lfSection('<div class="lf-card">' + body + "</div>");
+        }
+
+        window.renderLifeline = function () {
+          var mount = document.getElementById("lifeline-panel");
+          if (!mount) return;
+          var ctx = lfCtx();
+          if (!ctx) { mount.innerHTML = ""; return; }
+          if (ctx.platform === "espn") {
+            mount.innerHTML = lfNote("The hard math needs this league's remaining schedule, and ESPN doesn't publish future matchup pairings here — so the Lifeline sits this league out rather than guess. The sim odds below still cover you.");
+            return;
+          }
+          if (ctx.platform !== "sleeper" || !ctx.leagueId) { mount.innerHTML = ""; return; }
+          var rawK = Number(DATA.league.playoffTeams);
+          var K = (typeof playoffField === "function") ? playoffField() : 0;
+          var start = (typeof playoffStartWeek === "function") ? playoffStartWeek() : null;
+          if (!rawK || !K || !start) {
+            mount.innerHTML = lfNote("Playoff format couldn't be read for this league — the Lifeline is unavailable here rather than guessing at a format.");
+            return;
+          }
+          if (Number(DATA.league.leagueAverageMatch)) {
+            mount.innerHTML = lfNote("This league also plays a weekly median game, and those extra wins aren't on the published schedule — the hard math would be wrong here, so the Lifeline sits this league out. The sim odds below still apply.");
+            return;
+          }
+          var week = ctx.week;
+          if (!isFinite(week) || week < 1) { mount.innerHTML = ""; return; }
+          if (week >= start) {
+            mount.innerHTML = lfNote("Regular season complete — the playoff field is set, and the bracket lives in Season Outlook.");
+            return;
+          }
+          var ckey = ctx.leagueId + "@" + week + "-" + start;
+          var cached = lfCache[ckey];
+          if (cached && (Date.now() - cached.at) < LF_TTL) { lfPaint(mount, K, cached); return; }
+          if (!mount.innerHTML) mount.innerHTML = lfNote("Reading the remaining schedule…");
+          if (lfPending[ckey]) return;
+          lfPending[ckey] = true;
+          lfFetchSchedule(ctx.leagueId, week, start).then(function (res) {
+            delete lfPending[ckey];
+            /* Errors are not cached: the next render trigger retries,
+               as the note promises. The error is painted directly here
+               (not via a re-render) so a dead network can't spin a
+               fetch loop. Successes and "not published yet" cache for
+               LF_TTL. */
+            var now = lfCtx();
+            if (!now || now.leagueId !== ctx.leagueId || now.week !== week) return;
+            if (res.state === "error") {
+              mount.innerHTML = lfNote("Couldn't pull this league's remaining schedule just now — the Lifeline retries when you come back to this view. The sim odds below are unaffected.");
+              return;
+            }
+            lfCache[ckey] = { at: Date.now(), state: res.state, games: res.games };
+            window.renderLifeline();
+          });
+        };
       })();
     </script>
     <script>
