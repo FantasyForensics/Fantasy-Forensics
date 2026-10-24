@@ -319,6 +319,16 @@
       .ff-menu-foot[hidden] { display: none; }
       .ff-menu-signin { color: var(--accent) !important; }
       .ff-avatar-btn svg { display: block; }
+      /* Signed-out header control (Oct 24): a text pill, not a bare
+         avatar, so the account entry reads as one. Signed in, the
+         button keeps the avatar rendering below. */
+      .ff-avatar-btn.ff-acct-text {
+        width: auto; height: auto; border-radius: 999px; padding: 8px 15px;
+        font-size: 13.5px; white-space: nowrap;
+      }
+      @media (max-width: 640px) {
+        .ff-avatar-btn.ff-acct-text { padding: 7px 12px; font-size: 13px; }
+      }
       .ff-saved-group { margin-bottom: 12px; }
       .ff-saved-group:last-child { margin-bottom: 0; }
       .ff-saved-group-title {
@@ -2552,6 +2562,12 @@
       .wl-msg { flex: 1 1 100%; font-size: 13px; color: var(--ink-2); min-height: 1em; }
       .wl-msg.ok { color: var(--accent); font-weight: 600; }
       .wl-msg.err { color: #FF7A9E; }
+      /* Founding-list → account nudge (Oct 24): shown only after a
+         successful signup while Firebase-signed-out; the button
+         opens the existing account dialog. */
+      .wl-acct-prompt { flex: 1 1 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+      .wl-acct-prompt button { background: transparent; color: var(--accent); border: 1px solid rgba(198, 255, 0, .45); border-radius: 999px; padding: 6px 14px; font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap; }
+      .wl-acct-prompt button:hover { background: rgba(198, 255, 0, .08); }
       .radar-meta { color: var(--ink-3); font-size: 13px; margin: -4px 0 14px; }
       .radar-filters { margin: 4px 0 16px; }
       .rd-strip-h { font-family: "Space Grotesk", sans-serif; font-size: 17px; margin: 20px 0 10px; color: var(--ink); }
@@ -10976,7 +10992,21 @@ ${rdP ? "" : `
           if (label) { el.textContent = label.trim().charAt(0).toUpperCase() || "?"; return; }
           el.innerHTML = GLYPH;
         }
-        function renderControl() { avatarInto(acctBtn); }
+        /* Signed-out header control (Oct 24): a text label, not a
+           bare avatar — the button must read as the account entry.
+           Signed in, the avatar rendering is unchanged. */
+        function renderControl() {
+          if (!acctBtn) return;
+          if (authState.user) {
+            acctBtn.classList.remove("ff-acct-text");
+            acctBtn.setAttribute("aria-label", "Profile and saved leagues");
+            avatarInto(acctBtn);
+          } else {
+            acctBtn.classList.add("ff-acct-text");
+            acctBtn.textContent = "Sign up / Log in";
+            acctBtn.setAttribute("aria-label", "Sign up or log in to your account");
+          }
+        }
         function renderMenuHead() {
           if (!menuHeadEl) return;
           var u = authState.user;
@@ -11143,6 +11173,10 @@ ${rdP ? "" : `
           acctMenu.appendChild(add);
           acctMenu.appendChild(menuFootEl);
           acctBtn.addEventListener("click", function () {
+            /* Signed out, the label opens the account dialog
+               directly; the menu stays the signed-in control, and
+               the fallback when the accounts layer is unavailable. */
+            if (!authState.user && window.__ffAuth && typeof window.__ffAuth.openPanel === "function") { window.__ffAuth.openPanel(); return; }
             if (acctMenu.hidden) openMenu(); else closeMenu();
           });
           document.addEventListener("click", function (e) {
@@ -16964,6 +16998,30 @@ window.__lifeline = (function () {
             form.reset();
             say("You're on the founding list — watch your inbox when premium opens.", "ok");
             try { if (typeof gtag === "function") gtag("event", "waitlist_signup"); } catch (e) { /* analytics only */ }
+            /* Founding-list → account nudge (Oct 24): only when the
+               visitor is Firebase-signed-out with the dialog
+               available (resolved state + openPanel). Reuses the
+               existing account dialog; no prefill — the dialog
+               exposes no prefill hook — and nothing is stored. */
+            try {
+              var auth = window.__ffAuth;
+              if (band && auth && auth.stateResolved === true && !auth.user && typeof auth.openPanel === "function") {
+                if (!band.querySelector(".wl-acct-prompt")) {
+                  var pr = document.createElement("div");
+                  pr.className = "wl-acct-prompt";
+                  pr.appendChild(document.createTextNode("Create a free account to keep your leagues saved across devices. "));
+                  var pb = document.createElement("button");
+                  pb.type = "button";
+                  pb.textContent = "Create a free account";
+                  pb.addEventListener("click", function () { try { window.__ffAuth.openPanel(); } catch (e) { /* dialog unavailable */ } });
+                  pr.appendChild(pb);
+                  band.appendChild(pr);
+                }
+              } else if (band && auth && auth.user) {
+                var oldPr = band.querySelector(".wl-acct-prompt");
+                if (oldPr) oldPr.remove();
+              }
+            } catch (e) { /* the nudge never blocks a signup */ }
           }).catch(function () {
             say("Couldn't reach the list just now — try again in a minute.", "err");
           });
