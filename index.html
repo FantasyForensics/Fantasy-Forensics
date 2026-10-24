@@ -285,6 +285,47 @@
         color: var(--ink-2); font-size: 17px; line-height: 1;
       }
       .ff-saved-x:hover { color: #FF7EB3; border-color: rgba(255, 46, 136, .4); }
+      /* Identity-first profile menu (2026-10-24 redesign): the menu
+         lives on the backend-free saved-leagues layer, so it renders
+         once per open from in-memory state — grouped leagues under a
+         Sleeper identity line — signed in or out. */
+      .ff-menu-head { display: flex; align-items: center; gap: 10px; padding: 2px 6px 10px; }
+      .ff-menu-head[hidden] { display: none; }
+      .ff-menu-avatar {
+        flex: none; display: inline-flex; align-items: center; justify-content: center;
+        width: 34px; height: 34px; border-radius: 50%; overflow: hidden;
+        background: var(--chip); border: 1px solid rgba(198, 255, 0, .45); color: var(--accent);
+        font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px;
+      }
+      .ff-menu-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .ff-menu-id-lines { min-width: 0; }
+      .ff-menu-identity {
+        font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14.5px; color: var(--ink);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      .ff-menu-head .ff-menu-email { padding: 1px 0 0; }
+      .ff-menu-group { margin-bottom: 6px; }
+      .ff-menu-group-title {
+        color: var(--ink-2); font-size: 11.5px; font-weight: 700; letter-spacing: .08em;
+        text-transform: uppercase; padding: 6px 6px 4px;
+      }
+      .ff-menu-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+      .ff-menu-conn {
+        flex: none; display: inline-flex; align-items: center; gap: 6px;
+        font-size: 11px; font-weight: 700; letter-spacing: .05em; color: var(--accent);
+      }
+      .ff-menu-empty { color: var(--ink-2); font-size: 13.5px; line-height: 1.45; padding: 2px 6px 8px; }
+      .ff-menu-foot { border-top: 1px solid rgba(255, 255, 255, .09); margin-top: 8px; padding-top: 8px; }
+      .ff-menu-foot[hidden] { display: none; }
+      .ff-menu-signin { color: var(--accent) !important; }
+      .ff-avatar-btn svg { display: block; }
+      .ff-saved-group { margin-bottom: 12px; }
+      .ff-saved-group:last-child { margin-bottom: 0; }
+      .ff-saved-group-title {
+        font-size: 12px; font-weight: 700; color: var(--ink-2);
+        letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px;
+      }
+      .ff-saved-conn { color: var(--accent); font-weight: 700; }
       .ff-google-btn {
         width: 100%; margin-top: 20px; min-height: 52px; border-radius: 12px; cursor: pointer;
         background: #fff; color: #1a1a2e; border: none; font-weight: 700; font-size: 16px;
@@ -10499,6 +10540,59 @@ ${rdP ? "" : `
         } catch (e) { return false; }
       };
 
+      /* ---- Profile-menu data hooks (identity-first menu, 2026-10-24) --
+         The saved-leagues layer renders the header profile menu; it
+         reads the connected league's key (for the "Connected" mark)
+         and the Sleeper account's league list through these, so the
+         Sleeper API access stays in this script where slpGet lives. */
+      window.__ffConnKey = function () {
+        try { return connLeagueKey || null; } catch (e) { return null; }
+      };
+      window.__ffSleeperSession = function () {
+        try {
+          if (slpState.user && slpState.user.username) {
+            return {
+              username: slpState.user.username,
+              leagues: (slpState.leagues || []).map(l => ({
+                leagueId: String(l.league_id), name: l.name || null,
+                season: Number(l.season) || slpState.usedSeason || null,
+              })),
+            };
+          }
+        } catch (e) { /* no session yet */ }
+        return null;
+      };
+      window.__ffSleeperLeaguesFor = async function (username) {
+        try {
+          if (!username) return null;
+          const user = await slpGet("/user/" + encodeURIComponent(username));
+          if (!user || !user.user_id) return null;
+          let season = slpState.season;
+          if (!season) {
+            try {
+              const st = await slpGet("/state/nfl");
+              if (st && st.season) season = Number(st.season);
+            } catch (e) { /* default below */ }
+          }
+          if (!season) season = 2026;
+          const seasons = [season, season - 1];
+          for (const s of seasons) {
+            let leagues = null;
+            try { leagues = await slpGet(`/user/${user.user_id}/leagues/nfl/${s}`); } catch (e) { leagues = null; }
+            if (leagues && leagues.length) {
+              return {
+                username: user.username || username,
+                leagues: leagues.map(l => ({
+                  leagueId: String(l.league_id), name: l.name || null,
+                  season: Number(l.season) || s,
+                })),
+              };
+            }
+          }
+          return { username: user.username || username, leagues: [] };
+        } catch (e) { return null; }
+      };
+
     </script>
     <script>
       "use strict";
@@ -10518,41 +10612,139 @@ ${rdP ? "" : `
             return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
           });
         }
+
+        /* ---- Normalized storage ----------------------------------
+           A saved league's identity is platform + leagueId, trimmed
+           and case-normalized. cleanList() is the single choke point:
+           every read for rendering goes through it (so a stored list
+           that already contains duplicates renders each league once)
+           and every write goes through it (so the next record cleans
+           storage). Duplicates merge field-wise — newest lastUsed
+           wins, missing name/username/season fill from the dupe. */
+        function normPlatform(p) { return String(p == null ? "" : p).trim().toLowerCase(); }
+        function normId(id) { return String(id == null ? "" : id).trim(); }
+        function normKey(e) { return normPlatform(e && e.platform) + ":" + normId(e && e.leagueId); }
+        function cleanEntry(e) {
+          if (!e || !e.platform || e.leagueId == null) return null;
+          var c = {
+            platform: normPlatform(e.platform),
+            leagueId: normId(e.leagueId),
+            name: e.name || null,
+            season: e.season != null && e.season !== "" ? Number(e.season) : null,
+            lastUsed: Number(e.lastUsed) || 0,
+          };
+          if (!c.platform || !c.leagueId) return null;
+          if (c.platform === "sleeper") c.username = e.username ? String(e.username).trim() : null;
+          return c;
+        }
+        function cleanList(raw) {
+          var byKey = {};
+          var order = [];
+          (Array.isArray(raw) ? raw : []).forEach(function (e) {
+            var c = cleanEntry(e);
+            if (!c) return;
+            var k = normKey(c);
+            var prev = byKey[k];
+            if (!prev) { byKey[k] = c; order.push(k); return; }
+            var keep = (c.lastUsed >= prev.lastUsed) ? c : prev;
+            var other = (keep === c) ? prev : c;
+            if (!keep.name) keep.name = other.name;
+            if (keep.season == null) keep.season = other.season;
+            if (keep.platform === "sleeper" && !keep.username) keep.username = other.username;
+            byKey[k] = keep;
+          });
+          return order.map(function (k) { return byKey[k]; });
+        }
         function read() {
           try {
             var v = JSON.parse(localStorage.getItem(KEY) || "[]");
-            return Array.isArray(v) ? v.filter(function (e) { return e && e.platform && e.leagueId; }) : [];
+            return Array.isArray(v) ? v : [];
           } catch (e) { return []; }
         }
-        function persist(list, silent) {
-          try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) { /* private mode: list lives for the render only */ }
-          render();
-          if (!silent && api.onChange) { try { api.onChange(list); } catch (e) { /* sync is best-effort */ } }
+        function sorted(entries) {
+          return entries.slice().sort(function (a, b) { return (b.lastUsed || 0) - (a.lastUsed || 0); });
         }
-        function keyOf(e) { return e.platform + ":" + e.leagueId; }
-        function sorted(list) {
-          return list.slice().sort(function (a, b) { return (b.lastUsed || 0) - (a.lastUsed || 0); });
+        function list() { return sorted(cleanList(read())); }
+        function persist(rawList, silent) {
+          var cl = cleanList(rawList);
+          try { localStorage.setItem(KEY, JSON.stringify(cl)); } catch (e) { /* private mode: list lives for the render only */ }
+          renderAll();
+          if (!silent && api.onChange) { try { api.onChange(cl); } catch (e) { /* sync is best-effort */ } }
         }
+
+        /* ---- Grouping ---------------------------------------------
+           Leagues hang from the account they belong to, not from
+           click recency: one group per Sleeper username (its saved
+           leagues), then one ESPN group. Shared by the connect
+           dialog list and the profile menu so both surfaces agree. */
+        function groupEntries(entries) {
+          var slpGroups = [];
+          var slpByUser = {};
+          var espn = [];
+          entries.forEach(function (e) {
+            if (e.platform === "espn") { espn.push(e); return; }
+            var k = e.username ? e.username.toLowerCase() : "";
+            var g = slpByUser[k];
+            if (!g) { g = { kind: "sleeper", username: e.username || null, entries: [] }; slpByUser[k] = g; slpGroups.push(g); }
+            if (!g.username && e.username) g.username = e.username;
+            g.entries.push(e);
+          });
+          slpGroups.forEach(function (g) { g.entries = sorted(g.entries); });
+          slpGroups.sort(function (a, b) {
+            var ma = a.entries.length ? (a.entries[0].lastUsed || 0) : 0;
+            var mb = b.entries.length ? (b.entries[0].lastUsed || 0) : 0;
+            return mb - ma;
+          });
+          var groups = slpGroups;
+          if (espn.length) groups.push({ kind: "espn", username: null, entries: sorted(espn) });
+          return groups;
+        }
+        function groupTitle(g) {
+          return g.kind === "espn" ? "ESPN" : ("Sleeper" + (g.username ? " · " + g.username : ""));
+        }
+        function connKey() {
+          try { return window.__ffConnKey ? window.__ffConnKey() : null; } catch (e) { return null; }
+        }
+        function primaryUsername() {
+          try {
+            var sess = window.__ffSleeperSession && window.__ffSleeperSession();
+            if (sess && sess.username) return sess.username;
+          } catch (e) { /* fall through to saved entries */ }
+          var entries = list();
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].platform === "sleeper" && entries[i].username) return entries[i].username;
+          }
+          return null;
+        }
+
+        /* ---- Connect dialog list (grouped) ---- */
         function render() {
           var wrap = document.getElementById("ff-saved");
           var listEl = document.getElementById("ff-saved-list");
           if (!wrap || !listEl) return;
-          var list = sorted(read());
-          wrap.hidden = !list.length;
-          listEl.innerHTML = list.map(function (e, i) {
-            var meta = (e.platform === "espn" ? "ESPN" : "Sleeper") + (e.season ? " · " + e.season + " season" : "");
-            return '<div class="ff-saved-row">' +
-              '<button type="button" class="ff-saved-item" data-ff-saved="' + i + '">' +
-              '<span class="ff-saved-name">' + escHtml(e.name || "League " + e.leagueId) + '</span>' +
-              '<span class="ff-saved-meta">' + escHtml(meta) + '</span></button>' +
-              '<button type="button" class="ff-saved-x" data-ff-saved-x="' + i + '" aria-label="Remove ' + escHtml(e.name || "league") + '">&times;</button></div>';
+          var entries = list();
+          wrap.hidden = !entries.length;
+          var ck = connKey();
+          var byKey = {};
+          entries.forEach(function (e) { byKey[normKey(e)] = e; });
+          listEl.innerHTML = groupEntries(entries).map(function (g) {
+            var rows = g.entries.map(function (e) {
+              var conn = !!ck && normKey(e) === ck;
+              var meta = (e.platform === "espn" ? "ESPN" : "Sleeper") + (e.season ? " · " + e.season + " season" : "") + (conn ? ' · <span class="ff-saved-conn">Connected</span>' : "");
+              return '<div class="ff-saved-row">' +
+                '<button type="button" class="ff-saved-item" data-ff-saved="' + escHtml(normKey(e)) + '">' +
+                '<span class="ff-saved-name">' + escHtml(e.name || "League " + e.leagueId) + '</span>' +
+                '<span class="ff-saved-meta">' + meta + '</span></button>' +
+                '<button type="button" class="ff-saved-x" data-ff-saved-x="' + escHtml(normKey(e)) + '" aria-label="Remove ' + escHtml(e.name || "league") + '">&times;</button></div>';
+            }).join("");
+            return '<div class="ff-saved-group"><div class="ff-saved-group-title">' + escHtml(groupTitle(g)) + '</div>' + rows + '</div>';
           }).join("");
           listEl.querySelectorAll("[data-ff-saved]").forEach(function (btn) {
-            btn.addEventListener("click", function () { reconnect(list[Number(btn.dataset.ffSaved)], true); });
+            btn.addEventListener("click", function () { reconnect(byKey[btn.dataset.ffSaved], true); });
           });
           listEl.querySelectorAll("[data-ff-saved-x]").forEach(function (btn) {
             btn.addEventListener("click", function () {
-              var e = list[Number(btn.dataset.ffSavedX)];
+              var e = byKey[btn.dataset.ffSavedX];
               if (e) api.remove(e.platform, e.leagueId);
             });
           });
@@ -10572,31 +10764,25 @@ ${rdP ? "" : `
           if (!window.__ffReconnectSleeper) return Promise.resolve(false);
           return window.__ffReconnectSleeper(entry.username, entry.leagueId, entry.season).then(function (ok) {
             if (!ok && !manual) closeOverlayQuietly();
-            if (!ok && manual) { /* the loader already surfaced its own error in the dialog */ }
             return !!ok;
           }).catch(function () { if (!manual) closeOverlayQuietly(); return false; });
         }
         var api = {
           onChange: null,
-          list: read,
+          list: list,
           record: function (entry) {
-            if (!entry || !entry.platform || !entry.leagueId) return;
-            var e = {
-              platform: entry.platform,
-              leagueId: String(entry.leagueId),
-              name: entry.name || null,
-              season: entry.season != null && entry.season !== "" ? Number(entry.season) : null,
-              lastUsed: Date.now(),
-            };
-            if (entry.platform === "sleeper") e.username = entry.username || null;
-            var list = read().filter(function (x) { return keyOf(x) !== keyOf(e); });
-            list.unshift(e);
-            persist(list, false);
+            var e = cleanEntry(entry);
+            if (!e) return;
+            e.lastUsed = Date.now();
+            var rest = cleanList(read()).filter(function (x) { return normKey(x) !== normKey(e); });
+            rest.unshift(e);
+            persist(rest, false);
           },
           remove: function (platform, leagueId) {
-            persist(read().filter(function (x) { return keyOf(x) !== platform + ":" + leagueId; }), false);
+            var k = normPlatform(platform) + ":" + normId(leagueId);
+            persist(cleanList(read()).filter(function (x) { return normKey(x) !== k; }), false);
           },
-          replaceAll: function (list) { persist(sorted(list || []), true); },
+          replaceAll: function (l) { persist(l || [], true); },
           render: render,
           reconnectEntry: function (entry) { return reconnect(entry, true); },
           apply: function () { applySavedLeagues(); },
@@ -10604,40 +10790,279 @@ ${rdP ? "" : `
         window.__ffSaved = api;
         window.__ffSavedRecord = function (entry) { api.record(entry); };
         window.__ffApplySavedLeagues = function () { applySavedLeagues(); };
+
+        /* ---- Header profile control + identity-first menu --------
+           This layer owns the control now (the Firebase module only
+           fills in identity and auth actions through __ffProfile):
+           the DOM is built ONCE, its listeners attach ONCE, and the
+           control starts in a neutral state — username initial when
+           one is known, a plain glyph otherwise — so it can never
+           flash "Sign in" -> avatar while auth resolves. The menu
+           renders ONCE per open, synchronously, from in-memory
+           state; the one async input (the Sleeper account's full
+           league list) updates the rows in place when it lands. */
+        var GLYPH = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>';
+        var authState = { resolved: false, available: false, user: null };
+        var acctBtn = null, acctMenu = null, menuHeadEl = null, menuGroupsEl = null, menuFootEl = null;
+        function avatarInto(el) {
+          if (!el) return;
+          el.innerHTML = "";
+          var u = authState.user;
+          if (u && u.photoURL) {
+            var img = document.createElement("img");
+            img.src = u.photoURL; img.alt = ""; img.referrerPolicy = "no-referrer";
+            el.appendChild(img);
+            return;
+          }
+          var label = (u && u.email) || primaryUsername() || "";
+          if (label) { el.textContent = label.trim().charAt(0).toUpperCase() || "?"; return; }
+          el.innerHTML = GLYPH;
+        }
+        function renderControl() { avatarInto(acctBtn); }
+        function renderMenuHead() {
+          if (!menuHeadEl) return;
+          var u = authState.user;
+          var un = primaryUsername();
+          var parts = [];
+          if (un) parts.push('<div class="ff-menu-identity">Sleeper · ' + escHtml(un) + '</div>');
+          if (u && u.email) parts.push('<div class="ff-menu-email">' + escHtml(u.email) + '</div>');
+          menuHeadEl.hidden = !parts.length;
+          var lines = menuHeadEl.querySelector(".ff-menu-id-lines");
+          if (lines) lines.innerHTML = parts.join("");
+          avatarInto(menuHeadEl.querySelector(".ff-menu-avatar"));
+        }
+        /* The Sleeper account's league list: whatever a connect this
+           session already resolved wins; else the menu-open fetch
+           (cached per username for the session). Saved entries for
+           the username that the fetched list lacks are merged in —
+           the union is the account's leagues as far as we know them. */
+        var slpFetchCache = {};
+        var slpFetchPending = {};
+        function fetchedFor(username) {
+          if (!username) return null;
+          try {
+            var sess = window.__ffSleeperSession && window.__ffSleeperSession();
+            if (sess && sess.username && sess.username.toLowerCase() === username.toLowerCase() && sess.leagues && sess.leagues.length) return sess.leagues;
+          } catch (e) { /* no session list */ }
+          return slpFetchCache[username.toLowerCase()] || null;
+        }
+        function kickSleeperFetch(username) {
+          if (!username || fetchedFor(username)) return;
+          var k = username.toLowerCase();
+          if (slpFetchPending[k] || !window.__ffSleeperLeaguesFor) return;
+          slpFetchPending[k] = true;
+          window.__ffSleeperLeaguesFor(username).then(function (res) {
+            delete slpFetchPending[k];
+            if (res && res.leagues) {
+              slpFetchCache[k] = res.leagues;
+              renderMenuGroups(); /* in place — the menu never closes or rebuilds */
+              renderMenuHead();
+            }
+          }).catch(function () { delete slpFetchPending[k]; });
+        }
+        function menuGroupsModel() {
+          var groups = groupEntries(list());
+          var ck = connKey();
+          groups.forEach(function (g) {
+            if (g.kind !== "sleeper" || !g.username) return;
+            var fetched = fetchedFor(g.username);
+            if (!fetched) return;
+            var byId = {};
+            g.entries.forEach(function (e) { byId[normId(e.leagueId)] = e; });
+            fetched.forEach(function (fl) {
+              var id = normId(fl.leagueId);
+              if (id && !byId[id]) {
+                var ne = { platform: "sleeper", leagueId: id, name: fl.name || null, season: fl.season != null && fl.season !== "" ? Number(fl.season) : null, username: g.username, lastUsed: 0 };
+                byId[id] = ne;
+                g.entries.push(ne);
+              }
+            });
+            g.entries.sort(function (a, b) {
+              var ca = ck && normKey(a) === ck ? 1 : 0;
+              var cb = ck && normKey(b) === ck ? 1 : 0;
+              if (ca !== cb) return cb - ca;
+              if ((b.lastUsed || 0) !== (a.lastUsed || 0)) return (b.lastUsed || 0) - (a.lastUsed || 0);
+              return String(a.name || "").localeCompare(String(b.name || ""));
+            });
+          });
+          return groups;
+        }
+        function renderMenuGroups() {
+          if (!menuGroupsEl) return;
+          var ck = connKey();
+          var groups = menuGroupsModel();
+          var byKey = {};
+          groups.forEach(function (g) { g.entries.forEach(function (e) { byKey[normKey(e)] = e; }); });
+          if (!groups.length) {
+            menuGroupsEl.innerHTML = '<div class="ff-menu-empty">No saved leagues yet. Connect a league and it will be here next time.</div>';
+            return;
+          }
+          menuGroupsEl.innerHTML = groups.map(function (g) {
+            var rows = g.entries.map(function (e) {
+              var conn = !!ck && normKey(e) === ck;
+              var right = conn
+                ? '<span class="ff-menu-conn"><span class="ff-menu-dot"></span>Connected</span>'
+                : '<span class="ff-menu-tag">' + (e.platform === "espn" ? "ESPN" : "Sleeper") + '</span>';
+              return '<button type="button" class="ff-menu-league" data-ff-league-id="' + escHtml(e.leagueId) + '" data-ff-league-key="' + escHtml(normKey(e)) + '">' +
+                '<span class="ff-menu-league-name">' + escHtml(e.name || ("League " + e.leagueId)) + '</span>' + right + '</button>';
+            }).join("");
+            return '<div class="ff-menu-group"><div class="ff-menu-group-title">' + escHtml(groupTitle(g)) + '</div>' + rows + '</div>';
+          }).join("");
+          menuGroupsEl.querySelectorAll("[data-ff-league-key]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var e = byKey[btn.dataset.ffLeagueKey];
+              closeMenu();
+              if (e) api.reconnectEntry(e);
+            });
+          });
+        }
+        function renderMenuFoot() {
+          if (!menuFootEl) return;
+          menuFootEl.innerHTML = "";
+          if (authState.user) {
+            var out = document.createElement("button");
+            out.type = "button"; out.textContent = "Sign out";
+            out.addEventListener("click", function () {
+              closeMenu();
+              if (window.__ffAuth && window.__ffAuth.signOut) window.__ffAuth.signOut();
+            });
+            menuFootEl.appendChild(out);
+            menuFootEl.hidden = false;
+          } else if (authState.available) {
+            var si = document.createElement("button");
+            si.type = "button"; si.className = "ff-menu-signin"; si.textContent = "Sign in";
+            si.addEventListener("click", function () {
+              closeMenu();
+              if (window.__ffAuth && window.__ffAuth.openPanel) window.__ffAuth.openPanel();
+            });
+            menuFootEl.appendChild(si);
+            menuFootEl.hidden = false;
+          } else {
+            menuFootEl.hidden = true;
+          }
+        }
+        function renderMenu() { renderMenuHead(); renderMenuGroups(); renderMenuFoot(); }
+        function renderAll() { render(); renderControl(); renderMenuHead(); renderMenuGroups(); }
+        function openMenu() {
+          if (!acctMenu) return;
+          renderMenu(); /* once, synchronously, from in-memory state */
+          acctMenu.hidden = false;
+          groupEntries(list()).forEach(function (g) {
+            if (g.kind === "sleeper" && g.username) kickSleeperFetch(g.username);
+          });
+        }
+        function closeMenu() { if (acctMenu) acctMenu.hidden = true; }
+        function buildProfile() {
+          var slot = document.getElementById("ff-acct-slot");
+          if (!slot) return;
+          slot.innerHTML = "";
+          acctBtn = document.createElement("button");
+          acctBtn.type = "button"; acctBtn.className = "ff-avatar-btn"; acctBtn.id = "ff-acct-btn";
+          acctBtn.setAttribute("aria-label", "Profile and saved leagues");
+          acctBtn.setAttribute("aria-haspopup", "true");
+          acctMenu = document.createElement("div");
+          acctMenu.className = "ff-menu"; acctMenu.id = "ff-acct-menu"; acctMenu.hidden = true;
+          menuHeadEl = document.createElement("div");
+          menuHeadEl.className = "ff-menu-head";
+          menuHeadEl.innerHTML = '<span class="ff-menu-avatar"></span><div class="ff-menu-id-lines"></div>';
+          menuGroupsEl = document.createElement("div");
+          menuGroupsEl.className = "ff-menu-leagues";
+          var add = document.createElement("button");
+          add.type = "button"; add.textContent = "Add a league…";
+          add.addEventListener("click", function () {
+            closeMenu();
+            if (window.openSleeperConnect) window.openSleeperConnect();
+          });
+          menuFootEl = document.createElement("div");
+          menuFootEl.className = "ff-menu-foot";
+          acctMenu.appendChild(menuHeadEl);
+          acctMenu.appendChild(menuGroupsEl);
+          acctMenu.appendChild(add);
+          acctMenu.appendChild(menuFootEl);
+          acctBtn.addEventListener("click", function () {
+            if (acctMenu.hidden) openMenu(); else closeMenu();
+          });
+          document.addEventListener("click", function (e) {
+            if (!acctMenu.hidden && !slot.contains(e.target)) closeMenu();
+          });
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") closeMenu();
+          });
+          slot.appendChild(acctBtn);
+          slot.appendChild(acctMenu);
+          renderControl();
+          renderMenu();
+        }
+        window.__ffProfile = {
+          refresh: function () { renderAll(); },
+          setAuth: function (user) {
+            authState.resolved = true;
+            authState.available = true;
+            authState.user = user ? { email: user.email || null, photoURL: user.photoURL || null } : null;
+            renderControl();
+            renderMenuHead();
+            renderMenuFoot();
+          },
+          authAvailable: function () {
+            if (!authState.resolved && !authState.available) {
+              authState.available = true;
+              renderMenuFoot();
+            }
+          },
+          authUnavailable: function () {
+            authState.resolved = true;
+            authState.available = false;
+            authState.user = null;
+            renderControl();
+            renderMenuHead();
+            renderMenuFoot();
+          },
+        };
+        buildProfile();
+        /* The connect dialog re-renders its list every time it
+           opens, so the Connected mark and grouping are never stale
+           from an earlier persist. */
+        try {
+          var ffOrigOpenConnect = window.openSleeperConnect;
+          if (typeof ffOrigOpenConnect === "function") {
+            window.openSleeperConnect = function () { render(); return ffOrigOpenConnect.apply(null, arguments); };
+          }
+        } catch (e) { /* the dialog still re-renders on every persist */ }
         render();
 
         /* Quiet auto-reconnect: most recent saved league, Sleeper
            only (an ESPN reconnect lands on a pick-your-team step, so
            auto-opening it on every visit would nag; the entry waits
-           one click away in the connect dialog). A failed attempt
-           stays in guest mode and closes the dialog the loader may
-           have opened to show its error. */
-        var autoInFlight = false;
+           one click away in the connect dialog and the profile menu).
+           Single-flight per league: the session latch records the
+           league an attempt STARTED for, so the page-load timer, a
+           Firebase session restore, and a manual sign-in can all run
+           the apply step and the connect path still fires exactly
+           once for that league — and the CURRENT_LEAGUE guard means
+           it never reconnects over a league already connected. */
+        var autoAttemptedKey = null;
         function maybeAutoReconnect() {
           try {
-            if (autoInFlight) return; /* page load and post-sign-in can both ask; one attempt at a time */
-            var list = sorted(read());
-            if (!list.length) return;
+            var entries = list();
+            if (!entries.length) return;
             if (window.CURRENT_LEAGUE === "conn") return;
             if (location.hash && location.hash.length > 1) return; /* share links win */
-            var e = list[0];
+            var e = entries[0];
             if (e.platform !== "sleeper") return;
-            autoInFlight = true;
-            var release = function () { autoInFlight = false; };
-            var p = reconnect(e, false);
-            if (p && typeof p.then === "function") { p.then(release, release); setTimeout(release, 30000); }
-            else release();
-          } catch (err) { autoInFlight = false; /* guest mode stands */ }
+            if (autoAttemptedKey === normKey(e)) return;
+            autoAttemptedKey = normKey(e);
+            reconnect(e, false);
+          } catch (err) { /* guest mode stands */ }
         }
         /* The one "apply the saved leagues" step, shared by page load
            (through the timer below) and by the accounts layer after a
-           sign-in merge lands: re-render the connect dialog's list,
-           then run the same guarded auto-reconnect. The Google popup
-           sign-in never reloads the page, so without this step the
-           merged leagues only took effect on a manual refresh
-           (Eric, 2026-10-24). */
+           sign-in merge lands: re-render the dialog list and the
+           profile menu, then run the same guarded auto-reconnect.
+           The Google popup sign-in never reloads the page, so without
+           this step the merged leagues only took effect on a manual
+           refresh (Eric, 2026-10-24). */
         function applySavedLeagues() {
-          render();
+          renderAll();
           maybeAutoReconnect();
         }
         /* Armed on DOMContentLoaded, NOT window load: load waits for
@@ -10666,11 +11091,12 @@ ${rdP ? "" : `
          Fail-soft by construction: the SDK loads by dynamic import
          inside one try/catch, so a blocked CDN, a bad config, or any
          Firebase error leaves the site — and the local saved-leagues
-         layer above — exactly as it was. The header sign-in control
-         is rendered ONLY after the SDK is confirmed alive, so a dead
-         backend never leaves a dead button on the page. The config
-         below is a public client identifier; access control lives in
-         the Firestore rules (users/{uid} is owner-only). */
+         layer above — exactly as it was. The header profile control
+         belongs to that local layer and renders without this module;
+         on failure this module only reports auth unavailable, so the
+         menu never offers a sign-in action that cannot work. The
+         config below is a public client identifier; access control
+         lives in the Firestore rules (users/{uid} is owner-only). */
       const firebaseConfig = {
         apiKey: "AIzaSyDdmk-BdudyUKttURUNgkJW64Gp6RRRmB4",
         authDomain: "fantasy-forensics-bbeb3.firebaseapp.com",
@@ -10692,14 +11118,11 @@ ${rdP ? "" : `
           const auth = authMod.getAuth(app);
           const db = fsMod.getFirestore(app);
           const saved = window.__ffSaved || null;
-          const slot = document.getElementById("ff-acct-slot");
           const overlay = document.getElementById("ff-auth-overlay");
           const errEl = document.getElementById("ff-auth-err");
           const msgEl = document.getElementById("ff-auth-msg");
           let currentUid = null;
           let pendingNewUser = false;
-          let menuLabelEl = null;
-          let menuLeaguesEl = null;
 
           function track(name) {
             try { if (typeof gtag === "function") gtag("event", name, {}); } catch (e) { /* analytics never blocks auth */ }
@@ -10709,93 +11132,30 @@ ${rdP ? "" : `
           function openPanel() { if (overlay) { overlay.hidden = false; document.body.style.overflow = "hidden"; } }
           function closePanel() { if (overlay) { overlay.hidden = true; document.body.style.overflow = ""; } }
 
-          function renderControl(user) {
-            if (!slot) return;
-            slot.innerHTML = "";
-            if (!user) {
-              menuLabelEl = null; menuLeaguesEl = null;
-              const b = document.createElement("button");
-              b.type = "button"; b.className = "ff-signin-btn"; b.textContent = "Sign in";
-              b.addEventListener("click", openPanel);
-              slot.appendChild(b);
-              return;
-            }
-            const btn = document.createElement("button");
-            btn.type = "button"; btn.className = "ff-avatar-btn";
-            btn.setAttribute("aria-label", "Account menu");
-            if (user.photoURL) {
-              const img = document.createElement("img");
-              img.src = user.photoURL; img.alt = ""; img.referrerPolicy = "no-referrer";
-              btn.appendChild(img);
-            } else {
-              btn.textContent = (user.email || "?").trim().charAt(0).toUpperCase() || "?";
-            }
-            const menu = document.createElement("div");
-            menu.className = "ff-menu"; menu.hidden = true;
-            const em = document.createElement("div");
-            em.className = "ff-menu-email"; em.textContent = user.email || "";
-            const lgLabel = document.createElement("div");
-            lgLabel.className = "ff-menu-label"; lgLabel.textContent = "Your leagues";
-            const lgBox = document.createElement("div");
-            lgBox.className = "ff-menu-leagues";
-            const add = document.createElement("button");
-            add.type = "button"; add.textContent = "Add a league…";
-            add.addEventListener("click", () => {
-              menu.hidden = true;
-              if (window.openSleeperConnect) window.openSleeperConnect();
-            });
-            const out = document.createElement("button");
-            out.type = "button"; out.textContent = "Sign out";
-            out.addEventListener("click", async () => {
-              menu.hidden = true;
-              try { await authMod.signOut(auth); } catch (e) { /* state listener re-renders either way */ }
-            });
-            menu.appendChild(em); menu.appendChild(lgLabel); menu.appendChild(lgBox); menu.appendChild(add); menu.appendChild(out);
-            menuLabelEl = lgLabel; menuLeaguesEl = lgBox;
-            fillMenuLeagues();
-            btn.addEventListener("click", () => { fillMenuLeagues(); menu.hidden = !menu.hidden; });
-            document.addEventListener("click", (e) => {
-              if (!slot.contains(e.target)) menu.hidden = true;
-            });
-            slot.appendChild(btn); slot.appendChild(menu);
+          /* The header control + profile menu live on the local
+             saved-leagues layer (window.__ffProfile), which builds
+             them once and renders them from in-memory state, signed
+             in or out. This module only fills in identity and auth
+             actions: it reports auth availability, and hands the
+             profile the user on every real sign-in / sign-out event
+             (the first callback sets the control once; later ones
+             fire only on actual auth changes). */
+          const profile = window.__ffProfile || null;
+          function profileSetAuth(u) {
+            try { if (profile) profile.setAuth(u); } catch (e) { /* the menu stands on local state */ }
           }
-
-          /* Profile-menu league picker (Eric, 2026-10-24): the saved
-             leagues one click from the avatar, through the same
-             reconnect paths the connect dialog uses. Refreshed every
-             time the menu opens and again after the sign-in merge
-             lands; with zero saved leagues the section is just the
-             "Add a league…" item under the (hidden) label. */
-          function fillMenuLeagues() {
-            if (!menuLeaguesEl) return;
-            const list = saved ? saved.list().slice().sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0)) : [];
-            if (menuLabelEl) menuLabelEl.hidden = !list.length;
-            menuLeaguesEl.innerHTML = "";
-            list.forEach((e) => {
-              const b = document.createElement("button");
-              b.type = "button"; b.className = "ff-menu-league";
-              const nm = document.createElement("span");
-              nm.className = "ff-menu-league-name"; nm.textContent = e.name || ("League " + e.leagueId);
-              const tag = document.createElement("span");
-              tag.className = "ff-menu-tag"; tag.textContent = e.platform === "espn" ? "ESPN" : "Sleeper";
-              b.appendChild(nm); b.appendChild(tag);
-              b.addEventListener("click", () => {
-                const m = menuLeaguesEl.closest(".ff-menu"); if (m) m.hidden = true;
-                if (saved && saved.reconnectEntry) saved.reconnectEntry(e);
-              });
-              menuLeaguesEl.appendChild(b);
-            });
-          }
+          if (profile) { try { profile.authAvailable(); } catch (e) { /* ignore */ } }
+          window.__ffAuth.openPanel = openPanel;
 
           function clean(e) {
             if (!e || !e.platform || !e.leagueId) return null;
             const out = {
-              platform: String(e.platform), leagueId: String(e.leagueId),
+              platform: String(e.platform).trim().toLowerCase(), leagueId: String(e.leagueId).trim(),
               name: e.name || null,
               season: e.season != null && e.season !== "" ? Number(e.season) : null,
               lastUsed: Number(e.lastUsed) || 0,
             };
-            if (out.platform === "sleeper") out.username = e.username || null;
+            if (out.platform === "sleeper") out.username = e.username ? String(e.username).trim() : null;
             return out;
           }
           async function pushDoc(user, leagues) {
@@ -10897,12 +11257,12 @@ ${rdP ? "" : `
              the apply step's own guard sees CURRENT_LEAGUE "conn". */
           function afterSignInApplied() {
             try { if (window.__ffApplySavedLeagues) window.__ffApplySavedLeagues(); } catch (e) { /* apply is best-effort */ }
-            fillMenuLeagues();
+            try { if (profile) profile.refresh(); } catch (e) { /* the menu re-renders on next open anyway */ }
           }
           authMod.onAuthStateChanged(auth, (user) => {
             window.__ffAuth.user = user || null;
             window.__ffAuth.stateResolved = true;
-            renderControl(user);
+            profileSetAuth(user);
             if (user && user.uid !== currentUid) {
               currentUid = user.uid;
               const nu = pendingNewUser; pendingNewUser = false;
@@ -10917,11 +11277,15 @@ ${rdP ? "" : `
           window.__ffAuth = {
             ready: true, stateResolved: false, user: null,
             signOut: () => authMod.signOut(auth),
+            openPanel,
             applySavedLeagues: () => { if (window.__ffApplySavedLeagues) window.__ffApplySavedLeagues(); },
           };
         } catch (e) {
-          /* Accounts layer stays off: no control is rendered, the
-             local saved-leagues layer above is untouched. */
+          /* Accounts layer stays off: the profile menu (owned by the
+             local saved-leagues layer above) is told auth is
+             unavailable, so it never offers a sign-in action that
+             cannot work; saved leagues keep working as before. */
+          try { if (window.__ffProfile) window.__ffProfile.authUnavailable(); } catch (e2) { /* ignore */ }
           window.__ffAuth = { ready: false, stateResolved: true, user: null, error: String(e && e.message || e) };
         }
       })();
