@@ -2447,6 +2447,23 @@
       .cc-spark-k { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
       .cc-rail { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
       .cc-rail-h { font-family: "Space Grotesk", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+      .cc-tabs { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+      .cc-tab { border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 7px 14px; background: rgba(255,255,255,.04); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+      .cc-tab.on { background: var(--accent); border-color: var(--accent); color: #150826; }
+      .cc-manage { margin-left: auto; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 7px 14px; background: transparent; color: var(--ink-3); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+      .cc-manage:hover { color: var(--ink); border-color: rgba(0,229,255,.5); }
+      .cc-spot-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+      .cc-hide { border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 8px 14px; background: transparent; color: var(--ink-3); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+      .cc-hide:hover:not(:disabled) { color: var(--ink); border-color: rgba(255,46,136,.6); }
+      .cc-hide:disabled { opacity: .55; cursor: default; }
+      .cc-manage-group { margin-bottom: 16px; }
+      .cc-manage-group-h { display: flex; align-items: center; gap: 10px; font-family: "Space Grotesk", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 2px; }
+      .cc-manage-group-h .cc-hide { margin-left: auto; padding: 5px 10px; font-size: 12px; }
+      .cc-manage-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+      .cc-manage-row .cc-manage-name { flex: 1; min-width: 0; }
+      .cc-manage-row .cc-manage-name b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .cc-manage-row .cc-manage-name span { font-size: 12px; color: var(--ink-3); }
+      .cc-manage-row .cc-hide { padding: 5px 10px; font-size: 12px; flex-shrink: 0; }
       .cc-rail-it { text-align: left; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 12px 14px; background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.01)); color: var(--ink); font: inherit; cursor: pointer; width: 100%; }
       .cc-rail-it:hover, .cc-rail-it:focus-visible { border-color: rgba(0,229,255,.5); }
       .cc-rail-it.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent), 0 0 12px rgba(198,255,0,.2); cursor: default; }
@@ -9558,6 +9575,15 @@ ${rdP ? "" : `
             items.push({ key: "espn:" + C.leagueId, name: C.league.name, meta: "ESPN", league: null, espn: true });
           }
         }
+        /* Hidden leagues stay out of the switcher; the active league's
+           pill stays so you can always see where you are. */
+        try {
+          const pr = (window.__ffPrefs ? window.__ffPrefs.get() : { hiddenLeagues: [], hiddenAccounts: [] });
+          const sessUser = (slpState.user && slpState.user.username) ? String(slpState.user.username).trim().toLowerCase() : null;
+          const isHid = (it) => pr.hiddenLeagues.indexOf(it.key) !== -1 || (it.key.indexOf("sleeper:") === 0 && sessUser && pr.hiddenAccounts.indexOf(sessUser) !== -1);
+          const visItems = items.filter(it => it.key === connLeagueKey || !isHid(it));
+          items.splice(0, items.length, ...visItems);
+        } catch (e) { /* switcher stands unfiltered */ }
         if (!items.length) { wrap.hidden = true; pills.innerHTML = ""; return; }
         wrap.hidden = false;
         pills.innerHTML = items.map((it, i) => {
@@ -10838,6 +10864,67 @@ ${rdP ? "" : `
           if (!silent && api.onChange) { try { api.onChange(cl); } catch (e) { /* sync is best-effort */ } }
         }
 
+        /* ---- Command Center prefs: hide + custom tabs ------------
+           Hide is reversible and list-only: a hidden league or account
+           stops appearing in every league list (Command Center rail
+           and queue, switcher, connect-dialog list, profile menu) but
+           can still be opened directly, and can always be unhidden
+           from Command Center's Manage view. Shape:
+           { hiddenLeagues: ["sleeper:123", "espn:456"],
+             hiddenAccounts: ["username"],   // Sleeper usernames, lowercased
+             customLeagues: ["sleeper:123"],  // Custom tab membership
+             updatedAt: 0 }
+           Local-first like saved leagues (works signed-out); the
+           accounts backend mirrors it into the signed-in user's doc
+           through prefsApi.onChange, same pattern as saved leagues. */
+        var PREFS_KEY = "ff_cc_prefs";
+        function prefsKey(platform, leagueId) { return normPlatform(platform) + ":" + normId(leagueId); }
+        function prefsClean(p) {
+          var out = { hiddenLeagues: [], hiddenAccounts: [], customLeagues: [], updatedAt: 0 };
+          if (!p || typeof p !== "object") return out;
+          function keys(v) {
+            var seen = {}, res = [];
+            (Array.isArray(v) ? v : []).forEach(function (x) {
+              var s = String(x == null ? "" : x).trim();
+              if (s && !seen[s]) { seen[s] = true; res.push(s); }
+            });
+            return res;
+          }
+          out.hiddenLeagues = keys(p.hiddenLeagues);
+          out.hiddenAccounts = keys(p.hiddenAccounts).map(function (u) { return u.toLowerCase(); });
+          out.customLeagues = keys(p.customLeagues);
+          out.updatedAt = Number(p.updatedAt) || 0;
+          return out;
+        }
+        function prefsGet() {
+          try {
+            var v = JSON.parse(localStorage.getItem(PREFS_KEY) || "{}");
+            return prefsClean(v);
+          } catch (e) { return prefsClean(null); }
+        }
+        function prefsPersist(p, silent) {
+          var cl = prefsClean(p);
+          cl.updatedAt = Date.now();
+          try { localStorage.setItem(PREFS_KEY, JSON.stringify(cl)); } catch (e) { /* private mode: prefs live for the session */ }
+          if (!silent && prefsApi.onChange) { try { prefsApi.onChange(cl); } catch (e) { /* sync is best-effort */ } }
+          return cl;
+        }
+        function prefsIsHidden(platform, leagueId, username) {
+          var pr = prefsGet();
+          if (pr.hiddenLeagues.indexOf(prefsKey(platform, leagueId)) !== -1) return true;
+          if (normPlatform(platform) === "sleeper" && username) {
+            return pr.hiddenAccounts.indexOf(String(username).trim().toLowerCase()) !== -1;
+          }
+          return false;
+        }
+        var prefsApi = {
+          onChange: null,
+          get: prefsGet,
+          save: function (p) { return prefsPersist(p, false); },
+          replaceAll: function (p) { return prefsPersist(p, true); },
+        };
+        window.__ffPrefs = prefsApi;
+
         /* ---- Grouping ---------------------------------------------
            Leagues hang from the account they belong to, not from
            click recency: one group per Sleeper username (its saved
@@ -10888,7 +10975,10 @@ ${rdP ? "" : `
           var wrap = document.getElementById("ff-saved");
           var listEl = document.getElementById("ff-saved-list");
           if (!wrap || !listEl) return;
-          var entries = list();
+          /* Hidden leagues/accounts stay out of the list; unhide lives
+             in Command Center's Manage view, and a hidden league can
+             still be opened directly. */
+          var entries = list().filter(function (e) { return !prefsIsHidden(e.platform, e.leagueId, e.username); });
           wrap.hidden = !entries.length;
           var ck = connKey();
           var byKey = {};
@@ -11078,7 +11168,9 @@ ${rdP ? "" : `
         function renderMenuGroups() {
           if (!menuGroupsEl) return;
           var ck = connKey();
-          var groups = menuGroupsModel();
+          var groups = menuGroupsModel().map(function (g) {
+            return { kind: g.kind, username: g.username, entries: g.entries.filter(function (e) { return !prefsIsHidden(e.platform, e.leagueId, e.username); }) };
+          }).filter(function (g) { return g.entries.length > 0; });
           var byKey = {};
           groups.forEach(function (g) { g.entries.forEach(function (e) { byKey[normKey(e)] = e; }); });
           if (!groups.length) {
@@ -11438,21 +11530,27 @@ ${rdP ? "" : `
           }
           async function pushDoc(user, leagues) {
             try {
-              await fsMod.setDoc(fsMod.doc(db, "users", user.uid), {
+              var payload = {
                 email: user.email || null,
                 leagues: (leagues || []).map(clean).filter(Boolean),
                 updatedAt: new Date().toISOString(),
-              });
+              };
+              /* Prefs ride the same doc: it is rewritten whole on every
+                 sync, so omitting them here would wipe them. */
+              try { if (window.__ffPrefs) payload.ccPrefs = window.__ffPrefs.get(); } catch (e) { /* prefs stay local */ }
+              await fsMod.setDoc(fsMod.doc(db, "users", user.uid), payload);
             } catch (e) { /* offline/rules hiccup: local mirror stands */ }
           }
           async function syncOnSignIn(user, isNewUser) {
             let remote = [], existed = false;
+            var remotePrefs = null;
             try {
               const snap = await fsMod.getDoc(fsMod.doc(db, "users", user.uid));
               if (snap.exists()) {
                 existed = true;
                 const d = snap.data();
                 if (d && Array.isArray(d.leagues)) remote = d.leagues.map(clean).filter(Boolean);
+                if (d && d.ccPrefs && typeof d.ccPrefs === "object") remotePrefs = d.ccPrefs;
               }
             } catch (e) { /* treat as no remote doc; the merge below still lands local */ }
             const local = saved ? saved.list().map(clean).filter(Boolean) : [];
@@ -11464,12 +11562,26 @@ ${rdP ? "" : `
             });
             const merged = [...byKey.values()].sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
             if (saved) saved.replaceAll(merged);
+            /* Command Center prefs: last write wins by updatedAt, so an
+               unhide on one device propagates instead of a union
+               re-adding it from the other device. Applied before the
+               push below, which then carries the winner. */
+            try {
+              if (window.__ffPrefs && remotePrefs && Number(remotePrefs.updatedAt) > Number(window.__ffPrefs.get().updatedAt)) {
+                window.__ffPrefs.replaceAll(remotePrefs);
+              }
+            } catch (e) { /* prefs stay local */ }
             await pushDoc(user, merged);
             track(isNewUser || !existed ? "account_signup" : "account_signin");
           }
           if (saved) {
             saved.onChange = (list) => {
               if (auth.currentUser) pushDoc(auth.currentUser, list);
+            };
+          }
+          if (window.__ffPrefs) {
+            window.__ffPrefs.onChange = () => {
+              if (auth.currentUser) pushDoc(auth.currentUser, saved ? saved.list() : []);
             };
           }
 
@@ -15050,6 +15162,107 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
          assumption the builder mints. */
       function ff4CCIsEspn(lg) { return !!(lg && lg.kind === "espn"); }
       function ff4CCPlatform(lg) { return ff4CCIsEspn(lg) ? "ESPN" : "Sleeper"; }
+      /* Command Center league-type filter: Sleeper entries classify from
+         the league object itself (slpLeagueType); the ESPN descriptor has
+         no settings until its snapshot loads, so it reads off the snap's
+         chips and stays visible (unclassified) until then. */
+      function ff4CCLeagueType(lg, snap) {
+        if (ff4CCIsEspn(lg)) {
+          const chips = (snap && snap.chips) || [];
+          if (chips.includes("Dynasty")) return "dynasty";
+          if (chips.includes("Redraft")) return "redraft";
+          return null;
+        }
+        return slpLeagueType(lg);
+      }
+      /* Command Center prefs (window.__ffPrefs, defined with the saved-
+         leagues layer): hide + custom-tab membership. Local-first, synced
+         when signed in. Defensive: without the layer, nothing is hidden. */
+      function ff4CCPrefs() {
+        try { if (window.__ffPrefs) return window.__ffPrefs.get(); } catch (e) {}
+        return { hiddenLeagues: [], hiddenAccounts: [], customLeagues: [], updatedAt: 0 };
+      }
+      function ff4CCPrefsSave(pr) {
+        try { if (window.__ffPrefs) return window.__ffPrefs.save(pr); } catch (e) {}
+        return pr;
+      }
+      function ff4CCSessionUsername() {
+        try {
+          const st = (typeof slpState !== "undefined") ? slpState : null;
+          return (st && st.user && st.user.username) || null;
+        } catch (e) { return null; }
+      }
+      function ff4CCLeagueKey(lg) {
+        if (ff4CCIsEspn(lg)) return "espn:" + String(lg.leagueId);
+        return "sleeper:" + String(lg.league_id);
+      }
+      function ff4CCIsHiddenKey(key, username) {
+        const pr = ff4CCPrefs();
+        if (pr.hiddenLeagues.indexOf(key) !== -1) return true;
+        return !!(username && pr.hiddenAccounts.indexOf(String(username).trim().toLowerCase()) !== -1);
+      }
+      function ff4CCIsHidden(lg) {
+        if (ff4CCIsEspn(lg)) return ff4CCIsHiddenKey("espn:" + String(lg.leagueId), null);
+        return ff4CCIsHiddenKey("sleeper:" + String(lg.league_id), ff4CCSessionUsername());
+      }
+      /* The rail's league order (playoff odds, loaded first), filtered by
+         the active tab and by hide. Hide is list-only: a hidden league
+         still loads its snapshot in the background and can still be
+         opened directly — it just never appears in a list. */
+      function ff4CCVisibleOrder() {
+        const leagues = ff4.ccLeagues || [];
+        const tab = ff4.ccTab || "all";
+        const snaps = ff4.ccSnaps || {};
+        const pr = ff4CCPrefs();
+        return leagues.map((lg, i) => i).filter(i => !(snaps[i] && snaps[i].noTeam)).sort((a, b) => {
+          const sa = snaps[a], sb = snaps[b];
+          const la = sa ? 1 : 0, lb = sb ? 1 : 0;
+          if (la !== lb) return lb - la;
+          const oa = sa && !sa.failed && sa.odds != null ? sa.odds : -1, ob = sb && !sb.failed && sb.odds != null ? sb.odds : -1;
+          if (oa !== ob) return ob - oa;
+          return a - b;
+        }).filter(i => {
+          const lg = leagues[i];
+          if (ff4CCIsHidden(lg)) return false;
+          if (tab === "all") return true;
+          if (tab === "custom") return pr.customLeagues.indexOf(ff4CCLeagueKey(lg)) !== -1;
+          const t = ff4CCLeagueType(lg, snaps[i]);
+          return t == null || t === tab;
+        });
+      }
+      function ff4CCRailEmptyNote(tab, pr, leagues) {
+        if (tab === "custom") return pr.customLeagues.length
+          ? `<p class="cc-status">None of your Custom leagues are loaded here right now.</p>`
+          : `<p class="cc-status">No leagues picked yet — open Manage to pick the leagues for this tab.</p>`;
+        if (tab === "dynasty" || tab === "redraft") return `<p class="cc-status">No ${tab} leagues here.</p>`;
+        const anyHidden = (leagues || []).some(lg => ff4CCIsHidden(lg));
+        return anyHidden ? `<p class="cc-status">Everything here is hidden — open Manage to bring leagues back.</p>` : "";
+      }
+      /* After a prefs change: re-render the lists (never the editor
+         itself — the editor re-renders itself), and move focus off a
+         league that just left the view. */
+      function ff4CCFixFocusAfterPrefs() {
+        const vis = ff4CCVisibleOrder();
+        if (ff4.ccFocus != null && !vis.includes(ff4.ccFocus)) {
+          if (vis.length) {
+            ff4.ccFocus = vis[0]; ff4CCRenderSpot();
+            if (!ff4.ccDetail[vis[0]]) ff4CCDetail(vis[0]);
+          } else { ff4.ccFocus = null; ff4CCRenderSpot(); }
+        }
+      }
+      function ff4CCAfterPrefsChange() {
+        ff4CCRenderRail(); ff4CCRenderQueue(); ff4CCRenderTabs();
+        try { if (window.renderLeagueSwitcher) window.renderLeagueSwitcher(); } catch (e) {}
+        ff4CCFixFocusAfterPrefs();
+      }
+      function ff4CCHideLeague(idx) {
+        const lg = (ff4.ccLeagues || [])[idx]; if (!lg) return;
+        const pr = ff4CCPrefs();
+        const k = ff4CCLeagueKey(lg);
+        if (pr.hiddenLeagues.indexOf(k) === -1) pr.hiddenLeagues.push(k);
+        ff4CCPrefsSave(pr);
+        ff4CCAfterPrefsChange();
+      }
       /* League name as rendered on cards, queue rows and the
          spotlight: in a combined session every league carries its
          platform ("League · ESPN" / "League · Sleeper" — the
@@ -15291,16 +15504,17 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         ff4CCRenderQueue(); ff4CCRenderRail();
         if (ff4.ccFocus != null || ff4.ccDead) return;
         const lg = (ff4.ccLeagues || [])[idx];
-        if (lg && ff4CCIsActive(lg)) { ff4.ccFocus = idx; ff4CCRenderRail(); ff4CCRenderSpot(); ff4CCDetail(idx); }
+        if (lg && ff4CCIsActive(lg) && ff4CCVisibleOrder().indexOf(idx) !== -1) { ff4.ccFocus = idx; ff4CCRenderRail(); ff4CCRenderSpot(); ff4CCDetail(idx); }
         else if ((ff4.ccDone || 0) + 1 >= (ff4.ccLeagues || []).length) ff4CCPickFocus();
       }
 
       function ff4CCPickFocus() {
+        const vis = new Set(ff4CCVisibleOrder());
         let best = null;
-        Object.values(ff4.ccSnaps || {}).forEach(s => { if (!s || s.failed || s.noTeam) return; const o = s.odds == null ? -1 : s.odds; if (!best || o > best.o) best = { idx: s.idx, o }; });
-        ff4.ccFocus = best ? best.idx : 0;
+        Object.values(ff4.ccSnaps || {}).forEach(s => { if (!s || s.failed || s.noTeam || !vis.has(s.idx)) return; const o = s.odds == null ? -1 : s.odds; if (!best || o > best.o) best = { idx: s.idx, o }; });
+        ff4.ccFocus = best ? best.idx : (vis.size ? [...vis][0] : null);
         ff4CCRenderRail(); ff4CCRenderSpot();
-        ff4CCDetail(ff4.ccFocus);
+        if (ff4.ccFocus != null) ff4CCDetail(ff4.ccFocus);
       }
 
       function ff4CCFocusLeague(idx) {
@@ -15339,7 +15553,11 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const spot = document.getElementById("cc-spot");
         if (!spot) return;
         const idx = ff4.ccFocus;
-        if (idx == null) { spot.innerHTML = `<p class="cc-status cc-loading">Loading your leagues…</p>`; return; }
+        if (idx == null) {
+          const done = (ff4.ccDone || 0) >= (ff4.ccLeagues || []).length;
+          if (done && !ff4CCVisibleOrder().length) { spot.innerHTML = `<p class="cc-status">No leagues in this view — open Manage to pick or unhide leagues.</p>`; return; }
+          spot.innerHTML = `<p class="cc-status cc-loading">Loading your leagues…</p>`; return;
+        }
         const d = ff4.ccDetail[idx];
         if (!d) { spot.innerHTML = `<p class="cc-status cc-loading">Building this league's full picture — odds ring, magic number, swing game, value trend…</p>`; return; }
         if (d.failed) {
@@ -15359,7 +15577,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             <div class="cc-spot-team">${esc(d.teamName)} <span class="you-tag">Your team</span></div>
             <div class="cc-spot-league">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div>
             <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
-          </div><button type="button" class="cc-enter" data-cc-open="1">Open league →</button></div>
+          </div><div class="cc-spot-actions"><button type="button" class="cc-enter" data-cc-open="1">Open league →</button><button type="button" class="cc-hide" data-cc-hide="1">Hide league</button></div></div>
           <div class="cc-spot-mid">${ff4CCRing(d)}
             <div class="cc-spot-stats">
               <div><span>Record</span><b>${esc(d.record || "—")}</b></div>
@@ -15370,21 +15588,124 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           ${lines.length ? `<div class="cc-lines">${lines.join("")}</div>` : ""}
           ${d.spark ? `<div class="cc-spark">${d.spark}</div>` : ""}`;
         const ob = spot.querySelector("[data-cc-open]"); if (ob) ob.addEventListener("click", () => ff4CCOpen(idx));
+        const hb = spot.querySelector("[data-cc-hide]"); if (hb) hb.addEventListener("click", () => ff4CCHideLeague(idx));
       }
 
+      /* Tabs bar (lives above the queue so it reads as the view switcher
+         for the whole dashboard, and stays visible on phones where the
+         rail itself turns into a horizontal scroller). */
+      function ff4CCRenderTabs() {
+        const el = document.getElementById("cc-tabs"); if (!el) return;
+        const tab = ff4.ccTab || "all";
+        const hiddenCount = (ff4.ccLeagues || []).filter(lg => ff4CCIsHidden(lg)).length;
+        const tabs = [["all", "All"], ["dynasty", "Dynasty"], ["redraft", "Redraft"], ["custom", "Custom"]].map(([v, label]) => `<button type="button" class="cc-tab${tab === v ? " on" : ""}" data-cc-tab="${v}" role="tab" aria-selected="${tab === v}">${label}</button>`).join("");
+        el.innerHTML = `<div class="cc-tabs" role="tablist" aria-label="Command Center views">${tabs}<button type="button" class="cc-manage" data-cc-manage="1">Manage${hiddenCount ? ` · ${hiddenCount} hidden` : ""}</button></div>`;
+        el.querySelectorAll("[data-cc-tab]").forEach(b => b.addEventListener("click", () => {
+          ff4.ccTab = b.dataset.ccTab;
+          ff4CCRenderTabs(); ff4CCRenderRail(); ff4CCRenderQueue();
+          const vis = ff4CCVisibleOrder();
+          if (ff4.ccFocus != null && !vis.includes(ff4.ccFocus) && vis.length) ff4CCFocusLeague(vis[0]);
+        }));
+        el.querySelectorAll("[data-cc-manage]").forEach(b => b.addEventListener("click", () => ff4CCOpenManage()));
+      }
+      /* Manage editor: every league the site knows (this session's plus
+         saved records from other accounts), grouped by account. Picks
+         apply whenever those leagues are loaded; hidden leagues stay
+         listed here with Unhide so nothing can vanish for good. */
+      function ff4CCManageLeagues() {
+        const out = [], seen = {};
+        (ff4.ccLeagues || []).forEach(lg => {
+          const k = ff4CCLeagueKey(lg);
+          if (!seen[k]) { seen[k] = true; out.push({ key: k, name: lg.name || "League", platform: ff4CCIsEspn(lg) ? "espn" : "sleeper", username: ff4CCIsEspn(lg) ? null : ff4CCSessionUsername() }); }
+        });
+        try {
+          const saved = (window.__ffSaved && window.__ffSaved.list) ? window.__ffSaved.list() : [];
+          saved.forEach(e => {
+            const k = String(e.platform).toLowerCase() + ":" + String(e.leagueId);
+            if (!seen[k]) { seen[k] = true; out.push({ key: k, name: e.name || ("League " + e.leagueId), platform: String(e.platform).toLowerCase(), username: e.username || null }); }
+          });
+        } catch (e) {}
+        return out;
+      }
+      function ff4CCOpenManage() {
+        const rail = document.getElementById("cc-rail"); if (!rail) return;
+        ff4.ccManage = true;
+        ff4CCRenderManage();
+      }
+      function ff4CCCloseManage() {
+        ff4.ccManage = false;
+        ff4CCRenderRail(); ff4CCRenderQueue();
+      }
+      function ff4CCRenderManage() {
+        const rail = document.getElementById("cc-rail"); if (!rail) return;
+        const pr = ff4CCPrefs();
+        const all = ff4CCManageLeagues();
+        const groups = [], byU = {};
+        all.forEach(lg => {
+          const gk = lg.platform === "espn" ? "espn" : ("sleeper:" + (lg.username || "").toLowerCase());
+          let g = byU[gk];
+          if (!g) { g = { title: lg.platform === "espn" ? "ESPN" : ("Sleeper" + (lg.username ? " · " + lg.username : "")), username: lg.platform === "espn" ? null : (lg.username || null), leagues: [] }; byU[gk] = g; groups.push(g); }
+          g.leagues.push(lg);
+        });
+        groups.forEach(g => g.leagues.sort((a, b) => String(a.name).localeCompare(String(b.name))));
+        let h = `<div class="cc-rail-h">Manage leagues</div><p class="cc-status">Pick leagues for the Custom tab. Hide leagues or whole accounts you don't want in any list — you can always bring them back here.</p>`;
+        if (!all.length) h += `<p class="cc-status">No leagues found — connect a league first.</p>`;
+        groups.forEach(g => {
+          const acctHidden = g.username ? pr.hiddenAccounts.indexOf(g.username.toLowerCase()) !== -1 : false;
+          h += `<div class="cc-manage-group"><div class="cc-manage-group-h"><span>${esc(g.title)}</span>${g.username ? `<button type="button" class="cc-hide" data-cc-acct="${esc(g.username)}">${acctHidden ? "Unhide account" : "Hide account"}</button>` : ""}</div>`;
+          h += g.leagues.map(lg => {
+            const indHidden = pr.hiddenLeagues.indexOf(lg.key) !== -1;
+            const checked = pr.customLeagues.indexOf(lg.key) !== -1;
+            const hideBtn = indHidden
+              ? `<button type="button" class="cc-hide" data-cc-hide-league="${esc(lg.key)}">Unhide</button>`
+              : (acctHidden
+                ? `<button type="button" class="cc-hide" data-cc-hide-league="${esc(lg.key)}" disabled>Hidden via account</button>`
+                : `<button type="button" class="cc-hide" data-cc-hide-league="${esc(lg.key)}">Hide</button>`);
+            return `<div class="cc-manage-row"><input type="checkbox" data-cc-custom="${esc(lg.key)}"${checked ? " checked" : ""} aria-label="Include ${esc(lg.name)} in the Custom tab"><div class="cc-manage-name"><b>${esc(lg.name)}</b><span>${lg.platform === "espn" ? "ESPN" : "Sleeper"}${(indHidden || acctHidden) ? " · Hidden" : ""}</span></div>${hideBtn}</div>`;
+          }).join("") + `</div>`;
+        });
+        h += `<button type="button" class="cc-enter" data-cc-manage-done="1">Done</button>`;
+        rail.innerHTML = h;
+        rail.querySelectorAll("[data-cc-custom]").forEach(box => box.addEventListener("change", () => {
+          const pr2 = ff4CCPrefs();
+          const k = box.dataset.ccCustom;
+          const i = pr2.customLeagues.indexOf(k);
+          if (box.checked && i === -1) pr2.customLeagues.push(k);
+          if (!box.checked && i !== -1) pr2.customLeagues.splice(i, 1);
+          ff4CCPrefsSave(pr2);
+          ff4CCRenderManage(); ff4CCRenderQueue(); ff4CCRenderTabs();
+        }));
+        rail.querySelectorAll("[data-cc-hide-league]").forEach(btn => btn.addEventListener("click", () => {
+          const pr2 = ff4CCPrefs();
+          const k = btn.dataset.ccHideLeague;
+          const i = pr2.hiddenLeagues.indexOf(k);
+          if (i === -1) pr2.hiddenLeagues.push(k); else pr2.hiddenLeagues.splice(i, 1);
+          ff4CCPrefsSave(pr2);
+          ff4CCRenderManage(); ff4CCRenderQueue(); ff4CCRenderTabs();
+          try { if (window.renderLeagueSwitcher) window.renderLeagueSwitcher(); } catch (e) {}
+          ff4CCFixFocusAfterPrefs();
+        }));
+        rail.querySelectorAll("[data-cc-acct]").forEach(btn => btn.addEventListener("click", () => {
+          const pr2 = ff4CCPrefs();
+          const u = String(btn.dataset.ccAcct).trim().toLowerCase();
+          const i = pr2.hiddenAccounts.indexOf(u);
+          if (i === -1) pr2.hiddenAccounts.push(u); else pr2.hiddenAccounts.splice(i, 1);
+          ff4CCPrefsSave(pr2);
+          ff4CCRenderManage(); ff4CCRenderQueue(); ff4CCRenderTabs();
+          try { if (window.renderLeagueSwitcher) window.renderLeagueSwitcher(); } catch (e) {}
+          ff4CCFixFocusAfterPrefs();
+        }));
+        rail.querySelectorAll("[data-cc-manage-done]").forEach(btn => btn.addEventListener("click", () => ff4CCCloseManage()));
+      }
       function ff4CCRenderRail() {
         const rail = document.getElementById("cc-rail");
         if (!rail) return;
         const leagues = ff4.ccLeagues || [];
-        const order = leagues.map((lg, i) => i).filter(i => !(ff4.ccSnaps[i] && ff4.ccSnaps[i].noTeam)).sort((a, b) => {
-          const sa = ff4.ccSnaps[a], sb = ff4.ccSnaps[b];
-          const la = sa ? 1 : 0, lb = sb ? 1 : 0;
-          if (la !== lb) return lb - la;
-          const oa = sa && !sa.failed && sa.odds != null ? sa.odds : -1, ob = sb && !sb.failed && sb.odds != null ? sb.odds : -1;
-          if (oa !== ob) return ob - oa;
-          return a - b;
-        });
-        rail.innerHTML = `<div class="cc-rail-h">Your leagues · by playoff odds</div>` + order.map(i => {
+        if (ff4.ccManage) return;
+        const order = ff4CCVisibleOrder();
+        const tab = ff4.ccTab || "all";
+        const pr = ff4CCPrefs();
+        const list = order.length ? order.map(i => {
           const lg = leagues[i]; const s = ff4.ccSnaps[i]; const on = ff4.ccFocus === i;
           if (!s) return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}"><div class="cc-rail-top"><span class="cc-rail-team cc-loading">Loading…</span></div><div class="cc-rail-lg">${esc(ff4CCLgLabel(lg.name, ff4CCPlatform(lg)))}</div></button>`;
           if (s.failed) return `<button type="button" class="cc-rail-it" data-cc-open="${i}"><div class="cc-rail-top"><span class="cc-rail-team">Couldn't load</span></div><div class="cc-rail-lg">${esc(ff4CCLgLabel(s.leagueName, s.platform))} — tap to open it in full</div></button>`;
@@ -15394,9 +15715,11 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             <div class="cc-rail-lg">${esc(ff4CCLgLabel(s.leagueName, s.platform))}</div>
             <div class="cc-chips">${(s.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
           </button>`;
-        }).join("");
+        }).join("") : ff4CCRailEmptyNote(tab, pr, leagues);
+        rail.innerHTML = `<div class="cc-rail-h">Your leagues · by playoff odds</div>` + list;
         rail.querySelectorAll("[data-cc-focus]").forEach(b => b.addEventListener("click", () => ff4CCFocusLeague(+b.dataset.ccFocus)));
         rail.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
+
       }
 
       function ff4CCRenderQueue() {
@@ -15416,22 +15739,31 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const fyis = [];
         Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.fyiItem && !(s.queueItems && s.queueItems.length)) fyis.push(s.fyiItem); });
         fyis.sort((a, b) => a.idx - b.idx);
-        if (!items.length && !fyis.length) {
+        /* The queue follows the active tab: the Custom tab's queue is
+           only its picked leagues, a hidden league never queues. */
+        const visQ = new Set(ff4CCVisibleOrder());
+        const itemsV = items.filter(it => visQ.has(it.idx));
+        const fyisV = fyis.filter(it => visQ.has(it.idx));
+        if (!itemsV.length && !fyisV.length) {
           q.className = "cc-queue clean";
-          q.innerHTML = `<div class="cc-queue-h">Needs you first</div><p class="cc-queue-note">Nothing needs you — all leagues are clean.</p>`;
+          const tabQ = ff4.ccTab || "all";
+          const noteQ = tabQ === "custom" && !ff4CCPrefs().customLeagues.length
+            ? "No leagues picked for this tab yet — open Manage to pick them."
+            : (visQ.size === 0 ? "No leagues in this view." : "Nothing needs you — all leagues are clean.");
+          q.innerHTML = `<div class="cc-queue-h">Needs you first</div><p class="cc-queue-note">${noteQ}</p>`;
           return;
         }
-        q.className = items.length ? "cc-queue" : "cc-queue clean";
+        q.className = itemsV.length ? "cc-queue" : "cc-queue clean";
         q.innerHTML = `<div class="cc-queue-h">Needs you first</div>`
-          + items.map(it => `<button type="button" class="cc-queue-it" data-cc-open="${it.idx}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></button>`).join("")
-          + fyis.map(it => `<div class="cc-queue-it static"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue fyi">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></div>`).join("");
+          + itemsV.map(it => `<button type="button" class="cc-queue-it" data-cc-open="${it.idx}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></button>`).join("")
+          + fyisV.map(it => `<div class="cc-queue-it static"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue fyi">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></div>`).join("");
         q.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
       }
 
       function ff4RenderCC() {
         const out = document.getElementById("cc-out");
         if (!out) return;
-        ff4.ccDead = false; ff4.ccBusy = false; ff4.ccMixed = false;
+        ff4.ccDead = false; ff4.ccBusy = false; ff4.ccMixed = false; ff4.ccTab = "all"; ff4.ccManage = false;
         const st = (typeof slpState !== "undefined") ? slpState : null;
         const leagues = st && Array.isArray(st.leagues) ? st.leagues : [];
         const user = st && st.user ? st.user : null;
@@ -15479,8 +15811,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (espnEntry) entries.push(espnEntry);
         ff4.ccMixed = entries.length > leagues.length;
         ff4.ccLeagues = entries; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
-        out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div class="cc-rail" id="cc-rail"></div></div>`;
-        ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
+        out.innerHTML = `<div id="cc-tabs"></div><div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div class="cc-rail" id="cc-rail"></div></div>`;
+        ff4CCRenderTabs(); ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
         (async () => {
           for (let i = 0; i < entries.length; i++) {
             if (ff4.ccDead) break;
@@ -15953,9 +16285,13 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           el.innerHTML = `<div class="cc-queue-h">Trade Board</div><p class="cc-queue-note cc-loading">Grading the offers waiting on you…</p>`;
           return;
         }
-        if (!tb.incoming.length && !tb.espnNote) { el.innerHTML = ""; return; }
-        el.innerHTML = `<div class="cc-queue-h">Trade Board · ${tb.incoming.length} waiting on you</div>`
-          + (tb.incoming.length ? tb.incoming.map(o => ff4TBCardHtml(o, true)).join("") : `<p class="cc-queue-note">No trades waiting on you.</p>`)
+        /* Hidden leagues never show their trades here (the pass still
+           fetches them; this render is the choke point). */
+        const sessU = ff4CCSessionUsername();
+        const incoming = tb.incoming.filter(o => !ff4CCIsHiddenKey("sleeper:" + String(o.leagueId), sessU));
+        if (!incoming.length && !tb.espnNote) { el.innerHTML = ""; return; }
+        el.innerHTML = `<div class="cc-queue-h">Trade Board · ${incoming.length} waiting on you</div>`
+          + (incoming.length ? incoming.map(o => ff4TBCardHtml(o, true)).join("") : `<p class="cc-queue-note">No trades waiting on you.</p>`)
           + (tb.espnNote ? `<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>` : "")
           + `<button type="button" class="tb-open-board" id="cc-tb-open">Open the Trade Board →</button>`;
         const ob = document.getElementById("cc-tb-open");
