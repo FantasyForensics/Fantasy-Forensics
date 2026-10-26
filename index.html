@@ -2713,7 +2713,7 @@
       
 
       <nav class="mainnav" id="site-main" role="tablist" aria-label="Fantasy Forensics sections">
-        <button role="tab" type="button" data-pnav="overview" aria-selected="false">Overview</button>
+        <button role="tab" type="button" data-pnav="command" aria-selected="false">Command Center</button>
         <button role="tab" type="button" data-pnav="myteam" aria-selected="false">My Team</button>
         <button role="tab" type="button" data-pnav="trades" aria-selected="false">Trades</button>
         <button role="tab" type="button" data-pnav="players" aria-selected="true">Players</button>
@@ -2840,7 +2840,7 @@
         </div>
         <details class="how-box">
           <summary>How this board works</summary>
-          <p class="tab-intro below" id="board-intro">Every price on this board is computed by our <strong>proprietary Dynasty Value Algorithm</strong>, built from deep analytics and market consensus. It weighs production, role and usage, age, and availability into a single value for every player, priced for <strong>this league’s scoring</strong> — the format is set in the <strong>League Format</strong> tool (Fantasy Tools menu). Where a player’s recent form runs ahead of his price — or behind it — he is flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>. Tap “Why?” on any player for his season line, his usage, and his value history.</p>
+          <p class="tab-intro below" id="board-intro">Every price on this board is computed by our <strong>proprietary Dynasty Value Algorithm</strong>, built from deep analytics and market consensus. It weighs production, role and usage, age, and availability into a single value for every player, priced for <strong>this league’s scoring</strong> — the format is set in the <strong>League Format</strong> tool. Where a player’s recent form runs ahead of his price — or behind it — he is flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>. Tap “Why?” on any player for his season line, his usage, and his value history.</p>
         </details>
 <div id="trending-strip" class="trending-strip" hidden></div>
 <div id="movers-block">
@@ -8705,7 +8705,7 @@ ${rdP ? "" : `
         sub: `2026 season · NFL Week ${DATA.league.week} · Values as of ${DATA.league.snapshot} · Injuries refresh daily · Browsing as a guest — no league connected`,
         title: "Fantasy Forensics — Player Values",
         footer: "Fantasy Forensics · Values are computed by our proprietary Dynasty Value Algorithm (" + DATA.league.snapshot + " snapshot), adjusted for the scoring format set in the League Format tool. Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot; injuries and news after that date are not priced in.",
-        boardIntro: `Every price on this board is computed by our <strong>proprietary Dynasty Value Algorithm</strong>, built from deep analytics and market consensus. It weighs production, role and usage, age, and availability into a single value for every player, priced for <strong>the scoring format</strong> set in the <strong>League Format</strong> tool (Fantasy Tools menu). Where a player’s recent form runs ahead of his price — or behind it — he is flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>. Tap “Why?” on any player for his season line, his usage, and his value history. No league needed — connect one only for the team tools.`,
+        boardIntro: `Every price on this board is computed by our <strong>proprietary Dynasty Value Algorithm</strong>, built from deep analytics and market consensus. It weighs production, role and usage, age, and availability into a single value for every player, priced for <strong>the scoring format</strong> set in the <strong>League Format</strong> tool. Where a player’s recent form runs ahead of his price — or behind it — he is flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>. Tap “Why?” on any player for his season line, his usage, and his value history. No league needed — connect one only for the team tools.`,
         calcIntro: `Add <strong>any players or draft picks</strong> to either side — no rosters, no league needed. Picks are the standard rookie slots (2027–2029, 1st through 4th round, early/mid/late), priced on the same ladder the league views use. The verdict is a <strong>pure value comparison</strong> on the same algorithm that prices the board, with the <strong>value adjustment</strong> applied — the side whose value sits concentrated in its best players earns an adjustment because the best player in a deal carries weight beyond raw totals, so one stud is not outweighed by three lesser pieces just because their prices add up. Connect a league and the calculator adds roster-fit notes and title-odds impact for both teams.`,
       };
 
@@ -13233,7 +13233,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
               if (d > 0.001) moves.push({
                 kind: "Waivers", dChamp: d,
                 title: `Add ${x.p.name} (${x.p.pos}) off waivers`,
-                sub: `Projects ${(x.p.ros || 0).toFixed(1)} pts/wk — +${x.add.toFixed(1)} to your optimal lineup total. ${waiverSystem() && waiverSystem().type === "faab" ? "Suggested bids live in Fantasy Tools → Waiver Targets." : "Pickup guidance lives in Fantasy Tools → Waiver Targets."}`,
+                sub: `Projects ${(x.p.ros || 0).toFixed(1)} pts/wk — +${x.add.toFixed(1)} to your optimal lineup total. ${waiverSystem() && waiverSystem().type === "faab" ? "Suggested bids live in My Team → Waiver Targets." : "Pickup guidance lives in My Team → Waiver Targets."}`,
               });
             });
           }
@@ -15110,7 +15110,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
       /* CC light-pass sim cache: the 1,500-sim odds pass is deterministic
          for a fixed seed, so re-opening Command Center reuses the last
          result for an unchanged league instead of re-running the sim on
-         every open (the Overview tab would otherwise rebuild it on
+         every open (the Command Center tab would otherwise rebuild it on
          every visit). Fingerprinted on week, records, points and
          rosters — any of those changing re-runs the sim, so odds never
          go stale. Keyed by platform + league + tab index (the seed)
@@ -17402,13 +17402,13 @@ window.__lifeline = (function () {
       });
     </script>
       <script>
-    /* Five-tab navigation: Overview = Command Center, Players = values board.
+    /* Five-tab navigation: Command Center, My Team, Trades, Players, League.
        Thin layer over the site's own activateNav; sections, data and logic unchanged. */
     (function () {
       var mainBtns = document.querySelectorAll("#site-main [data-pnav]");
       var subBar = document.getElementById("site-sub");
       var subBtns = document.querySelectorAll("#site-sub [data-pnav-sub]");
-      var MAIN_FOR = { values: "players", radar: "players", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", trades: "trades", targets: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "overview" };
+      var MAIN_FOR = { values: "players", radar: "players", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", trades: "trades", targets: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "command" };
       var GROUP_FOR = { players: "players", myteam: "myteam", trades: "trades", league: "league" };
       function setMainSel(key) {
         mainBtns.forEach(function (b) { b.setAttribute("aria-selected", b.dataset.pnav === key ? "true" : "false"); });
@@ -17426,7 +17426,7 @@ window.__lifeline = (function () {
         var main = MAIN_FOR[key];
         if (!main) return;
         setMainSel(main);
-        if (main === "overview") { showGroup(null); return; }
+        if (main === "command") { showGroup(null); return; }
         showGroup(GROUP_FOR[main]);
         var sub = key;
         if (key === "league") {
@@ -17467,7 +17467,7 @@ window.__lifeline = (function () {
       mainBtns.forEach(function (btn) {
         btn.addEventListener("click", function () {
           var key = btn.dataset.pnav;
-          if (key === "overview") { window.activateNav("command"); window.scrollTo({ top: 0 }); return; }
+          if (key === "command") { window.activateNav("command"); window.scrollTo({ top: 0 }); return; }
           showGroup(key);
           var def = DEFAULTS[key];
           goSub(def);
