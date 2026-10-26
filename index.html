@@ -2712,29 +2712,43 @@
 
       
 
-      <nav class="mainnav" role="tablist" aria-label="Fantasy Forensics sections">
-        <button role="tab" type="button" data-nav="values" aria-selected="true">Player Values</button>
-        <button role="tab" type="button" data-nav="league" aria-selected="false">League Analyzer<span class="nav-lock" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2" fill="currentColor" stroke="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
-        <button role="tab" type="button" data-nav="trades" aria-selected="false">Trade Calculator</button>
-        <button role="tab" type="button" data-nav="targets" id="nav-targets" aria-selected="false">Player Targets<span class="launch-badge">Free during launch</span></button>
-        <div class="tools-wrap">
-          <button type="button" class="tools-btn" data-nav="tools" aria-selected="false" aria-haspopup="true" aria-expanded="false">Fantasy Tools <span class="tools-caret" aria-hidden="true">▾</span></button>
-          <div class="tools-menu" id="tools-menu" role="menu" aria-label="Fantasy Tools" hidden>
-          <button type="button" class="tool-entry" data-tool="lineup" role="menuitem"><span class="tool-name">Lineup Analyzer</span><span class="tool-desc">Your best lineup this week, in your league's scoring</span></button>
-          <button type="button" class="tool-entry" data-tool="risk" role="menuitem"><span class="tool-name">Starters at Risk</span><span class="tool-desc">Who's Out or doubtful, and the swap to make before lock</span></button>
-          <button type="button" class="tool-entry" data-tool="bye" role="menuitem"><span class="tool-name">Bye Week Planner</span><span class="tool-desc">Every bye week coming, and where your roster has holes</span></button>
-          <button type="button" class="tool-entry" data-tool="waivers" role="menuitem"><span class="tool-name">Waiver Targets</span><span class="tool-desc">The adds that actually improve your lineup</span></button>
-          <button type="button" class="tool-entry" data-tool="realtrades" role="menuitem"><span class="tool-name">Real Trades</span><span class="tool-desc">What real leagues actually paid</span></button>
-          <button type="button" class="tool-entry" data-tool="tradeboard" role="menuitem"><span class="tool-name">Trade Board</span><span class="tool-desc">Every offer waiting on you, graded</span></button>
-          <button type="button" class="tool-entry" data-tool="teamport" role="menuitem"><span class="tool-name">Team Portfolio</span><span class="tool-desc">Your whole roster — players and picks — priced like a portfolio</span></button>
-          <button type="button" class="tool-entry" data-tool="command" role="menuitem"><span class="tool-name">Command Center<span class="launch-badge">Free during launch</span></span><span class="tool-desc">Every league you play in, on one screen</span></button>
-          <button type="button" class="tool-entry" data-tool="radar" role="menuitem"><span class="tool-name">Opportunity Radar<span class="launch-badge">Free during launch</span></span><span class="tool-desc">Starter-sized workloads whose scoring hasn't caught up — with the measured record</span></button>
-          <button type="button" class="tool-entry" data-tool="ppath" role="menuitem"><span class="tool-name">Playoff Path Explorer<span class="launch-badge">Free during launch</span></span><span class="tool-desc">Your magic number, and the games that swing your playoff odds</span></button>
-          <button type="button" class="tool-entry" data-tool="psched" role="menuitem"><span class="tool-name">Playoff Schedule Difficulty</span><span class="tool-desc">How soft each team's Weeks 15–17 playoff path really is</span></button>
-          </div>
-        </div>
-        <button role="tab" data-nav="draft" type="button" aria-selected="false">Draft Command</button>
+      <nav class="mainnav" id="site-main" role="tablist" aria-label="Fantasy Forensics sections">
+        <button role="tab" type="button" data-pnav="overview" aria-selected="false">Overview</button>
+        <button role="tab" type="button" data-pnav="myteam" aria-selected="false">My Team</button>
+        <button role="tab" type="button" data-pnav="trades" aria-selected="false">Trades</button>
+        <button role="tab" type="button" data-pnav="players" aria-selected="true">Players</button>
+        <button role="tab" type="button" data-pnav="league" aria-selected="false">League<span class="nav-lock" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2" fill="currentColor" stroke="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
+        <button role="tab" type="button" data-nav="draft" aria-selected="false">Draft Room</button>
       </nav>
+      <div class="subnav" id="site-sub" role="tablist" aria-label="Fantasy Forensics subsections">
+        <button type="button" role="tab" data-pnav-sub="rosters" data-group="myteam" aria-selected="false" hidden>Roster</button>
+        <button type="button" role="tab" data-pnav-sub="lineup" data-group="myteam" aria-selected="false" hidden>Lineup Analyzer</button>
+        <button type="button" role="tab" data-pnav-sub="waivers" data-group="myteam" aria-selected="false" hidden>Waiver Targets</button>
+        <button type="button" role="tab" data-pnav-sub="bye" data-group="myteam" aria-selected="false" hidden>Bye Week Planner</button>
+        <button type="button" role="tab" data-pnav-sub="risk" data-group="myteam" aria-selected="false" hidden>Starters at Risk</button>
+        <button type="button" role="tab" data-pnav-sub="teamport" data-group="myteam" aria-selected="false" hidden>Team Portfolio</button>
+        <button type="button" role="tab" data-pnav-sub="trades" data-group="trades" aria-selected="false" hidden>Trade Calculator</button>
+        <button type="button" role="tab" data-pnav-sub="targets" data-group="trades" aria-selected="false" hidden>Player Targets<span class="launch-badge">Free during launch</span></button>
+        <button type="button" role="tab" data-pnav-sub="counter" data-group="trades" aria-selected="false" hidden>Counteroffers</button>
+        <button type="button" role="tab" data-pnav-sub="realtrades" data-group="trades" aria-selected="false" hidden>Real Trades</button>
+        <button type="button" role="tab" data-pnav-sub="tradeboard" data-group="trades" aria-selected="false" hidden>Trade Board</button>
+        <button type="button" role="tab" data-pnav-sub="values" data-group="players" aria-selected="true">Player Values</button>
+        <button type="button" role="tab" data-pnav-sub="risers" data-group="players" aria-selected="false">Risers &amp; Fallers</button>
+        <button type="button" role="tab" data-pnav-sub="radar" data-group="players" aria-selected="false">Opportunity Radar</button>
+        <button type="button" role="tab" data-pnav-sub="power" data-group="league" aria-selected="false" hidden>Power Rankings</button>
+        <button type="button" role="tab" data-pnav-sub="rosters" data-group="league" aria-selected="false" hidden>Rosters</button>
+        <button type="button" role="tab" data-pnav-sub="outlook" data-group="league" aria-selected="false" hidden>Season Outlook</button>
+        <button type="button" role="tab" data-pnav-sub="odds" data-group="league" aria-selected="false" hidden>Playoff Odds</button>
+        <button type="button" role="tab" data-pnav-sub="ppath" data-group="league" aria-selected="false" hidden>Playoff Path</button>
+        <button type="button" role="tab" data-pnav-sub="psched" data-group="league" aria-selected="false" hidden>Schedule Difficulty</button>
+        <button type="button" role="tab" data-pnav-sub="results" data-group="league" aria-selected="false" hidden>League Results</button>
+      </div>
+      <style>
+        .subnav-mount.subnav-head { display: none !important; }
+        #site-sub { padding: 8px 2px; }
+        #site-sub[hidden] { display: none !important; }
+        #site-sub button[hidden] { display: none !important; }
+      </style>
     <div class="subnav-mount subnav-head" data-subnav-mount="league"></div>
       <section class="tab active" id="tab-values" role="tabpanel">
         
@@ -13046,7 +13060,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
       }
 
       renderFeed();
-      document.querySelector('nav.mainnav button[data-nav="values"]').addEventListener("click", () => { showFeed(false); if (location.hash.indexOf("#/insights") === 0) history.pushState(null, "", "#/insights"); });
+      const _ffNavValuesBtn = document.querySelector('nav.mainnav button[data-nav="values"]'); if (_ffNavValuesBtn) _ffNavValuesBtn.addEventListener("click", () => { showFeed(false); if (location.hash.indexOf("#/insights") === 0) history.pushState(null, "", "#/insights"); });
       window.addEventListener("hashchange", syncInsightsFromHash);
       syncInsightsFromHash();
     </script>
@@ -15093,6 +15107,27 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         return { player: p.name, issue: (p.inj === "IR" ? "Injured reserve" : "Out") + (p.ibp ? " — " + p.ibp : "") + " · on your bench, no move needed" };
       }
 
+      /* CC light-pass sim cache: the 1,500-sim odds pass is deterministic
+         for a fixed seed, so re-opening Command Center reuses the last
+         result for an unchanged league instead of re-running the sim on
+         every open (the Overview tab would otherwise rebuild it on
+         every visit). Fingerprinted on week, records, points and
+         rosters — any of those changing re-runs the sim, so odds never
+         go stale. Keyed by platform + league + tab index (the seed)
+         + user team. */
+      ff4.ccSimCache = {};
+      function ff4CCSimCached(cacheKey, idx, me) {
+        const fp = (DATA.league.week || "") + "|" + DATA.teams.map(t => [t.rid, t.record, t.pf, (t.playerIds || []).slice().sort().join(",")].join(":")).join(";");
+        const ck = cacheKey + "|" + idx + "|" + me.rid;
+        const hit = ff4.ccSimCache[ck];
+        if (hit && hit.fp === fp) return hit;
+        const sim = window.buildSeasonSim({ sims: 1500, seed: 9100 + idx * 17 });
+        if (!sim || !sim.results[me.rid]) return null;
+        const out = { fp, odds: sim.results[me.rid].playoff, clinched: !!sim.results[me.rid].clinched };
+        ff4.ccSimCache[ck] = out;
+        return out;
+      }
+
       /* Light pass (same cost as the old card grid): one league's
          record, power rank, 1,500-sim odds, status line and queue
          items, snapshotted under a context swap, then restored. */
@@ -15115,7 +15150,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             if (!me) throw new Error("user team not found");
             snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
-              try { const sim = window.buildSeasonSim({ sims: 1500, seed: 9100 + idx * 17 }); if (sim && sim.results[me.rid]) { snap.odds = sim.results[me.rid].playoff; snap.clinched = !!sim.results[me.rid].clinched; } } catch (e) { /* odds stay blank */ }
+              try { const ccSim = ff4CCSimCached("Sleeper:" + lg.league_id, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; } } catch (e) { /* odds stay blank */ }
             }
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
@@ -15216,7 +15251,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             if (!me) throw new Error("user team not found");
             snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
-              try { const sim = window.buildSeasonSim({ sims: 1500, seed: 9100 + idx * 17 }); if (sim && sim.results[me.rid]) { snap.odds = sim.results[me.rid].playoff; snap.clinched = !!sim.results[me.rid].clinched; } } catch (e) { /* odds stay blank */ }
+              try { const ccSim = ff4CCSimCached("ESPN:" + entry.leagueId, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; } } catch (e) { /* odds stay blank */ }
             }
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
@@ -17366,5 +17401,122 @@ window.__lifeline = (function () {
         });
       });
     </script>
-  </body>
+      <script>
+    /* Five-tab navigation: Overview = Command Center, Players = values board.
+       Thin layer over the site's own activateNav; sections, data and logic unchanged. */
+    (function () {
+      var mainBtns = document.querySelectorAll("#site-main [data-pnav]");
+      var subBar = document.getElementById("site-sub");
+      var subBtns = document.querySelectorAll("#site-sub [data-pnav-sub]");
+      var MAIN_FOR = { values: "players", radar: "players", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", trades: "trades", targets: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "overview" };
+      var GROUP_FOR = { players: "players", myteam: "myteam", trades: "trades", league: "league" };
+      function setMainSel(key) {
+        mainBtns.forEach(function (b) { b.setAttribute("aria-selected", b.dataset.pnav === key ? "true" : "false"); });
+      }
+      function setSubSel(btn) {
+        subBtns.forEach(function (b) { b.setAttribute("aria-selected", b === btn ? "true" : "false"); });
+      }
+      function showGroup(group) {
+        if (!group) { subBar.hidden = true; return; }
+        subBar.hidden = false;
+        subBtns.forEach(function (b) { b.hidden = b.dataset.group !== group; });
+      }
+      function syncNav(key, arg) {
+        if (key === "draft" || key === "format" || key === "how") { setMainSel(""); showGroup(null); return; }
+        var main = MAIN_FOR[key];
+        if (!main) return;
+        setMainSel(main);
+        if (main === "overview") { showGroup(null); return; }
+        showGroup(GROUP_FOR[main]);
+        var sub = key;
+        if (key === "league") {
+          if (arg === "#pp-explorer") sub = "ppath";
+          else if (arg === "#po-sched") sub = "psched";
+          else sub = (window.__subnavState && window.__subnavState.league) || "power";
+        }
+        var btn = document.querySelector('#site-sub [data-pnav-sub="' + sub + '"][data-group="' + main + '"]');
+        if (btn) setSubSel(btn);
+      }
+      function goSub(key) {
+        if (key === "power" || key === "rosters" || key === "outlook" || key === "odds") {
+          window.__subnavNext = window.__subnavNext || {};
+          window.__subnavNext.league = key;
+          window.activateNav("league");
+        } else if (key === "ppath" || key === "psched") {
+          if (key === "ppath" && typeof window.ff4RenderPP === "function") window.ff4RenderPP();
+          if (key === "psched" && typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
+          if (typeof window.renderLifeline === "function") window.renderLifeline();
+          window.__subnavNext = window.__subnavNext || {};
+          window.__subnavNext.league = "odds";
+          window.activateNav("league", key === "ppath" ? "#pp-explorer" : "#po-sched");
+        } else if (key === "counter") {
+          window.activateNav("trades");
+          setTimeout(function () { var el = document.getElementById("balancer"); if (el) el.scrollIntoView({ block: "start" }); }, 60);
+        } else if (key === "risers") {
+          window.activateNav("values");
+          setTimeout(function () { var el = document.getElementById("movers-block"); if (el) el.scrollIntoView({ block: "start" }); }, 60);
+        } else if (key === "results") {
+          window.activateNav("league");
+          setTimeout(function () { var el = document.getElementById("wtw-wrap"); if (el && !el.hidden) el.scrollIntoView({ block: "start" }); }, 120);
+        } else {
+          window.activateNav(key);
+        }
+        window.scrollTo({ top: 0 });
+      }
+      var DEFAULTS = { myteam: "lineup", trades: "trades", players: "values", league: "power" };
+      mainBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var key = btn.dataset.pnav;
+          if (key === "overview") { window.activateNav("command"); window.scrollTo({ top: 0 }); return; }
+          showGroup(key);
+          var def = DEFAULTS[key];
+          goSub(def);
+          setMainSel(key);
+          var defBtn = document.querySelector('#site-sub [data-pnav-sub="' + def + '"][data-group="' + key + '"]');
+          if (defBtn) setSubSel(defBtn);
+        });
+      });
+      subBtns.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          goSub(btn.dataset.pnavSub);
+          setSubSel(btn);
+        });
+      });
+      document.querySelectorAll('#site-main [data-nav]').forEach(function (btn) {
+        btn.addEventListener("click", function () { setMainSel(""); showGroup(null); });
+      });
+      /* Keep the tab highlight honest no matter which path switches sections
+         (nav clicks, connect flow, team strip, tool links): wrap activateNav. */
+      var origActivateNav = window.activateNav;
+      if (typeof origActivateNav === "function") {
+        window.activateNav = function (key, arg) {
+          var r = origActivateNav(key, arg);
+          if (key === "values") {
+            if (typeof window.showFeed === "function") window.showFeed(false);
+            if (location.hash.indexOf("#/insights") === 0) history.pushState(null, "", "#/insights");
+          }
+          syncNav(key, arg);
+          return r;
+        };
+      }
+      /* Targets + Real Trades are dynasty-only (same rule the old menu enforced):
+         hide their subtabs in redraft. */
+      var origChrome = window.applyLeagueModeChrome;
+      if (typeof origChrome === "function") {
+        window.applyLeagueModeChrome = function (rd) {
+          var r = origChrome(rd);
+          ["targets", "realtrades"].forEach(function (k) {
+            document.querySelectorAll('#site-sub [data-pnav-sub="' + k + '"]').forEach(function (b) { b.style.display = rd ? "none" : ""; });
+          });
+          return r;
+        };
+      }
+      /* Landing is unchanged (values home): highlight Players, Player Values. */
+      setMainSel("players");
+      showGroup("players");
+      var homeBtn = document.querySelector('#site-sub [data-pnav-sub="values"][data-group="players"]');
+      if (homeBtn) setSubSel(homeBtn);
+    })();
+    </script>
+</body>
 </html>
