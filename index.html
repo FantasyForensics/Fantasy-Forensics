@@ -5042,7 +5042,10 @@ ${rdP ? "" : `
         else if (st.team === "FA") list = DATA.players.filter(p => !p.owner);
         else list = TBY[st.team].playerIds.map(id => PBY[id]).filter(Boolean);
         const chosen = new Set(st.assets.filter(a => a.kind === "player").map(a => a.id));
-        return list.filter(p => !chosen.has(p.id)).sort((a, b) => dispVal(b) - dispVal(a));
+        /* Never-graded players (kickers, defenses, unpriced stubs) can't
+           be added to a trade here: the site has no price for them, and
+           grading one at 0 would present "not graded" as "worth nothing". */
+        return list.filter(p => !chosen.has(p.id) && !p.unpriced).sort((a, b) => dispVal(b) - dispVal(a));
       }
 
       /* Pick search (Eric, 2026-10-23): with the chip grid gone, the
@@ -5125,7 +5128,7 @@ ${rdP ? "" : `
         const st = calc[side];
         box.innerHTML = st.assets.map((a, i) => `
           <div class="asset">${a.kind === "player" && PBY[a.id] ? hsImg(PBY[a.id], "phs-sm") : ""}<span>${esc(assetLabel(a))}</span>
-          <span><span class="val">${fmt(assetValue(a))}</span> <button data-rm="${i}" aria-label="Remove">×</button></span></div>`).join("");
+          <span><span class="val">${a.kind === "player" && PBY[a.id] && PBY[a.id].unpriced ? "Unpriced" : fmt(assetValue(a))}</span> <button data-rm="${i}" aria-label="Remove">×</button></span></div>`).join("");
         box.querySelectorAll("[data-rm]").forEach(btn => {
           btn.addEventListener("click", () => {
             st.assets.splice(Number(btn.dataset.rm), 1);
@@ -7662,14 +7665,20 @@ ${rdP ? "" : `
           const b = bars[pos];
           return b ? `<strong>${pos} ${(b.p.ros || 0).toFixed(1)}</strong> <span class="p-sub">(${esc(b.p.name)}, ${b.slot})</span>` : `<strong>${pos} —</strong>`;
         }).join(" · ");
-        /* "Safely droppable" badge: the suggested drop (lowest dynasty value on
-           the bench, still the same player — the rule is unchanged) gets an
+        /* "Safely droppable" badge: the suggested drop (lowest graded
+           dynasty value on the bench, still the same player — the rule
+           is unchanged) gets an
            extra badge when the national 24h Sleeper trending data shows
            other managers dropping him too (present in window.SLEEPER_TRENDING
            drops). Badge only — never changes which player is suggested. */
         const lineupIds = new Set(opt.lineup.map(l => l.p.id));
+        /* Drop candidates are graded players ONLY: a never-graded
+           bench player (kicker, defense, unpriced stub) carries a
+           zero value precisely because we didn't grade him — that
+           zero must never win "lowest value" and get recommended
+           as the drop. */
         const drop = team.playerIds.map(id => PBY[id]).filter(Boolean)
-          .filter(x => !lineupIds.has(x.id)).sort((a, b) => dispVal(a) - dispVal(b))[0];
+          .filter(x => !x.unpriced && !lineupIds.has(x.id)).sort((a, b) => dispVal(a) - dispVal(b))[0];
         const dropDrops = (() => {
           if (!drop) return 0;
           const tr = window.SLEEPER_TRENDING;
