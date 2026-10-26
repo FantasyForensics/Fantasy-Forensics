@@ -3363,7 +3363,7 @@
       <table>
         <thead><tr>
           <th style="width:5%" class="r">Rank</th><th>Player</th><th style="width:6%">Pos</th><th style="width:5%">Team</th>
-          <th style="width:5%" class="r">Age</th><th style="width:11%" class="r">Redraft value</th><th style="width:6%" class="r">ADP</th><th style="width:8%" class="r">SF $ · per ESPN</th><th style="width:8%" class="r">Expert rank</th><th style="width:12%" class="r">Own · per ESPN</th><th style="width:12%" class="r">Dynasty price</th><th style="width:9%">Tier</th>
+          <th style="width:5%" class="r">Age</th><th style="width:11%" class="r">Redraft value</th><th style="width:6%" class="r">ADP</th><th style="width:8%" class="r">SF $ · per ESPN</th><th style="width:8%" class="r">Expert rank</th><th style="width:12%" class="r">Dynasty price</th><th style="width:9%">Tier</th>
         </tr></thead>
         <tbody id="snakeBody"></tbody>
       </table>
@@ -3510,7 +3510,7 @@
 
   <footer>
     <p style="margin:0 0 6px"><b style="color:var(--ink)">Fantasy Forensics — Draft Room</b> — the rookie-draft companion to <a href="../dynasty-analyzer/">Fantasy Forensics</a>, where the full value board, trade calculator, and season simulator live.</p>
-    <p style="margin:0">Player values: our proprietary dynasty value algorithm, snapshot Oct 17, 2026 (NFL Week 6). Redraft values: the Fantasy Forensics rest-of-season engine — the same prices as the main site's Redraft mode. Pick ladder: the Fantasy Forensics value algorithm, Oct 17, 2026. Draft overlay: ADP, SUPERFLEX auction values (per ESPN), expert-consensus ranks, and ownership (per ESPN), snapshot Oct 20, 2026 — market context shown next to our values; it does not change any price, recommendation, or grade. Demo league: Demo League — a dynasty league on Sleeper. Grades score each pick against the ladder value of its slot — a pick is a steal when the player beats the slot, a reach when the slot beats the player.</p>
+    <p style="margin:0">Player values: our proprietary dynasty value algorithm, snapshot Oct 17, 2026 (NFL Week 6). Redraft values: the Fantasy Forensics rest-of-season engine — the same prices as the main site's Redraft mode. Pick ladder: the Fantasy Forensics value algorithm, Oct 17, 2026. Draft overlay: ADP, SUPERFLEX auction values (per ESPN), and expert-consensus ranks, snapshot Oct 20, 2026 — market context shown next to our values; it does not change any price, recommendation, or grade. Demo league: Demo League — a dynasty league on Sleeper. Grades score each pick against the ladder value of its slot — a pick is a steal when the player beats the slot, a reach when the slot beats the player.</p>
   </footer>
 </div>
 <div class="toast" id="toast"></div>
@@ -5235,21 +5235,8 @@ ${rdP ? "" : `
         }
         const notesA = fitNotes("A"), notesB = fitNotes("B");
         const noteHtml = n => typeof n === "string" ? `<li>${esc(n)}</li>` : `<li class="${n.cls}">${esc(n.txt)}</li>`;
-        /* ITEM 9 — ESPN % started context on verdict assets: display only.
-           No verdict math is touched; missing ESPN_OWN entry → no text. */
-        const startedCtx = a => {
-          if (a.kind !== "player") return "";
-          const own = window.ESPN_OWN && window.ESPN_OWN[a.id];
-          if (!own || own.s == null) return "";
-          return ` <span class="v-started" title="per ESPN">${Math.round(own.s)}% started (per ESPN)</span>`;
-        };
         const verdictAssetList = side =>
-          assetsOf(side).map(a => `<li><span>${esc(assetLabel(a))}</span>${startedCtx(a)}</li>`).join("");
-        const startedVals = assetsOf("A").concat(assetsOf("B"))
-          .filter(a => a.kind === "player")
-          .map(a => window.ESPN_OWN && window.ESPN_OWN[a.id] ? window.ESPN_OWN[a.id].s : null);
-        const coreSummary = startedVals.length && startedVals.every(s => s != null && s >= 80)
-          ? `<p class="bonus-note v-core">Both sides' pieces are 80%+ started — core pieces, not depth.</p>` : "";
+          assetsOf(side).map(a => `<li><span>${esc(assetLabel(a))}</span></li>`).join("");
         el.innerHTML = `
           <h3>${esc(headline)}</h3>
           ${VALMODE === "redraft" ? `<p style="color:var(--ink-2);margin:8px 0 0">Redraft values · rest of season — this verdict prices the rest of this year.</p>` : ""}
@@ -5296,7 +5283,6 @@ ${rdP ? "" : `
             <div><h4>${esc(nameA)} sends</h4><ul>${verdictAssetList("A")}</ul></div>
             <div><h4>${esc(nameB)} sends</h4><ul>${verdictAssetList("B")}</ul></div>
           </div>
-          ${coreSummary}
           <div class="fit-notes">
             <div><h4>Fit for ${esc(nameA)}</h4><ul>${notesA.map(noteHtml).join("")}</ul></div>
             <div><h4>Fit for ${esc(nameB)}</h4><ul>${notesB.map(noteHtml).join("")}</ul></div>
@@ -6438,8 +6424,8 @@ ${rdP ? "" : `
           return `
           <tr>
             <td class="num">${i + 1}</td>
-            <td>${hsImg(p)}<span class="p-name">${esc(p.name)}</span>${injChip(p)}${typeof radarChip === "function" ? radarChip(p) : ""}${p.flag ? ` <span class="sig ${SIG[p.flag][0]}">${SIG[p.flag][1]}</span>` : ""}${(boardState.owner !== "ALL" && boardState.owner !== "FA" && window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].o === "number" && window.ESPN_OWN[p.id].o < 10) ? ` <span class="sig fall" title="Owned in only ${window.ESPN_OWN[p.id].o}% of ESPN leagues — low risk to drop">safely droppable</span>` : ""}${p.trendDir === "up" ? ` <span class="sig lead">Leads algorithm</span>` : p.trendDir === "dn" ? ` <span class="sig lag">Lags algorithm</span>` : ""}
-              <div class="p-sub">${esc(ownerLabel(p))} · ${esc(p.tier)}${window.ESPN_OWN && window.ESPN_OWN[p.id] ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned${window.ESPN_OWN[p.id].t >= 10 ? ' <span class="trending">🔥 trending</span>' : ""}</span>` : ""}</div></td>
+            <td>${hsImg(p)}<span class="p-name">${esc(p.name)}</span>${injChip(p)}${typeof radarChip === "function" ? radarChip(p) : ""}${p.flag ? ` <span class="sig ${SIG[p.flag][0]}">${SIG[p.flag][1]}</span>` : ""}${(boardState.owner !== "ALL" && boardState.owner !== "FA" && VALMODE !== "redraft" && !p.unpriced && dispVal(p) < 1000) ? ` <span class="sig fall" title="Value under 1,000 — low risk to drop">safely droppable</span>` : ""}${p.trendDir === "up" ? ` <span class="sig lead">Leads algorithm</span>` : p.trendDir === "dn" ? ` <span class="sig lag">Lags algorithm</span>` : ""}
+              <div class="p-sub">${esc(ownerLabel(p))} · ${esc(p.tier)}</div></td>
             <td><span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${p.posRank}</span></td>
             <td class="num hide-sm">${p.age ?? "—"}</td>
             <td class="hide-sm">${logoImg(p.team)}${esc(p.team)}</td>
@@ -7716,7 +7702,7 @@ ${rdP ? "" : `
           return `<div class="wv-row">
             <div class="wv-main">
               ${hsImg(p, "phs-sm")}<span class="who">${esc(p.name)}</span> <span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${p.posRank}</span>${injChip(p)}${p.flag && WV_SIG[p.flag] ? ` <span class="sig ${WV_SIG[p.flag][0]}">${WV_SIG[p.flag][1]}</span>` : ""}
-              <div class="wv-meta">${logoImg(p.team)}${esc(p.team)} · Age ${p.age ?? "—"} · ${p.unpriced ? "Unpriced" : (typeof VALMODE !== "undefined" && VALMODE === "redraft" ? "Redraft" : "Dynasty") + " value " + fmt(dispVal(p))} · <span class="trnd ${trCls}">${trArrow} ${tr > 0 ? "+" : ""}${tr}% 3-wk trend</span>${window.ESPN_OWN && window.ESPN_OWN[p.id] ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned${window.ESPN_OWN[p.id].t >= 10 ? ' <span class="trending">🔥 trending</span>' : ""}</span>` : ""}</div>
+              <div class="wv-meta">${logoImg(p.team)}${esc(p.team)} · Age ${p.age ?? "—"} · ${p.unpriced ? "Unpriced" : (typeof VALMODE !== "undefined" && VALMODE === "redraft" ? "Redraft" : "Dynasty") + " value " + fmt(dispVal(p))} · <span class="trnd ${trCls}">${trArrow} ${tr > 0 ? "+" : ""}${tr}% 3-wk trend</span></div>
               <p class="wv-why">${wvWhy(p)}</p>
             </div>
             <div class="wv-nums">
@@ -8260,39 +8246,8 @@ ${rdP ? "" : `
         /* An unpriced player's projection is unknown — print the word,
            never a 0 that claims knowledge nobody has. */
         const projTxt = pr => pr.unpriced ? "Unpriced" : f1(pr.pts);
-        /* ESPN percent-started (window.ESPN_OWN[p.id].s): display-only
-           crowd context, attributed to ESPN. Missing data or a sub-1%
-           figure shows nothing — no empty label, no "0%", no layout
-           change. Projection math is untouched. */
-        const startedPct = p => (window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].s === "number") ? window.ESPN_OWN[p.id].s : null;
-        /* Bug B — when the crowd number is a lie: a projection hard-zero
-           means the player cannot score in the viewed week (bye, injury
-           designation, unsigned) — percent-started can't describe this
-           week for him. Crowd data is also current-week behavior only,
-           so the plan-ahead view suppresses it entirely. */
-        const noCrowd = pr => !pr || pr.pts !== 0 ? false
-          : !!pr.unsigned || pr.tag === "IR" || pr.tag === "PUP" || pr.tag === "Out" || pr.tag === "Suspended"
-          || (typeof pr.tag === "string" && pr.tag.indexOf("Bye") === 0);
-        const crowdStart = (p, pr) => {
-          if (isNext || noCrowd(pr)) return "";
-          const s = startedPct(p);
-          return (s != null && s >= 1) ? ` · <span class="own" title="per ESPN">${Math.round(s)}% started</span>` : "";
-        };
-        /* When a recommended swap runs against the crowd — starting a
-           player few ESPN leagues start, or benching one most start —
-           say so, as context only. The recommendation itself is never
-           changed on account of it. Only when both players are actually
-           playing: a crowd note about a bye/injured player is fiction. */
-        const contraNote = (inn, out) => {
-          if (isNext || noCrowd(inn.proj) || noCrowd(out.proj)) return "";
-          const si = startedPct(inn.p), so = startedPct(out.p);
-          const notes = [];
-          if (si != null && si < 25) notes.push(`going against the crowd — only ${Math.round(si)}% of ESPN leagues start him`);
-          if (so != null && so > 50) notes.push(`the crowd is on ${esc(out.p.name)} — started in ${Math.round(so)}% of ESPN leagues`);
-          return notes.length ? `<div class="sub contra">${notes.join("; ")} (per ESPN)</div>` : "";
-        };
         const rowHtml = r => `<tr><td><span class="slot-tag">${r.slot}</span></td>
-          <td>${hsImg(r.p)}<span class="p-name">${esc(r.p.name)}</span>${desigChip(r.p)}${tagHtml(r.proj)}<div class="p-sub">${r.proj.unsigned ? "No NFL team" : logoImg(r.p.team) + esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}${r.p.unpriced ? " · Unpriced — no consensus value" : ""}${crowdStart(r.p, r.proj)}</div></td>
+          <td>${hsImg(r.p)}<span class="p-name">${esc(r.p.name)}</span>${desigChip(r.p)}${tagHtml(r.proj)}<div class="p-sub">${r.proj.unsigned ? "No NFL team" : logoImg(r.p.team) + esc(r.p.team)} · ${r.p.pos}${r.p.posRank} · ROS ${f1(r.p.ros || 0)}/wk${sosTxt(r.proj)}${r.p.unpriced ? " · Unpriced — no consensus value" : ""}</div></td>
           <td class="num">${projTxt(r.proj)}</td></tr>`;
         /* K / DEF starter slots (connected leagues only): starterSlots()
            drops them — there is no priced pool and no weekly projection
@@ -8349,8 +8304,8 @@ ${rdP ? "" : `
           movesHtml = `<div class="wv-card"><h3>Make these moves — +${f1(shownGain)} projected points</h3>
             <p class="wv-sub">Start the left player over the right one. A starter projecting zero is auto-benched: bye weeks and Out / IR / PUP / Suspended designations score nothing in Week ${VW}, a player with no NFL team is excluded entirely, and the reason rides on his name. A designation that contradicts a real weekly projection is flagged as a status conflict instead of a zero - verify before Sunday.</p>
             ${pairs.map(({ inn, out }) => `<div class="mv-row">
-              <div>${hsImg(inn.p, "phs-sm")}<span class="who">Start ${esc(inn.p.name)}${desigChip(inn.p)}</span> <span class="sub">${inn.slot} · ${inn.proj.unsigned ? "No NFL team" : logoImg(inn.p.team) + esc(inn.p.team)}${sosTxt(inn.proj)}${crowdStart(inn.p, inn.proj)}</span>
-                <div class="sub">over ${esc(out.p.name)}${desigChip(out.p)} (${out.slot})${out.proj.tag && !DESIG_TAGS[out.proj.tag] ? ` — <strong>${esc(out.proj.tag)}</strong>` : ""}${crowdStart(out.p, out.proj)}</div>${contraNote(inn, out)}</div>
+              <div>${hsImg(inn.p, "phs-sm")}<span class="who">Start ${esc(inn.p.name)}${desigChip(inn.p)}</span> <span class="sub">${inn.slot} · ${inn.proj.unsigned ? "No NFL team" : logoImg(inn.p.team) + esc(inn.p.team)}${sosTxt(inn.proj)}</span>
+                <div class="sub">over ${esc(out.p.name)}${desigChip(out.p)} (${out.slot})${out.proj.tag && !DESIG_TAGS[out.proj.tag] ? ` — <strong>${esc(out.proj.tag)}</strong>` : ""}</div></div>
               <div class="delta">${(inn.proj.unpriced || out.proj.unpriced) ? `<span class="lu-delta flat">Unpriced</span>` : `<span class="lu-delta up">+${f1(inn.proj.pts - out.proj.pts)}</span>`}<div class="sub">${projTxt(inn.proj)} vs ${projTxt(out.proj)}</div></div>
             </div>`).join("")}</div>`;
         }
@@ -11875,7 +11830,7 @@ ${rdP ? "" : `
               return `<div class="mt-wv-row">
                 <div class="mt-wv-main">
                   ${(typeof window.hsImg === "function") ? window.hsImg(p, "phs-sm") : ""}<span class="mt-wv-name">${esc(p.name)}</span><span class="mt-wv-kind ${kindCls}">${w.kind}</span>
-                  <div class="mt-wv-meta">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team)} · ${p.pos}${p.posRank} · Age ${p.age != null ? p.age : "—"}${(window.ESPN_OWN && window.ESPN_OWN[p.id] && typeof window.ESPN_OWN[p.id].o === "number") ? ` · <span class="own" title="per ESPN">${window.ESPN_OWN[p.id].o}% owned</span>` : ""}</div>
+                  <div class="mt-wv-meta">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team)} · ${p.pos}${p.posRank} · Age ${p.age != null ? p.age : "—"}</div>
                   ${gap}
                 </div>
                 <div class="mt-wv-nums"><div class="mt-wv-ros">${(p.ros || 0).toFixed(1)}<small>ROS pts/wk</small></div></div>
@@ -13702,7 +13657,7 @@ const RDRAFT = {"4984":10422,"9221":9921,"9509":9505,"11604":7000,"9488":9567,"8
 
 /* ---------- draft overlay (display only) ----------
    Per-player market snapshot baked Oct 20, 2026, keyed by player id:
-   [ADP, SUPERFLEX auction $ (per ESPN), expert-consensus positional avg rank (PPR panel), % owned (per ESPN)].
+   [ADP, SUPERFLEX auction $ (per ESPN), expert-consensus positional avg rank (PPR panel), % owned (per ESPN, no longer displayed)].
    null = no published figure -> the board shows a dash. This layer never feeds
    values, recommendations, tier-cliff / run alerts, or room codes. */
 const DRAFTX = {"10213":[95.5,1,33.62,44.2],"10219":[191.0,1,46.75,13.3],"10222":[null,2,38.25,24.6],"10229":[42.0,32,13.0,95.5],"10232":[31.5,2,15.88,91.5],"10236":[71.0,1,13.38,82.1],"10859":[52.0,5,3.75,95.8],"11256":[162.0,null,17.75,1.0],"11273":[null,null,null,0.0],"11435":[82.0,null,16.62,86.1],"11557":[null,null,null,0.5],"11559":[133.5,null,16.62,11.2],"11560":[108.0,21,11.38,87.6],"11563":[104.5,30,12.75,63.9],"11564":[44.0,48,3.62,97.0],"11565":[352.0,null,null,0.9],"11566":[92.0,58,5.88,94.1],"11576":[76.0,null,15.12,83.7],"11581":[126.0,1,20.75,75.3],"11583":[null,3,50.0,38.9],"11584":[31.0,9,11.12,97.3],"11586":[116.5,1,27.0,67.2],"11603":[119.5,null,20.0,7.5],"11604":[23.5,25,1.0,99.9],"11610":[84.0,null,30.12,31.9],"11617":[322.0,null,null,0.1],"11620":[76.5,7,29.38,87.2],"11624":[86.0,2,28.25,74.0],"11625":[175.5,1,39.62,17.4],"11628":[195.0,4,59.88,75.1],"11630":[99.0,null,39.5,13.3],"11631":[149.0,3,59.12,51.2],"11632":[33.0,22,4.25,99.1],"11635":[54.5,10,32.12,90.7],"11637":[70.0,null,45.0,32.2],"11638":[null,null,null,2.0],"11643":[179.0,null,38.25,5.9],"11646":[44.0,1,17.25,87.8],"11647":[170.0,null,36.75,10.2],"1166":[106.0,null,9.75,60.6],"11783":[111.0,null,43.38,8.0],"11834":[85.0,null,26.5,69.3],"12457":[302.5,null,null,0.2],"12469":[162.5,null,46.25,8.3],"12470":[null,null,null,0.0],"12474":[60.0,1,20.88,70.3],"12481":[75.0,10,17.75,96.4],"12484":[null,null,null,2.0],"12487":[235.0,1,14.5,12.2],"12489":[63.0,1,22.5,71.9],"12490":[41.0,6,17.62,92.9],"12492":[null,null,null,1.5],"12493":[195.0,null,23.88,2.8],"12495":[42.0,null,23.75,71.8],"12496":[244.0,null,null,0.1],"12501":[35.5,3,10.38,91.9],"12502":[176.5,null,25.88,2.3],"12504":[225.5,null,43.12,2.3],"12506":[69.5,5,9.38,91.1],"12507":[101.0,19,26.25,94.7],"12508":[null,38,8.0,26.2],"12509":[125.0,null,40.75,4.1],"12512":[66.0,10,13.5,93.8],"12514":[65.5,11,26.88,94.7],"12517":[93.5,8,12.88,86.7],"12518":[74.0,8,5.88,97.8],"12519":[50.5,6,23.25,89.9],"12522":[149.5,2,23.5,4.9],"12524":[null,null,null,0.9],"12526":[31.0,13,9.38,98.5],"12527":[25.0,26,9.12,99.7],"12529":[118.0,3,35.38,79.0],"12533":[123.0,1,28.38,59.3],"12534":[95.5,1,33.5,77.8],"12535":[185.0,null,53.12,2.2],"12536":[158.0,null,60.88,4.7],"12542":[164.0,null,55.12,2.8],"12545":[110.0,8,13.38,74.3],"12829":[null,null,null,0.0],"13013":[null,null,null,0.0],"13150":[193.0,null,43.5,12.1],"13151":[null,null,null,0.0],"13264":[207.0,null,49.38,3.2],"13268":[319.0,null,null,0.1],"13269":[null,null,null,3.4],"13270":[313.0,null,null,0.1],"13272":[null,null,null,0.4],"13274":[87.5,null,33.75,44.4],"13275":[null,null,null,0.2],"13276":[83.0,null,null,2.9],"13277":[196.0,null,44.38,0.1],"13278":[340.0,null,null,0.1],"13279":[45.5,4,23.88,86.0],"13281":[null,1,null,32.4],"13285":[169.0,null,55.5,5.4],"13286":[null,6,23.38,69.3],"13287":[95.0,33,13.0,95.9],"13288":[233.0,null,null,0.6],"13289":[null,null,null,0.1],"13293":[182.0,null,null,9.9],"13294":[153.5,1,55.75,42.0],"13296":[139.5,1,60.25,10.6],"13297":[310.5,null,null,0.0],"13298":[85.5,1,47.75,45.2],"13301":[146.0,null,46.38,5.4],"13302":[300.0,null,null,0.3],"13303":[null,null,null,0.1],"13305":[148.5,1,45.0,18.6],"13306":[null,null,null,0.0],"13307":[259.0,null,null,0.0],"13311":[154.0,null,48.62,2.2],"13317":[176.5,null,59.5,0.7],"13319":[272.0,null,null,0.1],"13320":[202.0,null,null,1.7],"13322":[245.5,null,null,0.1],"13324":[212.0,null,null,0.1],"13329":[285.0,null,null,0.1],"13330":[113.5,null,24.0,33.8],"13333":[319.5,null,null,0.0],"13337":[176.0,null,42.75,13.8],"13338":[231.0,null,null,0.2],"13345":[217.5,null,49.5,19.9],"13346":[63.5,1,20.75,81.6],"13347":[272.0,null,null,0.4],"13349":[322.5,null,null,0.3],"13353":[null,null,null,0.1],"13380":[243.5,null,null,0.1],"13394":[203.0,null,60.12,0.3],"13400":[360.0,null,null,0.0],"13402":[233.0,null,null,0.5],"13404":[null,null,null,0.0],"13405":[247.0,null,null,0.5],"13408":[282.0,null,null,0.0],"13411":[283.0,null,null,0.5],"13413":[279.0,null,59.88,2.1],"13414":[169.0,null,39.75,21.5],"13417":[null,2,49.0,22.3],"13420":[223.0,null,null,0.1],"13421":[170.5,null,null,0.4],"13423":[308.5,null,48.0,0.6],"13424":[199.5,null,48.88,1.0],"13425":[160.0,null,25.38,1.9],"13434":[281.0,null,null,0.1],"13477":[239.0,null,null,0.1],"13533":[293.0,null,null,0.1],"13602":[null,null,null,0.0],"13726":[null,null,null,0.1],"1373":[143.0,1,22.62,5.6],"1466":[54.0,2,5.62,94.0],"1479":[117.0,null,36.88,39.1],"2133":[22.0,11,12.0,99.1],"2216":[18.0,3,6.75,94.5],"2306":[148.0,null,13.12,33.4],"2449":[86.0,1,32.25,80.1],"2505":[110.0,null,20.88,16.4],"3163":[72.0,4,3.62,88.1],"3198":[14.5,28,5.75,99.9],"3214":[100.5,1,15.0,42.6],"3257":[119.0,2,17.88,29.0],"3271":[115.0,null,18.88,22.8],"3294":[50.5,30,8.62,92.3],"3321":[null,null,null,35.8],"3634":[135.0,null,46.25,23.0],"4017":[141.5,null,16.38,18.8],"4034":[7.0,49,3.0,99.9],"4035":[81.0,null,23.0,62.0],"4037":[82.5,1,50.88,47.0],"4046":[94.0,17,6.88,95.0],"4199":[76.0,1,10.25,92.9],"421":[71.0,23,5.25,93.3],"4217":[35.0,2,3.38,98.0],"4454":[108.0,null,55.75,7.4],"4866":[35.0,29,15.5,97.8],"4881":[31.0,58,1.88,98.6],"4892":[181.0,4,19.5,24.5],"4943":[126.0,2,17.0,40.0],"4983":[39.0,6,19.25,91.4],"4984":[29.0,59,1.0,99.9],"4993":[120.0,null,20.75,15.3],"5001":[118.0,null,18.88,31.8],"5012":[83.5,2,12.38,73.3],"5022":[75.5,2,8.88,82.9],"5045":[109.0,4,38.62,70.8],"5844":[78.0,1,10.88,55.6],"5846":[49.5,4,23.75,88.6],"5849":[76.0,9,12.5,48.6],"5850":[35.0,1,33.25,85.7],"5859":[33.0,22,19.25,95.3],"5870":[196.0,4,20.12,16.9],"5872":[77.0,1,27.5,76.3],"5892":[72.0,6,22.12,83.2],"5927":[57.0,10,22.25,91.6],"5947":[98.0,2,37.88,70.1],"5967":[55.0,3,16.25,88.0],"6770":[53.0,40,2.62,97.6],"6783":[212.0,1,52.0,11.3],"6786":[7.0,42,2.0,99.9],"6790":[25.5,9,11.88,96.6],"6794":[14.0,36,5.38,99.8],"6797":[162.0,21,24.88,47.2],"6801":[27.0,7,20.0,96.2],"6804":[71.0,2,4.12,85.9],"6806":[105.0,2,26.88,77.9],"6813":[11.0,44,5.62,99.9],"6819":[null,4,35.5,50.8],"6904":[136.0,46,13.0,85.8],"7002":[77.0,null,7.12,78.7],"7021":[125.0,3,36.88,55.6],"7083":[176.5,null,19.0,5.3],"7523":[72.0,31,11.75,89.1],"7525":[45.0,12,19.88,97.7],"7526":[48.5,7,22.75,91.8],"7527":[null,null,null,0.2],"7543":[null,17,25.25,82.3],"7547":[9.0,43,3.62,99.9],"7553":[131.0,5,16.0,71.0],"7564":[8.0,53,2.38,99.9],"7567":[97.5,2,34.0,55.6],"7569":[12.0,32,9.25,99.4],"7571":[139.0,null,52.75,14.9],"7588":[11.0,18,8.75,99.3],"7594":[20.0,2,12.62,94.5],"7600":[102.5,null,9.88,57.9],"7611":[51.0,6,13.0,93.0],"8110":[102.0,2,21.12,62.6],"8111":[123.0,null,19.5,4.1],"8112":[14.0,35,6.75,99.6],"8121":[62.5,1,32.12,69.2],"8126":[68.0,2,38.5,63.1],"8129":[156.5,null,21.12,55.7],"8130":[18.0,34,2.0,99.9],"8131":[61.0,2,3.62,94.6],"8132":[114.0,null,19.38,57.0],"8134":[66.0,2,34.75,62.3],"8136":[69.0,1,23.75,59.4],"8137":[39.0,14,14.75,99.0],"8138":[19.0,37,6.62,99.9],"8142":[132.0,3,32.12,55.0],"8144":[21.0,22,4.12,99.6],"8146":[24.0,15,13.25,98.9],"8148":[62.0,7,26.12,89.5],"8150":[7.0,15,4.5,99.5],"8151":[5.0,26,2.25,99.8],"8154":[166.0,1,31.5,44.5],"8155":[35.0,19,10.38,95.6],"8161":[134.0,2,25.5,6.8],"8167":[20.0,3,5.25,96.6],"8183":[47.0,24,2.0,98.2],"8210":[144.0,null,23.0,3.6],"8219":[344.0,null,null,0.0],"8228":[22.0,5,10.5,94.9],"8408":[73.0,1,33.5,50.5],"8676":[148.5,1,41.38,30.4],"9221":[1.0,57,1.0,99.9],"9224":[18.0,20,7.5,98.6],"9225":[null,null,50.25,7.3],"9226":[null,41,11.25,36.1],"9228":[72.0,2,9.88,85.8],"9229":[null,null,null,0.1],"9230":[145.0,null,22.75,2.6],"9480":[82.0,null,11.12,44.2],"9482":[136.0,null,18.12,14.9],"9484":[66.0,2,5.38,90.2],"9486":[143.5,null,40.38,38.5],"9487":[27.0,4,12.38,95.3],"9488":[3.0,51,2.5,99.9],"9493":[4.0,55,1.0,99.9],"9500":[71.0,1,32.75,75.3],"9501":[129.0,null,42.75,13.8],"9502":[226.0,null,58.62,28.0],"9504":[184.0,null,53.38,5.0],"9508":[114.5,1,28.38,33.2],"9509":[2.0,57,1.0,99.9],"9511":[111.0,null,30.5,21.9],"96":[98.0,null,17.62,26.1],"9753":[116.0,1,44.5,57.4],"9754":[137.0,1,53.38,33.4],"9756":[97.0,2,16.25,69.8],"9757":[94.0,null,26.88,33.2],"9758":[115.0,2,17.62,43.7],"9997":[14.0,13,9.0,98.9]};
@@ -13726,7 +13681,6 @@ function dxRec(p){
   const bits = [];
   if(d[0] != null) bits.push("ADP " + dxAdp(p));
   if(d[2] != null) bits.push("ECR " + dxEcr(p));
-  if(d[3] != null) bits.push("Own " + d[3].toFixed(1) + "%");
   return bits.length ? " · " + bits.join(" · ") : "";
 }
 
@@ -14176,7 +14130,7 @@ function snakeSeqN(order, rounds){
     $("#snakeBody").innerHTML = rows.slice(0, 120).map(p=>{
       const pct = Math.round((p.value/p.dyn - 1)*100);
       const dHtml = fmt(p.dyn) + ' <span style="font-weight:700; color:'+(pct>2?"var(--cyan)":pct<-2?"#ff7aa8":"var(--dim)")+'">'+(pct>0?"+":"")+(pct===0?"±":pct)+'%</span>';
-      const dxs = dxSub(p, true);
+      const dxs = dxSub(p, false);
       return "<tr><td class='r num sub'>"+(SBYIDX[p.id]+1)+"</td>"
         + "<td><b>"+esc(p.name)+"</b><span class='msub'>"+esc(p.team||"FA")+(p.age? " · age "+p.age : "")+" · Tier "+p.tier+(dxs? " · "+esc(dxs) : "")+"</span></td>"
         + "<td><span class='pospill pos-"+p.pos+"'>"+p.pos+"</span></td>"
@@ -14186,10 +14140,9 @@ function snakeSeqN(order, rounds){
         + "<td class='r num dx'>"+dxAdp(p)+"</td>"
         + "<td class='r num dx'>"+dxSf(p)+"</td>"
         + "<td class='r num dx'>"+dxEcr(p)+"</td>"
-        + "<td class='r'>"+dxOwn(p)+"</td>"
         + "<td class='r num sub'>"+dHtml+"</td>"
         + "<td><span class='chip tier' style='color:var(--cyan); border-color:rgba(0,229,255,.4); background:rgba(0,229,255,.06)'>Tier "+p.tier+"</span>"+(p.inj? " <span class='chip inj'>"+esc(p.inj)+"</span>":"")+"</td></tr>";
-    }).join("") || "<tr><td colspan='12' class='sub'>No players match.</td></tr>";
+    }).join("") || "<tr><td colspan='11' class='sub'>No players match.</td></tr>";
     $("#snakeCount").textContent = "Showing " + Math.min(rows.length,120) + " of " + rows.length + " matching players · " +
       SNAKE.length + " players carry a redraft price · values as of Oct 17, 2026";
   }
