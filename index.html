@@ -1465,6 +1465,7 @@
       .vh-delta.flat { color: var(--ink-3); }
       .vh svg { display: block; width: 100%; height: auto; }
       .vh-note { color: var(--ink-3); font-size: 12.5px; margin-top: 2px; }
+      .vh-inj { color: #FFB020; font-weight: 700; font-size: 12.5px; margin-top: 6px; }
       .nav-lock { display: none; margin-left: 7px; vertical-align: -2px; }
       body.guest .nav-lock { display: inline-block; }
       body.guest #team-strip, body.guest #board-owner { display: none; }
@@ -6379,7 +6380,7 @@ ${rdP ? "" : `
             (i === 0 || isLast ? `<text x="${X(i).toFixed(1)}" y="${(Y(v) - 10).toFixed(1)}" text-anchor="${i === 0 ? "start" : "end"}" font-size="12.5" font-weight="700" fill="#F2F2F5" font-family="Space Grotesk, sans-serif">${fmt(v)}</text>` : "") +
             `<text x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="#83839C" font-family="Space Grotesk, sans-serif">${wk(i)}${isLast ? " · now" : ""}</text>`;
         }).join("");
-        const injMark = p.inj ? `<circle cx="${X(pts.length - 1).toFixed(1)}" cy="${Y(last).toFixed(1)}" r="9" fill="none" stroke="#FFB020" stroke-width="1.6" stroke-dasharray="3 3"/><text x="${(X(pts.length - 1) - 14).toFixed(1)}" y="${(Y(last) + 22).toFixed(1)}" text-anchor="end" font-size="11.5" font-weight="700" fill="#FFB020" font-family="Space Grotesk, sans-serif">${esc(injLabel(p))} — Week ${DATA.league.week} designation</text>` : "";
+        const injMark = p.inj ? `<circle cx="${X(pts.length - 1).toFixed(1)}" cy="${Y(last).toFixed(1)}" r="9" fill="none" stroke="#FFB020" stroke-width="1.6" stroke-dasharray="3 3"/>` : "";
         const title = VALMODE === "redraft" ? "Dynasty value history — weekly snapshots" : "Value history — weekly snapshots";
         return `<div class="vh">
           <div class="vh-head"><span class="vh-title">${title}</span><span class="vh-delta ${dCls}">${dTxt}</span></div>
@@ -6388,6 +6389,7 @@ ${rdP ? "" : `
             <polyline points="${line}" fill="none" stroke="#C6FF00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
             ${dots}${injMark}
           </svg>
+          ${p.inj ? `<div class="vh-inj">Current designation: ${esc(injLabel(p))} — Week ${DATA.league.week} snapshot</div>` : ""}
           <div class="vh-note">One point per week.${p.inj ? " The dashed marker flags the designation the current snapshot carries — dated injury history isn't published by any free source, so earlier weeks aren't marked." : ""}</div>
         </div>`;
       }
