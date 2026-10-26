@@ -5756,9 +5756,13 @@ ${rdP ? "" : `
            so every other roster is a potential partner. */
         DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty"))).forEach(partner => {
           const windowBonus = VALMODE === "redraft" ? 2 : partner.arch === "rebuilder" ? 5 : 1.5;
-          teamPlayers(partner.rid)
-            .filter(p => dispVal(p) >= tradeFloors().target && (p.ros || 0) > 0 && wantMatch(p.pos))
-            .forEach(target => {
+          const pool = teamPlayers(partner.rid)
+            .filter(p => dispVal(p) >= tradeFloors().target && (p.ros || 0) > 0 && wantMatch(p.pos));
+          /* From a rebuilder, prefer players 26+ — a young quarterback
+             is their future, not a sell — and fall back to the full
+             pool when the age filter leaves nothing. */
+          const aged = (VALMODE !== "redraft" && partner.arch === "rebuilder") ? pool.filter(p => (p.age ?? 0) >= 26) : [];
+          (aged.length ? aged : pool).forEach(target => {
               let pkg = buildPackage(payPool, target.value, 0.90, 1.12, null, target.value);
               if (!pkg) return;
               /* COUNTERPARTY SANITY (Oct 21 fix, dynasty only): from
@@ -6174,7 +6178,7 @@ ${rdP ? "" : `
             partner: s.partner,
             givePlayers: giveAssets.filter(a => a.kind === "player").map(a => a.p),
             getPlayers: getAssets.filter(a => a.kind === "player").map(a => a.p),
-          }, tot(giveAssets), tot(getAssets)) : "";
+          }, s.grade ? s.grade.giveAdj : tot(giveAssets), s.grade ? s.grade.getAdj : tot(getAssets)) : "";
           const dTxt = `${s.dPpg >= 0 ? "+" : "−"}${Math.abs(s.dPpg).toFixed(1)}`;
           /* Trade-value line (both sides, value adjustment included),
              the fairness chip, and the "Grade it" deep link that
@@ -6204,7 +6208,7 @@ ${rdP ? "" : `
               ? `<span class="dir-tag">Near miss</span><strong>${dTxt} projected pts/week</strong> — just under your Dynasty bar (+${DYNASTY_MIN_GAIN.toFixed(1)}). A real, fairly-priced deal, shown for transparency rather than as a recommendation: the only kind a Dynasty 👑 core acts on clears the bar outright. Paid for with ${payDesc}; your young starters stay home.`
               : mine.arch === "dynasty"
               ? `<span class="dir-tag">Dynasty buy</span>A clear upgrade — the only kind a Dynasty 👑 core makes: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc}. Your young starters stay home.`
-              : `<span class="dir-tag">Win-now move</span>Buys production now: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc} — future capital spent on this season.`;
+              : `<span class="dir-tag">Win-now path</span>One direction for a Crossroads team — buys production now: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc} — future capital spent on this season.`;
             why.push(VALMODE === "redraft"
               ? `${esc(t.name)} ${lineupSet(s.partner.rid).has(t.id) ? "starts for" : "is depth on"} ${esc(s.partner.name)} — in redraft, a pure lineup fit.`
               : `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be trading production for future capital.`);
@@ -6213,18 +6217,20 @@ ${rdP ? "" : `
             else if ((t.age ?? 99) <= 24) why.push(`Premium price: at ${t.age}, ${esc(t.name)} is young <em>and</em> producing — the most expensive profile in dynasty, so the offer stacks ${s.pkg.length} asset${s.pkg.length > 1 ? "s" : ""} to reach his price.`);
             else if ((t.age ?? 0) >= 29) why.push(`Discount aisle: ${t.age}-year-old production — the same weekly points a young player costs a fortune for, at a fraction of the price. Exactly the arbitrage a win-now window should hunt.`);
             else why.push(`At ${t.age ?? "—"}, ${esc(t.name)} is priced between the young-stud premium and the veteran discount — proven production without the youth markup — so the offer is built to match that price.`);
-            why.push(`${VALMODE === "redraft" ? "Redraft math" : "Dynasty math"}: you send ${fmt(tot(giveAssets))} for ${fmt(tot(getAssets))}.`);
+            why.push(`${VALMODE === "redraft" ? "Redraft math" : "Dynasty math"}: you send ${fmt(s.grade ? s.grade.giveAdj : tot(giveAssets))} for ${fmt(s.grade ? s.grade.getAdj : tot(getAssets))}.`);
+            if (s.grade) { const aG = s.grade.giveAdj - tot(giveAssets), aT = s.grade.getAdj - tot(getAssets); const adj = Math.abs(aG) >= 1 ? aG : aT; if (Math.abs(adj) >= 1) why.push(`Trade values include a value adjustment (${Math.abs(aG) >= 1 ? "your side " : "their side "}${adj > 0 ? "+" : ""}${fmt(Math.round(adj))}): production packed into fewer roster spots is worth more than the same production spread thin. Methodology has the full math.`); }
           } else {
             const v = s.vet;
             windowLine = mine.arch === "rebuilder"
               ? `<span class="dir-tag sell">Rebuilder sell</span>Rebuilder move: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season — production your roster isn't contending with, converted into picks and youth.`
-              : `<span class="dir-tag sell">Rebuild move</span>Sells a veteran for the future: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season.`;
+              : `<span class="dir-tag sell">Rebuild path</span>The other direction for a Crossroads team: sells a veteran for the future: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season.`;
             why.push(`${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be paying future capital for production now.`);
             why.push(`${esc(v.name)} (age ${v.age ?? "—"}) still produces — ${rosProj(v).toFixed(1)} projected pts/wk — but his value peaks before your roster's window opens. The return is all picks and players 24 or younger.`);
             why.push(s.dPpg >= -0.05
               ? `It barely touches this season: your optimal lineup holds at ~${Math.round(s.basePpg + s.dPpg)} projected pts/week without him.`
               : `The honest cost: your optimal lineup drops ${Math.round(s.basePpg)} → ${Math.round(s.basePpg + s.dPpg)} projected pts/week this season. That's the rebuild trade — future value up, this year down.`);
-            why.push(`Dynasty math: you send ${fmt(tot(giveAssets))} for ${fmt(tot(getAssets))} — full value or better, all of it future assets.`);
+            why.push(`Dynasty math: you send ${fmt(s.grade ? s.grade.giveAdj : tot(giveAssets))} for ${fmt(s.grade ? s.grade.getAdj : tot(getAssets))} — full value or better, all of it future assets.`);
+            if (s.grade) { const aG = s.grade.giveAdj - tot(giveAssets), aT = s.grade.getAdj - tot(getAssets); const adj = Math.abs(aG) >= 1 ? aG : aT; if (Math.abs(adj) >= 1) why.push(`Trade values include a value adjustment (${Math.abs(aG) >= 1 ? "your side " : "their side "}${adj > 0 ? "+" : ""}${fmt(Math.round(adj))}): production packed into fewer roster spots is worth more than the same production spread thin. Methodology has the full math.`); }
           }
           return `<article class="suggestion">
             <h3>With ${esc(s.partner.name)}${VALMODE === "redraft" ? "" : ` <span class="p-sub">(${archTag(s.partner.arch)})</span>`} · <span class="fit-score">match index ${fitIdx}/100</span></h3>
@@ -6259,7 +6265,7 @@ ${rdP ? "" : `
            rendered below the recommendations, visually subordinate,
            each labeled with its actual gain. */
         if (VALMODE === "dynasty" && nearMisses && nearMisses.length) {
-          html += `<div class="near-miss-strip"><h3 class="path-head">Near misses</h3><p class="path-desc">Deals that work on price and fit but add less than the +3.0 projected pts/week your Dynasty 👑 bar demands — here for transparency, not as recommendations.</p>${nearMisses.map(cardFor).join("")}</div>`;
+          html += `<div class="near-miss-strip"><h3 class="path-head">Near misses</h3><p class="path-desc">Deals that work on price and fit but add less than the +3.0 projected pts/week your Dynasty 👑 bar demands — here for transparency, not as recommendations. Projections aren't precise to a tenth of a point: a deal at +2.8 is essentially tied with the bar, not a different class of deal.</p>${nearMisses.map(cardFor).join("")}</div>`;
         }
         el.innerHTML = html;
       }
@@ -6500,8 +6506,8 @@ ${rdP ? "" : `
           return { d: cur - prev, pct: prev ? (cur - prev) / prev * 100 : 0, cur };
         };
         const pool = DATA.players.filter(p => dispVal(p) >= MOVER_MIN && p.hist && p.hist.length >= 2);
-        const risers = [...pool].sort((a, b) => wk(b).pct - wk(a).pct).slice(0, 8);
-        const fallers = [...pool].sort((a, b) => wk(a).pct - wk(b).pct).slice(0, 8);
+        const risers = [...pool].sort((a, b) => wk(b).pct - wk(a).pct).filter(p => wk(p).pct > 0).slice(0, 8);
+        const fallers = [...pool].sort((a, b) => wk(a).pct - wk(b).pct).filter(p => wk(p).pct < 0).slice(0, 8);
         const buys = DATA.players.filter(p => p.flag === "buy" && dispVal(p) >= MOVER_MIN).sort((a, b) => b.value - a.value);
         const sells = DATA.players.filter(p => p.flag === "sell" && dispVal(p) >= MOVER_MIN).sort((a, b) => b.value - a.value);
         const mvRow = p => {
@@ -6509,7 +6515,7 @@ ${rdP ? "" : `
           const cls = w.d >= 0 ? "up" : "dn";
           return `<div class="mv-row">
             <span>${hsImg(p, "phs-sm")}<span class="who">${esc(p.name)}</span> <span class="sub">${p.pos}${p.posRank} · ${logoImg(p.team)}${esc(p.team)} · ${esc(ownerLabel(p))}</span></span>
-            <span class="delta"><span class="trnd ${cls}">${w.d >= 0 ? "+" : "−"}${fmt(Math.abs(w.d))} (${w.pct >= 0 ? "+" : "−"}${Math.abs(w.pct).toFixed(1)}%)</span><br><span class="sub">now ${fmt(p.value)}</span></span>
+            <span class="delta"><span class="trnd ${cls}">${Math.abs(w.pct) >= 1000 ? `${w.d >= 0 ? "+" : "−"}${fmt(Math.abs(w.d))} — from a low base` : `${w.d >= 0 ? "+" : "−"}${fmt(Math.abs(w.d))} (${w.pct >= 0 ? "+" : "−"}${Math.abs(w.pct).toFixed(1)}%)`}</span><br><span class="sub">now ${fmt(p.value)}</span></span>
           </div>`;
         };
         const sigRow = p => `<div class="mv-row">
@@ -6525,7 +6531,8 @@ ${rdP ? "" : `
           <div class="mv-grid">
             <div class="mv-card"><h3>Buy low <span class="sig buy">Role ↑ · Points lagging</span></h3><p class="mv-sub">Usage is expanding faster than production — the points usually follow the snaps. ${buys.length} flagged.</p>${buys.length ? buys.map(sigRow).join("") : '<p class="mv-note">No buy-low signals this week.</p>'}</div>
             <div class="mv-card"><h3>Sell high <span class="sig sell">Points ↑ · Role flat</span></h3><p class="mv-sub">Production is outrunning the role underneath it — a touchdown-heavy profile that usually regresses. ${sells.length} flagged.</p>${sells.length ? sells.map(sigRow).join("") : '<p class="mv-note">No sell-high signals this week.</p>'}</div>
-          </div>`;
+          </div>
+          <p class="mv-note">Week-over-week steps mix player movement with model updates — judge extreme percentages by the absolute change, not the percent.</p>`;
         renderMoversStrip();
       }
       renderMovers();
@@ -6570,7 +6577,7 @@ ${rdP ? "" : `
         const pool = DATA.players.filter(p => dispVal(p) >= MOVER_MIN && p.hist && p.hist.length >= 2);
         const row = (p, dir) => {
           const w = wk(p);
-          return `<div class="ms-row"><span class="ms-main">${hsImg(p, "phs-sm")}<span class="ms-name">${esc(p.name)}</span> <span class="ms-sub">${p.pos}${p.posRank} · ${logoImg(p.team)}${esc(p.team)}</span><span class="ms-why">${esc(reason(p, dir))}</span></span><span class="ms-pct ${dir > 0 ? "up" : "dn"}">${dir > 0 ? "+" : "−"}${Math.abs(w.pct).toFixed(1)}%</span></div>`;
+          return `<div class="ms-row"><span class="ms-main">${hsImg(p, "phs-sm")}<span class="ms-name">${esc(p.name)}</span> <span class="ms-sub">${p.pos}${p.posRank} · ${logoImg(p.team)}${esc(p.team)}</span><span class="ms-why">${esc(reason(p, dir))}</span></span><span class="ms-pct ${dir > 0 ? "up" : "dn"}">${Math.abs(w.pct) >= 1000 ? `${w.d >= 0 ? "+" : "−"}${fmt(Math.abs(w.d))} value` : `${dir > 0 ? "+" : "−"}${Math.abs(w.pct).toFixed(1)}%`}</span></div>`;
         };
         riseEl.innerHTML = [...pool].sort((a, b) => wk(b).pct - wk(a).pct).filter(p => wk(p).pct > 0).slice(0, 5).map(p => row(p, 1)).join("");
         fallEl.innerHTML = [...pool].sort((a, b) => wk(a).pct - wk(b).pct).filter(p => wk(p).pct < 0).slice(0, 5).map(p => row(p, -1)).join("");
@@ -7112,7 +7119,7 @@ ${rdP ? "" : `
             lines.push(`<p class="warn">Helps them more than you: their title odds gain ${pp(dThem)} against your ${pp(dChamp)}, and you’re rebuilding — this season’s points shouldn’t be what you’re buying.</p>`);
           if (dChamp <= -0.03)
             lines.push(`<p class="warn">It costs you this season: your title odds fall ${Math.round(Math.abs(dChamp) * 100)} pp even though the ${rdF ? "value math" : "dynasty math"} is close — the production you’re sending out matters more in 2026 than the value gap suggests.</p>`);
-          return `<div class="impact"><p class="impact-head">${rdF ? "Season impact — what it does to your title odds" : "Season impact — separate from dynasty value"}</p>${lines.join("")}</div>`;
+          return `<div class="impact"><p class="impact-head">${rdF ? "Season impact — what it does to your title odds" : "Season impact — separate from dynasty value"}</p>${lines.join("")}<p class="p-sub">Title-odds moves carry roughly ±2pp of simulation sampling noise (3,000 runs) — treat small moves as ties.</p></div>`;
         }
 
         function calcImpactHtml() {
@@ -7148,9 +7155,9 @@ ${rdP ? "" : `
               : `your playoff odds move from <strong>${playoffLabel(uB)}</strong> to <strong>${playoffLabel(uA)}</strong>`;
             return `<div class="impact"><p class="impact-head">What if you made this trade?</p>
               <p>If this deal went through, ${titleTxt} — and ${poTxt}.</p>
-              <p>For ${esc(oT.name)}: title odds ${titleMove(oB, oA)} (playoffs ${playoffLabel(oB)} → ${playoffLabel(oA)}). Priced by re-running the 3,000-sim season with both post-trade optimal lineups. The verdict above is pure ${valKind} — this line never feeds it.</p></div>`;
+              <p>For ${esc(oT.name)}: title odds ${titleMove(oB, oA)} (playoffs ${playoffLabel(oB)} → ${playoffLabel(oA)}). Priced by re-running the 3,000-sim season with both post-trade optimal lineups. The verdict above is pure ${valKind} — this line never feeds it. Title-odds moves carry roughly ±2pp of simulation sampling noise — treat small moves as ties.</p></div>`;
           }
-          return `<div class="impact"><p class="impact-head">Season impact — this season only</p><p>If this deal went through: <strong>${esc(tA.name)}</strong> title odds ${titleMove(aB, aA)} (playoffs ${playoffLabel(aB)} → ${playoffLabel(aA)}) · <strong>${esc(tB.name)}</strong> title odds ${titleMove(bB, bA)} (playoffs ${playoffLabel(bB)} → ${playoffLabel(bA)}). The verdict above is pure ${valKind} — this line never feeds it.</p></div>`;
+          return `<div class="impact"><p class="impact-head">Season impact — this season only</p><p>If this deal went through: <strong>${esc(tA.name)}</strong> title odds ${titleMove(aB, aA)} (playoffs ${playoffLabel(aB)} → ${playoffLabel(aA)}) · <strong>${esc(tB.name)}</strong> title odds ${titleMove(bB, bA)} (playoffs ${playoffLabel(bB)} → ${playoffLabel(bA)}). The verdict above is pure ${valKind} — this line never feeds it. Title-odds moves carry roughly ±2pp of simulation sampling noise — treat small moves as ties.</p></div>`;
         }
 
         /* Playoff schedule difficulty, Weeks 15-17. The fantasy
@@ -7269,7 +7276,7 @@ ${rdP ? "" : `
             if (r.champ >= 0.2) s += " A championship favorite — one of the teams the title runs through.";
             else if (r.clinched) s += " The only question left is seeding — and the first-round bye that comes with it.";
             else if (r.playoff >= 0.9) s += " A near-lock for the postseason; the title race is where the variance lives.";
-            else if (r.playoff >= 0.5) s += " In the mix — a move or two changes this number fast, which is what Player Targets’ season impact is for.";
+            else if (r.playoff >= 0.5) s += " In the mix — a move or two changes this number fast, which is what ${rdS ? 'the trade calculator\'s season impact' : 'Player Targets’ season impact'} is for.";
             else if (r.playoff >= 0.15) s += " Needs help: the path runs through a trade or a breakout, not the current lineup.";
             else if (r.elim) s += rdS ? " Mathematically eliminated — the title path is closed; what's left is pride and playing spoiler." : " Mathematically eliminated — every decision from here is a dynasty decision.";
             else s += rdS ? " Still mathematically alive — the path needs a win-out run and help elsewhere, so every point still matters." : " Still mathematically alive — the path needs a win-out run and help elsewhere, so every other decision is a dynasty decision.";
@@ -7349,7 +7356,7 @@ ${rdP ? "" : `
             <li><strong>The simulation.</strong> 3,000 simulated finishes. For a connected league, each remaining week (${DATA.league.week}–14) plays the league's actual remaining schedule — the same opponents in every finish, with each score drawn around the team's projection with a realistic week-to-week spread. Where a league's real schedule isn't available to read, that league's pairings are drawn at random instead, so its odds carry a little more noise. The first of those weeks is priced from this week’s actual weekly projections — the same ESPN/Rotowire numbers behind the Lineup tab, bye weeks and all — while every later week uses the rest-of-season projection; if a week’s projections aren’t published yet, that week falls back to the rest-of-season number. That spread is measured from this league’s actual weekly scores, not guessed. Standings seed by wins, then total points; the top ${FIELD} make the playoffs (Weeks 15–17${FIELD === 6 ? ", top two seeds bye" : ""}, bracket reseeds).</li>
             <li><strong>Title odds.</strong> Title odds are never counted directly from the sims — a longshot's true chance sits far below what 3,000 finishes can resolve by counting, so counting manufactures zeros. Instead they decompose: title odds = playoff odds × the probability of winning the bracket once in. That bracket term is priced from team strength — the single-game win probability against the likely playoff field under the same scoring model, ${FIELD === 6 ? "over the two wins a bye team needs or the three everyone else needs (the bye share itself comes from the sims' top-2 finishes, a common event the sims estimate well)" : "over the wins a plain single-elimination bracket of this size requires"}. The product is coherent by construction: never above the playoff odds, and never zero while the playoff odds aren't. On screen the headline title number is the bracket term itself — the chance of winning it all if the team makes the playoffs — with the overall product shown as the secondary figure; the 99% display ceiling applies to both terms. A team is shown 0% only when it is mathematically eliminated — at least ${FIELD} rivals already own more wins than it can reach by winning out, with every other result and tiebreak breaking its way. Short of elimination, a sub-1% chance displays as &lt;1%. The mirror test runs at the top: a team has clinched when, even if it loses out and loses every points tiebreak, fewer than ${FIELD} rivals can still reach its win total — that team displays “Clinched” rather than a percentage. Nothing else displays above 99%, for playoff or title odds alike: a team that survives all 3,000 simulated finishes without being mathematically locked in is capped at 99%, because the sim prices games, not injuries or chaos.</li>
             <li><strong>Playoff schedule difficulty (Weeks 15–17).</strong> The fantasy bracket isn't set yet, but the NFL half of every playoff matchup already is. Each defense is graded by the fantasy points it has allowed per game to each position (this season's results, in the snapshot's scoring, from Sleeper's actual weekly stats against each player's real opponent that week — the same points-allowed computation behind the strength-of-schedule factors). Every team's projected starters are then matched against the defenses they'll face in Weeks 15, 16 and 17 of the real NFL schedule, and the rating is the mean softness of those starter-weeks (one per starter, Weeks 15–17; rank 1 = softest defense, 32 = stingiest). It grades the schedule, not the bracket: who you draw in the fantasy playoffs still depends on seeding, but the defenses your players run into don't.</li>
-            <li><strong>Trade impact.</strong> Title-odds swings on Player Targets and in the calculator come from paired simulations run before and after the deal under identical conditions, so the delta reflects the trade, not simulation noise. Draft picks don’t change 2026 odds — they change future seasons, which is the dynasty engine’s department.</li>
+            <li><strong>Trade impact.</strong> Title-odds swings on Player Targets and in the calculator come from paired simulations run before and after the deal under identical conditions, so the delta reflects the trade, not simulation noise — though the absolute odds still carry roughly ±2pp of sampling noise at 3,000 runs, so small title-odds moves should be read as ties. Draft picks don’t change 2026 odds — they change future seasons, which is the dynasty engine’s department.</li>
           </ul>`; }
 
         /* ---- Playoff Path Explorer API (Eric, 2026-10-22) ----
@@ -7599,12 +7606,15 @@ ${rdP ? "" : `
       }
       function wvIsStash(p) {
         if (p.age == null || p.age > 24) return false;
+        if (p.unpriced) return false;
+        if (!p.team || p.team === "FA") return false;
         if ((p.gp || 0) === 0) return true;
         return p.rtrend != null && p.rtrend >= 10;
       }
       function wvWhy(p) {
         const sgn = x => (x >= 0 ? "+" : "−") + Math.abs(x);
         const bits = [];
+        if ((p.gp || 0) > 0) {
         if (p.rtrend != null && p.rtrend >= 15)
           bits.push(`His role is climbing — ${p.snap != null ? `${p.snap}% snap share, ` : ""}usage ${sgn(p.rtrend)}% over his last 3 games, and the points usually follow the snaps.`);
         else if (p.flag === "rise")
@@ -7615,8 +7625,9 @@ ${rdP ? "" : `
           bits.push("His production is running ahead of the role underneath it — fine as free depth, don't pay for the spike.");
         else if (p.flag === "fall")
           bits.push("His role is shrinking — a desperation add only.");
+        }
         if ((p.gp || 0) === 0)
-          bits.push(`He hasn't taken a snap in 2026, so this is a bet on the depth chart and his #${p.rank} summer draft rank, not on anything he's done.`);
+          bits.push(p.rank != null ? `He hasn't taken a snap in 2026, so this is a bet on the depth chart and his #${p.rank} summer draft rank, not on anything he's done.` : `He hasn't taken a snap in 2026, so this is a bet on the depth chart, not on anything he's done.`);
         if (p.pos === "QB")
           bits.push(SETTINGS.sf
             ? "In superflex, an unrostered quarterback with any path to starts is a bench hold by himself."
@@ -7644,11 +7655,17 @@ ${rdP ? "" : `
         const opt = wvOptimal(team.playerIds);
         const bars = {};
         ["QB", "RB", "WR", "TE"].forEach(pos => { bars[pos] = wvBar(opt.lineup, pos); });
+        const baseTotal = opt.total;
         const pool = DATA.players.filter(p => !p.owner).map(p => {
           const bar = bars[p.pos];
-          const add = (p.ros || 0) - (bar ? (bar.p.ros || 0) : 0);
+          const addPos = (p.ros || 0) - (bar ? (bar.p.ros || 0) : 0);
+          /* The bar is the whole-lineup test: re-run the optimal
+             lineup with the candidate added and compare totals, so a
+             receiver who bumps a weaker running back out of FLEX
+             counts even though he beats no WR starter. */
+          const add = wvOptimal(team.playerIds.concat([p.id])).total - baseTotal;
           const score = (p.ros || 0) * (1 + Math.max(0, add) / 10);
-          return { p, bar, add, score };
+          return { p, bar, add, addPos, score };
         });
         const byScore = (a, b) => b.score - a.score || dispVal(b.p) - dispVal(a.p);
         const startable = pool.filter(m => m.add > 0).sort(byScore);
@@ -7661,10 +7678,6 @@ ${rdP ? "" : `
         const rest = pool.filter(m => m.add <= 0 && !stashIds.has(m.p.id)).sort(byScore);
         const filt = list => waiverState.pos === "ALL" ? list : list.filter(m => m.p.pos === waiverState.pos);
 
-        const barTxt = ["QB", "RB", "WR", "TE"].map(pos => {
-          const b = bars[pos];
-          return b ? `<strong>${pos} ${(b.p.ros || 0).toFixed(1)}</strong> <span class="p-sub">(${esc(b.p.name)}, ${b.slot})</span>` : `<strong>${pos} —</strong>`;
-        }).join(" · ");
         /* "Safely droppable" badge: the suggested drop (lowest graded
            dynasty value on the bench, still the same player — the rule
            is unchanged) gets an
@@ -7689,12 +7702,12 @@ ${rdP ? "" : `
         const dropBadge = dropDrops > 0
           ? ` <span class="sig fall">safely droppable — trending down nationally</span>` : "";
         let html = `<div class="diag"><h3>${esc(team.name)} — the bar a pickup has to clear</h3>
-          <p>By rest-of-season projection, a pickup starts for your team only if he beats: ${barTxt} pts/wk.</p>
+          <p>By rest-of-season projection, a pickup makes the must-add list only if adding him improves your optimal lineup total — the test re-runs your whole lineup with him in it, so a receiver who bumps a weaker running back out of FLEX counts.</p>
           <p>${startable.length
-            ? `<strong>${startable.length} player${startable.length === 1 ? "" : "s"}</strong> on the wire clear${startable.length === 1 ? "s" : ""} that bar right now — they're the must-adds below.`
+            ? `<strong>${startable.length} player${startable.length === 1 ? "" : "s"}</strong> on the wire improve${startable.length === 1 ? "s" : ""} your optimal lineup right now — they're the must-adds below.`
             : (typeof VALMODE !== "undefined" && VALMODE === "redraft")
-              ? `Nobody on the wire clears that bar for your team this week — the wire's value here is depth, not starts, and the list below is ranked accordingly.`
-              : `Nobody on the wire clears that bar for your team this week — the wire's value here is stash value, not starts, and the stash list below is ranked accordingly.`}</p>
+              ? `Nobody on the wire improves your optimal lineup this week — the wire's value here is depth, not starts, and the list below is ranked accordingly.`
+              : `Nobody on the wire improves your optimal lineup this week — the wire's value here is stash value, not starts, and the stash list below is ranked accordingly.`}</p>
           ${drop ? `<p>Easiest roster spot to open: <strong>${esc(drop.name)}</strong>${dropBadge} (${drop.pos}, ${typeof VALMODE !== "undefined" && VALMODE === "redraft" ? "redraft" : "dynasty"} value ${fmt(dispVal(drop))}) — your lowest-value bench player.${dropDrops > 0 ? ` He's also among the most-dropped players nationally in the last 24h (${dropDrops.toLocaleString()} drops across Sleeper).` : ""}</p>` : ""}
         </div>`;
 
@@ -7706,8 +7719,10 @@ ${rdP ? "" : `
           const gap = !m.bar
             ? `<div class="wv-gap up">No starter to beat — he'd walk into the lineup</div>`
             : m.add > 0
-              ? `<div class="wv-gap up">+${m.add.toFixed(1)} pts/wk over your ${m.bar.slot} (${esc(m.bar.p.name)})</div>`
-              : `<div class="wv-gap dn">${Math.abs(m.add).toFixed(1)} pts/wk behind your last starting ${p.pos} (${esc(m.bar.p.name)})</div>`;
+              ? `<div class="wv-gap up">+${m.add.toFixed(1)} pts/wk to your optimal lineup total</div>`
+              : m.addPos > 0
+                ? `<div class="wv-gap dn">Beats your last starting ${p.pos} but doesn't lift your optimal total</div>`
+                : `<div class="wv-gap dn">${Math.abs(m.addPos).toFixed(1)} pts/wk behind your last starting ${p.pos} (${esc(m.bar.p.name)})</div>`;
           return `<div class="wv-row">
             <div class="wv-main">
               ${hsImg(p, "phs-sm")}<span class="who">${esc(p.name)}</span> <span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${p.posRank}</span>${injChip(p)}${p.flag && WV_SIG[p.flag] ? ` <span class="sig ${WV_SIG[p.flag][0]}">${WV_SIG[p.flag][1]}</span>` : ""}
@@ -7726,13 +7741,13 @@ ${rdP ? "" : `
           return `<div class="wv-card"><h3>${title}</h3><p class="wv-sub">${sub}</p>${l.map(m => row(m)).join("")}</div>`;
         };
         html += section("Startable now — must-adds",
-          "Projects to outscore the weakest starter in your best-ball lineup at his position. In a league this deep, this list is empty most weeks — when it isn't, move fast.",
+          "Adding him improves your optimal lineup total — the whole lineup is re-run with him in it, so cross-position FLEX upgrades count. In a league this deep, this list is empty most weeks — when it isn't, move fast.",
           startable);
         html += section("Stash targets",
           "Age 24 or younger with a rising role — or no 2026 snaps yet, where the bet is the depth chart. Ranked by dynasty value; these are next month's starters, not this week's.",
           stash);
         html += section("Best of the rest",
-          "Everyone else on the wire, ranked by projected points per week, boosted where a player sits close to your bar at his position.",
+          "Everyone else on the wire, ranked by projected points per week, boosted where adding a player comes close to improving your optimal lineup.",
           rest);
         /* Streaming: one-week fill-ins, ranked by this week's matchup-aware
            projection (wkProj — ESPN/Rotowire weekly projections, already
@@ -7790,7 +7805,7 @@ ${rdP ? "" : `
       const wvMethodEl = document.getElementById("method-body");
       if (wvMethodEl) wvMethodEl.innerHTML += `
         <h2>Waiver targets</h2>
-        <p>The pool is every tracked player not on one of the ${DATA.teams.length || 12} rosters — the same filter as the values board, so team-less and retired names never appear. A target's <strong>value-add</strong> is his rest-of-season PPG (in this league's scoring) minus the weakest starter at his position on the selected team, counting flex and superflex occupants — the player he'd actually have to beat. Targets are ranked by that value-add, so a genuine lineup upgrade outranks a slightly bigger projection buried behind someone else's starters. Dynasty value is printed on every card for context but never drives this ranking. The <strong>stash list</strong> is age 24 or younger with a rising role, or with no 2026 snaps yet. There is deliberately <strong>no bid guidance</strong> here: your league app already suggests a FAAB bid — or shows your claim priority — at the moment you place the claim. This board's job is the ranking: who deserves the claim, and by how much he clears your bar.</p>`;
+        <p>The pool is every tracked player not on one of the ${DATA.teams.length || 12} rosters — the same filter as the values board, so team-less and retired names never appear. A target's <strong>value-add</strong> is how much your optimal lineup total rises when he's added to the roster — the whole lineup is re-run with him in it, so a receiver who bumps a weaker running back out of FLEX counts. Targets are ranked by that value-add, so a genuine lineup upgrade outranks a slightly bigger projection buried behind someone else's starters. Dynasty value is printed on every card for context but never drives this ranking. The <strong>stash list</strong> is age 24 or younger with a rising role, or with no 2026 snaps yet. There is deliberately <strong>no bid guidance</strong> here: your league app already suggests a FAAB bid — or shows your claim priority — at the moment you place the claim. This board's job is the ranking: who deserves the claim, and by how much he clears your bar.</p>`;
     </script>
     <script>
       "use strict";
@@ -8135,9 +8150,17 @@ ${rdP ? "" : `
         if (pr.conflict) t += ` · listed ${pr.conflict} per Sleeper — projected to play; verify before Sunday`;
         return t;
       }
+      /* Lineup contexts score a status-conflict player at zero: a
+         designation that says he won't play must not outrank the
+         healthy option, whatever the weekly projection says. The
+         conflict flag still rides along for the verify note. */
+      function wkProjLineup(p, wkView) {
+        const pr = wkProj(p, wkView);
+        return pr.conflict ? { ...pr, pts: 0 } : pr;
+      }
       function wkOptimal(ids, wkView) {
         const pool = ids.map(id => PBY[id]).filter(Boolean)
-          .map(p => ({ p, proj: wkProj(p, wkView) }))
+          .map(p => ({ p, proj: wkProjLineup(p, wkView) }))
           /* Unsigned players are excluded outright — never a starter,
              whatever the projection residue says. Unpriced players
              (signed, but outside the priced pool) sort below every
@@ -8238,7 +8261,7 @@ ${rdP ? "" : `
            connect) for real leagues with deep starters. */
         const cur = team.lineup.map(l => ({ p: PBY[l.id], slot: l.slot }))
           .filter(r => r.p)
-          .map(r => ({ p: r.p, slot: r.slot, proj: wkProj(r.p, VW) }));
+          .map(r => ({ p: r.p, slot: r.slot, proj: wkProjLineup(r.p, VW) }));
         const curTotal = cur.reduce((s, r) => s + r.proj.pts, 0);
         const optIds = new Set(opt.lineup.map(l => l.p.id));
         const curIds = new Set(cur.map(r => r.p.id));
@@ -8274,18 +8297,18 @@ ${rdP ? "" : `
           const out = [];
           raw.forEach(s => {
             if (s !== "K" && s !== "DEF") return;
-            let nm = null;
+            let nm = null, tm = null;
             for (const id of team.playerIds) {
               if (used.has(id)) continue;
               const p = PBY[id];
-              if (p && p.pos === s) { used.add(id); nm = p.name; break; }
+              if (p && p.pos === s) { used.add(id); nm = p.name; tm = p.team; break; }
             }
-            out.push({ slot: s, name: nm });
+            out.push({ slot: s, name: nm, team: tm });
           });
           return out;
         })();
         const kdRowHtml = k => `<tr><td><span class="slot-tag">${k.slot}</span></td>
-          <td><span class="p-name">${k.name ? esc(k.name) : "—"}</span><div class="p-sub">Not projected — start your rostered ${k.slot === "K" ? "kicker" : "defense"}</div></td>
+          <td><span class="p-name">${k.name ? esc(k.name) : "—"}</span><div class="p-sub">${(typeof window.NFLBYE !== "undefined" && window.NFLBYE && k.team && window.NFLBYE[k.team] === VW) ? `On bye in Week ${VW} — needs a replacement` : `Not projected — start your rostered ${k.slot === "K" ? "kicker" : "defense"}`}</div></td>
           <td class="num">—</td></tr>`;
         const tbl = (title, rows, total, extra) => `<div class="mv-card"><h3>${title}</h3>
           <table class="mini"><thead><tr><th>Slot</th><th>Player</th><th class="num">Proj</th></tr></thead>
@@ -8311,7 +8334,7 @@ ${rdP ? "" : `
             <p>${ins.length ? "The optimal lineup edges yours by less than a tenth of a point - no move is worth making." : "Every starter set in the snapshot is also the starter the projections pick."} The close calls are in the matchup preview below.</p></div>`;
         } else {
           movesHtml = `<div class="wv-card"><h3>Make these moves — +${f1(shownGain)} projected points</h3>
-            <p class="wv-sub">Start the left player over the right one. A starter projecting zero is auto-benched: bye weeks and Out / IR / PUP / Suspended designations score nothing in Week ${VW}, a player with no NFL team is excluded entirely, and the reason rides on his name. A designation that contradicts a real weekly projection is flagged as a status conflict instead of a zero - verify before Sunday.</p>
+            <p class="wv-sub">Start the left player over the right one. A starter projecting zero is auto-benched: bye weeks and Out / IR / PUP / Suspended designations score nothing in Week ${VW}, a player with no NFL team is excluded entirely, and the reason rides on his name. A designation that contradicts a real weekly projection is flagged as a status conflict and scored as zero in the recommended lineup — verify before Sunday.</p>
             ${pairs.map(({ inn, out }) => `<div class="mv-row">
               <div>${hsImg(inn.p, "phs-sm")}<span class="who">Start ${esc(inn.p.name)}${desigChip(inn.p)}</span> <span class="sub">${inn.slot} · ${inn.proj.unsigned ? "No NFL team" : logoImg(inn.p.team) + esc(inn.p.team)}${sosTxt(inn.proj)}</span>
                 <div class="sub">over ${esc(out.p.name)}${desigChip(out.p)} (${out.slot})${out.proj.tag && !DESIG_TAGS[out.proj.tag] ? ` — <strong>${esc(out.proj.tag)}</strong>` : ""}</div></div>
@@ -9472,12 +9495,14 @@ ${rdP ? "" : `
         return ca && ca.delta < 0 ? "dynasty" : "win-now";
       }
       function slpExpl(t, arch, user) {
+        const recM = /(\d+)-(\d+)/.exec(t.record || "");
+        const recW = recM ? +recM[1] : 0, recL = recM ? +recM[2] : 0;
         const line = arch === "win-now"
           ? "a top lineup with a veteran core — built to win now, because the window is this one."
           : arch === "dynasty"
             ? "a top lineup with a young core — built to win now and keep winning."
             : arch === "rebuilder"
-              ? "the standings and the roster agree this is a build-for-next-year team."
+              ? (recW > recL ? "a roster graded as build-for-next-year, even though the record says otherwise." : "the standings and the roster agree this is a build-for-next-year team.")
               : "caught between timelines — good enough to matter, not quite built to finish it.";
         let s = `${t.record} start and power rank #${t.powerRank} — ${line}`;
         if (t.isUser && t.coOwned) s += ` You co-own this roster with ${t.owner}.`;
@@ -11725,18 +11750,20 @@ ${rdP ? "" : `
         const opt = wvOptimal(team.playerIds);
         const bars = {};
         ["QB", "RB", "WR", "TE"].forEach(pos => { bars[pos] = wvBar(opt.lineup, pos); });
+        const baseTotal = opt.total;
         const pool = DATA.players.filter(p => !p.owner).map(p => {
           const bar = bars[p.pos];
-          const add = (p.ros || 0) - (bar ? (bar.p.ros || 0) : 0);
+          const addPos = (p.ros || 0) - (bar ? (bar.p.ros || 0) : 0);
+          const add = wvOptimal(team.playerIds.concat([p.id])).total - baseTotal;
           const score = (p.ros || 0) * (1 + Math.max(0, add) / 10);
-          return { p, bar, add, score };
+          return { p, bar, add, addPos, score };
         });
         const byScore = (a, b) => b.score - a.score || dispVal(b.p) - dispVal(a.p);
         const startable = pool.filter(m => m.add > 0).sort(byScore);
         const stash = (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? [] : pool.filter(m => m.add <= 0 && wvIsStash(m.p)).sort((a, b) => dispVal(b.p) - dispVal(a.p));
         const stashIds = new Set(stash.map(m => m.p.id));
         const rest = pool.filter(m => m.add <= 0 && !stashIds.has(m.p.id)).sort(byScore);
-        const tag = (m, kind) => ({ p: m.p, bar: m.bar, add: m.add, kind });
+        const tag = (m, kind) => ({ p: m.p, bar: m.bar, add: m.add, addPos: m.addPos, kind });
         return [
           ...startable.map(m => tag(m, "Must-add")),
           ...stash.map(m => tag(m, "Stash")),
@@ -11833,8 +11860,10 @@ ${rdP ? "" : `
               const gap = !w.bar
                 ? `<div class="mt-wv-gap up">No starter to beat — he'd walk into the lineup</div>`
                 : w.add > 0
-                  ? `<div class="mt-wv-gap up">+${w.add.toFixed(1)} pts/wk over your ${esc(w.bar.slot)} (${esc(w.bar.p.name)})</div>`
-                  : `<div class="mt-wv-gap">${Math.abs(w.add).toFixed(1)} pts/wk behind your last starting ${p.pos} (${esc(w.bar.p.name)})</div>`;
+                  ? `<div class="mt-wv-gap up">+${w.add.toFixed(1)} pts/wk to your optimal lineup total</div>`
+                  : w.addPos > 0
+                    ? `<div class="mt-wv-gap">Beats your last starting ${p.pos} but doesn't lift your optimal total</div>`
+                    : `<div class="mt-wv-gap">${Math.abs(w.addPos).toFixed(1)} pts/wk behind your last starting ${p.pos} (${esc(w.bar.p.name)})</div>`;
               const kindCls = w.kind === "Stash" ? "stash" : w.kind === "Top of the wire" ? "wire" : "";
               return `<div class="mt-wv-row">
                 <div class="mt-wv-main">
@@ -12484,7 +12513,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           }
           return { label, slots };
         }
-        function translateOffer(rid, headPid, headV, arch, offerSide, headName) {
+        function translateOffer(rid, headPid, headV, arch, offerSide, headName, med) {
           const team = (typeof TBY !== "undefined") ? TBY[rid] : null;
           if (!team || typeof valueAdjustmentFor !== "function") return null;
           const roster = (team.playerIds || []).map(id => PBY[id]).filter(Boolean).filter(p => p.id !== headPid);
@@ -12576,7 +12605,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             verdict = `<strong>Light by ${pctTxt(pct)}%</strong> — the typical ${esc(headName)} deal lands higher than this.${closer}`;
           } else {
             vkind = "over";
-            verdict = `<strong>An overpay by ${pctTxt(pct)}%</strong> vs his price — his real deals don't usually cost this much.`;
+            verdict = (med != null && raw <= med) ? `<strong>Above his model value by ${pctTxt(pct)}%</strong> — but right around what his real deals actually cost (median ${fmt(Math.round(med))}), so this is a market-priced offer, not an overpay.` : `<strong>An overpay by ${pctTxt(pct)}%</strong> vs his price — his real deals don't usually cost this much.`;
           }
           const lines = chosen.map(a => `<div class="rt-asset">${a.kind === "player" ? hsImg({ id: a.id }, "phs-sm") : ""}<span class="rt-an">${esc(a.label)}</span><span class="rt-av${a.kind === "pick" ? " rt-av-pick" : ""}">${fmt(a.v)}</span></div>`).join("");
           const html = `<div class="rt-offer-pkg">
@@ -12615,15 +12644,16 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             const med = medianOf(vals), lo = pctileOf(vals, 0.25), hi = pctileOf(vals, 0.75);
             const arch = archetypeOf(stats.pkgs);
             const n = stats.pkgs.length;
-            const basis = stats.source === "direct"
+            let basis = stats.source === "direct"
               ? `Across <strong>${n}</strong> real ${modeName()} trades for ${esc(name)} in our database — he moved as the only player on his side — the typical return is <strong>${esc(arch.label)}</strong>: median package <strong>${fmt(Math.round(med))}</strong> on today's values, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`
               : `${esc(name)} has no clean trade history of his own yet, so this reads off <strong>${n}</strong> real ${modeName()} trades of ${stats.peers} players priced within ±10% of him: the typical return is <strong>${esc(arch.label)}</strong> — median package <strong>${fmt(Math.round(med))}</strong>, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`;
+            if (n < 6) basis += " Small sample — treat the typical return as a rough guide.";
             const offerSide = headSide === "A" ? "B" : "A";
             const guest = !!window.GUEST_MODE;
             const rid = guest || calc[offerSide].src === "any" ? null : calc[offerSide].team;
             let pkgHtml = "", suggestion = null;
             if (rid != null && rid !== "FA") {
-              const tr = translateOffer(rid, head, headV, arch, offerSide, name);
+              const tr = translateOffer(rid, head, headV, arch, offerSide, name, med);
               if (tr) { pkgHtml = tr.html; suggestion = { side: offerSide, assets: tr.assets }; }
             }
             if (!pkgHtml) {
@@ -13170,7 +13200,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
               if (d > 0.001) moves.push({
                 kind: "Trade", dChamp: d,
                 title: `Trade ${s.pkg.filter(a => a.kind === "player").map(a => a.p.name).join(" + ")} to ${s.partner.name} for ${s.target.name}`,
-                sub: `Raises your optimal lineup +${s.dPpg.toFixed(1)} projected pts/wk — the full breakdown, price and their side of it included, is in Player Targets.`,
+                sub: `Raises your optimal lineup +${s.dPpg.toFixed(1)} projected pts/wk — the full breakdown, price and their side of it included, is in ${(typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "the trade calculator" : "Player Targets"}.`,
               });
             });
           }
@@ -13178,9 +13208,10 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         try {
           if (typeof wvOptimal === "function" && typeof wvBar === "function") {
             const opt = wvOptimal(me.playerIds);
+            const base = opt.total;
             const cands = DATA.players.filter(p => !p.owner).map(p => {
               const bar = wvBar(opt.lineup, p.pos);
-              return { p, bar, add: (p.ros || 0) - (bar ? (bar.p.ros || 0) : 0) };
+              return { p, bar, add: wvOptimal(me.playerIds.concat([p.id])).total - base };
             }).filter(x => x.add > 0.3).sort((a, b) => b.add - a.add).slice(0, 3);
             cands.forEach(x => {
               const imp = sim.impact(rid, me.playerIds.concat([x.p.id]), null, null);
@@ -13188,7 +13219,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
               if (d > 0.001) moves.push({
                 kind: "Waivers", dChamp: d,
                 title: `Add ${x.p.name} (${x.p.pos}) off waivers`,
-                sub: `Projects ${(x.p.ros || 0).toFixed(1)} pts/wk — +${x.add.toFixed(1)} over your weakest starting ${x.p.pos}${x.bar ? ` (${x.bar.p.name})` : ""}. ${waiverSystem() && waiverSystem().type === "faab" ? "Suggested bids live in Fantasy Tools → Waiver Targets." : "Pickup guidance lives in Fantasy Tools → Waiver Targets."}`,
+                sub: `Projects ${(x.p.ros || 0).toFixed(1)} pts/wk — +${x.add.toFixed(1)} to your optimal lineup total. ${waiverSystem() && waiverSystem().type === "faab" ? "Suggested bids live in Fantasy Tools → Waiver Targets." : "Pickup guidance lives in Fantasy Tools → Waiver Targets."}`,
               });
             });
           }
@@ -13530,6 +13561,7 @@ const groups = {};
             if (isFinite(sa) && (!hi || sa > hi.s)) hi = { m: a, s: sa };
             if (b) {
               const sb = wtwScoreOf(b);
+              if (isFinite(sb) && (!hi || sb > hi.s)) hi = { m: b, s: sb };
               if (!isFinite(sa) || !isFinite(sb)) return;
               const mg = Math.abs(sa - sb);
               if (!blow || mg > blow.mg) blow = { w: sa >= sb ? a : b, l: sa >= sb ? b : a, mg: mg };
@@ -14795,7 +14827,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
 
       /* ---------------- shared ---------------- */
       function ff4Team(rid) { return TBY[rid] || (DATA.teams || []).find(t => String(t.rid) === String(rid)); }
-      function ff4PP(x) { const v = Math.round(x * 100); return (v > 0 ? "+" : "") + v + " pp"; }
+      function ff4PP(x) { const v = x * 100; const av = Math.abs(v); if (av > 0 && av < 0.5) return (v > 0 ? "+" : "-") + av.toFixed(1) + " pp"; const r = Math.round(v); return (r > 0 ? "+" : "") + r + " pp"; }
 
       /* ================= FEATURE 1 — Offer Balancer =================
          Lives in its own mount above #verdict and re-renders whenever
@@ -15421,8 +15453,11 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (d.noSim) lines.push(`<div class="cc-line">Playoff odds need the full-field season sim, which runs on a complete league table — open the league for its full picture.</div>`);
         else if (d.fmtValid === false) lines.push(`<div class="cc-line">This league's playoff format couldn't be read from its settings, so there's no magic number or swing game here — the odds ring still comes from the season sim.</div>`);
         else if (d.magic && d.magic.locked) lines.push(`<div class="cc-line"><b>Playoff spot locked up.</b> No magic number needed — the sim puts you in every time.</div>`);
-        else if (d.magic) lines.push(`<div class="cc-line"><b>Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"}</b> — ${d.magic.capped ? `even winning out, your playoff odds top out at ~${oddsPct(d.magic.pct)}` : `that takes your playoff odds to ~${oddsPct(d.magic.pct)}`} if the other games go to the favorites.</div>`);
-        if (d.swing) lines.push(`<div class="cc-line"><b>Biggest swing game:</b> ${esc(d.swing.aName)} vs ${esc(d.swing.bName)} — if ${esc(d.swing.dogName)} wins instead, your odds move <span class="cc-delta">${ff4PP(d.swing.d)}</span>.</div>`);
+        else if (d.magic) lines.push(d.magic.capped
+          ? `<div class="cc-line"><b>No clinching number</b> — even winning out (${d.magic.n} more win${d.magic.n === 1 ? "" : "s"}) only gets your playoff odds to ~${oddsPct(d.magic.pct)}; no win total guarantees a spot.</div>`
+          : `<div class="cc-line"><b>Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"}</b> — that takes your playoff odds to ~${oddsPct(d.magic.pct)} if the other games go to the favorites.</div>`);
+        if (d.swing && Math.abs(d.swing.d) < 0.0005) lines.push(`<div class="cc-line"><b>Biggest swing game:</b> no other matchup materially changes your odds.</div>`);
+        else if (d.swing) lines.push(`<div class="cc-line"><b>Biggest swing game:</b> ${esc(d.swing.aName)} vs ${esc(d.swing.bName)} — if ${esc(d.swing.dogName)} wins instead, your odds move <span class="cc-delta">${ff4PP(d.swing.d)}</span>.</div>`);
         else if (d.fmtValid && d.noPairs) lines.push(`<div class="cc-line">No matchup pairings are published for this league this week, so there's no swing game to call.</div>`);
         if (d.status) lines.push(`<div class="cc-line">${esc(d.status)}</div>`);
         spot.innerHTML = `<div class="cc-spot-top"><div>
