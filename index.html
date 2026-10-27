@@ -3848,11 +3848,16 @@
            p.value, so the fallback is exact. */
         const wireVal = p => (typeof window.dispVal === "function" ? window.dispVal(p) : p.value);
         const pool = DATA.players.filter(p => wireVal(p) >= MOVER_MIN && p.hist && p.hist.length >= 2);
+        const wireMoverHead = (p, dir) => {
+          const pct = wkPct(p);
+          if (Math.abs(pct) >= 1000) return `${p.name} — big move from a low base — ${reason(p, dir)}`;
+          return `${p.name} ${dir > 0 ? "+" : "−"}${Math.abs(pct).toFixed(1)}% — ${reason(p, dir)}`;
+        };
         const movers = (typeof window.snapshotStale === "function" && window.snapshotStale()) ? [] : [
           ...[...pool].sort((a, b) => wkPct(b) - wkPct(a)).slice(0, 3)
-            .map(p => ({ cat: "RISER", head: `${p.name} +${wkPct(p).toFixed(1)}% — ${reason(p, 1)}`, when: "" })),
+            .map(p => ({ cat: "RISER", head: wireMoverHead(p, 1), when: "" })),
           ...[...pool].sort((a, b) => wkPct(a) - wkPct(b)).slice(0, 3)
-            .map(p => ({ cat: "FALLER", head: `${p.name} −${Math.abs(wkPct(p)).toFixed(1)}% — ${reason(p, -1)}`, when: "" }))
+            .map(p => ({ cat: "FALLER", head: wireMoverHead(p, -1), when: "" }))
         ];
 
         /* (2b) Sleeper trending adds — national 24h data, so this group
@@ -4453,7 +4458,8 @@
 
       function teamName(rid) { return rid === "FA" ? "Free Agents" : TBY[rid].name; }
       function ownerLabel(p) {
-        if (window.GUEST_MODE) return p.owner ? "Rostered" : "Free agent";
+        /* Guest mode: ownership is unknown until a league connects. */
+        if (window.GUEST_MODE) return "—";
         if (!p.owner) return "Free agent";
         const t = TBY[p.owner];
         return t.name + (t.isUser ? " (you)" : "");
@@ -4720,7 +4726,7 @@
           const pv = p => rdP ? dispVal(p) : p.value;
           const totDisp = t.playerIds.reduce((s2, id) => { const p = PBY[id]; return p ? s2 + pv(p) : s2; }, 0);
           const stDisp = bbLineup.reduce((s2, l) => { const p = PBY[l.id]; return p ? s2 + pv(p) : s2; }, 0);
-          const explTxt = rdP ? `${t.record} start · power rank #${t.powerRank} of ${DATA.teams.length}.${t.isUser ? " This is your roster." : ""}` : t.expl;
+          const explTxt = rdP ? `${t.record} start · power rank #${t.powerRank} of ${DATA.teams.length}.${t.isUser ? " This is your roster." : ""}` : (typeof slpExpl === "function" ? slpExpl(t, t.arch) : t.expl);
           const lineupIds = new Set(bbLineup.map(l => l.id));
           const slotOf = {};
           bbLineup.forEach(l => { slotOf[l.id] = l.slot; });
@@ -12799,7 +12805,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             });
             let closer = "";
             if (bestC && bestNp < pct) {
-              closer = ` Adding <strong>${esc(bestC.label)}</strong> (${fmt(bestC.v)}) brings it to ${pctTxt(bestNp)}% of his price — the realistic closing shape from this roster.`;
+              closer = ` Adding <strong>${esc(bestC.label)}</strong> (${fmt(bestC.v)}) brings it to within ${pctTxt(bestNp)}% of his price — the realistic closing shape from this roster.`;
             }
             verdict = `<strong>Light by ${pctTxt(pct)}%</strong> — the typical ${esc(headName)} deal lands higher than this.${closer}`;
           } else {
@@ -12808,7 +12814,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           }
           const lines = chosen.map(a => `<div class="rt-asset">${a.kind === "player" ? hsImg({ id: a.id }, "phs-sm") : ""}<span class="rt-an">${esc(a.label)}</span><span class="rt-av${a.kind === "pick" ? " rt-av-pick" : ""}">${fmt(a.v)}</span></div>`).join("");
           const html = `<div class="rt-offer-pkg">
-            <div class="rt-offer-pkg-h">From ${esc(team.name)}'s roster, that shape is:</div>
+            <div class="rt-offer-pkg-h">From ${team.isUser ? "your roster" : esc(team.name) + "'s roster"}, that shape is:</div>
             ${lines}
             <div class="rt-offer-total">Package <strong>${fmt(Math.round(raw))}</strong> raw — ${esc(headName)} is <strong>${fmt(Math.round(headV))}</strong> raw · <strong>${fmt(Math.round(adjHead))}</strong> trade value with the value adjustment.</div>
             <div class="rt-take rt-take-${vkind}"><span class="rt-take-tag">Our verdict</span><span>${verdict}</span></div>
@@ -12844,9 +12850,9 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             const arch = archetypeOf(stats.pkgs);
             const n = stats.pkgs.length;
             let basis = stats.source === "direct"
-              ? `Across <strong>${n}</strong> real ${modeName()} trades for ${esc(name)} in our database — he moved as the only player on his side — the typical return is <strong>${esc(arch.label)}</strong>: median package <strong>${fmt(Math.round(med))}</strong> on today's values, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`
-              : `${esc(name)} has no clean trade history of his own yet, so this reads off <strong>${n}</strong> real ${modeName()} trades of ${stats.peers} players priced within ±10% of him: the typical return is <strong>${esc(arch.label)}</strong> — median package <strong>${fmt(Math.round(med))}</strong>, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`;
-            if (n < 6) basis += " Small sample — treat the typical return as a rough guide.";
+              ? `Across <strong>${n}</strong> real ${modeName()} trades for ${esc(name)} in our database — he moved as the only player on his side — most deals were headlined by <strong>${esc(arch.label)}</strong>; completed packages median <strong>${fmt(Math.round(med))}</strong> on today's values, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`
+              : `${esc(name)} has no clean trade history of his own yet, so this reads off <strong>${n}</strong> real ${modeName()} trades of ${stats.peers} players priced within ±10% of him: most deals were headlined by <strong>${esc(arch.label)}</strong>; completed packages median <strong>${fmt(Math.round(med))}</strong>, most deals landing between ${fmt(Math.round(lo))} and ${fmt(Math.round(hi))}.`;
+            if (n < 6) basis += " Small sample — treat the typical shape as a rough guide.";
             const offerSide = headSide === "A" ? "B" : "A";
             const guest = !!window.GUEST_MODE;
             const rid = guest || calc[offerSide].src === "any" ? null : calc[offerSide].team;
@@ -13451,7 +13457,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         wrap.classList.toggle("stale", st.status === "failed");
         if (btn) { btn.disabled = st.status === "loading"; btn.textContent = st.status === "failed" ? "Retry injury check" : "Refresh injuries"; }
         if (st.status === "live") {
-          txt.innerHTML = `<span class="inj-dot"></span>Injury data as of ${new Date(st.at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — live from Sleeper, overriding the baked snapshot`;
+          txt.innerHTML = `<span class="inj-dot"></span>Injury data as of ${new Date(st.at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })} — latest injury reports applied`;
         } else if (st.status === "loading") {
           txt.innerHTML = `<span class="inj-dot"></span>Checking Sleeper for the latest injury designations…`;
         } else if (st.status === "failed") {
@@ -15097,7 +15103,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         }
         mount.innerHTML = `<div class="bal-box">
           <div class="bal-head">Balance this trade</div>
-          <p class="bal-note">${esc(tName(lead))} is ahead by <strong>${fmt(Math.round(gap))}</strong> in trade value. Add one of these to <strong>${esc(tName(trail))}</strong> to close the gap:</p>
+          <p class="bal-note">${esc(tName(lead))} is giving <strong>${fmt(Math.round(gap))}</strong> more value. Add one of these to <strong>${esc(tName(trail))}</strong>'s package to balance the trade:</p>
           <div class="bal-chips">${picks3.map((c, i) => `<button type="button" class="bal-add" data-bal="${i}"><span class="bal-add-name">${esc(c.label)}</span><span class="bal-add-val">${fmt(c.value)}</span></button>`).join("")}</div>
         </div>`;
         mount.querySelectorAll("[data-bal]").forEach(btn => btn.addEventListener("click", () => {
@@ -15345,6 +15351,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
               try { const ccSim = ff4CCSimCached("Sleeper:" + lg.league_id, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; } } catch (e) { /* odds stay blank */ }
+            try { if (typeof ff4CCIsActive === "function" && ff4CCIsActive(lg) && window.SeasonSim && window.SeasonSim.recFp && window.SeasonSim.recFp === ff4CCRecFp() && window.SeasonSim.results && window.SeasonSim.results[me.rid]) { snap.odds = window.SeasonSim.results[me.rid].playoff; snap.clinched = !!window.SeasonSim.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
+            try { if (ff4.ccDetail[idx] && snap.odds != null && ff4.ccDetail[idx].odds !== snap.odds) { delete ff4.ccDetail[idx]; if (ff4.ccFocus === idx) ff4CCDetail(idx); } } catch (e) {}
             }
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
@@ -15444,6 +15452,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
               try { const ccSim = ff4CCSimCached("ESPN:" + entry.leagueId, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; } } catch (e) { /* odds stay blank */ }
+            try { if (typeof ff4CCIsActive === "function" && ff4CCIsActive(entry) && window.SeasonSim && window.SeasonSim.recFp && window.SeasonSim.recFp === ff4CCRecFp() && window.SeasonSim.results && window.SeasonSim.results[me.rid]) { snap.odds = window.SeasonSim.results[me.rid].playoff; snap.clinched = !!window.SeasonSim.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
+            try { if (ff4.ccDetail[idx] && snap.odds != null && ff4.ccDetail[idx].odds !== snap.odds) { delete ff4.ccDetail[idx]; if (ff4.ccFocus === idx) ff4CCDetail(idx); } } catch (e) {}
             }
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
@@ -15526,6 +15536,11 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
               else { const pl = ff4CCPathLines(sim, me); d.magic = pl.magic; d.swing = pl.swing; d.noPairs = pl.noPairs; }
             }
           }
+          /* Same-screen odds (Eric, 2026-10-27): the rail already shows
+             the light-pass sim, so the tile shows that same number
+             instead of a second sim run's — one odds number per league
+             on Command Center. */
+          try { const sn = ff4.ccSnaps ? ff4.ccSnaps[idx] : null; if (sn && sn.odds != null && d.odds != null) { d.odds = sn.odds; d.clinched = !!sn.clinched; } } catch (e) {}
         } else d.noSim = true;
         /* Power Rank tile extras (Eric, 2026-10-27): the team's
            positional letter grades (already computed by
@@ -15968,8 +15983,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const oddsLabel = d.clinched ? "Clinched" : (d.odds == null ? "—" : oddsPct(d.odds));
         const oddsSub = d.elim ? "Eliminated from the playoffs" : d.clinched ? "Playoff spot locked up" : (d.odds == null ? "Odds unavailable for this format" : "Chance at the playoffs");
         let magicLine = "";
-        if (d.magic && !d.magic.locked && !d.magic.capped) magicLine = `<div class="cc-tile-sub">Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"} to guarantee a playoff spot</div>`;
-        else if (d.magic && d.magic.capped) magicLine = `<div class="cc-tile-sub">No win total guarantees a spot</div>`;
+        if (d.magic && !d.magic.locked && !d.magic.capped) magicLine = `<div class="cc-tile-sub">Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"} (${oddsPct(d.magic.pct)} playoff odds)</div>`;
+        else if (d.magic && d.magic.capped) magicLine = `<div class="cc-tile-sub">No win total reaches 90% playoff odds</div>`;
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="odds" style="--tile-accent:#C6FF00"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div><div class="cc-tile-sub">${esc(oddsSub)}</div>${magicLine}</div></div>`);
         const powerBig = d.powerRank == null ? "—" : `#${d.powerRank} of ${d.total}`;
         let powerExtra = "";
@@ -16536,7 +16551,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           if (hit) magicHtml = `<div class="pp-magic"><span>Magic number</span><b>${hit.addWins} more win${hit.addWins === 1 ? "" : "s"} puts ${subj} at ~${oddsPct(hit.poRate)}</b></div>`;
           else if (rows.length) { const mx = rows[rows.length - 1]; magicHtml = `<div class="pp-magic"><span>Magic number</span><b>No win total gets ${subj} to 90% — winning out (${mx.addWins} more) tops out at ~${oddsPct(mx.poRate)}</b></div>`; }
         }
-        const fmtBits = [`${fmt.teams} playoff teams`, `starts Week ${fmt.start}`, fmt.byes > 0 ? `top ${fmt.byes} seed${fmt.byes === 1 ? "" : "s"} get a bye` : "no byes", `round type ${fmt.roundType}`, `seed type ${fmt.seedType}`, fmt.avgMatch ? "median game on" : "median game off", fmt.divisions ? `${fmt.divisions} divisions` : "no divisions"];
+        const fmtBits = [`${fmt.teams} playoff teams`, `starts Week ${fmt.start}`, fmt.byes > 0 ? `top ${fmt.byes} seed${fmt.byes === 1 ? "" : "s"} get a bye` : "no byes", fmt.avgMatch ? "median game on" : "median game off", fmt.divisions ? `${fmt.divisions} divisions` : "no divisions"];
         mount.innerHTML = `<div class="pp-box">
           <h3>Playoff Path Explorer<span class="launch-badge">Free during launch</span></h3>
           <p class="pp-fmt">Format read from this league: ${fmtBits.map(esc).join(" · ")}</p>
@@ -16923,7 +16938,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (tb.espnNote) parts.push(`<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>`);
         if (tb.failed) parts.push(`<p class="tb-espn">${tb.failed} league${tb.failed === 1 ? "" : "s"} couldn't be checked just now — hit Re-check to try again.</p>`);
         if (tb.incoming.length) parts.push(`<div class="tb-grid">${tb.incoming.map(o => ff4TBCardHtml(o, false)).join("")}</div>`);
-        else parts.push(`<div class="tb-empty"><p>No trades waiting on you — nothing needs an answer in any of your leagues.</p></div>`);
+        else parts.push(`<div class="tb-empty"><p>No trades waiting on you — nothing found in the last 8 weeks of transactions.</p></div>`);
         if (tb.sent.length) {
           parts.push(`<h3 class="tb-subh">Waiting on them — offers you sent</h3><div class="tb-grid">${tb.sent.map(o => ff4TBCardHtml(o, false)).join("")}</div>`);
         }
