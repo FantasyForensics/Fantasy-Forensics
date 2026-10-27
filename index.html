@@ -1582,7 +1582,7 @@
 
       /* ================= responsive pass — phone / tablet / desktop =================
          Layout-only: the Arena styling, data, and numbers are untouched.
-         Phone gets a fixed bottom tab bar, 44px touch targets, a sticky
+         Phone gets a fixed bottom tab bar, 44px touch targets, an in-flow
          filter bar, and a stacked-card values board (every column from the
          desktop table — rank, age, and team included — as labeled rows on
          the card; vertical scroll only). Tablet keeps the full top nav,
@@ -1674,13 +1674,15 @@
            marquee is JS-driven on the natively swipeable view, and a
            touch-hold pauses it, so every item stays reachable by swipe */
 
-        /* filter/search stays pinned while the board scrolls */
+        /* filter/search sits at the top of the board and scrolls away
+           with it (Eric, 2026-10-26): a pinned bar ate vertical space
+           on every scroll. In normal flow it can never cover rows. */
         .board-controls {
-          position: sticky; top: 0; z-index: 25;
-          margin: 0 -14px 12px; padding: 10px 14px;
-          background: rgba(10, 10, 26, .9);
-          backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-          border-bottom: 1px solid var(--line);
+          position: static;
+          margin: 0 0 12px; padding: 0;
+          background: none;
+          backdrop-filter: none; -webkit-backdrop-filter: none;
+          border-bottom: none;
         }
         .board-controls input[type="search"] { flex: 1 1 100%; }
         .board-controls select { flex: 1 1 42%; min-width: 0; }
@@ -2520,6 +2522,13 @@
         .cc-rail-h { display: none; }
         .cc-rail-it { flex: 0 0 auto; width: auto; max-width: 250px; }
         .cc-rail-it .cc-chips { display: none; }
+        /* Manage editor is a tall vertical list, not a rail card: when
+           it replaces the rail on narrow screens it must break out of
+           the rail's horizontal strip, or the intro squeezes to a
+           column and league names clip (Eric, 2026-10-26). The rail
+           header also comes back, since it carries the Manage title. */
+        .cc-rail.cc-manage-open { flex-direction: column; overflow-x: visible; }
+        .cc-rail.cc-manage-open .cc-rail-h { display: block; }
       }
 
       .pp-box { border: 1px solid rgba(255,46,136,.35); border-radius: 16px; padding: 18px 20px; margin-top: 16px; background: linear-gradient(150deg, rgba(255,46,136,.06), rgba(255,255,255,.012)); }
@@ -2545,7 +2554,34 @@
       .pp-swingrow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.08); font-size: 14.5px; }
       .pp-swingrow b { font-family: "Space Grotesk", sans-serif; color: #00E5FF; font-size: 17px; }
       .pp-swingrow small { color: var(--ink-3); }
-      @media (max-width: 640px) { .pk-total { font-size: 40px; } .cc-spot-stats b { font-size: 18px; } .cc-spot { padding: 16px; } }
+      @media (max-width: 640px) {
+        .pk-total { font-size: 40px; }
+        /* Command Center density (Eric, 2026-10-26): tighter spacing
+           and smaller display type so more of the dashboard fits one
+           phone screen. Phone-only: tablet/desktop rules above stand. */
+        #tab-command .tab-intro { margin-bottom: 10px; }
+        .cc-layout { gap: 10px; }
+        .cc-tabs { margin-bottom: 8px; }
+        .cc-tab, .cc-manage { padding: 6px 12px; }
+        .cc-spot { padding: 14px; }
+        .cc-spot-team { font-size: 20px; }
+        .cc-spot-mid { gap: 14px; margin-top: 10px; }
+        .cc-ring { width: 104px; height: 104px; }
+        .cc-ring-num { font-size: 24px; }
+        .cc-spot-stats { gap: 10px 18px; }
+        .cc-spot-stats b { font-size: 18px; }
+        .cc-lines { margin-top: 10px; padding-top: 8px; }
+        .cc-line { font-size: 14px; }
+        .cc-queue { padding: 10px 12px; margin-bottom: 10px; }
+        .cc-queue-it { padding: 7px 2px; }
+        .cc-q-player { font-size: 14.5px; }
+        .cc-q-issue { font-size: 13.5px; }
+        .cc-queue-note { font-size: 13.5px; }
+        .cc-rail-it { padding: 10px 12px; }
+        .cc-rail-team { font-size: 14.5px; }
+        .cc-rail-odds { font-size: 17px; }
+        .cc-rail-sub { font-size: 12.5px; }
+      }
       /* ---------- Trade Board ---------- */
       .cc-tb { margin-bottom: 16px; }
       .cc-tb:not(:empty) { border: 1px solid rgba(0,229,255,.35); border-radius: 16px; padding: 14px 18px; background: linear-gradient(150deg, rgba(0,229,255,.05), rgba(255,255,255,.012)); }
@@ -11337,7 +11373,7 @@ ${rdP ? "" : `
             autoAttemptedKey = normKey(e);
             setRestoring(e);
             reconnect(e, false).then(function (ok) {
-              if (ok) { clearRestoring(); return; }
+              if (ok) { clearRestoring(); try { if (window.__ffDefaultToCommand) window.__ffDefaultToCommand(); } catch (e2) {} return; }
               /* A failed attempt must NOT strand the league for the
                  whole visit: release the latch so a later apply (the
                  post-sign-in path, or the retry below) can try again.
@@ -11359,6 +11395,29 @@ ${rdP ? "" : `
             });
           } catch (err) { clearRestoring(); /* guest mode stands */ }
         }
+        /* Signed-in default tab (Eric, 2026-10-26): when a login lands
+           (saved-league auto-reconnect or a fresh sign-in), the site
+           opens on the Command Center instead of the Player Values
+           board — but only if the user is still on the default board
+           (they haven't navigated elsewhere) and no share-link hash is
+           routing the visit. Guests keep the values landing. */
+        window.__ffDefaultToCommand = function () {
+          try {
+            if (location.hash && location.hash.length > 1) return;
+            var valuesTab = document.getElementById("tab-values");
+            if (!valuesTab || !valuesTab.classList.contains("active")) return;
+            /* Only a top-of-page landing defaults to Command Center. A
+               scrolled user is mid-read: switching to the shorter
+               dashboard would clamp their scroll position (the
+               auto-connect probe asserts scroll is never yanked), so
+               the default yields and they stay where they are. */
+            if ((window.scrollY || 0) > 0) return;
+            /* Tab switch only — never scroll: the auto-connect probe
+               asserts the scroll position is not yanked, and a login
+               landing has no business moving the page under the user. */
+            if (typeof window.activateNav === "function") window.activateNav("command");
+          } catch (e) { /* default tab stands */ }
+        };
         /* The one "apply the saved leagues" step, shared by page load
            (through the timer below) and by the accounts layer after a
            sign-in merge lands: re-render the dialog list and the
@@ -11641,6 +11700,12 @@ ${rdP ? "" : `
              the apply step's own guard sees CURRENT_LEAGUE "conn". */
           function afterSignInApplied() {
             try { if (window.__ffApplySavedLeagues) window.__ffApplySavedLeagues(); } catch (e) { /* apply is best-effort */ }
+            /* A league already connected (guest connected first, then
+               signed in) means the data is in place: land on Command
+               Center now. Otherwise the auto-reconnect success path
+               above does it once the league actually lands, so the
+               dashboard never renders empty. */
+            try { if (window.CURRENT_LEAGUE === "conn" && window.__ffDefaultToCommand) window.__ffDefaultToCommand(); } catch (e) { /* default tab stands */ }
             try { if (profile) profile.refresh(); } catch (e) { /* the menu re-renders on next open anyway */ }
           }
           authMod.onAuthStateChanged(auth, (user) => {
@@ -15653,14 +15718,17 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
       function ff4CCOpenManage() {
         const rail = document.getElementById("cc-rail"); if (!rail) return;
         ff4.ccManage = true;
+        rail.classList.add("cc-manage-open");
         ff4CCRenderManage();
       }
       function ff4CCCloseManage() {
         ff4.ccManage = false;
+        const rail = document.getElementById("cc-rail"); if (rail) rail.classList.remove("cc-manage-open");
         ff4CCRenderRail(); ff4CCRenderQueue();
       }
       function ff4CCRenderManage() {
         const rail = document.getElementById("cc-rail"); if (!rail) return;
+        rail.classList.add("cc-manage-open");
         const pr = ff4CCPrefs();
         const all = ff4CCManageLeagues();
         const groups = [], byU = {};
@@ -15725,6 +15793,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (!rail) return;
         const leagues = ff4.ccLeagues || [];
         if (ff4.ccManage) return;
+        rail.classList.remove("cc-manage-open");
         const order = ff4CCVisibleOrder();
         const tab = ff4.ccTab || "all";
         const pr = ff4CCPrefs();
