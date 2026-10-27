@@ -2537,9 +2537,12 @@
       .cc-tile-row .t-up { color: #C6FF00; }
       .cc-tile-row .t-dn { color: #FF2E88; }
       .cc-radar-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
-      .cc-tile img.cc-radar-face { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-      .cc-power-grades { font-size: 13.5px; margin-top: 8px; }
+      .cc-tile img.cc-radar-face, .cc-tile img.cc-wv-face { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+      .cc-wv-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+      .cc-power-grades { display: flex; justify-content: space-between; font-size: 17px; margin-top: 14px; }
+      .cc-power-grades span { white-space: nowrap; }
       .cc-power-grades b { font-weight: 700; }
+      .cc-power-meta { display: flex; justify-content: space-between; font-size: 14px; margin-top: 12px; color: var(--ink-2); }
       .cc-ticker-list { max-height: 216px; overflow-y: auto; display: grid; gap: 6px; padding-right: 2px; }
       .cc-tool-link { display: block; width: 100%; text-align: left; border: 1px solid rgba(0,229,255,.25); background: none; color: var(--ink); font: inherit; font-size: 14.5px; font-weight: 600; border-radius: 10px; padding: 9px 12px; cursor: pointer; }
       .cc-tool-link:hover { border-color: rgba(0,229,255,.6); }
@@ -15615,31 +15618,34 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           } else d.tradeIdeas = null;
         } catch (e) { d.tradeIdeas = null; }
         /* Waiver Targets tile (Eric, 2026-10-27): Sleeper's own
-           most-added players (24h add counts — Sleeper publishes
-           counts, not percentages), filtered to players actually
-           available in THIS league, so the list changes league to
-           league — dynasty stashes in one, redraft streamers in
-           another. The value-based waiver tool itself is untouched. */
+           most-added players, general list (24h add counts —
+           Sleeper publishes counts, not percentages). No
+           availability filter: the old unrostered-only filter left
+           a single name whenever nearly every trending player was
+           already rostered. The value-based waiver tool itself is
+           untouched. */
         try {
           const bake = (typeof window.SLEEPER_TRENDING !== "undefined") ? window.SLEEPER_TRENDING : null;
           if (bake && typeof bake === "object") {
-            const rostered = new Set();
-            (DATA.teams || []).forEach(t => (t.playerIds || []).forEach(id => rostered.add(String(id))));
             const rows = Object.keys(bake).map(id => {
               const p = PBY[id];
               const adds = (bake[id] && Number(bake[id].adds)) || 0;
-              return (p && p.name && adds > 0 && !rostered.has(String(id))) ? { name: p.name, pos: p.pos, team: p.team, adds } : null;
+              return (p && p.name && adds > 0) ? { id, name: p.name, pos: p.pos, team: p.team, adds } : null;
             }).filter(Boolean).sort((a, b) => b.adds - a.adds);
             d.waiverTops = rows.slice(0, 6);
           } else d.waiverTops = null;
         } catch (e) { d.waiverTops = null; }
-        /* Opportunity Radar tile (Eric, 2026-10-27): the wire's
-           flags for this league, biggest names first, up to eight —
-           the tile scrolls, so every flag stays reachable. */
+        /* Opportunity Radar tile (Eric, 2026-10-27): the Radar
+           board's own flags, most valuable first, up to eight —
+           the tile scrolls, so every flag stays reachable. No
+           ownership filter: the old unrostered-only filter hid the
+           whole board whenever every flagged player was rostered
+           (stars always are), leaving the tile empty while the
+           tool showed the full board. */
         try {
           if (typeof rdLiveFlags === "function") {
             const live = rdLiveFlags() || [];
-            const fas = live.filter(f => { const p = PBY[f.player_id]; return p && !p.owner; });
+            const fas = live.filter(f => PBY[f.player_id]);
             const vv = f => { const p = PBY[f.player_id]; return (p && !p.unpriced && typeof dispVal === "function") ? (dispVal(p) || 0) : 0; };
             fas.sort((a, b) => vv(b) - vv(a));
             d.radarWatch = fas.slice(0, 8).map(f => ({ id: f.player_id, name: f.name, pos: f.position, team: f.team, head: (typeof rdHeadline === "function") ? rdHeadline(f) : "" }));
@@ -15780,7 +15786,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
          opening the league for ESPN entries. */
       async function ff4CCGoTool(idx, navKey) {
         const lg = (ff4.ccLeagues || [])[idx];
-        const go = () => { activateNav(navKey); window.scrollTo({ top: 0 }); };
+        const go = () => { if (navKey === "ppath" && typeof goLeagueSub === "function") goLeagueSub("ppath"); else activateNav(navKey); window.scrollTo({ top: 0 }); };
         if (!lg) { go(); return; }
         let active = false;
         try { active = ff4CCIsActive(lg); } catch (e) {}
@@ -15808,11 +15814,11 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         tiles.push(`<div class="cc-tile" style="--tile-accent:#C6FF00"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div><div class="cc-tile-sub">${esc(oddsSub)}</div>${magicLine}</div></div>`);
         const powerBig = d.powerRank == null ? "—" : `#${d.powerRank} of ${d.total}`;
         let powerExtra = "";
-        if (d.powerGrades) powerExtra += `<div class="cc-power-grades">${["QB", "RB", "WR", "TE"].map(pos => `${pos} <b>${esc(d.powerGrades[pos])}</b>`).join(" · ")}</div>`;
+        if (d.powerGrades) powerExtra += `<div class="cc-power-grades">${["QB", "RB", "WR", "TE"].map(pos => `<span>${pos} <b>${esc(d.powerGrades[pos])}</b></span>`).join("")}</div>`;
         const archBits = [];
         if (d.powerCoreAge != null) archBits.push(`Core age ${d.powerCoreAge}`);
         if (d.powerArch) archBits.push((typeof archTag === "function") ? archTag(d.powerArch) : d.powerArch);
-        if (archBits.length) powerExtra += `<div class="cc-tile-sub">${archBits.map(esc).join(" · ")}</div>`;
+        if (archBits.length) powerExtra += `<div class="cc-power-meta">${archBits.map(b => `<span>${esc(b)}</span>`).join("")}</div>`;
         tiles.push(`<div class="cc-tile" style="--tile-accent:#00E5FF"><div class="cc-tile-h">Power Rank</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(powerBig)}</div>${powerExtra}</div></div>`);
         let tickerChart = "";
         let tickerBig = "";
@@ -15892,14 +15898,14 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         tiles.push(`<div class="cc-tile" style="--tile-accent:#69F0AE"><div class="cc-tile-h">Trade Ideas</div><div class="cc-tile-body">${tradeBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="targets">Player Targets →</button></div></div>`);
         let wvBody = "";
         if (Array.isArray(d.waiverTops) && d.waiverTops.length) {
-          wvBody = `<div class="cc-tile-rows">` + d.waiverTops.map(w => `<div class="cc-tile-row"><span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span><span class="t-val">+${fmt(w.adds)} adds</span></div>`).join("") + `</div>`;
+          wvBody = `<div class="cc-tile-rows">` + d.waiverTops.map(w => { const face = (typeof window.hsImg === "function") ? window.hsImg({ id: w.id }, "cc-wv-face") : ""; return `<div class="cc-tile-row"><span class="cc-wv-left">${face}<span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span></span><span class="t-val">+${fmt(w.adds)} adds</span></div>`; }).join("") + `</div>`;
         } else {
-          wvBody = `<p class="cc-tile-sub">No trending adds available in this league this week.</p>`;
+          wvBody = `<p class="cc-tile-sub">No trending adds this week.</p>`;
         }
         tiles.push(`<div class="cc-tile" style="--tile-accent:#448AFF"><div class="cc-tile-h">Waiver Targets</div><div class="cc-tile-body">${wvBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="waivers">Waiver Targets →</button></div></div>`);
         tiles.push(`<div class="cc-tile" style="--tile-accent:#FF2E88"><div class="cc-tile-h">Fantasy Tools</div><div class="cc-tile-body"><div class="cc-tile-rows">
           <button type="button" class="cc-tool-link" data-cc-grid-tool="bye">Bye Week Planner</button>
-          <button type="button" class="cc-tool-link" data-cc-grid-tool="risk">Starters at Risk</button>
+          <button type="button" class="cc-tool-link" data-cc-grid-tool="ppath">Playoff Path</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="trades">Trade Calculator</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="lineup">Lineup Analyzer</button>
         </div></div></div>`);
@@ -16260,7 +16266,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (espnEntry) entries.push(espnEntry);
         ff4.ccMixed = entries.length > leagues.length;
         ff4.ccLeagues = entries; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
-        out.innerHTML = `<div id="cc-tabs"></div><div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div class="cc-rail" id="cc-rail"></div></div>`;
+        out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div id="cc-tabs"></div><div class="cc-rail" id="cc-rail"></div></div>`;
         ff4CCRenderTabs(); ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
         (async () => {
           for (let i = 0; i < entries.length; i++) {
@@ -16399,7 +16405,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
          and this site collects no ESPN credentials), so a connected
          ESPN league gets one honest line — never fabricated data. */
       function ff4TBState() {
-        if (!ff4.tb) ff4.tb = { loading: false, loaded: false, sig: "", incoming: [], sent: [], espnNote: false, failed: 0 };
+        if (!ff4.tb) ff4.tb = { loading: false, loaded: false, sig: "", incoming: [], sent: [], espnNote: false, failed: 0, checkedAt: null };
         return ff4.tb;
       }
       function ff4TBWhen(ts) {
@@ -16438,7 +16444,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           sent.sort((a, b) => (b.created || 0) - (a.created || 0));
           const cur = ff4TBState();
           if (cur.sig !== sig) return; /* a newer pass owns the state */
-          cur.incoming = incoming; cur.sent = sent; cur.failed = failed;
+          cur.incoming = incoming; cur.sent = sent; cur.failed = failed; cur.checkedAt = Date.now();
           cur.espnNote = !!ff4CCEspnEntry();
           cur.loading = false; cur.loaded = true;
           ff4RenderTB(); ff4RenderCCTB();
@@ -16738,9 +16744,18 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
            fetches them; this render is the choke point). */
         const sessU = ff4CCSessionUsername();
         const incoming = tb.incoming.filter(o => !ff4CCIsHiddenKey("sleeper:" + String(o.leagueId), sessU));
-        if (!incoming.length && !tb.espnNote) { el.innerHTML = ""; return; }
+        if (!incoming.length) {
+          const when = tb.checkedAt ? new Date(tb.checkedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
+          el.innerHTML = `<div class="cc-queue-h">Trade Board</div><p class="cc-queue-note">No incoming trades across all your leagues.${when ? ` Last checked ${when}.` : ""}</p>`
+            + (tb.failed ? `<p class="cc-queue-note">Couldn't check ${tb.failed} league${tb.failed === 1 ? "" : "s"} — reopen Command Center to retry.</p>` : "")
+            + (tb.espnNote ? `<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>` : "")
+            + `<button type="button" class="tb-open-board" id="cc-tb-open">Open the Trade Board →</button>`;
+          const ob0 = document.getElementById("cc-tb-open");
+          if (ob0) ob0.addEventListener("click", () => { activateNav("tradeboard"); window.scrollTo({ top: 0 }); });
+          return;
+        }
         el.innerHTML = `<div class="cc-queue-h">Trade Board · ${incoming.length} waiting on you</div>`
-          + (incoming.length ? incoming.map(o => ff4TBCardHtml(o, true)).join("") : `<p class="cc-queue-note">No trades waiting on you.</p>`)
+          + incoming.map(o => ff4TBCardHtml(o, true)).join("")
           + (tb.espnNote ? `<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>` : "")
           + `<button type="button" class="tb-open-board" id="cc-tb-open">Open the Trade Board →</button>`;
         const ob = document.getElementById("cc-tb-open");
