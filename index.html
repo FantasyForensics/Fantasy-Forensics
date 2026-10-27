@@ -2453,7 +2453,7 @@
       .cc-enter { margin-top: 12px; border: 1px solid rgba(198,255,0,.55); background: var(--surface-2); color: var(--ink); border-radius: 999px; padding: 8px 16px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
       .cc-enter:hover { box-shadow: 0 0 12px rgba(198,255,0,.35); }
       .cc-empty { border: 1px dashed rgba(255,255,255,.25); border-radius: 16px; padding: 22px; color: var(--ink-2); max-width: 640px; }
-      .cc-layout { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(250px, 1fr); gap: 16px; align-items: start; }
+      .cc-layout { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
       .cc-spot { border: 1px solid rgba(0,229,255,.3); border-radius: 18px; padding: 20px 22px; background: radial-gradient(120% 160% at 10% 0%, rgba(0,229,255,.08), transparent 55%), linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); }
       .cc-spot-top { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-start; }
       .cc-spot-top .cc-enter { margin-top: 2px; }
@@ -2475,8 +2475,9 @@
       .cc-line .cc-delta { color: #00E5FF; font-weight: 700; }
       .cc-spark { margin-top: 14px; }
       .cc-spark-k { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
-      .cc-rail { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-      .cc-rail-h { font-family: "Space Grotesk", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+      .cc-rail { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; min-width: 0; }
+      .cc-rail.cc-manage-open { display: block; }
+      .cc-rail-h { font-family: "Space Grotesk", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); grid-column: 1 / -1; }
       .cc-tabs { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
       .cc-tab { border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 7px 14px; background: rgba(255,255,255,.04); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
       .cc-tab.on { background: var(--accent); border-color: var(--accent); color: #150826; }
@@ -2518,8 +2519,8 @@
       .cc-queue-note { color: var(--ink-2); font-size: 14.5px; margin: 6px 0 2px; }
       .cc-spot-record { font-size: 15px; font-weight: 700; color: var(--ink-2); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 2px 10px; white-space: nowrap; vertical-align: middle; }
       .cc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
-      .cc-tile { border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.008)); min-width: 0; }
-      .cc-tile-h { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+      .cc-tile { border: 1px solid rgba(255,255,255,.12); border-top: 3px solid var(--tile-accent, rgba(255,255,255,.12)); border-radius: 16px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.008)); min-width: 0; height: 272px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
+      .cc-tile-h { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; color: var(--tile-accent, inherit); }
       .cc-tile-big { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 28px; line-height: 1.1; }
       .cc-tile-sub { color: var(--ink-2); font-size: 13.5px; margin-top: 4px; line-height: 1.4; }
       .cc-tile-bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.09); overflow: hidden; margin-top: 10px; }
@@ -2534,7 +2535,10 @@
       .cc-ticker-list { max-height: 216px; overflow-y: auto; display: grid; gap: 6px; padding-right: 2px; }
       .cc-tool-link { display: block; width: 100%; text-align: left; border: 1px solid rgba(0,229,255,.25); background: none; color: var(--ink); font: inherit; font-size: 14.5px; font-weight: 600; border-radius: 10px; padding: 9px 12px; cursor: pointer; }
       .cc-tool-link:hover { border-color: rgba(0,229,255,.6); }
-      .cc-tile-foot { margin-top: 10px; }
+      .cc-tile-body { flex: 1; min-height: 0; overflow-y: auto; }
+      .cc-tile-big.t-up { color: #C6FF00; }
+      .cc-tile-big.t-dn { color: #FF2E88; }
+      .cc-tile-foot { margin-top: auto; padding-top: 10px; }
       .cc-tile-foot button { background: none; border: 0; padding: 0; color: #00E5FF; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
       .cc-tile-foot button:hover { text-decoration: underline; }
       .cc-grid-move { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; width: 100%; text-align: left; border: 0; border-top: 1px solid rgba(255,255,255,.08); background: none; color: var(--ink); font: inherit; padding: 8px 2px; cursor: pointer; }
@@ -2544,7 +2548,7 @@
       .cc-grid-move.static:hover .cc-q-player { text-decoration: none; }
       @media (max-width: 860px) {
         .cc-layout { grid-template-columns: 1fr; }
-        .cc-rail { order: -1; flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
+        .cc-rail { display: flex; flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
         .cc-rail-h { display: none; }
         .cc-rail-it { flex: 0 0 auto; width: auto; max-width: 250px; }
         .cc-rail-it .cc-chips { display: none; }
@@ -2585,7 +2589,6 @@
         /* Command Center density (Eric, 2026-10-26): tighter spacing
            and smaller display type so more of the dashboard fits one
            phone screen. Phone-only: tablet/desktop rules above stand. */
-        #tab-command .tab-intro { margin-bottom: 10px; }
         .cc-layout { gap: 10px; }
         .cc-tabs { margin-bottom: 8px; }
         .cc-tab, .cc-manage { padding: 6px 12px; }
@@ -2608,7 +2611,7 @@
         .cc-rail-odds { font-size: 17px; }
         .cc-rail-sub { font-size: 12.5px; }
         .cc-grid { grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
-        .cc-tile { padding: 12px 14px; }
+        .cc-tile { padding: 12px 14px; height: 296px; }
         .cc-tile-big { font-size: 24px; }
         .cc-spot-record { font-size: 13px; }
       }
@@ -3107,7 +3110,6 @@
 
       <section class="tab" id="tab-command" role="tabpanel">
         <h2 class="block-title">Command Center<span class="launch-badge">Free during launch</span></h2>
-        <p class="tab-intro">Every league on your Sleeper account where you hold a roster. One league sits in the spotlight — playoff odds, the magic number, the swing game that matters most, and your team-value trend — with the rest ranked beside it and the players who need you first up top. Tap a league to bring it into focus, or open it for the full breakdown.</p>
         <div id="cc-out"></div>
       </section>
 
@@ -10034,7 +10036,7 @@ ${rdP ? "" : `
             <span class="slp-league-meta">${lg.season} season · ${lg.total_rosters} teams · ${esc(statusLabel(lg.status))} · ${slpLeagueType(lg) === "dynasty" ? "Dynasty" : "Redraft"}${names[i] ? ` · your team: ${esc(names[i])}` : ""}</span>
           </button>`).join("");
         list.querySelectorAll("[data-slp-league]").forEach(btn =>
-          btn.addEventListener("click", () => slpLoadLeague(slpState.leagues[Number(btn.dataset.slpLeague)])));
+          btn.addEventListener("click", () => slpLoadLeague(slpState.leagues[Number(btn.dataset.slpLeague)], { landCommand: true })));
       }
 
       async function slpLoadLeague(lg, opts) {
@@ -10151,17 +10153,21 @@ ${rdP ? "" : `
           setConnectedLeague();
           slpClose();
           ffTrackConnect("sleeper");
-          /* Manual connects land at the TOP of the League Analyzer
-             — the Your Team spotlight first. No section anchor here:
-             activateNav's deferred anchor jump used to fire after
-             this scroll-to-top and strand redraft landings mid-page
-             at Season Outlook. Quiet (auto) connects skip the landing
-             entirely: the data swaps in place and the user stays
-             exactly where they were reading. */
+          /* Manual connects land at the TOP of Command Center
+             (Eric, 2026-10-27): the rundown grid is the payoff for
+             connecting. A dialog connect (landCommand) lands there
+             directly; menu/switcher loads keep the League Analyzer
+             landing. No section anchor here. Quiet (auto) connects
+             skip the landing entirely: the data swaps in place and
+             the user stays exactly where they were reading. */
           if (!quiet) {
-            window.__subnavNext = window.__subnavNext || {};
-            window.__subnavNext.league = "power";
-            activateNav("league");
+            if (opts && opts.landCommand) {
+              activateNav("command");
+            } else {
+              window.__subnavNext = window.__subnavNext || {};
+              window.__subnavNext.league = "power";
+              activateNav("league");
+            }
             window.scrollTo({ top: 0 });
           }
           /* Saved-record write runs AFTER the landing, deferred a
@@ -11403,7 +11409,20 @@ ${rdP ? "" : `
             autoAttemptedKey = normKey(e);
             setRestoring(e);
             reconnect(e, false).then(function (ok) {
-              if (ok) { clearRestoring(); try { if (window.__ffDefaultToCommand) window.__ffDefaultToCommand(); } catch (e2) {} return; }
+              if (ok) {
+                clearRestoring();
+                try {
+                  /* If Command Center is already showing its empty
+                     state (signed in first, league landed second),
+                     the default switch above is a no-op, so refresh
+                     the dashboard in place now that the league data
+                     has landed. On any other tab the switch itself
+                     renders fresh content. */
+                  if (window.__ffDefaultToCommand) window.__ffDefaultToCommand();
+                  if (document.querySelector("#cc-out .cc-empty") && typeof window.ff4RenderCC === "function") window.ff4RenderCC();
+                } catch (e2) {}
+                return;
+              }
               /* A failed attempt must NOT strand the league for the
                  whole visit: release the latch so a later apply (the
                  post-sign-in path, or the retry below) can try again.
@@ -11730,12 +11749,14 @@ ${rdP ? "" : `
              the apply step's own guard sees CURRENT_LEAGUE "conn". */
           function afterSignInApplied() {
             try { if (window.__ffApplySavedLeagues) window.__ffApplySavedLeagues(); } catch (e) { /* apply is best-effort */ }
-            /* A league already connected (guest connected first, then
-               signed in) means the data is in place: land on Command
-               Center now. Otherwise the auto-reconnect success path
-               above does it once the league actually lands, so the
-               dashboard never renders empty. */
-            try { if (window.CURRENT_LEAGUE === "conn" && window.__ffDefaultToCommand) window.__ffDefaultToCommand(); } catch (e) { /* default tab stands */ }
+            /* Signing in lands on Command Center (Eric, 2026-10-27):
+               the guard inside __ffDefaultToCommand still applies
+               (default board, top of page, no share hash), so a
+               mid-browse sign-in never yanks the tab. When the
+               league hasn't landed yet, the dashboard renders its
+               connect prompt and the auto-reconnect success path
+               refreshes it in place once the league lands. */
+            try { if (window.__ffDefaultToCommand) window.__ffDefaultToCommand(); } catch (e) { /* default tab stands */ }
             try { if (profile) profile.refresh(); } catch (e) { /* the menu re-renders on next open anyway */ }
           }
           authMod.onAuthStateChanged(auth, (user) => {
@@ -15469,6 +15490,46 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           d.portfolioTotal = port.reduce((s, r) => s + (r.val || 0), 0);
         } catch (e) { d.portfolio = null; }
         try {
+          let wkD = 0, wkOk = false;
+          (me.playerIds || []).forEach(id => {
+            const p = PBY[id];
+            if (!p || p.unpriced) return;
+            let w = null;
+            try { w = (typeof tpWk === "function") ? tpWk(p) : null; } catch (e) {}
+            if (w && typeof w.d === "number") { wkD += w.d; wkOk = true; }
+          });
+          const prev = (d.portfolioTotal || 0) - wkD;
+          d.tickerWk = (wkOk && prev > 0) ? { d: wkD, pct: wkD / prev * 100 } : null;
+        } catch (e) { d.tickerWk = null; }
+        /* Stock Ticker chart series (Eric, 2026-10-27): the same
+           roster-value-over-snapshots math as the Team Portfolio
+           chart (tpChart), but players-only to match the tile's
+           "Roster value" total. Players without snapshot history are
+           carried at today's prices, so the last point equals the
+           roster total. Needs 3+ priced players with history. */
+        try {
+          d.ticker = null;
+          if (Array.isArray(d.portfolio)) {
+            const priced = (me.playerIds || []).map(id => PBY[id]).filter(p => p && !p.unpriced && p.hist && p.hist.length >= 2 && dispVal(p) != null);
+            if (priced.length >= 3) {
+              const n = Math.max(...priced.map(p => p.hist.length));
+              if (n >= 2) {
+                const pricedToday = priced.reduce((s, p) => s + (dispVal(p) || 0), 0);
+                const carried = (d.portfolioTotal || 0) - pricedToday;
+                const sums = [];
+                for (let j = 0; j < n; j++) {
+                  let s = carried;
+                  priced.forEach(p => { const h = p.hist; const idx = h.length - n + j; if (idx >= 0) s += Math.round(h[idx] * ((typeof factorRatio === "function") ? factorRatio(p.pos) : 1)); });
+                  sums.push(s);
+                }
+                const wkNow = (DATA.league && DATA.league.week) || 0;
+                const d0 = sums[n - 1] - sums[0];
+                d.ticker = { sums, rangePct: sums[0] ? d0 / sums[0] * 100 : 0, since: wkNow ? "Wk " + (wkNow - n + 1) : "Snapshot 1" };
+              }
+            }
+          }
+        } catch (e) { d.ticker = null; }
+        try {
           const oppRid = (window.OPP6 || {})[String(me.rid)];
           const opp = oppRid != null ? TBY[oppRid] : null;
           if (opp && typeof wkOptimal === "function" && typeof normCdf === "function") {
@@ -15655,27 +15716,40 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const col = frac >= 0.65 ? "#C6FF00" : frac >= 0.35 ? "#00E5FF" : "#FF2E88";
         const oddsLabel = d.clinched ? "Clinched" : (d.odds == null ? "—" : oddsPct(d.odds));
         const oddsSub = d.elim ? "Eliminated from the playoffs" : d.clinched ? "Playoff spot locked up" : (d.odds == null ? "Odds unavailable for this format" : "Chance at the playoffs");
-        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div><div class="cc-tile-sub">${esc(oddsSub)}</div></div>`);
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#C6FF00"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div><div class="cc-tile-sub">${esc(oddsSub)}</div></div></div>`);
         const powerBig = d.powerRank == null ? "—" : `#${d.powerRank} of ${d.total}`;
-        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Power Rank</div><div class="cc-tile-big">${esc(powerBig)}</div></div>`);
-        const port = Array.isArray(d.portfolio) ? d.portfolio : null;
-        let tickerHead = "";
-        let tickerBody = "";
-        if (!port) tickerBody = `<p class="cc-tile-sub">Portfolio values are still loading — reopen this league to refresh.</p>`;
-        else if (!port.length) tickerBody = `<p class="cc-tile-sub">No players on this roster.</p>`;
-        else {
-          tickerHead = `<div class="cc-tile-sub" style="margin-bottom:8px">Roster value ${fmt(d.portfolioTotal || 0)}</div>`;
-          tickerBody = `<div class="cc-ticker-list">` + port.map(r => {
-            if (r.val == null) return `<div class="cc-tile-row"><span class="t-name">${esc(r.name)} <span class="t-meta">${esc(r.pos)} · ${esc(r.team || "")}</span></span><span class="t-val">Unpriced</span></div>`;
-            let mv = "";
-            if (r.wk && typeof r.wk.pct === "number") {
-              const p = Math.abs(r.wk.pct) < 0.05 ? 0 : r.wk.pct;
-              mv = ` <span class="t-val ${p >= 0 ? "t-up" : "t-dn"}">${p >= 0 ? "▲ +" : "▼ −"}${Math.abs(p).toFixed(1)}%</span>`;
-            }
-            return `<div class="cc-tile-row"><span class="t-name">${esc(r.name)} <span class="t-meta">${esc(r.pos)} · ${esc(r.team || "")}</span></span><span class="t-val">${fmt(r.val)}${mv}</span></div>`;
-          }).join("") + `</div>`;
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#00E5FF"><div class="cc-tile-h">Power Rank</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(powerBig)}</div></div></div>`);
+        let tickerChart = "";
+        let tickerBig = "";
+        if (d.ticker && d.ticker.sums && d.ticker.sums.length >= 2) {
+          const sums = d.ticker.sums;
+          const W = 280, H = 88, PAD = 6;
+          const lo0 = Math.min(...sums), hi0 = Math.max(...sums);
+          const padV = Math.max((hi0 - lo0) * 0.18, hi0 * 0.02, 1);
+          const lo = lo0 - padV, hi = hi0 + padV;
+          const X = i => PAD + (W - PAD * 2) * i / (sums.length - 1);
+          const Y = v => PAD + (H - PAD * 2) * (1 - (v - lo) / (hi - lo));
+          const line = sums.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+          const area = `M${X(0).toFixed(1)},${Y(sums[0]).toFixed(1)} ` + sums.map((v, i) => `L${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ") + ` L${X(sums.length - 1).toFixed(1)},${(H - PAD).toFixed(1)} L${X(0).toFixed(1)},${(H - PAD).toFixed(1)} Z`;
+          tickerChart = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Roster value history" style="width:100%;height:auto;display:block"><path d="${area}" fill="rgba(255,196,0,.12)"/><polyline points="${line}" fill="none" stroke="#FFC400" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+          const rp = d.ticker.rangePct;
+          tickerBig = `<div class="cc-tile-big ${rp > 0 ? "t-up" : rp < 0 ? "t-dn" : ""}">${rp > 0 ? "▲ +" : rp < 0 ? "▼ −" : ""}${Math.abs(rp).toFixed(1)}%</div><div class="cc-tile-sub">since ${esc(d.ticker.since)}</div>`;
+        } else if (d.tickerWk && typeof d.tickerWk.pct === "number") {
+          const wp = d.tickerWk.pct;
+          tickerBig = `<div class="cc-tile-big ${wp > 0 ? "t-up" : wp < 0 ? "t-dn" : ""}">${wp > 0 ? "▲ +" : wp < 0 ? "▼ −" : ""}${Math.abs(wp).toFixed(1)}%</div><div class="cc-tile-sub">this week</div>`;
+        } else if (!Array.isArray(d.portfolio)) {
+          tickerBig = `<div class="cc-tile-sub">Portfolio values are still loading — reopen this league to refresh.</div>`;
+        } else if (!d.portfolio.length) {
+          tickerBig = `<div class="cc-tile-sub">No players on this roster.</div>`;
+        } else {
+          tickerBig = `<div class="cc-tile-sub">Value history needs more snapshots.</div>`;
         }
-        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Stock Ticker</div>${tickerHead}${tickerBody}<div class="cc-tile-foot"><button type="button" data-cc-grid-tool="teamport">Full portfolio →</button></div></div>`);
+        let tickerSub = `<div class="cc-tile-sub">Roster value ${fmt(d.portfolioTotal || 0)}</div>`;
+        if (d.ticker && d.tickerWk && typeof d.tickerWk.pct === "number") {
+          const wp = d.tickerWk.pct;
+          tickerSub = `<div class="cc-tile-sub">Roster value ${fmt(d.portfolioTotal || 0)} · ${wp > 0 ? "▲ +" : wp < 0 ? "▼ −" : ""}${Math.abs(wp).toFixed(1)}% this week</div>`;
+        }
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#FFC400"><div class="cc-tile-h">Stock Ticker</div><div class="cc-tile-body">${tickerChart}${tickerBig}${tickerSub}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="teamport">Full portfolio →</button></div></div>`);
         let movesBody = "";
         if (snap && snap.queueItems && snap.queueItems.length) {
           movesBody = snap.queueItems.slice(0, 3).map(it => `<button type="button" class="cc-grid-move" data-cc-grid-open="1"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span></button>`).join("");
@@ -15686,7 +15760,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         } else {
           movesBody = `<p class="cc-tile-sub">See Needs You First above.</p>`;
         }
-        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Your Next Three Moves</div>${movesBody}</div>`);
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#FF6B35"><div class="cc-tile-h">Your Next Three Moves</div><div class="cc-tile-body">${movesBody}</div></div>`);
         let matchBody = "";
         if (d.matchup) {
           const m = d.matchup;
@@ -15702,34 +15776,34 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         } else {
           matchBody = `<p class="cc-tile-sub">No opponent pairing published this week.</p>`;
         }
-        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">This Week's Matchup</div>${matchBody}<div class="cc-tile-foot"><button type="button" data-cc-grid-tool="lineup">Lineup Analyzer →</button></div></div>`);
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#B388FF"><div class="cc-tile-h">This Week's Matchup</div><div class="cc-tile-body">${matchBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="lineup">Lineup Analyzer →</button></div></div>`);
         let watchBody = "";
         if (Array.isArray(d.radarWatch) && d.radarWatch.length) {
           watchBody = `<div class="cc-tile-rows">` + d.radarWatch.map(w => `<div class="cc-tile-row"><span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span></div><div class="cc-tile-sub" style="margin-top:-4px">${esc(w.head)}</div>`).join("") + `</div>`;
         } else {
           watchBody = `<p class="cc-tile-sub">No Radar flags on the wire this week.</p>`;
         }
-        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Watchlist</div>${watchBody}<div class="cc-tile-foot"><button type="button" data-cc-grid-tool="radar">Opportunity Radar →</button></div></div>`);
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#FF4081"><div class="cc-tile-h">Watchlist</div><div class="cc-tile-body">${watchBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="radar">Opportunity Radar →</button></div></div>`);
         let tradeBody = "";
         if (Array.isArray(d.tradeIdeas) && d.tradeIdeas.length) {
           tradeBody = `<div class="cc-tile-rows">` + d.tradeIdeas.map(s => `<div class="cc-tile-row"><span class="t-name">${esc(s.target)} <span class="t-meta">${esc(s.pos)} · ${esc(s.team || "")}</span></span><span class="t-val">+${s.dPpg.toFixed(1)} pts/wk</span></div><div class="cc-tile-sub" style="margin-top:-4px">from ${esc(s.partner)}</div>`).join("") + `</div>`;
         } else {
           tradeBody = `<p class="cc-tile-sub">No buy ideas clear the bar right now.</p>`;
         }
-        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Trade Ideas</div>${tradeBody}<div class="cc-tile-foot"><button type="button" data-cc-grid-tool="targets">Player Targets →</button></div></div>`);
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#69F0AE"><div class="cc-tile-h">Trade Ideas</div><div class="cc-tile-body">${tradeBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="targets">Player Targets →</button></div></div>`);
         let wvBody = "";
         if (Array.isArray(d.waiverTops) && d.waiverTops.length) {
           wvBody = `<div class="cc-tile-rows">` + d.waiverTops.map(w => `<div class="cc-tile-row"><span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span><span class="t-val">+${w.add.toFixed(1)} pts/wk</span></div>`).join("") + `</div>`;
         } else {
           wvBody = `<p class="cc-tile-sub">No waiver add beats your starters this week.</p>`;
         }
-        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Waiver Targets</div>${wvBody}<div class="cc-tile-foot"><button type="button" data-cc-grid-tool="waivers">Waiver Targets →</button></div></div>`);
-        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Fantasy Tools</div><div class="cc-tile-rows">
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#448AFF"><div class="cc-tile-h">Waiver Targets</div><div class="cc-tile-body">${wvBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="waivers">Waiver Targets →</button></div></div>`);
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#FF2E88"><div class="cc-tile-h">Fantasy Tools</div><div class="cc-tile-body"><div class="cc-tile-rows">
           <button type="button" class="cc-tool-link" data-cc-grid-tool="bye">Bye Week Planner</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="radar">Opportunity Radar</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="trades">Trade Calculator</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="lineup">Lineup Analyzer</button>
-        </div></div>`);
+        </div></div></div>`);
         return tiles.join("");
       }
       function ff4CCRenderSpot() {
