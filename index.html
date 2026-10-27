@@ -8551,9 +8551,11 @@ ${rdP ? "" : `
           </div>
           ${movesHtml}
           <div class="mv-grid">${tbl("Current starters (snapshot)", cur, curTotal, kdSlots.length ? { rows: "", totNote: true } : null)}${tbl("Optimal Week " + VW, opt.lineup, opt.total, kdSlots.length ? { rows: kdSlots.map(kdRowHtml).join(""), totNote: true } : null)}</div>
+          <div id="uf-wrap"></div>
           ${byeHtml}
           ${matchHtml}`;
         if (typeof window.renderRiskPanel === "function") window.renderRiskPanel(team, cur, opt, VW);
+        if (typeof renderUpgradeFinder === "function") renderUpgradeFinder(team, rid);
       }
 
       /* ---------- Bye Week Planner (Fantasy Tools view) ----------
@@ -8761,6 +8763,208 @@ ${rdP ? "" : `
         accEl.innerHTML += `
           <h2>Season phase — currently “${SEASON_PHASE}”</h2>
           <p>Values run on one of three seasonal phases, chosen by the calendar, so the site stays right in January the way it is in October. <strong>Regular (Weeks 1–14):</strong> the full model, exactly as documented above. <strong>Playoffs (Weeks 15–17):</strong> in-season form stops moving dynasty values — values move on injury and news only, so two hot playoff weeks can't reprice a career. <strong>Offseason:</strong> prices rest on the algorithm's long-term view of each player; rookie draft picks tend to <em>appreciate</em> from January to the NFL draft, as the incoming class gets scouted and landing spots firm up — and the Season Outlook tab flips to a rookie board for the incoming class. This snapshot (Week ${LU_WEEK}) sits squarely in <strong>regular</strong>.</p>`;
+      }
+    </script>
+    <script>
+      "use strict";
+      /* ================= Upgrade Finder (Eric, 2026-10-27) =================
+         From the Lineup tab: your rest-of-season best lineup, every slot
+         shown, each player clickable. Click a player, pick roughly how
+         many more points a week you want from that slot, and the finder
+         shows players on selling teams who project in a loose band
+         around that bump - closest to the bump first - each with a
+         projected trade to get him: the player you clicked, a bench
+         player, picks, or a mix. Win-now by construction: you are buying
+         points now, so in dynasty the partners are rebuilding and
+         crossroads teams (the mirror of the Targets buy path); in
+         redraft every other roster is fair game. Packages come from the
+         same offer builder the Targets cards use, and every package
+         loads into the Trade Calculator with the same "Grade it" button.
+         Nothing here is hardcoded: every number comes from the
+         connected league's own roster, projections, and prices. */
+      const ufState = { rid: null, anchorId: null, slotKey: null, slotLabel: null, bump: 3, cacheKey: "", cacheHtml: "" };
+      const ufF1 = x => (Math.round(x * 10) / 10).toFixed(1);
+      /* starterSlots() labels repeat (WR x3, FLEX x3) - number the repeats
+         so the clicked slot reads WR3, FLEX2, the way the user talks. */
+      function ufSlotLabels() {
+        const slots = starterSlots();
+        const counts = {};
+        const totals = {};
+        slots.forEach(s => { totals[s.key] = (totals[s.key] || 0) + 1; });
+        return slots.map(s => {
+          counts[s.key] = (counts[s.key] || 0) + 1;
+          const label = totals[s.key] > 1 ? (s.label + counts[s.key]) : s.label;
+          return { key: s.key, cands: s.cands, label };
+        });
+      }
+      /* Rest-of-season best lineup, slot-labelled: the weekly optimizer's
+         take loop with rest-of-season projections instead of the week's. */
+      function ufRosLineup(team) {
+        const pool = team.playerIds.map(id => PBY[id]).filter(Boolean)
+          .sort((a, b) => ((a.unpriced ? 1 : 0) - (b.unpriced ? 1 : 0)) || rosProj(b) - rosProj(a));
+        const used = new Set();
+        const out = [];
+        ufSlotLabels().forEach(s => {
+          for (const p of pool) {
+            if (used.has(p.id) || !s.cands.includes(p.pos)) continue;
+            used.add(p.id);
+            out.push({ p, slot: s.label, slotKey: s.key, cands: s.cands, ros: rosProj(p) });
+            break;
+          }
+        });
+        return out;
+      }
+      function ufFind(rid, team, anchor, slotCands, bump) {
+        const anchorRos = rosProj(anchor);
+        /* Loose band, not an exact number: a +3 ask shows roughly +2 to
+           +5 above the anchor, closest to +3 first. The floor of +1
+           keeps the list to material upgrades only. */
+        const lo = anchorRos + Math.max(1, bump - 1);
+        const hi = anchorRos + bump + 2;
+        const floor = tradeFloors().target;
+        const myStarters = new Set(ufRosLineup(team).map(r => r.p.id));
+        const anchorAsset = playerAsset(anchor);
+        /* Pay pool: my picks plus tradable bench depth plus the anchor
+           himself. Other starters are excluded - a deal that costs a
+           starter elsewhere would eat the very bump it promises. */
+        const benchAssets = tradableAssets(rid).filter(p => p.id !== anchor.id && !myStarters.has(p.id)).map(playerAsset);
+        const payPool = [...pickAssets(team), anchorAsset, ...benchAssets];
+        const payPoolNoAnchor = [...pickAssets(team), ...benchAssets];
+        const starterCache = new Map();
+        const startsFor = partnerRid => {
+          if (!starterCache.has(partnerRid)) starterCache.set(partnerRid, lineupSet(partnerRid));
+          return starterCache.get(partnerRid);
+        };
+        const results = [];
+        const partners = DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty")));
+        partners.forEach(partner => {
+          teamPlayers(partner.rid)
+            .filter(p => slotCands.includes(p.pos) && dispVal(p) >= floor && (p.ros || 0) > 0)
+            .forEach(cand => {
+              const ros = rosProj(cand);
+              if (ros < lo || ros > hi) return;
+              const tv = dispVal(cand);
+              const tryPkg = (pool, anchorArg) => {
+                let pkg = buildPackage(pool, tv, 0.90, 1.12, anchorArg, tv);
+                if (!pkg) return null;
+                if (VALMODE !== "redraft" && !genuineRebuildPartner(partner) && !pkgStartsForPartner(partner, cand, pkg)) {
+                  pkg = rebuildWithStarter(partner, cand, pool);
+                  if (!pkg) return null;
+                }
+                return pkg;
+              };
+              const pkgs = [];
+              const pa = tryPkg(payPool, anchorAsset);
+              if (pa) pkgs.push({ pkg: pa, withAnchor: true });
+              const pb = tryPkg(payPoolNoAnchor, null);
+              if (pb) pkgs.push({ pkg: pb, withAnchor: false });
+              if (!pkgs.length) return;
+              results.push({ partner, cand, ros, gain: ros - anchorRos, pkgs: pkgs.slice(0, 2),
+                role: startsFor(partner.rid).has(cand.id) ? "starts for" : "is depth on" });
+            });
+        });
+        results.sort((a, b) => Math.abs(a.gain - bump) - Math.abs(b.gain - bump) || b.ros - a.ros);
+        return results.slice(0, 10);
+      }
+      function ufPkgGrade(pkg, tv) {
+        try {
+          const [cTgt, cPkg] = vaPair([tv], pkg.map(a => a.value));
+          const adjT = tv + cTgt, adjP = pkgValue(pkg) + cPkg;
+          if (!adjT) return "";
+          return `within ${Math.round(Math.abs(adjP - adjT) / adjT * 100)}%`;
+        } catch (e) { return ""; }
+      }
+      /* Same "Grade it" deep link the Targets cards use: the exact offer
+         re-opens in the Trade Calculator. Dynasty only, like theirs. */
+      function ufGradeBtn(rid, partnerRid, pkg, cand) {
+        if (VALMODE === "redraft") return "";
+        const toCalc = a => a.kind === "pick"
+          ? (a.key ? { kind: "pick", key: a.key, fromTeam: a.fromTeam } : null)
+          : { kind: "player", id: a.p.id };
+        const calcGive = pkg.map(toCalc), calcGet = [{ kind: "player", id: cand.id }];
+        if (!calcGive.every(Boolean) || !calcGet.every(Boolean)) return "";
+        const payload = { a: rid, b: partnerRid, give: calcGive, get: calcGet };
+        return `<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Grade it in the calculator \u2192</button>`;
+      }
+      function ufResultsHtml(team, rid, anchor, slotLabel, slotCands, bump) {
+        const key = [rid, anchor.id, ufState.slotKey, bump].join("|");
+        if (ufState.cacheKey === key && ufState.cacheHtml) return ufState.cacheHtml;
+        let html;
+        if (anchor.unpriced) {
+          html = `<div class="diag"><h3>No projection to measure from</h3><p>${esc(anchor.name)} has no rest-of-season projection, so there is no bump to measure from. Pick a priced starter instead.</p></div>`;
+        } else {
+          const results = ufFind(rid, team, anchor, slotCands, bump);
+          if (!results.length) {
+            html = `<div class="diag"><h3>No fit at that bump</h3><p>${VALMODE === "redraft" ? "No player on another roster" : "No player on a selling team"} fits that bump for the ${esc(slotLabel)} slot. Try a smaller bump, or a different player.</p></div>`;
+          } else {
+            html = `<div class="wv-card"><h3>Upgrades around +${bump.toFixed(1)} a week for ${esc(anchor.name)}</h3>` + results.map(r => {
+              const arch = VALMODE === "redraft" ? "" : ` ${archTag(r.partner.arch)}`;
+              const pkgHtml = r.pkgs.map(({ pkg, withAnchor }) => {
+                const assets = pkg.map(a => `${esc(a.label)} (${fmt(a.value)})`).join(" + ");
+                const grade = ufPkgGrade(pkg, dispVal(r.cand));
+                return `<div style="margin-top:8px;"><span class="who">You send: ${assets}</span><div class="sub">${withAnchor ? `Includes ${esc(anchor.name)} - the player being replaced` : `Keeps ${esc(anchor.name)} on your bench`}${grade ? ` - ${grade} of fair` : ""}</div>${ufGradeBtn(rid, r.partner.rid, pkg, r.cand)}</div>`;
+              }).join("");
+              return `<div class="mv-row"><div>${hsImg(r.cand, "phs-sm")}<span class="who">${esc(r.cand.name)}${desigChip(r.cand)}</span> <span class="sub">${logoImg(r.cand.team)}${esc(r.cand.team)} - ${r.cand.pos}${r.cand.posRank} - ${esc(r.role)} ${esc(r.partner.name)}${arch}</span><div class="sub">Projects ${ufF1(r.ros)} pts/wk the rest of the way</div>${pkgHtml}</div><div class="delta"><span class="lu-delta up">+${ufF1(r.gain)} pts/wk</span><div class="sub">at ${esc(slotLabel)}</div></div></div>`;
+            }).join("") + `</div>`;
+          }
+        }
+        ufState.cacheKey = key; ufState.cacheHtml = html;
+        return html;
+      }
+      function renderUpgradeFinder(team, rid) {
+        const wrap = document.getElementById("uf-wrap");
+        if (!wrap || !team || window.GUEST_MODE) { if (wrap) wrap.innerHTML = ""; return; }
+        if (ufState.rid !== rid) { ufState.rid = rid; ufState.anchorId = null; ufState.slotKey = null; ufState.slotLabel = null; }
+        const anchor = ufState.anchorId ? PBY[ufState.anchorId] : null;
+        if (ufState.anchorId && (!anchor || !team.playerIds.includes(anchor.id))) {
+          ufState.anchorId = null; ufState.slotKey = null; ufState.slotLabel = null;
+        }
+        const ros = ufRosLineup(team);
+        const sel = ufState.anchorId;
+        const rows = ros.map(r => {
+          const isSel = sel === r.p.id;
+          return `<tr data-uf-pick="${r.p.id}" data-uf-slot="${r.slotKey}" data-uf-label="${esc(r.slot)}" style="cursor:pointer;${isSel ? "background:rgba(198,255,0,.10);" : ""}"><td><span class="slot-tag">${esc(r.slot)}</span></td><td>${hsImg(r.p)}<span class="p-name">${esc(r.p.name)}</span>${desigChip(r.p)}<div class="p-sub">${r.p.unpriced ? "Unpriced" : logoImg(r.p.team) + esc(r.p.team)} - ${r.p.pos}${r.p.posRank} - ROS ${ufF1(r.ros)}/wk</div></td><td class="num">${r.p.unpriced ? "Unpriced" : ufF1(r.ros)}</td></tr>`;
+        }).join("");
+        let panel = "";
+        if (sel) {
+          const a = PBY[sel];
+          const slotCands = (starterSlots().find(s => s.key === ufState.slotKey) || {}).cands || [];
+          panel = `<div class="wv-card"><h3>Upgrading ${esc(a.name)} (${esc(ufState.slotLabel)} - ${ufF1(rosProj(a))} pts/wk)</h3>
+            <p class="wv-sub">How many more points a week are you looking for from this slot?</p>
+            <div style="display:flex;align-items:center;gap:12px;"><input type="range" id="uf-bump" min="1" max="6" step="0.5" value="${ufState.bump}" style="flex:1;"><span id="uf-bump-val" style="font-weight:700;white-space:nowrap;">+${ufState.bump.toFixed(1)} pts/wk</span></div>
+            <p class="wv-sub">A loose band, not an exact number: this ask shows players roughly +${Math.max(1, ufState.bump - 1).toFixed(1)} to +${(ufState.bump + 2).toFixed(1)} above ${esc(a.name)}, closest to +${ufState.bump.toFixed(1)} first.</p></div>
+            ${ufResultsHtml(team, rid, a, ufState.slotLabel, slotCands, ufState.bump)}`;
+        }
+        wrap.innerHTML = `<div class="mv-card"><h3>Upgrade Finder</h3>
+          <p class="wv-sub">Your rest-of-season best lineup, by projected points a week. Click a player to find a material upgrade for his slot - the trade to get him comes with it.</p>
+          <table class="mini"><thead><tr><th>Slot</th><th>Player</th><th class="num">ROS/wk</th></tr></thead><tbody>${rows}</tbody></table>
+          ${sel ? "" : `<p class="wv-sub">Click any player above to start.</p>`}</div>
+          ${panel}`;
+      }
+      if (!window.__ufWired) {
+        window.__ufWired = true;
+        document.addEventListener("click", e => {
+          const row = e.target.closest("[data-uf-pick]");
+          if (!row) return;
+          const id = Number(row.dataset.ufPick);
+          if (ufState.anchorId === id) { ufState.anchorId = null; ufState.slotKey = null; ufState.slotLabel = null; }
+          else { ufState.anchorId = id; ufState.slotKey = row.dataset.ufSlot; ufState.slotLabel = row.dataset.ufLabel; }
+          ufState.cacheKey = "";
+          if (ufState.rid != null && TBY[ufState.rid]) renderUpgradeFinder(TBY[ufState.rid], ufState.rid);
+        });
+        document.addEventListener("input", e => {
+          if (e.target && e.target.id === "uf-bump") {
+            const v = document.getElementById("uf-bump-val");
+            if (v) v.textContent = `+${parseFloat(e.target.value).toFixed(1)} pts/wk`;
+          }
+        });
+        document.addEventListener("change", e => {
+          if (e.target && e.target.id === "uf-bump") {
+            ufState.bump = parseFloat(e.target.value);
+            ufState.cacheKey = "";
+            if (ufState.rid != null && TBY[ufState.rid]) renderUpgradeFinder(TBY[ufState.rid], ufState.rid);
+          }
+        });
       }
     </script>
     <script>
