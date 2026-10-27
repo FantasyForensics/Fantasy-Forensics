@@ -2519,7 +2519,11 @@
       .cc-queue-note { color: var(--ink-2); font-size: 14.5px; margin: 6px 0 2px; }
       .cc-spot-record { font-size: 15px; font-weight: 700; color: var(--ink-2); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 2px 10px; white-space: nowrap; vertical-align: middle; }
       .cc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
-      .cc-tile { border: 1px solid rgba(255,255,255,.12); border-top: 3px solid var(--tile-accent, rgba(255,255,255,.12)); border-radius: 16px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.008)); min-width: 0; height: 272px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
+      /* Tile height (Eric, 2026-10-27): 240px so all nine tiles fit one
+         iPad-portrait viewport. Protection: widths never change and
+         rows never shrink — overflow scrolls inside .cc-tile-body
+         instead, so no player row can compress to dots. */
+      .cc-tile { border: 1px solid rgba(255,255,255,.12); border-top: 3px solid var(--tile-accent, rgba(255,255,255,.12)); border-radius: 16px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.008)); min-width: 0; height: 240px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
       .cc-tile-h { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; color: var(--tile-accent, inherit); }
       .cc-tile-big { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 28px; line-height: 1.1; }
       .cc-tile-sub { color: var(--ink-2); font-size: 13.5px; margin-top: 4px; line-height: 1.4; }
@@ -2532,6 +2536,10 @@
       .cc-tile-row .t-val { font-weight: 700; white-space: nowrap; flex-shrink: 0; }
       .cc-tile-row .t-up { color: #C6FF00; }
       .cc-tile-row .t-dn { color: #FF2E88; }
+      .cc-radar-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+      .cc-tile img.cc-radar-face { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+      .cc-power-grades { font-size: 13.5px; margin-top: 8px; }
+      .cc-power-grades b { font-weight: 700; }
       .cc-ticker-list { max-height: 216px; overflow-y: auto; display: grid; gap: 6px; padding-right: 2px; }
       .cc-tool-link { display: block; width: 100%; text-align: left; border: 1px solid rgba(0,229,255,.25); background: none; color: var(--ink); font: inherit; font-size: 14.5px; font-weight: 600; border-radius: 10px; padding: 9px 12px; cursor: pointer; }
       .cc-tool-link:hover { border-color: rgba(0,229,255,.6); }
@@ -10039,6 +10047,32 @@ ${rdP ? "" : `
           btn.addEventListener("click", () => slpLoadLeague(slpState.leagues[Number(btn.dataset.slpLeague)], { landCommand: true })));
       }
 
+      /* After a manual league switch, refresh the visible tool with
+         the new league's data (Eric, 2026-10-27: switching leagues
+         never forces a tab change). Shared views (board, calculator,
+         lineup, waivers, power) already refreshed inside
+         setConnectedLeague; this covers the activation-rendered
+         tools. Never runs for quiet auto-reconnects, for loads that
+         land somewhere (dialog entry), or for loads that navigate
+         next (tool links, which pass skipTabRefresh). Best-effort:
+         the data swap already landed, so a failed refresh here must
+         never break the switch itself. */
+      function ffRefreshCurrentTab() {
+        try {
+          const sec = document.querySelector("section.tab.active");
+          const key = sec ? sec.id.replace(/^tab-/, "") : "";
+          if (key === "bye" && typeof window.renderByeView === "function") window.renderByeView();
+          else if (key === "radar" && typeof window.renderRadar === "function") window.renderRadar();
+          else if (key === "teamport" && typeof window.tpRender === "function") window.tpRender();
+          else if (key === "tradeboard" && typeof window.ff4TBEnsure === "function") window.ff4TBEnsure(false);
+          else if (key === "command" && typeof window.ff4RenderCC === "function") window.ff4RenderCC();
+          else if (key === "league") {
+            if (typeof window.ff4RenderPP === "function") setTimeout(window.ff4RenderPP, 40);
+            if (typeof window.renderLifeline === "function") setTimeout(() => window.renderLifeline(), 40);
+          }
+        } catch (e) { /* the switch already landed; a stale tool view is better than a broken switch */ }
+      }
+
       async function slpLoadLeague(lg, opts) {
         /* opts.quiet (auto-reconnect only): apply the league silently.
            A manual connect lands the user on the League Analyzer at
@@ -10153,22 +10187,25 @@ ${rdP ? "" : `
           setConnectedLeague();
           slpClose();
           ffTrackConnect("sleeper");
-          /* Manual connects land at the TOP of Command Center
-             (Eric, 2026-10-27): the rundown grid is the payoff for
-             connecting. A dialog connect (landCommand) lands there
-             directly; menu/switcher loads keep the League Analyzer
-             landing. No section anchor here. Quiet (auto) connects
-             skip the landing entirely: the data swaps in place and
-             the user stays exactly where they were reading. */
+          /* Landing rules (Eric, 2026-10-27, top-down): a fresh
+             connect from the dialog (landCommand) lands on Command
+             Center — the rundown grid is the payoff for connecting.
+             Every other manual load stays exactly where the user is:
+             switching leagues never forces a tab change, and the
+             current tool re-renders with the new league's data in
+             place (setConnectedLeague already refreshed the shared
+             views; ffRefreshCurrentTab covers the tools it doesn't).
+             Quiet (auto) connects skip all of it: the data swaps in
+             place and the user stays exactly where they were reading.
+             Loads that navigate next (tool links) pass
+             skipTabRefresh and do their own navigation. */
           if (!quiet) {
             if (opts && opts.landCommand) {
               activateNav("command");
-            } else {
-              window.__subnavNext = window.__subnavNext || {};
-              window.__subnavNext.league = "power";
-              activateNav("league");
+              window.scrollTo({ top: 0 });
+            } else if (!(opts && opts.skipTabRefresh)) {
+              ffRefreshCurrentTab();
             }
-            window.scrollTo({ top: 0 });
           }
           /* Saved-record write runs AFTER the landing, deferred a
              tick (switch perf, 2026-10-24): its localStorage write,
@@ -10644,10 +10681,10 @@ ${rdP ? "" : `
           </button>`;
         }).join("");
         list.querySelectorAll("[data-espn-team]").forEach(b =>
-          b.addEventListener("click", () => espnConnect(Number(b.dataset.espnTeam))));
+          b.addEventListener("click", () => espnConnect(Number(b.dataset.espnTeam), { landCommand: true })));
       }
 
-      function espnConnect(yourRid) {
+      function espnConnect(yourRid, opts) {
         /* Same contract as the Sleeper loader: the dialog closes only
            after the league is fully applied; a failure rolls back to the
            clean guest state and surfaces its error in the open dialog. */
@@ -10675,14 +10712,16 @@ ${rdP ? "" : `
           slpClose();
           ffTrackConnect("espn");
           try { window.__ffSavedRecord({ platform: "espn", leagueId: String(espnState.leagueId), name: espnState.name || null, season: espnState.season || null }); } catch (e) { /* saved leagues are best-effort */ }
-          /* Land at the TOP of the League Analyzer — the Your Team
-             spotlight first. No section anchor here: activateNav's
-             deferred anchor jump used to fire after this scroll-to-top
-             and strand redraft landings mid-page at Season Outlook. */
-          window.__subnavNext = window.__subnavNext || {};
-          window.__subnavNext.league = "power";
-          activateNav("league");
-          window.scrollTo({ top: 0 });
+          /* Landing (Eric, 2026-10-27): a fresh ESPN entry from the
+             dialog's pick-your-team step (landCommand) lands on
+             Command Center, same as a fresh Sleeper entry. Stored
+             re-activations (switcher pill, Command Center open) and
+             guest browsing pass no flag and stay exactly where the
+             user is — switching leagues never forces a tab change. */
+          if (opts && opts.landCommand) {
+            activateNav("command");
+            window.scrollTo({ top: 0 });
+          }
         } catch (e) {
           if (staged) { try { slpDisconnect(); } catch (e2) { /* best effort */ } }
           const ov = slpEl("slp-overlay");
@@ -15453,6 +15492,23 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             }
           }
         } else d.noSim = true;
+        /* Power Rank tile extras (Eric, 2026-10-27): the team's
+           positional letter grades (already computed by
+           recomputeValues), its value-weighted core age, and its
+           archetype tag (dynasty only — redraft shows no tag). */
+        try {
+          const g = me.grades || {};
+          d.powerGrades = (["QB", "RB", "WR", "TE"].every(pos => g[pos])) ? { QB: g.QB, RB: g.RB, WR: g.WR, TE: g.TE } : null;
+        } catch (e) { d.powerGrades = null; }
+        try {
+          const isRd = (typeof tpIsRedraft === "function") ? tpIsRedraft() : false;
+          let archKey = null;
+          if (!isRd && typeof slpArch === "function") { try { archKey = slpArch(me, DATA.teams); } catch (e) {} }
+          let age = (me.coreAge != null) ? me.coreAge : null;
+          if (age == null && typeof slpCoreAge === "function") { try { const ca = slpCoreAge(me); if (ca) age = Math.round(ca.coreAge * 10) / 10; } catch (e) {} }
+          d.powerArch = archKey || null;
+          d.powerCoreAge = age;
+        } catch (e) { d.powerArch = null; d.powerCoreAge = null; }
         try {
           if (typeof tpBuild === "function") {
             const teamObj = { name: me.name, rid: me.rid, isUser: true, record: me.record, powerRank: me.powerRank,
@@ -15461,7 +15517,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             const b2 = tpBuild(teamObj);
             d.teamValue = b2.total;
             const rd = typeof tpIsRedraft === "function" && tpIsRedraft();
-            if (!rd && typeof tpChart === "function") d.spark = tpChart(teamObj, b2);
+            if (!rd) d.teamWk = { d: b2.wkD, pct: b2.wkPct };
           }
         } catch (e) {}
         if (d.teamValue == null) d.teamValue = (me.totalVal || 0) + (me.picksVal || 0);
@@ -15489,24 +15545,33 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           d.portfolio = port;
           d.portfolioTotal = port.reduce((s, r) => s + (r.val || 0), 0);
         } catch (e) { d.portfolio = null; }
+        /* Week-over-week change for the FULL team value (Eric,
+           2026-10-27): Team Portfolio's own weekly number when
+           available (it already includes pick movement once pick
+           history has two points); otherwise the players-only
+           fallback below. */
         try {
-          let wkD = 0, wkOk = false;
-          (me.playerIds || []).forEach(id => {
-            const p = PBY[id];
-            if (!p || p.unpriced) return;
-            let w = null;
-            try { w = (typeof tpWk === "function") ? tpWk(p) : null; } catch (e) {}
-            if (w && typeof w.d === "number") { wkD += w.d; wkOk = true; }
-          });
-          const prev = (d.portfolioTotal || 0) - wkD;
-          d.tickerWk = (wkOk && prev > 0) ? { d: wkD, pct: wkD / prev * 100 } : null;
+          if (d.teamWk && typeof d.teamWk.pct === "number") {
+            d.tickerWk = d.teamWk;
+          } else {
+            let wkD = 0, wkOk = false;
+            (me.playerIds || []).forEach(id => {
+              const p = PBY[id];
+              if (!p || p.unpriced) return;
+              let w = null;
+              try { w = (typeof tpWk === "function") ? tpWk(p) : null; } catch (e) {}
+              if (w && typeof w.d === "number") { wkD += w.d; wkOk = true; }
+            });
+            const prev = (d.portfolioTotal || 0) - wkD;
+            d.tickerWk = (wkOk && prev > 0) ? { d: wkD, pct: wkD / prev * 100 } : null;
+          }
         } catch (e) { d.tickerWk = null; }
         /* Stock Ticker chart series (Eric, 2026-10-27): the same
-           roster-value-over-snapshots math as the Team Portfolio
-           chart (tpChart), but players-only to match the tile's
-           "Roster value" total. Players without snapshot history are
-           carried at today's prices, so the last point equals the
-           roster total. Needs 3+ priced players with history. */
+           full-team-value-over-snapshots math as the Team Portfolio
+           chart (tpChart) — players by snapshot history, picks and
+           players without history carried at today's prices, so the
+           last point equals the full team value. Needs 3+ priced
+           players with history. */
         try {
           d.ticker = null;
           if (Array.isArray(d.portfolio)) {
@@ -15515,7 +15580,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
               const n = Math.max(...priced.map(p => p.hist.length));
               if (n >= 2) {
                 const pricedToday = priced.reduce((s, p) => s + (dispVal(p) || 0), 0);
-                const carried = (d.portfolioTotal || 0) - pricedToday;
+                const carried = (d.teamValue != null ? d.teamValue : (d.portfolioTotal || 0)) - pricedToday;
                 const sums = [];
                 for (let j = 0; j < n; j++) {
                   let s = carried;
@@ -15549,23 +15614,35 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             d.tradeIdeas = buys.slice(0, 2).map(s => ({ partner: s.partner ? s.partner.name : "", target: s.target ? s.target.name : "", pos: s.target ? s.target.pos : "", team: s.target ? s.target.team : "", dPpg: s.dPpg || 0 }));
           } else d.tradeIdeas = null;
         } catch (e) { d.tradeIdeas = null; }
+        /* Waiver Targets tile (Eric, 2026-10-27): Sleeper's own
+           most-added players (24h add counts — Sleeper publishes
+           counts, not percentages), filtered to players actually
+           available in THIS league, so the list changes league to
+           league — dynasty stashes in one, redraft streamers in
+           another. The value-based waiver tool itself is untouched. */
         try {
-          if (typeof wvOptimal === "function") {
-            const baseTotal = wvOptimal(me.playerIds).total;
-            const pool = DATA.players.filter(p => !p.owner).map(p => {
-              const add = wvOptimal(me.playerIds.concat([p.id])).total - baseTotal;
-              const score = (p.ros || 0) * (1 + Math.max(0, add) / 10);
-              return { p, add, score };
-            });
-            const startable = pool.filter(m => m.add > 0).sort((a, b) => b.score - a.score || dispVal(b.p) - dispVal(a.p));
-            d.waiverTops = startable.slice(0, 2).map(m => ({ name: m.p.name, pos: m.p.pos, team: m.p.team, add: m.add }));
+          const bake = (typeof window.SLEEPER_TRENDING !== "undefined") ? window.SLEEPER_TRENDING : null;
+          if (bake && typeof bake === "object") {
+            const rostered = new Set();
+            (DATA.teams || []).forEach(t => (t.playerIds || []).forEach(id => rostered.add(String(id))));
+            const rows = Object.keys(bake).map(id => {
+              const p = PBY[id];
+              const adds = (bake[id] && Number(bake[id].adds)) || 0;
+              return (p && p.name && adds > 0 && !rostered.has(String(id))) ? { name: p.name, pos: p.pos, team: p.team, adds } : null;
+            }).filter(Boolean).sort((a, b) => b.adds - a.adds);
+            d.waiverTops = rows.slice(0, 6);
           } else d.waiverTops = null;
         } catch (e) { d.waiverTops = null; }
+        /* Opportunity Radar tile (Eric, 2026-10-27): the wire's
+           flags for this league, biggest names first, up to eight —
+           the tile scrolls, so every flag stays reachable. */
         try {
           if (typeof rdLiveFlags === "function") {
             const live = rdLiveFlags() || [];
             const fas = live.filter(f => { const p = PBY[f.player_id]; return p && !p.owner; });
-            d.radarWatch = fas.slice(0, 3).map(f => ({ name: f.name, pos: f.position, team: f.team, head: (typeof rdHeadline === "function") ? rdHeadline(f) : "" }));
+            const vv = f => { const p = PBY[f.player_id]; return (p && !p.unpriced && typeof dispVal === "function") ? (dispVal(p) || 0) : 0; };
+            fas.sort((a, b) => vv(b) - vv(a));
+            d.radarWatch = fas.slice(0, 8).map(f => ({ id: f.player_id, name: f.name, pos: f.position, team: f.team, head: (typeof rdHeadline === "function") ? rdHeadline(f) : "" }));
           } else d.radarWatch = null;
         } catch (e) { d.radarWatch = null; }
         return d;
@@ -15662,21 +15739,30 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (!ff4.ccDetail[idx]) ff4CCDetail(idx);
       }
 
-      function ff4CCOpen(idx) {
-        ff4.ccDead = true;
+      async function ff4CCOpen(idx) {
         const lg = (ff4.ccLeagues || [])[idx];
-        if (!lg || ff4CCIsActive(lg)) { activateNav("league"); window.scrollTo({ top: 0 }); return; }
+        /* Opening a league from Command Center stays on Command
+           Center (Eric, 2026-10-27): the dashboard re-renders with
+           the new league focused — it never jumps to another tab. */
+        if (!lg) return;
+        if (ff4CCIsActive(lg)) { ff4CCFocusLeague(idx); return; }
+        ff4.ccDead = true;
         if (ff4CCIsEspn(lg)) {
-          /* Reload the stored ESPN connection (it lands on the
-             League Analyzer, like a Sleeper open). If the stored
-             payload can't be re-applied, fall back to the connect
-             dialog rather than a dead tap. */
+          /* Reload the stored ESPN connection, then re-render the
+             dashboard with it focused. If the stored payload can't
+             be re-applied, fall back to the connect dialog rather
+             than a dead tap. */
           if (typeof window.espnActivateStored === "function") {
-            window.espnActivateStored().catch(() => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
+            try {
+              const ok = await window.espnActivateStored();
+              if (ok) { if (typeof window.ff4RenderCC === "function") window.ff4RenderCC(); }
+              else if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
+            } catch (e) { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); }
           } else if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
           return;
         }
-        slpLoadLeague(lg);
+        await slpLoadLeague(lg, { skipTabRefresh: true });
+        if (!window.GUEST_MODE && window.CURRENT_LEAGUE === "conn" && typeof window.ff4RenderCC === "function") window.ff4RenderCC();
       }
 
       function ff4CCRing(d) {
@@ -15703,7 +15789,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const slp = (typeof slpState !== "undefined") ? slpState : null;
         const entry = slp && (slp.leagues || []).find(l => String(l.league_id) === String(lg.league_id));
         if (!entry) { ff4CCOpen(idx); return; }
-        try { await slpLoadLeague(entry); } catch (e) { ff4CCOpen(idx); return; }
+        try { await slpLoadLeague(entry, { skipTabRefresh: true }); } catch (e) { ff4CCOpen(idx); return; }
         let ck = null;
         try { ck = (typeof connLeagueKey === "string") ? connLeagueKey : null; } catch (e) {}
         if (ck && ck !== "sleeper:" + String(lg.league_id)) return;
@@ -15716,9 +15802,18 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const col = frac >= 0.65 ? "#C6FF00" : frac >= 0.35 ? "#00E5FF" : "#FF2E88";
         const oddsLabel = d.clinched ? "Clinched" : (d.odds == null ? "—" : oddsPct(d.odds));
         const oddsSub = d.elim ? "Eliminated from the playoffs" : d.clinched ? "Playoff spot locked up" : (d.odds == null ? "Odds unavailable for this format" : "Chance at the playoffs");
-        tiles.push(`<div class="cc-tile" style="--tile-accent:#C6FF00"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div><div class="cc-tile-sub">${esc(oddsSub)}</div></div></div>`);
+        let magicLine = "";
+        if (d.magic && !d.magic.locked && !d.magic.capped) magicLine = `<div class="cc-tile-sub">Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"} to guarantee a playoff spot</div>`;
+        else if (d.magic && d.magic.capped) magicLine = `<div class="cc-tile-sub">No win total guarantees a spot</div>`;
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#C6FF00"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div><div class="cc-tile-sub">${esc(oddsSub)}</div>${magicLine}</div></div>`);
         const powerBig = d.powerRank == null ? "—" : `#${d.powerRank} of ${d.total}`;
-        tiles.push(`<div class="cc-tile" style="--tile-accent:#00E5FF"><div class="cc-tile-h">Power Rank</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(powerBig)}</div></div></div>`);
+        let powerExtra = "";
+        if (d.powerGrades) powerExtra += `<div class="cc-power-grades">${["QB", "RB", "WR", "TE"].map(pos => `${pos} <b>${esc(d.powerGrades[pos])}</b>`).join(" · ")}</div>`;
+        const archBits = [];
+        if (d.powerCoreAge != null) archBits.push(`Core age ${d.powerCoreAge}`);
+        if (d.powerArch) archBits.push((typeof archTag === "function") ? archTag(d.powerArch) : d.powerArch);
+        if (archBits.length) powerExtra += `<div class="cc-tile-sub">${archBits.map(esc).join(" · ")}</div>`;
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#00E5FF"><div class="cc-tile-h">Power Rank</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(powerBig)}</div>${powerExtra}</div></div>`);
         let tickerChart = "";
         let tickerBig = "";
         if (d.ticker && d.ticker.sums && d.ticker.sums.length >= 2) {
@@ -15731,9 +15826,14 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           const Y = v => PAD + (H - PAD * 2) * (1 - (v - lo) / (hi - lo));
           const line = sums.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
           const area = `M${X(0).toFixed(1)},${Y(sums[0]).toFixed(1)} ` + sums.map((v, i) => `L${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ") + ` L${X(sums.length - 1).toFixed(1)},${(H - PAD).toFixed(1)} L${X(0).toFixed(1)},${(H - PAD).toFixed(1)} Z`;
-          tickerChart = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Roster value history" style="width:100%;height:auto;display:block"><path d="${area}" fill="rgba(255,196,0,.12)"/><polyline points="${line}" fill="none" stroke="#FFC400" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
-          const rp = d.ticker.rangePct;
-          tickerBig = `<div class="cc-tile-big ${rp > 0 ? "t-up" : rp < 0 ? "t-dn" : ""}">${rp > 0 ? "▲ +" : rp < 0 ? "▼ −" : ""}${Math.abs(rp).toFixed(1)}%</div><div class="cc-tile-sub">since ${esc(d.ticker.since)}</div>`;
+          tickerChart = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Team value history" style="width:100%;height:auto;display:block"><path d="${area}" fill="rgba(255,196,0,.12)"/><polyline points="${line}" fill="none" stroke="#FFC400" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+          const wp0 = (d.tickerWk && typeof d.tickerWk.pct === "number") ? d.tickerWk.pct : null;
+          if (wp0 != null) {
+            tickerBig = `<div class="cc-tile-big ${wp0 > 0 ? "t-up" : wp0 < 0 ? "t-dn" : ""}">${wp0 > 0 ? "▲ +" : wp0 < 0 ? "▼ −" : ""}${Math.abs(wp0).toFixed(1)}%</div><div class="cc-tile-sub">this week</div>`;
+          } else {
+            const rp = d.ticker.rangePct;
+            tickerBig = `<div class="cc-tile-big ${rp > 0 ? "t-up" : rp < 0 ? "t-dn" : ""}">${rp > 0 ? "▲ +" : rp < 0 ? "▼ −" : ""}${Math.abs(rp).toFixed(1)}%</div><div class="cc-tile-sub">since ${esc(d.ticker.since)}</div>`;
+          }
         } else if (d.tickerWk && typeof d.tickerWk.pct === "number") {
           const wp = d.tickerWk.pct;
           tickerBig = `<div class="cc-tile-big ${wp > 0 ? "t-up" : wp < 0 ? "t-dn" : ""}">${wp > 0 ? "▲ +" : wp < 0 ? "▼ −" : ""}${Math.abs(wp).toFixed(1)}%</div><div class="cc-tile-sub">this week</div>`;
@@ -15744,11 +15844,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         } else {
           tickerBig = `<div class="cc-tile-sub">Value history needs more snapshots.</div>`;
         }
-        let tickerSub = `<div class="cc-tile-sub">Roster value ${fmt(d.portfolioTotal || 0)}</div>`;
-        if (d.ticker && d.tickerWk && typeof d.tickerWk.pct === "number") {
-          const wp = d.tickerWk.pct;
-          tickerSub = `<div class="cc-tile-sub">Roster value ${fmt(d.portfolioTotal || 0)} · ${wp > 0 ? "▲ +" : wp < 0 ? "▼ −" : ""}${Math.abs(wp).toFixed(1)}% this week</div>`;
-        }
+        let tickerSub = `<div class="cc-tile-sub">Team value ${fmt(d.teamValue != null ? d.teamValue : (d.portfolioTotal || 0))}</div>`;
         tiles.push(`<div class="cc-tile" style="--tile-accent:#FFC400"><div class="cc-tile-h">Stock Ticker</div><div class="cc-tile-body">${tickerChart}${tickerBig}${tickerSub}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="teamport">Full portfolio →</button></div></div>`);
         let movesBody = "";
         if (snap && snap.queueItems && snap.queueItems.length) {
@@ -15760,7 +15856,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         } else {
           movesBody = `<p class="cc-tile-sub">See Needs You First above.</p>`;
         }
-        tiles.push(`<div class="cc-tile" style="--tile-accent:#FF6B35"><div class="cc-tile-h">Your Next Three Moves</div><div class="cc-tile-body">${movesBody}</div></div>`);
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#FF6B35"><div class="cc-tile-h">Your Next Moves</div><div class="cc-tile-body">${movesBody}</div></div>`);
         let matchBody = "";
         if (d.matchup) {
           const m = d.matchup;
@@ -15779,11 +15875,14 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         tiles.push(`<div class="cc-tile" style="--tile-accent:#B388FF"><div class="cc-tile-h">This Week's Matchup</div><div class="cc-tile-body">${matchBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="lineup">Lineup Analyzer →</button></div></div>`);
         let watchBody = "";
         if (Array.isArray(d.radarWatch) && d.radarWatch.length) {
-          watchBody = `<div class="cc-tile-rows">` + d.radarWatch.map(w => `<div class="cc-tile-row"><span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span></div><div class="cc-tile-sub" style="margin-top:-4px">${esc(w.head)}</div>`).join("") + `</div>`;
+          watchBody = `<div class="cc-tile-rows">` + d.radarWatch.map(w => {
+            const face = (typeof window.hsImg === "function") ? window.hsImg({ id: w.id }, "cc-radar-face") : "";
+            return `<div class="cc-radar-row">${face}<span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span></div><div class="cc-tile-sub" style="margin-top:-4px">${esc(w.head)}</div>`;
+          }).join("") + `</div>`;
         } else {
           watchBody = `<p class="cc-tile-sub">No Radar flags on the wire this week.</p>`;
         }
-        tiles.push(`<div class="cc-tile" style="--tile-accent:#FF4081"><div class="cc-tile-h">Watchlist</div><div class="cc-tile-body">${watchBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="radar">Opportunity Radar →</button></div></div>`);
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#FF4081"><div class="cc-tile-h">Opportunity Radar</div><div class="cc-tile-body">${watchBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="radar">Opportunity Radar →</button></div></div>`);
         let tradeBody = "";
         if (Array.isArray(d.tradeIdeas) && d.tradeIdeas.length) {
           tradeBody = `<div class="cc-tile-rows">` + d.tradeIdeas.map(s => `<div class="cc-tile-row"><span class="t-name">${esc(s.target)} <span class="t-meta">${esc(s.pos)} · ${esc(s.team || "")}</span></span><span class="t-val">+${s.dPpg.toFixed(1)} pts/wk</span></div><div class="cc-tile-sub" style="margin-top:-4px">from ${esc(s.partner)}</div>`).join("") + `</div>`;
@@ -15793,14 +15892,14 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         tiles.push(`<div class="cc-tile" style="--tile-accent:#69F0AE"><div class="cc-tile-h">Trade Ideas</div><div class="cc-tile-body">${tradeBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="targets">Player Targets →</button></div></div>`);
         let wvBody = "";
         if (Array.isArray(d.waiverTops) && d.waiverTops.length) {
-          wvBody = `<div class="cc-tile-rows">` + d.waiverTops.map(w => `<div class="cc-tile-row"><span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span><span class="t-val">+${w.add.toFixed(1)} pts/wk</span></div>`).join("") + `</div>`;
+          wvBody = `<div class="cc-tile-rows">` + d.waiverTops.map(w => `<div class="cc-tile-row"><span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span><span class="t-val">+${fmt(w.adds)} adds</span></div>`).join("") + `</div>`;
         } else {
-          wvBody = `<p class="cc-tile-sub">No waiver add beats your starters this week.</p>`;
+          wvBody = `<p class="cc-tile-sub">No trending adds available in this league this week.</p>`;
         }
         tiles.push(`<div class="cc-tile" style="--tile-accent:#448AFF"><div class="cc-tile-h">Waiver Targets</div><div class="cc-tile-body">${wvBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="waivers">Waiver Targets →</button></div></div>`);
         tiles.push(`<div class="cc-tile" style="--tile-accent:#FF2E88"><div class="cc-tile-h">Fantasy Tools</div><div class="cc-tile-body"><div class="cc-tile-rows">
           <button type="button" class="cc-tool-link" data-cc-grid-tool="bye">Bye Week Planner</button>
-          <button type="button" class="cc-tool-link" data-cc-grid-tool="radar">Opportunity Radar</button>
+          <button type="button" class="cc-tool-link" data-cc-grid-tool="risk">Starters at Risk</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="trades">Trade Calculator</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="lineup">Lineup Analyzer</button>
         </div></div></div>`);
@@ -15816,31 +15915,21 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           spot.innerHTML = `<p class="cc-status cc-loading">Loading your leagues…</p>`; return;
         }
         const d = ff4.ccDetail[idx];
-        if (!d) { spot.innerHTML = `<p class="cc-status cc-loading">Building this league's full picture — odds ring, magic number, swing game, value trend…</p>`; return; }
+        if (!d) { spot.innerHTML = `<p class="cc-status cc-loading">Building this league's full picture…</p>`; return; }
         if (d.failed) {
           spot.innerHTML = `<div class="cc-name">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div><p class="cc-status">This league couldn't be loaded here. Open it in full to see everything.</p><button type="button" class="cc-enter" data-cc-open="1">Open league →</button>`;
           const fb = spot.querySelector("[data-cc-open]"); if (fb) fb.addEventListener("click", () => ff4CCOpen(idx));
           return;
         }
-        const lines = [];
-        if (d.noSim) lines.push(`<div class="cc-line">Playoff odds need the full-field season sim, which runs on a complete league table — open the league for its full picture.</div>`);
-        else if (d.fmtValid === false) lines.push(`<div class="cc-line">This league's playoff format couldn't be read from its settings, so there's no magic number or swing game here — the odds ring still comes from the season sim.</div>`);
-        else if (d.magic && d.magic.locked) lines.push(`<div class="cc-line"><b>Playoff spot locked up.</b> No magic number needed — the sim puts you in every time.</div>`);
-        else if (d.magic) lines.push(d.magic.capped
-          ? `<div class="cc-line"><b>No clinching number</b> — even winning out (${d.magic.n} more win${d.magic.n === 1 ? "" : "s"}) only gets your playoff odds to ~${oddsPct(d.magic.pct)}; no win total guarantees a spot.</div>`
-          : `<div class="cc-line"><b>Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"}</b> — that takes your playoff odds to ~${oddsPct(d.magic.pct)} if the other games go to the favorites.</div>`);
-        if (d.swing && Math.abs(d.swing.d) < 0.0005) lines.push(`<div class="cc-line"><b>Biggest swing game:</b> no other matchup materially changes your odds.</div>`);
-        else if (d.swing) lines.push(`<div class="cc-line"><b>Biggest swing game:</b> ${esc(d.swing.aName)} vs ${esc(d.swing.bName)} — if ${esc(d.swing.dogName)} wins instead, your odds move <span class="cc-delta">${ff4PP(d.swing.d)}</span>.</div>`);
-        else if (d.fmtValid && d.noPairs) lines.push(`<div class="cc-line">No matchup pairings are published for this league this week, so there's no swing game to call.</div>`);
-        if (d.status) lines.push(`<div class="cc-line">${esc(d.status)}</div>`);
+        /* Spot footnotes retired (Eric, 2026-10-27): the magic
+           number now lives in the Playoff Odds tile; the swing
+           game and value-trend lines are gone entirely. */
         spot.innerHTML = `<div class="cc-spot-top"><div>
             <div class="cc-spot-team">${esc(d.teamName)}${d.record ? ` <span class="cc-spot-record">${esc(d.record)}</span>` : ""} <span class="you-tag">Your team</span></div>
             <div class="cc-spot-league">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div>
             <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
           </div><div class="cc-spot-actions"><button type="button" class="cc-enter" data-cc-open="1">Open league →</button><button type="button" class="cc-hide" data-cc-hide="1">Hide league</button></div></div>
-          <div class="cc-grid">${ff4CCGridHtml(idx, d)}</div>
-          ${lines.length ? `<div class="cc-lines">${lines.join("")}</div>` : ""}
-          ${d.spark ? `<div class="cc-spark">${d.spark}</div>` : ""}`;
+          <div class="cc-grid">${ff4CCGridHtml(idx, d)}</div>`;
         const ob = spot.querySelector("[data-cc-open]"); if (ob) ob.addEventListener("click", () => ff4CCOpen(idx));
         const hb = spot.querySelector("[data-cc-hide]"); if (hb) hb.addEventListener("click", () => ff4CCHideLeague(idx));
         spot.querySelectorAll("[data-cc-grid-tool]").forEach(b => b.addEventListener("click", () => ff4CCGoTool(idx, b.dataset.ccGridTool)));
@@ -16667,7 +16756,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           const slp = (typeof slpState !== "undefined") ? slpState : null;
           const lg = slp && (slp.leagues || []).find(l => String(l.league_id) === o.leagueId);
           if (!lg) return;
-          try { await slpLoadLeague(lg); } catch (e) { return; }
+          try { await slpLoadLeague(lg, { skipTabRefresh: true }); } catch (e) { return; }
           if (connLeagueKey !== "sleeper:" + o.leagueId) return;
         }
         try {
