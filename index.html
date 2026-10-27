@@ -15933,6 +15933,14 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const lg = (ff4.ccLeagues || [])[idx];
         const go = () => {
           if (navKey === "ppath" && typeof goLeagueSub === "function") goLeagueSub("ppath");
+          else if (navKey === "psched") {
+            if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
+            if (typeof window.renderLifeline === "function") window.renderLifeline();
+            window.__subnavNext = window.__subnavNext || {};
+            window.__subnavNext.league = "odds";
+            activateNav("league", "#po-sched");
+          }
+          else if (navKey === "risers") activateNav("values", "#movers-block");
           else if ((navKey === "odds" || navKey === "power") && typeof goLeagueSub === "function") goLeagueSub(navKey);
           else if (navKey === "moves") { if (typeof ff4RenderMoves === "function") ff4RenderMoves(idx); activateNav("moves"); }
           else activateNav(navKey);
@@ -16050,12 +16058,20 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           wvBody = `<p class="cc-tile-sub">No trending adds this week.</p>`;
         }
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="waivers" style="--tile-accent:#448AFF"><div class="cc-tile-h">Waiver Targets</div><div class="cc-tile-body">${wvBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="waivers">Waiver Targets →</button></div></div>`);
-        tiles.push(`<div class="cc-tile" style="--tile-accent:#FF2E88"><div class="cc-tile-h">Fantasy Tools</div><div class="cc-tile-body"><div class="cc-tile-rows">
-          <button type="button" class="cc-tool-link" data-cc-grid-tool="bye">Bye Week Planner</button>
+        /* Fantasy Tools tile (Eric, 2026-10-27): eight links — the
+           tile body already scrolls inside the fixed 240px tile,
+           so about four show and the rest scroll into view, exactly
+           as the other tiles scroll their rows. Real Trades stays
+           dynasty-only, matching the nav's own rule. */
+        const toolsLinks = `<button type="button" class="cc-tool-link" data-cc-grid-tool="bye">Bye Week Planner</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="ppath">Playoff Path</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="trades">Trade Calculator</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="lineup">Lineup Analyzer</button>
-        </div></div></div>`);
+          ${((d.chips || [])[0] === "Redraft") ? "" : `<button type="button" class="cc-tool-link" data-cc-grid-tool="realtrades">Real Trades</button>`}
+          <button type="button" class="cc-tool-link" data-cc-grid-tool="risers">Risers &amp; Fallers</button>
+          <button type="button" class="cc-tool-link" data-cc-grid-tool="psched">Schedule Difficulty</button>
+          <button type="button" class="cc-tool-link" data-cc-grid-tool="risk">Starters at Risk</button>`;
+        tiles.push(`<div class="cc-tile" style="--tile-accent:#FF2E88"><div class="cc-tile-h">Fantasy Tools</div><div class="cc-tile-body"><div class="cc-tile-rows">${toolsLinks}</div></div></div>`);
         return tiles.join("");
       }
       /* Your Next Moves view (Eric, 2026-10-27): the focused
