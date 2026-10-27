@@ -2819,6 +2819,7 @@
         <button type="button" role="tab" data-pnav-sub="moves" data-group="myteam" aria-selected="false" hidden>Next Moves</button>
         <button type="button" role="tab" data-pnav-sub="trades" data-group="trades" aria-selected="false" hidden>Trade Calculator</button>
         <button type="button" role="tab" data-pnav-sub="targets" data-group="trades" aria-selected="false" hidden>Player Targets<span class="launch-badge">Free during launch</span></button>
+        <button type="button" role="tab" data-pnav-sub="upgrades" data-group="trades" aria-selected="false" hidden>Upgrade Finder</button>
         <button type="button" role="tab" data-pnav-sub="counter" data-group="trades" aria-selected="false" hidden>Counteroffers</button>
         <button type="button" role="tab" data-pnav-sub="realtrades" data-group="trades" aria-selected="false" hidden>Real Trades</button>
         <button type="button" role="tab" data-pnav-sub="tradeboard" data-group="trades" aria-selected="false" hidden>Trade Board</button>
@@ -3092,6 +3093,10 @@
           <summary>How Personalized Player Targets work</summary>
           <p class="tab-intro finder-part" id="finder-intro">Pick a team and Player Targets works <strong>your window</strong>, not just your needs. A <strong>Win-Now ⏳</strong> team only sees buys: picks, prospects and depth go out, production comes in — and every idea is checked against the rest-of-season projections, so a deal that lowers your optimal lineup’s projected points per week <strong>never appears</strong>, however the values balance. A <strong>Dynasty 👑</strong> team sees buys too, but pickier ones: only clear upgrades, paid for with draft capital, so the young core stays intact. A <strong>Rebuilder 🔨</strong> only sees sells: veteran starters converted into picks and young players, each one graded by the calculator’s fairness meter — value adjustment included — and only <strong>Fair</strong> or <strong>Close</strong> offers are shown. <strong>Crossroads 🔀</strong> teams choose a direction: two labeled paths, <em>Go Win-Now ⏳</em> and <em>Go Rebuilder 🔨</em>, each held to its own window’s rules.</p>
         </details>
+      </section>
+
+      <section class="tab" id="tab-upgrades" role="tabpanel">
+        <div id="uf-trades-wrap"></div>
       </section>
 
       <section class="tab" id="tab-realtrades" role="tabpanel">
@@ -4577,7 +4582,7 @@
         "Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot; injuries and news after that date are not priced in.";
 
       /* ---------- tabs ---------- */
-      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", moves: "tab-moves" };
+      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", upgrades: "tab-upgrades", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", moves: "tab-moves" };
       const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, tradeboard: 1, teamport: 1, command: 1, radar: 1, format: 1, how: 1 };
       function activateNav(key, arg) {
         const viewKey = key === "risk" ? "lineup" : key;
@@ -8551,11 +8556,9 @@ ${rdP ? "" : `
           </div>
           ${movesHtml}
           <div class="mv-grid">${tbl("Current starters (snapshot)", cur, curTotal, kdSlots.length ? { rows: "", totNote: true } : null)}${tbl("Optimal Week " + VW, opt.lineup, opt.total, kdSlots.length ? { rows: kdSlots.map(kdRowHtml).join(""), totNote: true } : null)}</div>
-          <div id="uf-wrap"></div>
           ${byeHtml}
           ${matchHtml}`;
         if (typeof window.renderRiskPanel === "function") window.renderRiskPanel(team, cur, opt, VW);
-        if (typeof renderUpgradeFinder === "function") renderUpgradeFinder(team, rid);
       }
 
       /* ---------- Bye Week Planner (Fantasy Tools view) ----------
@@ -8768,7 +8771,7 @@ ${rdP ? "" : `
     <script>
       "use strict";
       /* ================= Upgrade Finder (Eric, 2026-10-27) =================
-         From the Lineup tab: your rest-of-season best lineup, every slot
+         From the Trades tab: your rest-of-season best lineup, every slot
          shown, each player clickable. Click a player, pick roughly how
          many more points a week you want from that slot, and the finder
          shows players on selling teams who project in a loose band
@@ -8782,7 +8785,7 @@ ${rdP ? "" : `
          loads into the Trade Calculator with the same "Grade it" button.
          Nothing here is hardcoded: every number comes from the
          connected league's own roster, projections, and prices. */
-      const ufState = { rid: null, anchorId: null, slotKey: null, slotLabel: null, bump: 3, cacheKey: "", cacheHtml: "" };
+      const ufState = { rid: null, anchorId: null, slotKey: null, slotLabel: null, bump: 3, cacheKey: "", cacheHtml: "", wrapId: null };
       const ufF1 = x => (Math.round(x * 10) / 10).toFixed(1);
       /* starterSlots() labels repeat (WR x3, FLEX x3) - number the repeats
          so the clicked slot reads WR3, FLEX2, the way the user talks. */
@@ -8835,14 +8838,14 @@ ${rdP ? "" : `
           if (!starterCache.has(partnerRid)) starterCache.set(partnerRid, lineupSet(partnerRid));
           return starterCache.get(partnerRid);
         };
-        const results = [];
+        const band = [], value = [];
         const partners = DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty")));
         partners.forEach(partner => {
           teamPlayers(partner.rid)
             .filter(p => slotCands.includes(p.pos) && dispVal(p) >= floor && (p.ros || 0) > 0)
             .forEach(cand => {
               const ros = rosProj(cand);
-              if (ros < lo || ros > hi) return;
+              if (ros < lo) return;
               const tv = dispVal(cand);
               const tryPkg = (pool, anchorArg) => {
                 let pkg = buildPackage(pool, tv, 0.90, 1.12, anchorArg, tv);
@@ -8859,12 +8862,25 @@ ${rdP ? "" : `
               const pb = tryPkg(payPoolNoAnchor, null);
               if (pb) pkgs.push({ pkg: pb, withAnchor: false });
               if (!pkgs.length) return;
-              results.push({ partner, cand, ros, gain: ros - anchorRos, pkgs: pkgs.slice(0, 2),
-                role: startsFor(partner.rid).has(cand.id) ? "starts for" : "is depth on" });
+              const rec = { partner, cand, ros, gain: ros - anchorRos, pkgs: pkgs.slice(0, 2),
+                role: startsFor(partner.rid).has(cand.id) ? "starts for" : "is depth on" };
+              /* Two lists, one pass. The band is the asked bump, loose.
+                 The value list is everything ABOVE the band — players
+                 projecting significantly more than asked — ranked by
+                 value per projected point, cheapest production first.
+                 That is where the old-but-productive players live:
+                 their dynasty value is age-discounted while their
+                 weekly projection stays high, so they cost far less
+                 per point than the young stars in the band. No player
+                 is ever named here — the pattern falls out of the
+                 numbers (Eric, 2026-10-27). */
+              if (ros <= hi) band.push(rec);
+              else value.push(rec);
             });
         });
-        results.sort((a, b) => Math.abs(a.gain - bump) - Math.abs(b.gain - bump) || b.ros - a.ros);
-        return results.slice(0, 10);
+        band.sort((a, b) => Math.abs(a.gain - bump) - Math.abs(b.gain - bump) || b.ros - a.ros);
+        value.sort((a, b) => (dispVal(a.cand) / a.ros) - (dispVal(b.cand) / b.ros) || b.ros - a.ros);
+        return { band: band.slice(0, 10), value: value.slice(0, 5) };
       }
       function ufPkgGrade(pkg, tv) {
         try {
@@ -8893,26 +8909,33 @@ ${rdP ? "" : `
         if (anchor.unpriced) {
           html = `<div class="diag"><h3>No projection to measure from</h3><p>${esc(anchor.name)} has no rest-of-season projection, so there is no bump to measure from. Pick a priced starter instead.</p></div>`;
         } else {
-          const results = ufFind(rid, team, anchor, slotCands, bump);
-          if (!results.length) {
+          const { band, value } = ufFind(rid, team, anchor, slotCands, bump);
+          if (!band.length && !value.length) {
             html = `<div class="diag"><h3>No fit at that bump</h3><p>${VALMODE === "redraft" ? "No player on another roster" : "No player on a selling team"} fits that bump for the ${esc(slotLabel)} slot. Try a smaller bump, or a different player.</p></div>`;
           } else {
-            html = `<div class="wv-card"><h3>Upgrades around +${bump.toFixed(1)} a week for ${esc(anchor.name)}</h3>` + results.map(r => {
+            /* Concise by default (Eric, 2026-10-27): one line per
+               target — name plus added points — and the trade itself
+               lives behind a small toggle under each line, so the
+               list scans instead of sprawling. */
+            const rowHtml = r => {
               const arch = VALMODE === "redraft" ? "" : ` ${archTag(r.partner.arch)}`;
               const pkgHtml = r.pkgs.map(({ pkg, withAnchor }) => {
                 const assets = pkg.map(a => `${esc(a.label)} (${fmt(a.value)})`).join(" + ");
                 const grade = ufPkgGrade(pkg, dispVal(r.cand));
                 return `<div style="margin-top:8px;"><span class="who">You send: ${assets}</span><div class="sub">${withAnchor ? `Includes ${esc(anchor.name)} - the player being replaced` : `Keeps ${esc(anchor.name)} on your bench`}${grade ? ` - ${grade} of fair` : ""}</div>${ufGradeBtn(rid, r.partner.rid, pkg, r.cand)}</div>`;
               }).join("");
-              return `<div class="mv-row"><div>${hsImg(r.cand, "phs-sm")}<span class="who">${esc(r.cand.name)}${desigChip(r.cand)}</span> <span class="sub">${logoImg(r.cand.team)}${esc(r.cand.team)} - ${r.cand.pos}${r.cand.posRank} - ${esc(r.role)} ${esc(r.partner.name)}${arch}</span><div class="sub">Projects ${ufF1(r.ros)} pts/wk the rest of the way</div>${pkgHtml}</div><div class="delta"><span class="lu-delta up">+${ufF1(r.gain)} pts/wk</span><div class="sub">at ${esc(slotLabel)}</div></div></div>`;
-            }).join("") + `</div>`;
+              return `<div class="mv-row" style="display:block;"><div>${hsImg(r.cand, "phs-sm")}<span class="who">${esc(r.cand.name)}${desigChip(r.cand)}</span> <span class="lu-delta up">+${ufF1(r.gain)} pts/wk</span> <span class="sub">${logoImg(r.cand.team)}${esc(r.cand.team)} - ${r.cand.pos}${r.cand.posRank} - ${esc(r.role)} ${esc(r.partner.name)}${arch}</span></div><button type="button" class="uf-show" data-uf-show="toggle" aria-expanded="false" style="margin-top:6px;">See who to trade for ▸</button><div class="uf-pkgs" hidden>${pkgHtml}</div></div>`;
+            };
+            const groupHtml = (title, rows) => rows.length ? `<div style="font-weight:700;margin:12px 0 4px;">${title}</div>` + rows.map(rowHtml).join("") : "";
+            html = `<div class="wv-card"><h3>Upgrades around +${bump.toFixed(1)} a week for ${esc(anchor.name)}</h3>` + groupHtml("Close to your target", band) + groupHtml("Best value — bigger jump, cheaper to buy", value) + `</div>`;
           }
         }
         ufState.cacheKey = key; ufState.cacheHtml = html;
         return html;
       }
-      function renderUpgradeFinder(team, rid) {
-        const wrap = document.getElementById("uf-wrap");
+      function renderUpgradeFinder(team, rid, wrapId) {
+        if (wrapId) ufState.wrapId = wrapId;
+        const wrap = document.getElementById(ufState.wrapId || "uf-wrap");
         if (!wrap || !team || window.GUEST_MODE) { if (wrap) wrap.innerHTML = ""; return; }
         if (ufState.rid !== rid) { ufState.rid = rid; ufState.anchorId = null; ufState.slotKey = null; ufState.slotLabel = null; }
         const anchor = ufState.anchorId ? PBY[ufState.anchorId] : null;
@@ -8941,16 +8964,38 @@ ${rdP ? "" : `
           ${sel ? "" : `<p class="wv-sub">Click any player above to start.</p>`}</div>
           ${panel}`;
       }
+      /* Trades-tab entry: your team in the currently loaded league.
+         Rendered on activation (and on tab refresh). Guest mode gets
+         an honest connect note, never a fake lineup. */
+      function renderUpgradeFinderTrades() {
+        const wrap = document.getElementById("uf-trades-wrap");
+        if (!wrap) return;
+        const note = `<div class="mv-card"><h3>Upgrade Finder</h3><p class="wv-sub">Connect a league to find upgrades for your lineup.</p></div>`;
+        if (window.GUEST_MODE) { wrap.innerHTML = note; return; }
+        const team = (DATA.teams || []).find(t => t.isUser) || null;
+        if (!team) { wrap.innerHTML = note; return; }
+        renderUpgradeFinder(team, team.rid, "uf-trades-wrap");
+      }
       if (!window.__ufWired) {
         window.__ufWired = true;
         document.addEventListener("click", e => {
+          const show = e.target.closest("[data-uf-show]");
+          if (show) {
+            const box = show.nextElementSibling;
+            if (box && box.classList.contains("uf-pkgs")) {
+              box.hidden = !box.hidden;
+              show.textContent = box.hidden ? "See who to trade for ▸" : "Hide the trade ▾";
+              show.setAttribute("aria-expanded", String(!box.hidden));
+            }
+            return;
+          }
           const row = e.target.closest("[data-uf-pick]");
           if (!row) return;
           const id = Number(row.dataset.ufPick);
           if (ufState.anchorId === id) { ufState.anchorId = null; ufState.slotKey = null; ufState.slotLabel = null; }
           else { ufState.anchorId = id; ufState.slotKey = row.dataset.ufSlot; ufState.slotLabel = row.dataset.ufLabel; }
           ufState.cacheKey = "";
-          if (ufState.rid != null && TBY[ufState.rid]) renderUpgradeFinder(TBY[ufState.rid], ufState.rid);
+          if (ufState.rid != null && TBY[ufState.rid]) renderUpgradeFinder(TBY[ufState.rid], ufState.rid, ufState.wrapId);
         });
         document.addEventListener("input", e => {
           if (e.target && e.target.id === "uf-bump") {
@@ -8962,7 +9007,7 @@ ${rdP ? "" : `
           if (e.target && e.target.id === "uf-bump") {
             ufState.bump = parseFloat(e.target.value);
             ufState.cacheKey = "";
-            if (ufState.rid != null && TBY[ufState.rid]) renderUpgradeFinder(TBY[ufState.rid], ufState.rid);
+            if (ufState.rid != null && TBY[ufState.rid]) renderUpgradeFinder(TBY[ufState.rid], ufState.rid, ufState.wrapId);
           }
         });
       }
@@ -9603,7 +9648,18 @@ ${rdP ? "" : `
           const srcLineup = nxtOk ? nxt.starters : (r.starters || []);
           const lineup = srcLineup.map((pid, i) => ({ id: pid, slot: slotLabel(startSlots[i] || "") }))
             .filter(l => KEEP_SLOTS.includes(l.slot));
-          const lineupWeek = (nxtOk && typeof week === "number") ? week + 1 : week;
+          /* A set lineup Sleeper already rolled forward still names next
+             week's starters even when it came from rosters[] (the
+             next-week entry fetch failed, or the rollover landed after
+             the entry was read): if the chosen starters match an
+             unplayed next-week entry exactly, the lineup IS next
+             week's set, whatever its source — label it so, or the
+             queue's bye check reads last week's byes against this
+             week's lineup (Tuten, Week 7 bye, flagged in Week 8). */
+          const nxtSet = (nxt && Array.isArray(nxt.starters)) ? new Set(nxt.starters.map(String)) : null;
+          const srcSet = new Set(srcLineup.map(String));
+          const matchesNext = !!(nxt && (nxt.points == null || nxt.points === 0) && nxtSet && srcSet.size > 0 && nxtSet.size === srcSet.size && [...srcSet].every(id => nxtSet.has(id)));
+          const lineupWeek = ((nxtOk || matchesNext) && typeof week === "number") ? week + 1 : week;
           return {
             rid: r.roster_id,
             name: teamNameOf(r),
@@ -9691,11 +9747,27 @@ ${rdP ? "" : `
           t.picksVal = t.picks.reduce((s2, pk) => s2 + pk.value, 0);
         });
         /* ---- this week's opponents from matchups ---- */
+        /* The preview this feeds is for the week to be played, not
+           the display week: once the display week's results are in
+           the records (most games any team has played >= the display
+           week — the same signal the season sim's effective week
+           uses), the week to be played is week + 1 and its pairings
+           live in matchupsNext; while the week is still in progress,
+           the pairings are the display week's own. Getting this wrong
+           pairs every team with last week's opponent (Eric,
+           2026-10-27: the preview said Week 8 against the Week 7
+           opponent). */
         let opp6 = null;
-        if (b.matchups && b.matchups.length) {
+        const maxGames = (rosters || []).reduce((m, r) => {
+          const s = r.settings || {};
+          return Math.max(m, (s.wins || 0) + (s.losses || 0) + (s.ties || 0));
+        }, 0);
+        const weekDone = (typeof week === "number") && maxGames >= week;
+        const oppSrc = (weekDone && b.matchupsNext && b.matchupsNext.length) ? b.matchupsNext : b.matchups;
+        if (oppSrc && oppSrc.length) {
           opp6 = {};
           const groups = {};
-          b.matchups.forEach(m => { (groups[m.matchup_id] = groups[m.matchup_id] || []).push(m.roster_id); });
+          oppSrc.forEach(m => { (groups[m.matchup_id] = groups[m.matchup_id] || []).push(m.roster_id); });
           Object.values(groups).forEach(g => {
             if (g.length === 2) { opp6[String(g[0])] = g[1]; opp6[String(g[1])] = g[0]; }
           });
@@ -10365,6 +10437,7 @@ ${rdP ? "" : `
           else if (key === "tradeboard" && typeof window.ff4TBEnsure === "function") window.ff4TBEnsure(false);
           else if (key === "command" && typeof window.ff4RenderCC === "function") window.ff4RenderCC();
           else if (key === "moves" && typeof window.ff4RenderMovesCurrent === "function") window.ff4RenderMovesCurrent();
+          else if (key === "upgrades" && typeof window.renderUpgradeFinderTrades === "function") window.renderUpgradeFinderTrades();
           else if (key === "league") {
             if (typeof window.ff4RenderPP === "function") setTimeout(window.ff4RenderPP, 40);
             if (typeof window.renderLifeline === "function") setTimeout(() => window.renderLifeline(), 40);
@@ -15561,8 +15634,9 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
 
       /* The queue's "starters" are the roster's ACTUAL set lineup —
          the built team's `lineup`, which buildConnLeague sources
-         from Sleeper's rosters[].starters — whenever it names
-         anyone. Only when no set lineup is available (guest / demo)
+         from next week's matchup entry when it is unplayed and
+         full-length, else from Sleeper's rosters[].starters.
+         Only when no set lineup is available (guest / demo)
          does the queue fall back to a value-optimal fill of the
          league's starter slots over the full roster (bestBallLineup()
          can't source that fill — it deliberately excludes Out/IR
@@ -15587,10 +15661,27 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
 
       function ff4CCQueueFor(me, wk) {
         const items = [];
+        /* Out / Doubtful rows also carry the player's rest-of-season
+           projection when it is positive (Eric, 2026-10-27: a stale Out
+           tag must never hide real projected points — DJ Moore and
+           Breece Hall both project points while flagged Out). The
+           weekly engine is not used here on purpose: it zeroes a
+           player whose designation conflicts with his projection
+           (the optimizer's auto-bench rule), which would hide exactly
+           the points this row exists to show. The rest-of-season rate
+           is week-independent and is the same number the lineup rows
+           show. Bye rows carry no projection: a bye means no game, so
+           there is nothing to project. */
+        const projTxt = p => {
+          try {
+            const rp = rosProj(p);
+            return (typeof rp === "number" && isFinite(rp) && rp > 0) ? " · projects " + (Math.round(rp * 10) / 10).toFixed(1) + " pts/wk" : "";
+          } catch (e) { return ""; }
+        };
         ff4CCStarters(me).forEach(p => {
-          if (p.inj === "Out" || p.inj === "IR") items.push({ prio: 0, cls: "out", player: p.name, issue: (p.inj === "IR" ? "Injured reserve" : "Out") + (p.ibp ? " — " + p.ibp : "") });
+          if (p.inj === "Out" || p.inj === "IR") items.push({ prio: 0, cls: "out", player: p.name, issue: (p.inj === "IR" ? "Injured reserve" : "Out") + (p.ibp ? " — " + p.ibp : "") + projTxt(p) });
           else if (window.TEAM_BYE && window.TEAM_BYE[p.team] === wk) items.push({ prio: 1, cls: "bye", player: p.name, issue: "On bye in Week " + wk });
-          else if (p.inj === "Doubtful") items.push({ prio: 2, cls: "dbt", player: p.name, issue: "Doubtful" + (p.ibp ? " — " + p.ibp : "") });
+          else if (p.inj === "Doubtful") items.push({ prio: 2, cls: "dbt", player: p.name, issue: "Doubtful" + (p.ibp ? " — " + p.ibp : "") + projTxt(p) });
         });
         return items;
       }
@@ -15938,9 +16029,12 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         /* Matchup advance (Eric, 2026-10-27): once the current
            week's result is in the records (games played >= the
            site's week), the tile shows NEXT week's pairing, not a
-           finished game. Next-week totals are ROS-based
-           (optimalLineup) — weekly lines for next week don't exist
-           yet — while the current-week tile keeps the weekly engine. */
+           finished game. Next-week totals use the same weekly
+           optimizer as the current-week tile (Eric, 2026-10-27):
+           the coming week's optimizer for both teams — weekly lines
+           where they exist, the rest-of-season estimate where they
+           don't — so the preview is best-vs-best for the week it
+           names, not a rest-of-season rate dressed as a weekly score. */
         try {
           const wkM = Number(DATA.league.week) || 0;
           const gamesPlayed = (me.record.match(/\d+/g) || []).reduce((s2, n) => s2 + Number(n), 0);
@@ -15950,9 +16044,10 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           const opp = oppRid != null ? TBY[oppRid] : null;
           if (opp && typeof normCdf === "function") {
             const sig = (typeof LU_SIGMA !== "undefined") ? LU_SIGMA : 30;
-            if (useNext && typeof optimalLineup === "function") {
-              const myOpt = optimalLineup(me.playerIds);
-              const oppOpt = optimalLineup(opp.playerIds);
+            if (useNext && typeof wkOptimal === "function" && typeof wkActiveWeek === "function") {
+              const wk = wkActiveWeek();
+              const myOpt = wkOptimal(me.playerIds, wk);
+              const oppOpt = wkOptimal(opp.playerIds, wk);
               if (myOpt.total > 0 && oppOpt.total > 0) {
                 d.matchup = { oppName: opp.name, oppRecord: opp.record, myProj: myOpt.total, oppProj: oppOpt.total, winP: normCdf((myOpt.total - oppOpt.total) / (sig * Math.SQRT2)), week: wkM + 1, advanced: true };
               } else d.matchup = null;
@@ -16328,7 +16423,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (d.matchup) {
           const m = d.matchup;
           const mx = Math.max(m.myProj, m.oppProj, 1);
-          matchBody = `${m.advanced ? `<div class="cc-tile-sub" style="margin-bottom:8px">Next-week preview — ROS-based, weekly lines aren't out yet.</div>` : ""}<div class="cc-tile-sub" style="margin-bottom:8px">vs ${esc(m.oppName)} (${esc(m.oppRecord || "")})</div>
+          matchBody = `${m.advanced ? `<div class="cc-tile-sub" style="margin-bottom:8px">Next-week preview — both teams at their best lineup.</div>` : ""}<div class="cc-tile-sub" style="margin-bottom:8px">vs ${esc(m.oppName)} (${esc(m.oppRecord || "")})</div>
             <div class="cc-tile-rows">
               <div class="cc-tile-row"><span class="t-name">Your optimal</span><span class="t-val">${m.myProj.toFixed(1)} pts</span></div>
               <div class="cc-tile-bar" style="margin-top:2px"><div style="width:${Math.round(m.myProj / mx * 100)}%;background:#C6FF00"></div></div>
@@ -18360,7 +18455,7 @@ window.__lifeline = (function () {
       var mainBtns = document.querySelectorAll("#site-main [data-pnav]");
       var subBar = document.getElementById("site-sub");
       var subBtns = document.querySelectorAll("#site-sub [data-pnav-sub]");
-      var MAIN_FOR = { values: "players", radar: "players", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "command" };
+      var MAIN_FOR = { values: "players", radar: "players", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", upgrades: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "command" };
       var GROUP_FOR = { players: "players", myteam: "myteam", trades: "trades", league: "league" };
       function setMainSel(key) {
         mainBtns.forEach(function (b) { b.setAttribute("aria-selected", b.dataset.pnav === key ? "true" : "false"); });
@@ -18410,6 +18505,9 @@ window.__lifeline = (function () {
         } else if (key === "moves") {
           if (typeof window.ff4RenderMovesCurrent === "function") window.ff4RenderMovesCurrent();
           window.activateNav("moves");
+        } else if (key === "upgrades") {
+          if (typeof window.renderUpgradeFinderTrades === "function") window.renderUpgradeFinderTrades();
+          window.activateNav("upgrades");
         } else if (key === "results") {
           window.activateNav("league");
           setTimeout(function () { var el = document.getElementById("wtw-wrap"); if (el && !el.hidden) el.scrollIntoView({ block: "start" }); }, 120);
