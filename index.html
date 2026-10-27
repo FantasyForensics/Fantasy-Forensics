@@ -3454,7 +3454,7 @@
     <div class="stats">
       
       <div class="stat"><div class="v cy num">0</div><div class="l">Draft picks on this board. Every one of the 180 slots in a snake draft is a player producing this season</div></div>
-      <div class="stat"><div class="v mg num">0.35×</div><div class="l">Jeremiyah Love's price ratio — 1,879 redraft vs 5,305 dynasty. The rookie premium evaporates when only this season counts</div></div>
+      
     </div>
 
     <div class="toolbar">
@@ -3465,6 +3465,11 @@
         <button class="fchip cy" data-f="RB">RB</button>
         <button class="fchip cy" data-f="WR">WR</button>
         <button class="fchip cy" data-f="TE">TE</button>
+      </div>
+      <div class="chips" id="snakeAdpChips" style="margin-left:8px">
+        <button class="fchip cy on" data-f="ppr">PPR ADP</button>
+        <button class="fchip cy" data-f="half">Half-PPR ADP</button>
+        <button class="fchip cy" data-f="standard">Non-PPR ADP</button>
       </div>
     </div>
     <div class="card" style="padding:6px 14px">
@@ -3477,7 +3482,7 @@
       </table>
     </div>
     <p class="note" id="snakeCount" style="margin-top:10px"></p>
-    <p class="note" style="margin-top:4px">Market overlay, snapshot Oct 20, 2026: <b style="color:var(--ink)">ADP</b> is the player's average dynasty-draft position, <b style="color:var(--ink)">SF $</b> is ESPN's SUPERFLEX auction value, and <b style="color:var(--ink)">Expert rank</b> is his positional rank in the PPR expert-consensus panel (e.g. RB4). <b style="color:var(--ink)">Own</b> is the share of ESPN leagues rostering him, banded into tiers: Core 90%+, Rostered 60–90%, Streamer 25–60%, Deep under 25%. A dash means no published figure for that player.</p>
+    <p class="note" style="margin-top:4px">Market overlay (ADP updated October 27, 2026; SF $ and Expert rank from the October 20, 2026 snapshot): <b style="color:var(--ink)">ADP</b> is the player's average redraft average draft position from Fantasy Football Calculator (12-team drafts; switch PPR / half-PPR / non-PPR with the toggle above), <b style="color:var(--ink)">SF $</b> is ESPN's SUPERFLEX auction value, and <b style="color:var(--ink)">Expert rank</b> is his positional rank in the PPR expert-consensus panel (e.g. RB4). <b style="color:var(--ink)">Own</b> is the share of ESPN leagues rostering him, banded into tiers: Core 90%+, Rostered 60–90%, Streamer 25–60%, Deep under 25%. A dash means no published figure for that player.</p>
   </section>
 
   <!-- ============ S2. SNAKE ROOM ============ -->
@@ -12181,7 +12186,7 @@ ${rdP ? "" : `
     <script>
       /* ============ REAL TRADES DATASET — window.REAL_TRADES ============
          REAL completed trades from public Sleeper leagues (Sleeper public
-         API, type=trade / status=complete), collected 2026-10-18.
+         API, type=trade / status=complete), collected 2026-10-27.
          Generated from real_trades.json (see trades_db/COLLECTION.md);
          the weekly refresh replaces THIS BLOCK wholesale with the fresh
          collection — the logic in the next script block reads only
@@ -13950,6 +13955,19 @@ function dxRec(p){
   return bits.length ? " · " + bits.join(" · ") : "";
 }
 
+/* ---------- redraft ADP (display only) ----------
+   Fantasy Football Calculator redraft ADP, 12-team drafts, pulled
+   October 27, 2026, keyed by Sleeper player id:
+   [PPR ADP, half-PPR ADP, non-PPR ADP]. null = no published figure
+   in that format -> the board shows a dash. This layer never feeds
+   values, recommendations, tier-cliff / run alerts, or room codes. */
+const RDADP = {"9221":[1.1,2.2,1.5],"9509":[2.6,3.0,null],"7564":[3.9,3.4,4.7],"9488":[5.0,null,9.4],"7547":[6.9,null,10.2],"6813":[7.7,6.1,2.5],"3198":[13.3,null,7.0],"8138":[15.6,8.4,7.7],"12527":[17.4,21.3,24.6],"8151":[20.0,21.5,16.4],"12507":[21.1,22.8,20.4],"4984":[24.3,29.0,32.8],"13287":[27.2,null,33.3],"8130":[32.3,47.9,59.6],"8150":[35.6,null,24.7],"6790":[42.0,40.8,39.7],"9487":[50.5,59.4,60.0],"8167":[50.6,null,42.4],"5892":[52.2,54.8,48.3],"7526":[52.4,44.0,44.9],"13286":[67.3,61.1,58.7],"7594":[69.2,null,85.3],"12529":[73.0,null,62.6],"11631":[81.6,null,68.6],"2449":[86.9,null,99.4],"11646":[90.9,null,null],"12545":[115.3,null,null],"10236":[123.1,null,145.8],"9493":[null,3.0,3.6],"4034":[null,5.6,5.5],"6786":[null,12.5,13.2],"9224":[null,13.7,16.4],"6794":[null,14.4,14.5],"5859":[null,16.0,15.7],"4866":[null,16.6,12.9],"7569":[null,20.6,null],"7588":[null,24.0,22.6],"7525":[null,27.8,34.8],"11632":[null,30.6,35.5],"12514":[null,35.9,33.0],"11604":[null,36.8,51.3],"2133":[null,37.0,30.9],"11635":[null,38.9,42.1],"4983":[null,47.5,47.6],"11620":[null,49.8,42.6],"7611":[null,56.2,61.4],"12517":[null,62.2,70.8],"12518":[null,72.4,86.5],"6904":[null,73.4,68.0],"4037":[null,74.7,80.1],"10232":[null,78.0,72.6],"10222":[null,87.2,79.8],"9484":[null,89.8,null],"4046":[null,102.2,117.0],"8408":[null,110.9,89.4],"13298":[null,114.4,112.7],"6797":[null,115.2,107.2],"11581":[null,115.3,110.8],"13417":[null,126.9,117.7],"6804":[null,129.8,null],"1466":[null,130.6,137.4],"11586":[null,132.2,105.8],"12474":[null,140.4,133.8],"9226":[null,null,11.1],"9997":[null,null,23.8],"8144":[null,null,26.3],"8155":[null,null,28.6],"6801":[null,null,30.7],"7543":[null,null,31.6],"12526":[null,null,34.1],"12481":[null,null,35.8],"8146":[null,null,37.3],"5927":[null,null,45.1],"11564":[null,null,46.7],"12512":[null,null,46.7],"11584":[null,null,49.0],"6770":[null,null,53.2],"12490":[null,null,54.8],"8142":[null,null,55.7],"5846":[null,null,57.2],"2216":[null,null,57.8],"12519":[null,null,58.3],"5045":[null,null,63.0],"11628":[null,null,65.7],"5967":[null,null,67.2],"421":[null,null,69.9],"13279":[null,null,75.1],"9754":[null,null,79.2],"9756":[null,null,79.9],"11624":[null,null,80.7],"12501":[null,null,85.2],"10859":[null,null,85.6],"6819":[null,null,86.8],"12533":[null,null,86.8],"7523":[null,null,94.7],"3163":[null,null,95.6],"11560":[null,null,97.6],"9500":[null,null,101.2],"8676":[null,null,104.0],"5850":[null,null,107.9],"11563":[null,null,109.2],"4199":[null,null,111.7],"13294":[null,null,113.5],"8136":[null,null,120.6],"7553":[null,null,120.7],"6783":[null,null,121.8],"11618":[null,null,124.4],"7567":[null,null,125.3],"12508":[null,null,128.5],"9753":[null,null,129.8],"4981":[null,null,132.3],"7571":[null,null,133.0],"9504":[null,null,136.0],"4892":[null,null,136.4],"5849":[null,null,140.6],"13305":[null,null,143.7],"1479":[null,null,150.2],"4039":[null,null,155.4],"8131":[null,null,158.7]};
+let RDADP_FMT = 0; // 0 = PPR, 1 = half-PPR, 2 = non-PPR
+function rdAdpVal(p){ const d = RDADP[p.id]; return d ? d[RDADP_FMT] : null; }
+function rdAdp(p){ const v = rdAdpVal(p); return v != null ? (Number.isInteger(v) ? String(v) : v.toFixed(1)) : "—"; }
+function rdSub(p){ const bits = []; const a = rdAdp(p); if(a !== "—") bits.push("ADP " + a); const d = dxOf(p); if(d && d[1] != null) bits.push("SF $" + d[1]); if(d && d[2] != null) bits.push("ECR " + dxEcr(p)); return bits.join(" · "); }
+function rdRec(p){ const bits = []; const a = rdAdp(p); if(a !== "—") bits.push("ADP " + a); const d = dxOf(p); if(d && d[2] != null) bits.push("ECR " + dxEcr(p)); return bits.length ? " · " + bits.join(" · ") : ""; }
+
 /* ---------- shared model ---------- */
 const TEAMS = DATA.teams, TEAMNAME = {}; TEAMS.forEach(t=>TEAMNAME[t.id]=t.name);
 const ROOKIES = DATA.rookies;                       // sorted by value desc
@@ -14396,26 +14414,34 @@ function snakeSeqN(order, rounds){
     $("#snakeBody").innerHTML = rows.slice(0, 120).map(p=>{
       const pct = Math.round((p.value/p.dyn - 1)*100);
       const dHtml = fmt(p.dyn) + ' <span style="font-weight:700; color:'+(pct>2?"var(--cyan)":pct<-2?"#ff7aa8":"var(--dim)")+'">'+(pct>0?"+":"")+(pct===0?"±":pct)+'%</span>';
-      const dxs = dxSub(p, false);
+      const dxs = rdSub(p);
       return "<tr><td class='r num sub'>"+(SBYIDX[p.id]+1)+"</td>"
         + "<td><b>"+esc(p.name)+"</b><span class='msub'>"+esc(p.team||"FA")+(p.age? " · age "+p.age : "")+" · Tier "+p.tier+(dxs? " · "+esc(dxs) : "")+"</span></td>"
         + "<td><span class='pospill pos-"+p.pos+"'>"+p.pos+"</span></td>"
         + "<td class='sub'>"+esc(p.team||"FA")+"</td>"
         + "<td class='r num'>"+(p.age||"—")+"</td>"
         + "<td class='r num' style='font-weight:700; color:var(--cyan)'>"+fmt(p.value)+"</td>"
-        + "<td class='r num dx'>"+dxAdp(p)+"</td>"
+        + "<td class='r num dx'>"+rdAdp(p)+"</td>"
         + "<td class='r num dx'>"+dxSf(p)+"</td>"
         + "<td class='r num dx'>"+dxEcr(p)+"</td>"
         + "<td class='r num sub'>"+dHtml+"</td>"
         + "<td><span class='chip tier' style='color:var(--cyan); border-color:rgba(0,229,255,.4); background:rgba(0,229,255,.06)'>Tier "+p.tier+"</span>"+(p.inj? " <span class='chip inj'>"+esc(p.inj)+"</span>":"")+"</td></tr>";
     }).join("") || "<tr><td colspan='11' class='sub'>No players match.</td></tr>";
     $("#snakeCount").textContent = "Showing " + Math.min(rows.length,120) + " of " + rows.length + " matching players · " +
-      SNAKE.length + " players carry a redraft price · values as of Oct 17, 2026";
+      SNAKE.length + " players carry a redraft price · prices match Redraft mode";
   }
   $("#snakeChips").addEventListener("click", e=>{
     const b = e.target.closest("button.fchip"); if(!b) return;
     drRoot.querySelectorAll("#snakeChips .fchip").forEach(x=>x.classList.remove("on"));
     b.classList.add("on"); filter = b.dataset.f; render();
+  $("#snakeAdpChips").addEventListener("click", e=>{
+    const b = e.target.closest("button.fchip"); if(!b) return;
+    drRoot.querySelectorAll("#snakeAdpChips .fchip").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    const map = { ppr: 0, half: 1, standard: 2 };
+    RDADP_FMT = (b.dataset.f in map) ? map[b.dataset.f] : 0;
+    render();
+  });
   });
   $("#snakeSearch").addEventListener("input", e=>{ q = e.target.value.trim().toLowerCase(); render(); });
   render();
@@ -14480,7 +14506,7 @@ function renderSnakeRoom(){
       if(inTier===1) why += " · LAST of his tier at "+p.pos;
       if(s.teamId===S.mine){ const sn = slotNoteS(p, myPos); if(sn) why += " · "+sn; }
       if(p.inj) why += " · "+p.inj;
-      why += dxRec(p);
+      why += rdRec(p);
       return '<button class="recrow" data-spick="'+p.id+'"><span class="rk">'+(i+1)+'</span><span class="who"><b>'+esc(p.name)+' <span class="pospill pos-'+p.pos+'">'+p.pos+'</span></b><span>'+esc(why)+'</span></span><span class="vv num" style="color:var(--cyan)">'+fmt(p.value)+"</span></button>";
     }).join("");
     drRoot.querySelectorAll("[data-spick]").forEach(b=> b.addEventListener("click", ()=>{ if(!S.follow) makeSnakePick(b.dataset.spick); }));
@@ -14494,7 +14520,7 @@ function renderDraftSearchS(){
   if(!q){ box.innerHTML = '<p class="note" style="margin:0">Type a name to draft anyone left in the pool — not just the top of the board.</p>'; return; }
   const matches = sAvail().filter(p=>p.name.toLowerCase().includes(q)).slice(0, 6);
   box.innerHTML = matches.length ? matches.map(p=>
-    '<button class="recrow" data-sdraft="'+p.id+'"><span class="who"><b>'+esc(p.name)+' <span class="pospill pos-'+p.pos+'">'+p.pos+'</span></b><span>Tier '+p.tier+" · "+p.pos+p.posRank+' overall'+dxRec(p)+'</span></span><span class="vv num" style="color:var(--cyan)">'+fmt(p.value)+"</span></button>"
+    '<button class="recrow" data-sdraft="'+p.id+'"><span class="who"><b>'+esc(p.name)+' <span class="pospill pos-'+p.pos+'">'+p.pos+'</span></b><span>Tier '+p.tier+" · "+p.pos+p.posRank+' overall'+rdRec(p)+'</span></span><span class="vv num" style="color:var(--cyan)">'+fmt(p.value)+"</span></button>"
   ).join("") : '<p class="note" style="margin:0">No available player matches.</p>';
   drRoot.querySelectorAll("[data-sdraft]").forEach(b=> b.addEventListener("click", ()=>{ if(!S.follow) makeSnakePick(b.dataset.sdraft); }));
 }
