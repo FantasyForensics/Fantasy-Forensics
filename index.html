@@ -2516,6 +2516,32 @@
       .cc-q-issue.fyi { color: var(--ink-2); font-weight: 500; }
       .cc-q-where { color: var(--ink-3); font-size: 13px; margin-left: auto; }
       .cc-queue-note { color: var(--ink-2); font-size: 14.5px; margin: 6px 0 2px; }
+      .cc-spot-record { font-size: 15px; font-weight: 700; color: var(--ink-2); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 2px 10px; white-space: nowrap; vertical-align: middle; }
+      .cc-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+      .cc-tile { border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.008)); min-width: 0; }
+      .cc-tile-h { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+      .cc-tile-big { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 28px; line-height: 1.1; }
+      .cc-tile-sub { color: var(--ink-2); font-size: 13.5px; margin-top: 4px; line-height: 1.4; }
+      .cc-tile-bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.09); overflow: hidden; margin-top: 10px; }
+      .cc-tile-bar > div { height: 100%; border-radius: 99px; }
+      .cc-tile-rows { display: grid; gap: 8px; }
+      .cc-tile-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; min-width: 0; }
+      .cc-tile-row .t-name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .cc-tile-row .t-meta { color: var(--ink-3); font-size: 12.5px; white-space: nowrap; flex-shrink: 0; font-weight: 500; }
+      .cc-tile-row .t-val { font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+      .cc-tile-row .t-up { color: #C6FF00; }
+      .cc-tile-row .t-dn { color: #FF2E88; }
+      .cc-ticker-list { max-height: 216px; overflow-y: auto; display: grid; gap: 6px; padding-right: 2px; }
+      .cc-tool-link { display: block; width: 100%; text-align: left; border: 1px solid rgba(0,229,255,.25); background: none; color: var(--ink); font: inherit; font-size: 14.5px; font-weight: 600; border-radius: 10px; padding: 9px 12px; cursor: pointer; }
+      .cc-tool-link:hover { border-color: rgba(0,229,255,.6); }
+      .cc-tile-foot { margin-top: 10px; }
+      .cc-tile-foot button { background: none; border: 0; padding: 0; color: #00E5FF; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+      .cc-tile-foot button:hover { text-decoration: underline; }
+      .cc-grid-move { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; width: 100%; text-align: left; border: 0; border-top: 1px solid rgba(255,255,255,.08); background: none; color: var(--ink); font: inherit; padding: 8px 2px; cursor: pointer; }
+      .cc-grid-move:first-child { border-top: 0; padding-top: 0; }
+      .cc-grid-move.static { cursor: default; }
+      .cc-grid-move:hover .cc-q-player { text-decoration: underline; }
+      .cc-grid-move.static:hover .cc-q-player { text-decoration: none; }
       @media (max-width: 860px) {
         .cc-layout { grid-template-columns: 1fr; }
         .cc-rail { order: -1; flex-direction: row; overflow-x: auto; padding-bottom: 4px; }
@@ -2581,6 +2607,10 @@
         .cc-rail-team { font-size: 14.5px; }
         .cc-rail-odds { font-size: 17px; }
         .cc-rail-sub { font-size: 12.5px; }
+        .cc-grid { grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+        .cc-tile { padding: 12px 14px; }
+        .cc-tile-big { font-size: 24px; }
+        .cc-spot-record { font-size: 13px; }
       }
       /* ---------- Trade Board ---------- */
       .cc-tb { margin-bottom: 16px; }
@@ -15414,6 +15444,69 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           }
         } catch (e) {}
         if (d.teamValue == null) d.teamValue = (me.totalVal || 0) + (me.picksVal || 0);
+        /* League-rundown grid data (Command Center 3x3, Eric 2026-10-26):
+           computed once per detail pass and cached with the detail, so
+           re-renders only format. Every piece is guarded — a failed
+           tile computation leaves that tile in its fallback state and
+           never breaks the detail. Values use dispVal, the same path
+           the spotlight and queue already use. */
+        try {
+          const port = (me.playerIds || []).map(id => PBY[id]).filter(Boolean).map(p => {
+            let wk = null;
+            try { wk = (typeof tpWk === "function") ? tpWk(p) : null; } catch (e) {}
+            if (!wk && p.hist && p.hist.length >= 2) {
+              try {
+                const f = (typeof factorRatio === "function") ? factorRatio(p.pos) : 1;
+                const prev = Math.round(p.hist[p.hist.length - 2] * f);
+                const cur = Math.round(p.hist[p.hist.length - 1] * f);
+                wk = { d: cur - prev, pct: prev ? (cur - prev) / prev * 100 : 0 };
+              } catch (e) {}
+            }
+            return { name: p.name, pos: p.pos, team: p.team, val: p.unpriced ? null : dispVal(p), wk };
+          });
+          port.sort((a, b) => (b.val == null ? -1 : b.val) - (a.val == null ? -1 : a.val));
+          d.portfolio = port;
+          d.portfolioTotal = port.reduce((s, r) => s + (r.val || 0), 0);
+        } catch (e) { d.portfolio = null; }
+        try {
+          const oppRid = (window.OPP6 || {})[String(me.rid)];
+          const opp = oppRid != null ? TBY[oppRid] : null;
+          if (opp && typeof wkOptimal === "function" && typeof normCdf === "function") {
+            const myOpt = wkOptimal(me.playerIds);
+            const oppOpt = wkOptimal(opp.playerIds);
+            if (myOpt.total > 0 && oppOpt.total > 0) {
+              const sig = (typeof LU_SIGMA !== "undefined") ? LU_SIGMA : 30;
+              const winP = normCdf((myOpt.total - oppOpt.total) / (sig * Math.SQRT2));
+              d.matchup = { oppName: opp.name, oppRecord: opp.record, myProj: myOpt.total, oppProj: oppOpt.total, winP };
+            } else d.matchup = null;
+          } else d.matchup = null;
+        } catch (e) { d.matchup = null; }
+        try {
+          if (typeof buySuggestions === "function") {
+            const buys = buySuggestions(me.rid, me, { collectNear: (typeof VALMODE !== "undefined" && VALMODE === "dynasty") }) || [];
+            buys.sort((a, b) => (b.score || 0) - (a.score || 0));
+            d.tradeIdeas = buys.slice(0, 2).map(s => ({ partner: s.partner ? s.partner.name : "", target: s.target ? s.target.name : "", pos: s.target ? s.target.pos : "", team: s.target ? s.target.team : "", dPpg: s.dPpg || 0 }));
+          } else d.tradeIdeas = null;
+        } catch (e) { d.tradeIdeas = null; }
+        try {
+          if (typeof wvOptimal === "function") {
+            const baseTotal = wvOptimal(me.playerIds).total;
+            const pool = DATA.players.filter(p => !p.owner).map(p => {
+              const add = wvOptimal(me.playerIds.concat([p.id])).total - baseTotal;
+              const score = (p.ros || 0) * (1 + Math.max(0, add) / 10);
+              return { p, add, score };
+            });
+            const startable = pool.filter(m => m.add > 0).sort((a, b) => b.score - a.score || dispVal(b.p) - dispVal(a.p));
+            d.waiverTops = startable.slice(0, 2).map(m => ({ name: m.p.name, pos: m.p.pos, team: m.p.team, add: m.add }));
+          } else d.waiverTops = null;
+        } catch (e) { d.waiverTops = null; }
+        try {
+          if (typeof rdLiveFlags === "function") {
+            const live = rdLiveFlags() || [];
+            const fas = live.filter(f => { const p = PBY[f.player_id]; return p && !p.owner; });
+            d.radarWatch = fas.slice(0, 3).map(f => ({ name: f.name, pos: f.position, team: f.team, head: (typeof rdHeadline === "function") ? rdHeadline(f) : "" }));
+          } else d.radarWatch = null;
+        } catch (e) { d.radarWatch = null; }
         return d;
       }
 
@@ -15533,6 +15626,112 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         return `<div class="cc-ring"><svg width="132" height="132" viewBox="0 0 132 132" role="img" aria-label="Playoff odds ${esc(label)}"><circle cx="66" cy="66" r="54" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="10"/><circle cx="66" cy="66" r="54" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(frac * C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 66 66)"/></svg><div class="cc-ring-c"><div class="cc-ring-num${label.length > 4 ? " sm" : ""}">${esc(label)}</div><div class="cc-ring-lab">Playoff odds</div></div></div>`;
       }
 
+      /* Command Center league-rundown grid (Eric, 2026-10-26): the
+         focused league as nine tiles. Tool links deep-link when the
+         league is already loaded; otherwise they load it first (the
+         Trade Board's open-in-calculator pattern), and fall back to
+         opening the league for ESPN entries. */
+      async function ff4CCGoTool(idx, navKey) {
+        const lg = (ff4.ccLeagues || [])[idx];
+        const go = () => { activateNav(navKey); window.scrollTo({ top: 0 }); };
+        if (!lg) { go(); return; }
+        let active = false;
+        try { active = ff4CCIsActive(lg); } catch (e) {}
+        if (active) { go(); return; }
+        if (ff4CCIsEspn(lg)) { ff4CCOpen(idx); return; }
+        const slp = (typeof slpState !== "undefined") ? slpState : null;
+        const entry = slp && (slp.leagues || []).find(l => String(l.league_id) === String(lg.league_id));
+        if (!entry) { ff4CCOpen(idx); return; }
+        try { await slpLoadLeague(entry); } catch (e) { ff4CCOpen(idx); return; }
+        let ck = null;
+        try { ck = (typeof connLeagueKey === "string") ? connLeagueKey : null; } catch (e) {}
+        if (ck && ck !== "sleeper:" + String(lg.league_id)) return;
+        go();
+      }
+      function ff4CCGridHtml(idx, d) {
+        const snap = (ff4.ccSnaps || {})[idx] || null;
+        const tiles = [];
+        const frac = d.odds == null ? 0 : Math.max(0, Math.min(1, d.odds));
+        const col = frac >= 0.65 ? "#C6FF00" : frac >= 0.35 ? "#00E5FF" : "#FF2E88";
+        const oddsLabel = d.clinched ? "Clinched" : (d.odds == null ? "—" : oddsPct(d.odds));
+        const oddsSub = d.elim ? "Eliminated from the playoffs" : d.clinched ? "Playoff spot locked up" : (d.odds == null ? "Odds unavailable for this format" : "Chance at the playoffs");
+        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div><div class="cc-tile-sub">${esc(oddsSub)}</div></div>`);
+        const powerBig = d.powerRank == null ? "—" : `#${d.powerRank} of ${d.total}`;
+        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Power Rank</div><div class="cc-tile-big">${esc(powerBig)}</div></div>`);
+        const port = Array.isArray(d.portfolio) ? d.portfolio : null;
+        let tickerHead = "";
+        let tickerBody = "";
+        if (!port) tickerBody = `<p class="cc-tile-sub">Portfolio values are still loading — reopen this league to refresh.</p>`;
+        else if (!port.length) tickerBody = `<p class="cc-tile-sub">No players on this roster.</p>`;
+        else {
+          tickerHead = `<div class="cc-tile-sub" style="margin-bottom:8px">Roster value ${fmt(d.portfolioTotal || 0)}</div>`;
+          tickerBody = `<div class="cc-ticker-list">` + port.map(r => {
+            if (r.val == null) return `<div class="cc-tile-row"><span class="t-name">${esc(r.name)} <span class="t-meta">${esc(r.pos)} · ${esc(r.team || "")}</span></span><span class="t-val">Unpriced</span></div>`;
+            let mv = "";
+            if (r.wk && typeof r.wk.pct === "number") {
+              const p = Math.abs(r.wk.pct) < 0.05 ? 0 : r.wk.pct;
+              mv = ` <span class="t-val ${p >= 0 ? "t-up" : "t-dn"}">${p >= 0 ? "▲ +" : "▼ −"}${Math.abs(p).toFixed(1)}%</span>`;
+            }
+            return `<div class="cc-tile-row"><span class="t-name">${esc(r.name)} <span class="t-meta">${esc(r.pos)} · ${esc(r.team || "")}</span></span><span class="t-val">${fmt(r.val)}${mv}</span></div>`;
+          }).join("") + `</div>`;
+        }
+        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Stock Ticker</div>${tickerHead}${tickerBody}<div class="cc-tile-foot"><button type="button" data-cc-grid-tool="teamport">Full portfolio →</button></div></div>`);
+        let movesBody = "";
+        if (snap && snap.queueItems && snap.queueItems.length) {
+          movesBody = snap.queueItems.slice(0, 3).map(it => `<button type="button" class="cc-grid-move" data-cc-grid-open="1"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span></button>`).join("");
+        } else if (snap && snap.fyiItem) {
+          movesBody = `<div class="cc-grid-move static"><span class="cc-q-player">${esc(snap.fyiItem.player)}</span><span class="cc-q-issue fyi">${esc(snap.fyiItem.issue)}</span></div>`;
+        } else if (snap) {
+          movesBody = `<p class="cc-tile-sub">Nothing needs you — all clean.</p>`;
+        } else {
+          movesBody = `<p class="cc-tile-sub">See Needs You First above.</p>`;
+        }
+        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Your Next Three Moves</div>${movesBody}</div>`);
+        let matchBody = "";
+        if (d.matchup) {
+          const m = d.matchup;
+          const mx = Math.max(m.myProj, m.oppProj, 1);
+          matchBody = `<div class="cc-tile-sub" style="margin-bottom:8px">vs ${esc(m.oppName)} (${esc(m.oppRecord || "")})</div>
+            <div class="cc-tile-rows">
+              <div class="cc-tile-row"><span class="t-name">Your optimal</span><span class="t-val">${m.myProj.toFixed(1)} pts</span></div>
+              <div class="cc-tile-bar" style="margin-top:2px"><div style="width:${Math.round(m.myProj / mx * 100)}%;background:#C6FF00"></div></div>
+              <div class="cc-tile-row"><span class="t-name">${esc(m.oppName)} optimal</span><span class="t-val">${m.oppProj.toFixed(1)} pts</span></div>
+              <div class="cc-tile-bar" style="margin-top:2px"><div style="width:${Math.round(m.oppProj / mx * 100)}%;background:#00E5FF"></div></div>
+              <div class="cc-tile-row"><span class="t-name">Win probability</span><span class="t-val">${Math.round(m.winP * 100)}%</span></div>
+            </div>`;
+        } else {
+          matchBody = `<p class="cc-tile-sub">No opponent pairing published this week.</p>`;
+        }
+        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">This Week's Matchup</div>${matchBody}<div class="cc-tile-foot"><button type="button" data-cc-grid-tool="lineup">Lineup Analyzer →</button></div></div>`);
+        let watchBody = "";
+        if (Array.isArray(d.radarWatch) && d.radarWatch.length) {
+          watchBody = `<div class="cc-tile-rows">` + d.radarWatch.map(w => `<div class="cc-tile-row"><span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span></div><div class="cc-tile-sub" style="margin-top:-4px">${esc(w.head)}</div>`).join("") + `</div>`;
+        } else {
+          watchBody = `<p class="cc-tile-sub">No Radar flags on the wire this week.</p>`;
+        }
+        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Watchlist</div>${watchBody}<div class="cc-tile-foot"><button type="button" data-cc-grid-tool="radar">Opportunity Radar →</button></div></div>`);
+        let tradeBody = "";
+        if (Array.isArray(d.tradeIdeas) && d.tradeIdeas.length) {
+          tradeBody = `<div class="cc-tile-rows">` + d.tradeIdeas.map(s => `<div class="cc-tile-row"><span class="t-name">${esc(s.target)} <span class="t-meta">${esc(s.pos)} · ${esc(s.team || "")}</span></span><span class="t-val">+${s.dPpg.toFixed(1)} pts/wk</span></div><div class="cc-tile-sub" style="margin-top:-4px">from ${esc(s.partner)}</div>`).join("") + `</div>`;
+        } else {
+          tradeBody = `<p class="cc-tile-sub">No buy ideas clear the bar right now.</p>`;
+        }
+        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Trade Ideas</div>${tradeBody}<div class="cc-tile-foot"><button type="button" data-cc-grid-tool="targets">Player Targets →</button></div></div>`);
+        let wvBody = "";
+        if (Array.isArray(d.waiverTops) && d.waiverTops.length) {
+          wvBody = `<div class="cc-tile-rows">` + d.waiverTops.map(w => `<div class="cc-tile-row"><span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span><span class="t-val">+${w.add.toFixed(1)} pts/wk</span></div>`).join("") + `</div>`;
+        } else {
+          wvBody = `<p class="cc-tile-sub">No waiver add beats your starters this week.</p>`;
+        }
+        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Waiver Targets</div>${wvBody}<div class="cc-tile-foot"><button type="button" data-cc-grid-tool="waivers">Waiver Targets →</button></div></div>`);
+        tiles.push(`<div class="cc-tile"><div class="cc-tile-h">Fantasy Tools</div><div class="cc-tile-rows">
+          <button type="button" class="cc-tool-link" data-cc-grid-tool="bye">Bye Week Planner</button>
+          <button type="button" class="cc-tool-link" data-cc-grid-tool="radar">Opportunity Radar</button>
+          <button type="button" class="cc-tool-link" data-cc-grid-tool="trades">Trade Calculator</button>
+          <button type="button" class="cc-tool-link" data-cc-grid-tool="lineup">Lineup Analyzer</button>
+        </div></div>`);
+        return tiles.join("");
+      }
       function ff4CCRenderSpot() {
         const spot = document.getElementById("cc-spot");
         if (!spot) return;
@@ -15561,21 +15760,17 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         else if (d.fmtValid && d.noPairs) lines.push(`<div class="cc-line">No matchup pairings are published for this league this week, so there's no swing game to call.</div>`);
         if (d.status) lines.push(`<div class="cc-line">${esc(d.status)}</div>`);
         spot.innerHTML = `<div class="cc-spot-top"><div>
-            <div class="cc-spot-team">${esc(d.teamName)} <span class="you-tag">Your team</span></div>
+            <div class="cc-spot-team">${esc(d.teamName)}${d.record ? ` <span class="cc-spot-record">${esc(d.record)}</span>` : ""} <span class="you-tag">Your team</span></div>
             <div class="cc-spot-league">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div>
             <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
           </div><div class="cc-spot-actions"><button type="button" class="cc-enter" data-cc-open="1">Open league →</button><button type="button" class="cc-hide" data-cc-hide="1">Hide league</button></div></div>
-          <div class="cc-spot-mid">${ff4CCRing(d)}
-            <div class="cc-spot-stats">
-              <div><span>Record</span><b>${esc(d.record || "—")}</b></div>
-              <div><span>Power rank</span><b>#${d.powerRank} of ${d.total}</b></div>
-              <div><span>Team value</span><b>${fmt(d.teamValue || 0)}</b></div>
-            </div>
-          </div>
+          <div class="cc-grid">${ff4CCGridHtml(idx, d)}</div>
           ${lines.length ? `<div class="cc-lines">${lines.join("")}</div>` : ""}
           ${d.spark ? `<div class="cc-spark">${d.spark}</div>` : ""}`;
         const ob = spot.querySelector("[data-cc-open]"); if (ob) ob.addEventListener("click", () => ff4CCOpen(idx));
         const hb = spot.querySelector("[data-cc-hide]"); if (hb) hb.addEventListener("click", () => ff4CCHideLeague(idx));
+        spot.querySelectorAll("[data-cc-grid-tool]").forEach(b => b.addEventListener("click", () => ff4CCGoTool(idx, b.dataset.ccGridTool)));
+        spot.querySelectorAll("[data-cc-grid-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(idx)));
       }
 
       /* Command Center prefs (window.__ffPrefs, defined with the saved-
