@@ -9343,12 +9343,29 @@ ${rdP ? "" : `
         const slotLabel = x => x === "SUPER_FLEX" ? "SF" : x;
         const KEEP_SLOTS = ["QB", "RB", "WR", "TE", "FLEX", "SF", "WRRB_FLEX", "REC_FLEX"];
         const n = rosters.length;
+        /* Next-week set lineup (Eric, 2026-10-27): Sleeper's rosters[].starters
+           still reflects the DISPLAY week, which lags the week to be played on
+           Tuesday mornings (state week 8, display week 7) — so a set lineup the
+           user already changed shows up stale. When the next week's matchup
+           entry exists, is full-length, and is unplayed (points 0), it IS the
+           lineup the user set for that week: prefer it, and record which week
+           the lineup is for (lineupWeek) so the queue's bye check uses the
+           same week. Any doubt (missing entry, partial starters, points > 0)
+           falls back to rosters[].starters. */
+        const nextByRid = {};
+        if (Array.isArray(b.matchupsNext)) {
+          b.matchupsNext.forEach(m => { if (m && m.roster_id != null) nextByRid[m.roster_id] = m; });
+        }
         const teams = rosters.map(r => {
           const s = r.settings || {};
           const pf = (s.fpts || 0) + (s.fpts_decimal || 0) / 100;
           const pa = (s.fpts_against || 0) + (s.fpts_against_decimal || 0) / 100;
-          const lineup = (r.starters || []).map((pid, i) => ({ id: pid, slot: slotLabel(startSlots[i] || "") }))
+          const nxt = nextByRid[r.roster_id];
+          const nxtOk = !!(nxt && Array.isArray(nxt.starters) && nxt.starters.length === startSlots.length && (nxt.points == null || nxt.points === 0));
+          const srcLineup = nxtOk ? nxt.starters : (r.starters || []);
+          const lineup = srcLineup.map((pid, i) => ({ id: pid, slot: slotLabel(startSlots[i] || "") }))
             .filter(l => KEEP_SLOTS.includes(l.slot));
+          const lineupWeek = (nxtOk && typeof week === "number") ? week + 1 : week;
           return {
             rid: r.roster_id,
             name: teamNameOf(r),
@@ -9361,6 +9378,7 @@ ${rdP ? "" : `
             pa: Math.round(pa * 100) / 100,
             playerIds: (r.players || []).slice(),
             lineup,
+            lineupWeek,
             picks: [],
             picksVal: 0,
             arch: "crossroads",
@@ -10166,6 +10184,7 @@ ${rdP ? "" : `
             slpGet(`/league/${lg.league_id}/users`),
             slpGet(`/league/${lg.league_id}/traded_picks`).catch(() => []),
             slpGet(`/league/${lg.league_id}/matchups/${week}`).catch(() => null),
+            slpGet(`/league/${lg.league_id}/matchups/${week + 1}`).catch(() => null),
           ]);
           /* Schedule prefetch (perf, 2026-10-24): the season sim and
              the Lifeline both need weeks [week, max(playoff start, 15))
@@ -10185,7 +10204,7 @@ ${rdP ? "" : `
               window.__ffSchedEnsure(lg.league_id, week, sEnd).catch(function () {});
             }
           } catch (e) { /* schedule prefetch is best-effort */ }
-          const [league, rosters, users, traded, matchups] = await bundleP;
+          const [league, rosters, users, traded, matchups, matchupsNext] = await bundleP;
           if (!league || !rosters || !users) throw new Error("bundle");
           const txns = await txnP;
           /* Real pick ownership, two legs: the league-level traded_picks
@@ -10209,7 +10228,7 @@ ${rdP ? "" : `
           const allTraded = [...draftTraded, ...(traded || [])];
           const built = buildConnLeague({
             user: slpState.user, league, rosters, users,
-            tradedPicks: allTraded, matchups, week, transactions: txns,
+            tradedPicks: allTraded, matchups, matchupsNext, week, transactions: txns,
           });
           stashConnOverride();
           connLeagueKey = "sleeper:" + lg.league_id;
@@ -15337,13 +15356,14 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         ff4.ccSnaps[idx] = snap;
         try {
           const week = ff4CCWeek(lg);
-          const [league, rosters, users] = await Promise.all([
-            slpGet(`/league/${lg.league_id}`), slpGet(`/league/${lg.league_id}/rosters`), slpGet(`/league/${lg.league_id}/users`)
+          const [league, rosters, users, matchupsNext] = await Promise.all([
+            slpGet(`/league/${lg.league_id}`), slpGet(`/league/${lg.league_id}/rosters`), slpGet(`/league/${lg.league_id}/users`),
+            slpGet(`/league/${lg.league_id}/matchups/${week + 1}`).catch(() => null)
           ]);
           if (!league || !rosters || !users) throw new Error("bundle");
           const myRoster = rosters.find(r => r.owner_id === user.user_id || (r.co_owners || []).includes(user.user_id));
           if (!myRoster) { snap.noTeam = true; ff4CCAfterLight(idx); return; }
-          const built = buildConnLeague({ user, league, rosters, users, tradedPicks: [], matchups: null, week, transactions: [] });
+          const built = buildConnLeague({ user, league, rosters, users, tradedPicks: [], matchups: null, matchupsNext, week, transactions: [] });
           const cap = ff4CCCapture();
           try {
             ff4CCSwap(built);
@@ -15358,7 +15378,8 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
             const wk = Number(DATA.league.week) || week;
-            snap.queueItems = ff4CCQueueFor(me, wk).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper" }));
+            const qwk = me.lineupWeek || wk;
+            snap.queueItems = ff4CCQueueFor(me, qwk).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper" }));
             const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
             const streak = myRoster.settings && myRoster.settings.streak ? String(myRoster.settings.streak) : null;
             if (byeNames.length) snap.status = `${byeNames.length} starter${byeNames.length === 1 ? "" : "s"} on bye in Week ${wk + 1}: ${byeNames.slice(0, 3).join(", ")}${byeNames.length > 3 ? "…" : ""}`;
@@ -15866,7 +15887,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           let matchupsNext = null;
           try { matchupsNext = await slpGet(`/league/${lg.league_id}/matchups/${week + 1}`); } catch (e) {}
           if (ff4.ccDead) return;
-          const built = buildConnLeague({ user, league, rosters, users, tradedPicks, matchups, week, transactions: [] });
+          const built = buildConnLeague({ user, league, rosters, users, tradedPicks, matchups, matchupsNext, week, transactions: [] });
           const myRoster = rosters.find(r => r.owner_id === user.user_id || (r.co_owners || []).includes(user.user_id));
           const cap = ff4CCCapture();
           const savedConn = window.CONN_LEAGUE;
@@ -16451,7 +16472,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             out.innerHTML = `<div class="cc-refresh"><button type="button" id="cc-refresh">↻ Refresh records & odds</button><span class="cc-refresh-note">Re-pulls every league from Sleeper.</span></div><div class="cc-queue" id="cc-queue"></div><div class="cc-spot" id="cc-spot"></div>`;
             { const rb = document.getElementById("cc-refresh"); if (rb) rb.addEventListener("click", () => ff4RenderCC()); }
             const me = DATA.teams.find(t => t.isUser) || null;
-            const items = me ? ff4CCQueueFor(me, Number(DATA.league.week) || 1) : [];
+            const items = me ? ff4CCQueueFor(me, me.lineupWeek || Number(DATA.league.week) || 1) : [];
             const q = document.getElementById("cc-queue");
             q.className = "cc-queue" + (items.length ? "" : " clean");
             q.innerHTML = `<div class="cc-queue-h">Needs you first</div>` + (items.length
