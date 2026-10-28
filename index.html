@@ -6394,10 +6394,15 @@ ${rdP ? "" : `
         }
         el.innerHTML = html;
       }
-      /* "Grade it →" on a Player Targets card: load that exact offer
-         into the Trade Calculator (same calc asset shapes the Real
-         Trades offer loader writes) and open the calculator on it. */
-      document.getElementById("finder-out").addEventListener("click", e => {
+      /* "Grade it →" on a Player Targets card AND on an Upgrade Finder
+         row: load that exact offer into the Trade Calculator (same
+         calc asset shapes the Real Trades offer loader writes) and
+         open the calculator on it. The listener sits on the document,
+         not on #finder-out: the finder's buttons live in
+         #uf-trades-wrap, outside the Targets section, so a
+         finder-out-scoped listener never fired for them and the
+         finder's Grade it button was dead (Eric, 2026-10-28). */
+      document.addEventListener("click", e => {
         const btn = e.target.closest("[data-grade]");
         if (!btn) return;
         let payload = null;
