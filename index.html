@@ -2461,6 +2461,10 @@
       .cc-enter { margin-top: 12px; border: 1px solid rgba(198,255,0,.55); background: var(--surface-2); color: var(--ink); border-radius: 999px; padding: 8px 16px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
       .cc-enter:hover { box-shadow: 0 0 12px rgba(198,255,0,.35); }
       .cc-empty { border: 1px dashed rgba(255,255,255,.25); border-radius: 16px; padding: 22px; color: var(--ink-2); max-width: 640px; }
+      .cc-loadbox { display: flex; gap: 12px; align-items: flex-start; }
+      .cc-spin { flex-shrink: 0; width: 22px; height: 22px; margin-top: 2px; border: 3px solid rgba(255,255,255,.18); border-top-color: var(--accent); border-radius: 50%; animation: hr-spin 0.8s linear infinite; }
+      .cc-load-name { font-family: "Space Grotesk", sans-serif; font-size: 17px; font-weight: 700; color: var(--ink); display: block; }
+      .cc-load-sub { display: block; margin-top: 3px; font-size: 14px; }
       .cc-layout { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
       .cc-spot { border: 1px solid rgba(0,229,255,.3); border-radius: 18px; padding: 20px 22px; background: radial-gradient(120% 160% at 10% 0%, rgba(0,229,255,.08), transparent 55%), linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); }
       .cc-spot-top { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: flex-start; }
@@ -17042,6 +17046,16 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             ff4.ccSessionDone = true;
             return;
           }
+          if (document.documentElement.classList.contains("ff-restoring")) {
+            let lnm = "your league";
+            try {
+              const sv = JSON.parse(localStorage.getItem("ff_saved_leagues") || "[]");
+              const top = Array.isArray(sv) && sv.length ? sv.slice().sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0))[0] : null;
+              if (top && top.name) lnm = top.name;
+            } catch (e) { /* generic label stands */ }
+            out.innerHTML = `<div class="cc-empty cc-loadbox"><span class="cc-spin" aria-hidden="true"></span><span><span class="cc-load-name">Loading ${esc(lnm)}…</span><span class="cc-load-sub">Pulling your rosters, standings and matchups from Sleeper.</span></span></div>`;
+            return;
+          }
           out.innerHTML = `<div class="cc-empty"><p>Connect with your Sleeper username and every league where you hold a roster lines up here — record, power rank and playoff odds on one screen.</p><button type="button" class="locked-cta" id="cc-connect">Connect your league</button></div>`;
           const b = document.getElementById("cc-connect");
           if (b) b.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
@@ -17084,6 +17098,14 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         ff4TBEnsure(false);
       }
       window.ff4RenderCC = ff4RenderCC;
+      /* Swap the CC empty state between its connect prompt and the
+         restoring placeholder as the ff-restoring flag comes and
+         goes (see the empty branch above). */
+      try {
+        new MutationObserver(function () {
+          if (document.querySelector("#cc-out .cc-empty")) ff4RenderCC();
+        }).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+      } catch (e) { /* enhancement only */ }
 
       /* ================= FEATURE 4 — Playoff Path Explorer =================
          Format comes from playoffFormat() — the connected league's own
