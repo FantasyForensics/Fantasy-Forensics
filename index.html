@@ -16499,7 +16499,13 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
       async function ff4CCGoTool(idx, navKey) {
         const lg = (ff4.ccLeagues || [])[idx];
         const go = () => {
-          if (navKey === "ppath" && typeof goLeagueSub === "function") goLeagueSub("ppath");
+          if (navKey === "ppath") {
+            if (typeof window.ff4RenderPP === "function") window.ff4RenderPP();
+            if (typeof window.renderLifeline === "function") window.renderLifeline();
+            window.__subnavNext = window.__subnavNext || {};
+            window.__subnavNext.league = "odds";
+            activateNav("league", "#pp-explorer");
+          }
           else if (navKey === "psched") {
             if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
             if (typeof window.renderLifeline === "function") window.renderLifeline();
