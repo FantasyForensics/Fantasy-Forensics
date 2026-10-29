@@ -12774,6 +12774,26 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
 
         /* ---------- browser state ---------- */
         const state = { player: null, filter: "all", shown: 12 };
+        function connFmt() {
+          try {
+            if (window.GUEST_MODE) return null;
+            if (window.CURRENT_LEAGUE !== "conn") return null;
+            return (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "r" : "d";
+          } catch (e) { return null; }
+        }
+        function rtSyncFmt() {
+          const locked = connFmt();
+          const fEl = document.getElementById("rt-filter");
+          if (locked) {
+            if (state.filter !== locked) { state.filter = locked; state.shown = PAGE; }
+            if (fEl) {
+              fEl.style.display = "none";
+              fEl.querySelectorAll("[data-rtf]").forEach(b => b.setAttribute("aria-pressed", b.dataset.rtf === locked ? "true" : "false"));
+            }
+          } else if (fEl) {
+            fEl.style.display = "";
+          }
+        }
         const PAGE = 12;
         const resultsEl = document.getElementById("rt-results");
         const headEl = document.getElementById("rt-head");
@@ -12786,6 +12806,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           return list;
         }
         function renderBrowser() {
+          rtSyncFmt();
           const list = filteredTrades();
           if (state.player) {
             const info = RT.players[state.player] || ["Unknown player", "", ""];
@@ -12887,6 +12908,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         const filterEl = document.getElementById("rt-filter");
         if (filterEl) filterEl.querySelectorAll("[data-rtf]").forEach(btn => {
           btn.addEventListener("click", () => {
+            if (connFmt()) return; /* format locked to the connected league */
             state.filter = btn.dataset.rtf;
             state.shown = PAGE;
             filterEl.querySelectorAll("[data-rtf]").forEach(b => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
