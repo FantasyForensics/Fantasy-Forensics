@@ -15416,7 +15416,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
          league's own playoff format through playoffFormat() and hides
          itself when that format cannot be read in full. */
 
-      const ff4 = { ccCache: {}, ppKey: null, ppRid: null, ppWin: {}, ppSwingKey: null, ppSwing: null };
+      const ff4 = { ccCache: {}, ppKey: null, ppRid: null, ppWin: {}, ppSwingKey: null, ppSwing: null, ppScenKey: null, ppScen: null };
 
       /* ---------------- shared ---------------- */
       function ff4Team(rid) { return TBY[rid] || (DATA.teams || []).find(t => String(t.rid) === String(rid)); }
@@ -16334,14 +16334,14 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           if (typeof window.espnActivateStored === "function") {
             try {
               const ok = await window.espnActivateStored();
-              if (ok) { if (typeof window.ff4RenderCC === "function") window.ff4RenderCC(); }
+              if (ok) { if (typeof window.ff4RenderCC === "function") window.ff4RenderCC(true); }
               else if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
             } catch (e) { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); }
           } else if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
           return;
         }
         await slpLoadLeague(lg, { skipTabRefresh: true });
-        if (!window.GUEST_MODE && window.CURRENT_LEAGUE === "conn" && typeof window.ff4RenderCC === "function") window.ff4RenderCC();
+        if (!window.GUEST_MODE && window.CURRENT_LEAGUE === "conn" && typeof window.ff4RenderCC === "function") window.ff4RenderCC(true);
       }
 
       function ff4CCRing(d) {
@@ -16848,9 +16848,30 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         q.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
       }
 
-      function ff4RenderCC() {
+      function ff4RenderCC(force) {
         const out = document.getElementById("cc-out");
         if (!out) return;
+        /* Session cache (Eric, 2026-10-29): a tab return must not
+           re-pull every league and rebuild the dashboard — the first
+           build stays live for the whole visit, the same pattern the
+           Trade Board's sig cache already uses. The key covers the
+           Sleeper user, the league set, any ESPN entry, and the active
+           connected league (loading a different league from a card
+           changes the focus, so it misses the cache on purpose). The
+           ↻ Refresh button passes force — it is the one explicit
+           re-pull. A call that lands while a previous build is still
+           loading lets that build finish instead of starting a
+           second one. */
+        const stK = (typeof slpState !== "undefined") ? slpState : null;
+        const lgK = stK && Array.isArray(stK.leagues) ? stK.leagues : [];
+        let espnK = null;
+        try { espnK = ff4CCEspnEntry(); } catch (e) { /* the key just omits it */ }
+        const connK = (!window.GUEST_MODE && window.CURRENT_LEAGUE === "conn" && window.CONN_LEAGUE)
+          ? (window.CONN_LEAGUE.leagueId || (window.CONN_LEAGUE.league && window.CONN_LEAGUE.league.name) || "") : "";
+        const keyK = ((stK && stK.user && stK.user.user_id) || "") + "|" + lgK.map(l => l.league_id).join(",")
+          + "|" + (espnK ? (espnK.leagueId || "espn") : "") + "|" + connK;
+        if (!force && ff4.ccSessionKey === keyK && (ff4.ccSessionBusy || ff4.ccSessionDone)) return;
+        ff4.ccSessionKey = keyK; ff4.ccSessionBusy = false; ff4.ccSessionDone = false;
         ff4.ccDead = false; ff4.ccBusy = false; ff4.ccMixed = false; ff4.ccTab = "all"; ff4.ccManage = false;
         const st = (typeof slpState !== "undefined") ? slpState : null;
         const leagues = st && Array.isArray(st.leagues) ? st.leagues : [];
@@ -16861,7 +16882,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
                (e.g. an ESPN league): spotlight the loaded league alone. */
             ff4.ccLeagues = []; ff4.ccUser = null; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = 0; ff4.ccDone = 0;
             out.innerHTML = `<div class="cc-refresh"><button type="button" id="cc-refresh">↻ Refresh records & odds</button><span class="cc-refresh-note">Re-pulls every league from Sleeper.</span></div><div class="cc-queue" id="cc-queue"></div><div class="cc-spot" id="cc-spot"></div>`;
-            { const rb = document.getElementById("cc-refresh"); if (rb) rb.addEventListener("click", () => ff4RenderCC()); }
+            { const rb = document.getElementById("cc-refresh"); if (rb) rb.addEventListener("click", () => ff4RenderCC(true)); }
             const me = DATA.teams.find(t => t.isUser) || null;
             const items = me ? ff4CCQueueFor(me, me.lineupWeek || Number(DATA.league.week) || 1) : [];
             const q = document.getElementById("cc-queue");
@@ -16879,6 +16900,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             chips.push(DATA.teams.length + " teams");
             ff4.ccDetail[0] = ff4CCDetailHere(0, chips, ff4CCFreshSim(), null) || { idx: 0, failed: true, leagueName: DATA.league.name || "League", chips };
             ff4CCRenderSpot();
+            ff4.ccSessionDone = true;
             return;
           }
           out.innerHTML = `<div class="cc-empty"><p>Connect with your Sleeper username and every league where you hold a roster lines up here — record, power rank and playoff odds on one screen.</p><button type="button" class="locked-cta" id="cc-connect">Connect your league</button></div>`;
@@ -16898,19 +16920,23 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         ff4.ccMixed = entries.length > leagues.length;
         ff4.ccLeagues = entries; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
         out.innerHTML = `<div class="cc-refresh"><button type="button" id="cc-refresh">↻ Refresh records & odds</button><span class="cc-refresh-note">Re-pulls every league from Sleeper.</span></div><div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div id="cc-tabs"></div><div class="cc-rail" id="cc-rail"></div></div>`;
-        { const rb = document.getElementById("cc-refresh"); if (rb) rb.addEventListener("click", () => ff4RenderCC()); }
+        { const rb = document.getElementById("cc-refresh"); if (rb) rb.addEventListener("click", () => ff4RenderCC(true)); }
         ff4CCRenderTabs(); ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
+        ff4.ccSessionBusy = true;
         (async () => {
-          for (let i = 0; i < entries.length; i++) {
-            if (ff4.ccDead) break;
-            await ff4CCLock();
-            try {
-              if (ff4CCIsEspn(entries[i])) await ff4CCLoadEspn(entries[i], i);
-              else await ff4CCLoad(entries[i], i, user);
-            } finally { ff4.ccBusy = false; }
-            ff4.ccDone++;
-            ff4CCRenderQueue();
-          }
+          try {
+            for (let i = 0; i < entries.length; i++) {
+              if (ff4.ccDead) break;
+              await ff4CCLock();
+              try {
+                if (ff4CCIsEspn(entries[i])) await ff4CCLoadEspn(entries[i], i);
+                else await ff4CCLoad(entries[i], i, user);
+              } finally { ff4.ccBusy = false; }
+              ff4.ccDone++;
+              ff4CCRenderQueue();
+            }
+            if (!ff4.ccDead && ff4.ccDone >= entries.length) ff4.ccSessionDone = true;
+          } finally { ff4.ccSessionBusy = false; }
         })();
         /* The Trade Board's compact section rides the same league
            set: its pass is independent (own fetches, own swaps,
@@ -16951,7 +16977,15 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const pairs = sim.path.pairs || [];
         const fixed = pairs.map((pr, i) => ff4.ppWin[i] === pr[0] ? [pr[0], pr[1]] : [pr[1], pr[0]]);
         let scen = null, scenTable = null;
-        try { const run = sim.path.run(fixed); scen = run.results[rid]; scenTable = run.raw[rid] ? run.raw[rid].winTable : null; } catch (e) { /* baseline only */ }
+        /* Session cache (Eric, 2026-10-29): the conditioned run over
+           the remaining schedule is the League tab's heavy step —
+           reuse it while the sim, the team, and the winner picks are
+           unchanged, instead of re-running it on every tab return. */
+        const scenSig = key + "|" + rid + "|" + fixed.map(f => f.join(">")).join(",") + "|" + (sim.recFp || sim.schedKey || "");
+        if (ff4.ppScenKey === scenSig && ff4.ppScen) { scen = ff4.ppScen.scen; scenTable = ff4.ppScen.table; }
+        else {
+          try { const run = sim.path.run(fixed); scen = run.results[rid]; scenTable = run.raw[rid] ? run.raw[rid].winTable : null; ff4.ppScenKey = scenSig; ff4.ppScen = { scen, table: scenTable }; } catch (e) { /* baseline only */ }
+        }
         const curPlayoff = scen ? scen.playoff : base.playoff;
         const delta = scen ? scen.playoff - base.playoff : 0;
         /* Magic number from the (scenario) outcome distribution. */
