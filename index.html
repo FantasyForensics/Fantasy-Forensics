@@ -1083,6 +1083,14 @@
         table.board-table th:nth-child(3), table.board-table td:nth-child(3) { width: 50px; }
         table.board-table th:nth-child(6), table.board-table td:nth-child(6) { width: 92px; }
         table.board-table th:nth-child(8), table.board-table td:nth-child(8) { width: 46px; }
+        /* Roster table (My Team) has no rank column: undo the board's
+           fixed tracks so its Player column gets natural width. */
+        #tab-roster table.board-table { table-layout: auto; }
+        #tab-roster table.board-table th:nth-child(1), #tab-roster table.board-table td:nth-child(1),
+        #tab-roster table.board-table th:nth-child(3), #tab-roster table.board-table td:nth-child(3),
+        #tab-roster table.board-table th:nth-child(6), #tab-roster table.board-table td:nth-child(6) { width: auto; }
+        #tab-roster .p-name { overflow-wrap: normal; }
+        #tab-roster .inj-chip { white-space: normal; }
         .p-name, .p-sub { overflow-wrap: break-word; }
         .cons-line { white-space: normal; font-size: 11.5px; }
         .val-big { font-size: 19px; }
