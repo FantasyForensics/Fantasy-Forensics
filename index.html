@@ -9643,17 +9643,35 @@ ${rdP ? "" : `
            the lineup is for (lineupWeek) so the queue's bye check uses the
            same week. Any doubt (missing entry, partial starters, points > 0)
            falls back to rosters[].starters. */
+        /* Oct 29 correction (Eric): the week to be played is the FIRST
+           unplayed week, not blindly week + 1. Once the display week
+           catches up to the state week (Wednesday on), week + 1's entry
+           is a lineup Sleeper carried forward when that week opened —
+           it can predate changes the user made to the CURRENT week's
+           lineup (his Week 9 entry still held Purdy/Vele while his
+           Week 8 entry already started Mahomes/Tuten), and trusting it
+           made the queue recommend swaps he had already made. So the
+           display week's own entry wins while it is unplayed; week + 1
+           is the source only while the display week is already played
+           (the Tuesday lag above). */
         const nextByRid = {};
         if (Array.isArray(b.matchupsNext)) {
           b.matchupsNext.forEach(m => { if (m && m.roster_id != null) nextByRid[m.roster_id] = m; });
+        }
+        const curByRid = {};
+        if (Array.isArray(b.matchups)) {
+          b.matchups.forEach(m => { if (m && m.roster_id != null) curByRid[m.roster_id] = m; });
         }
         const teams = rosters.map(r => {
           const s = r.settings || {};
           const pf = (s.fpts || 0) + (s.fpts_decimal || 0) / 100;
           const pa = (s.fpts_against || 0) + (s.fpts_against_decimal || 0) / 100;
           const nxt = nextByRid[r.roster_id];
-          const nxtOk = !!(nxt && Array.isArray(nxt.starters) && nxt.starters.length === startSlots.length && (nxt.points == null || nxt.points === 0));
-          const srcLineup = nxtOk ? nxt.starters : (r.starters || []);
+          const cur = curByRid[r.roster_id];
+          const entryOk = e => !!(e && Array.isArray(e.starters) && e.starters.length === startSlots.length && (e.points == null || e.points === 0));
+          const curOk = entryOk(cur);
+          const nxtOk = entryOk(nxt);
+          const srcLineup = curOk ? cur.starters : nxtOk ? nxt.starters : (r.starters || []);
           const lineup = srcLineup.map((pid, i) => ({ id: pid, slot: slotLabel(startSlots[i] || "") }))
             .filter(l => KEEP_SLOTS.includes(l.slot));
           /* A set lineup Sleeper already rolled forward still names next
@@ -9667,7 +9685,7 @@ ${rdP ? "" : `
           const nxtSet = (nxt && Array.isArray(nxt.starters)) ? new Set(nxt.starters.map(String)) : null;
           const srcSet = new Set(srcLineup.map(String));
           const matchesNext = !!(nxt && (nxt.points == null || nxt.points === 0) && nxtSet && srcSet.size > 0 && nxtSet.size === srcSet.size && [...srcSet].every(id => nxtSet.has(id)));
-          const lineupWeek = ((nxtOk || matchesNext) && typeof week === "number") ? week + 1 : week;
+          const lineupWeek = curOk ? week : (((nxtOk || matchesNext) && typeof week === "number") ? week + 1 : week);
           return {
             rid: r.roster_id,
             name: teamNameOf(r),
@@ -15642,7 +15660,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
 
       /* The queue's "starters" are the roster's ACTUAL set lineup —
          the built team's `lineup`, which buildConnLeague sources
-         from next week's matchup entry when it is unplayed and
+         from the first unplayed week's matchup entry when it is
          full-length, else from Sleeper's rosters[].starters.
          Only when no set lineup is available (guest / demo)
          does the queue fall back to a value-optimal fill of the
@@ -15724,14 +15742,15 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         ff4.ccSnaps[idx] = snap;
         try {
           const week = ff4CCWeek(lg);
-          const [league, rosters, users, matchupsNext] = await Promise.all([
+          const [league, rosters, users, matchups, matchupsNext] = await Promise.all([
             slpGet(`/league/${lg.league_id}`), slpGet(`/league/${lg.league_id}/rosters`), slpGet(`/league/${lg.league_id}/users`),
+            slpGet(`/league/${lg.league_id}/matchups/${week}`).catch(() => null),
             slpGet(`/league/${lg.league_id}/matchups/${week + 1}`).catch(() => null)
           ]);
           if (!league || !rosters || !users) throw new Error("bundle");
           const myRoster = rosters.find(r => r.owner_id === user.user_id || (r.co_owners || []).includes(user.user_id));
           if (!myRoster) { snap.noTeam = true; ff4CCAfterLight(idx); return; }
-          const built = buildConnLeague({ user, league, rosters, users, tradedPicks: [], matchups: null, matchupsNext, week, transactions: [] });
+          const built = buildConnLeague({ user, league, rosters, users, tradedPicks: [], matchups, matchupsNext, week, transactions: [] });
           const cap = ff4CCCapture();
           try {
             ff4CCSwap(built);
