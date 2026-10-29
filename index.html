@@ -4985,7 +4985,11 @@ ${rdP ? "" : `
         // True 1-for-1: no adjustment (KTC parity, Eric Oct 21) —
         // with one asset a side there is no concentration to price,
         // so the raw difference is the whole gap.
-        if (aValues.length === 1 && bValues.length === 1) return [0, 0];
+        // Zero-value assets don't count toward the trigger (Eric, Oct 28):
+        // a worthless throw-in must not flip a straight swap into a full
+        // concentration adjustment.
+        const aPriced = aValues.filter(v => v > 0), bPriced = bValues.filter(v => v > 0);
+        if (aPriced.length === 1 && bPriced.length === 1) return [0, 0];
         const t = Math.max(...aValues, ...bValues);
         if (!(t > 0)) return [0, 0];
         const gap = aValues.reduce((s, v) => s + vaPhi(v, t), 0)
