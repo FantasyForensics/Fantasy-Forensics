@@ -22,8 +22,19 @@
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-0LN6ZHJN6C');
+      /* Owner self-traffic opt-out (Oct 30): ?ff_ga=off sets a
+         per-browser flag that skips the GA config on this browser;
+         ?ff_ga=on clears it. Regular visitors never trigger either. */
+      try {
+        var ffGaQ = new URLSearchParams(location.search);
+        if (ffGaQ.get('ff_ga') === 'off') localStorage.setItem('ff_ga_off', '1');
+        if (ffGaQ.get('ff_ga') === 'on') localStorage.removeItem('ff_ga_off');
+        window.__ffGaOff = localStorage.getItem('ff_ga_off') === '1';
+      } catch (e) { window.__ffGaOff = false; }
+      if (!window.__ffGaOff) {
+        gtag('js', new Date());
+        gtag('config', 'G-0LN6ZHJN6C');
+      }
     </script>
     <script>
       /* Entry scroll position (Eric, 2026-10-23): a fresh entry must
@@ -2875,7 +2886,7 @@
           </div>
         </div>
         <div class="waitlist-band ">
-          <div class="wl-txt"><span class="wl-kicker">Founding members</span><span class="wl-line"><strong>Free during launch.</strong> Join the founding list and lock in launch pricing when premium opens.</span></div>
+          <div class="wl-txt"><span class="wl-kicker">Founding members</span><span class="wl-line"><strong>Free during launch.</strong> Join the founding list and lock in <strong>$3.99/mo or $29.99/yr for life</strong> — launch pricing for everyone else is $5.99/mo or $49.99/yr.</span></div>
           <form class="wl-form" id="wl-form-hero" novalidate>
             <input type="email" name="email" autocomplete="email" placeholder="you@email.com" aria-label="Email address for the founding list" />
             <button type="submit">Join the list</button>
@@ -3066,6 +3077,14 @@
         <div class="verdict" id="verdict"></div>
         <div id="rt-calc-strip" hidden></div>
         <div id="rt-offer" hidden></div>
+        <div class="waitlist-band">
+          <div class="wl-txt"><span class="wl-kicker">Founding members</span><span class="wl-line"><strong>Grades like this are free during launch.</strong> Join the founding list and lock in <strong>$3.99/mo or $29.99/yr for life</strong> when premium opens.</span></div>
+          <form class="wl-form" id="wl-form-calc" novalidate>
+            <input type="email" name="email" autocomplete="email" placeholder="you@email.com" aria-label="Email address for the founding list" />
+            <button type="submit">Join the list</button>
+          </form>
+          <p class="wl-msg" role="status" aria-live="polite"></p>
+        </div>
         <details class="how-box">
           <summary>How the calculator works</summary>
           <p class="tab-intro" id="calc-intro">Build a deal from any two rosters (or the free-agent pool). The verdict weighs <strong>trade value and team fit</strong> — each side's raw sum plus its value adjustment, so the side whose value sits concentrated in its best players gets credit for that concentration and one stud is not outweighed by a pile of lesser pieces — and whether the pieces fill a need, cost a starter, or fight a team's competitive window.</p>
@@ -3091,6 +3110,14 @@
           </div>
         </div>
         <div id="finder-out" class="finder-part"></div>
+        <div class="waitlist-band">
+          <div class="wl-txt"><span class="wl-kicker">Founding members</span><span class="wl-line"><strong>Deals built for your team — free during launch.</strong> Join the founding list and lock in <strong>$3.99/mo or $29.99/yr for life</strong> when premium opens.</span></div>
+          <form class="wl-form" id="wl-form-targets" novalidate>
+            <input type="email" name="email" autocomplete="email" placeholder="you@email.com" aria-label="Email address for the founding list" />
+            <button type="submit">Join the list</button>
+          </form>
+          <p class="wl-msg" role="status" aria-live="polite"></p>
+        </div>
         <div class="locked-state" data-locked="targets">
           <div class="locked-body">
             <h2>Your targets live here</h2>
@@ -3662,7 +3689,7 @@
       </section>
 
       <div class="waitlist-band foot">
-          <div class="wl-txt"><span class="wl-kicker">Founding members</span><span class="wl-line"><strong>Free during launch.</strong> Join the founding list and lock in launch pricing when premium opens.</span></div>
+          <div class="wl-txt"><span class="wl-kicker">Founding members</span><span class="wl-line"><strong>Free during launch.</strong> Join the founding list and lock in <strong>$3.99/mo or $29.99/yr for life</strong> — launch pricing for everyone else is $5.99/mo or $49.99/yr.</span></div>
           <form class="wl-form" id="wl-form-foot" novalidate>
             <input type="email" name="email" autocomplete="email" placeholder="you@email.com" aria-label="Email address for the founding list" />
             <button type="submit">Join the list</button>
