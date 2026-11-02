@@ -22,13 +22,25 @@
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
-      /* Owner self-traffic opt-out (Oct 30): ?ff_ga=off sets a
-         per-browser flag that skips the GA config on this browser;
-         ?ff_ga=on clears it. Regular visitors never trigger either. */
+      /* Owner self-traffic opt-out (Oct 30; hardened Nov 2, 2026): the
+         owner's own testing must never reach GA. Layers: ?ff_ga=off/on
+         manual override; a persisted Firebase sign-in under an owner
+         email marks this browser permanently; the auth callback sets
+         the same mark the moment an owner sign-in resolves and
+         disables GA for the rest of that session. Visitors never
+         trigger any of it. */
+      window.__ffGaOwners = ['thefantasyforensics@gmail.com'];
       try {
         var ffGaQ = new URLSearchParams(location.search);
         if (ffGaQ.get('ff_ga') === 'off') localStorage.setItem('ff_ga_off', '1');
         if (ffGaQ.get('ff_ga') === 'on') localStorage.removeItem('ff_ga_off');
+        for (var ffK = 0; ffK < localStorage.length; ffK++) {
+          var ffKey = localStorage.key(ffK) || '';
+          if (ffKey.indexOf('firebase:authUser:') === 0) {
+            var ffU = JSON.parse(localStorage.getItem(ffKey) || 'null');
+            if (ffU && ffU.email && window.__ffGaOwners.indexOf(String(ffU.email).toLowerCase()) >= 0) localStorage.setItem('ff_ga_off', '1');
+          }
+        }
         window.__ffGaOff = localStorage.getItem('ff_ga_off') === '1';
       } catch (e) { window.__ffGaOff = false; }
       if (!window.__ffGaOff) {
@@ -12331,6 +12343,16 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
           authMod.onAuthStateChanged(auth, (user) => {
             window.__ffAuth.user = user || null;
             window.__ffAuth.stateResolved = true;
+            /* Owner GA opt-out (Nov 2): an owner sign-in marks this
+               browser permanently and disables GA for the session. */
+            try {
+              if (user && user.email && (window.__ffGaOwners || []).indexOf(String(user.email).toLowerCase()) >= 0) {
+                localStorage.setItem('ff_ga_off', '1');
+                window['ga-disable-G-0LN6ZHJN6C'] = true;
+                document.cookie = '_ga=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                document.cookie = '_gid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+              }
+            } catch (e) { /* analytics hygiene must never block auth */ }
             profileSetAuth(user);
             if (user && user.uid !== currentUid) {
               currentUid = user.uid;
