@@ -3201,6 +3201,7 @@
 
       <section class="tab" id="tab-command" role="tabpanel">
         <h2 class="block-title">Command Center<span class="launch-badge">Free during launch</span></h2>
+        <p class="cc-story-row"><button type="button" class="share-btn" id="cc-story-btn">📖 League Storylines</button></p>
         <div id="cc-out"></div>
       </section>
 
@@ -19155,6 +19156,94 @@ window.__lifeline = (function () {
           };
         }
         window.addEventListener("modechange", () => { window.__storyCache = null; });
+      })();
+    </script>
+
+    <style>
+      .cc-story-row { margin: 2px 0 12px; }
+      #story-modal { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: flex-start; justify-content: center; padding: 24px 14px; }
+      #story-modal[hidden] { display: none; }
+      .storym-backdrop { position: absolute; inset: 0; background: rgba(2,6,12,.72); }
+      .storym-panel { position: relative; width: 100%; max-width: 640px; max-height: calc(100vh - 48px); overflow: auto; background: #0B1220; border: 1px solid rgba(255,255,255,.14); border-radius: 18px; padding: 20px 20px 16px; box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+      .storym-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+      .storym-head h3 { font-family: "Space Grotesk", sans-serif; font-size: 19px; margin: 0; }
+      .storym-x { background: none; border: 1px solid rgba(255,255,255,.2); color: var(--ink); border-radius: 99px; width: 32px; height: 32px; cursor: pointer; font-size: 14px; }
+      .storym-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+      .storym-note { color: #C6FF00; font-size: 13px; font-weight: 700; }
+    </style>
+    <div id="story-modal" hidden>
+      <div class="storym-backdrop" data-story-close></div>
+      <div class="storym-panel" role="dialog" aria-modal="true" aria-label="League Storylines">
+        <div class="storym-head"><h3>📖 League Storylines</h3><button type="button" class="storym-x" data-story-close aria-label="Close">✕</button></div>
+        <div id="story-modal-body"></div>
+        <div class="storym-actions">
+          <button type="button" class="share-btn" id="story-copy">Copy synopsis</button>
+          <button type="button" class="share-btn" id="story-share">Share</button>
+          <button type="button" class="share-btn" id="story-open">Open full Storylines →</button>
+          <span id="story-copied" class="storym-note" hidden>Copied ✓</span>
+        </div>
+      </div>
+    </div>
+    <script>
+      "use strict";
+      /* ============ Storylines popup (Eric, Nov 1, 2026) ============
+         Command Center button -> modal with the connected league's
+         synopsis. Content comes from the Storylines engine itself
+         (renderStorylines writes #story-out); the popup reads it from
+         there so the two surfaces can never disagree. Copy takes the
+         plain-text synopsis; Share uses the Web Share API with a copy
+         fallback. */
+      (function () {
+        const modal = document.getElementById("story-modal");
+        const body = document.getElementById("story-modal-body");
+        const copied = document.getElementById("story-copied");
+        if (!modal || !body) return;
+        const close = () => { modal.hidden = true; document.body.style.overflow = ""; };
+        const flashCopied = () => { if (!copied) return; copied.hidden = false; setTimeout(() => { copied.hidden = true; }, 1800); };
+        const synopsisText = () => {
+          const t = (body.innerText || "").trim();
+          return t ? t + "\n\n— via Fantasy Forensics · thefantasyforensics.com" : "";
+        };
+        const copyText = async () => {
+          const t = synopsisText(); if (!t) return false;
+          try { await navigator.clipboard.writeText(t); return true; }
+          catch (e) {
+            const ta = document.createElement("textarea");
+            ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+            document.body.appendChild(ta); ta.select();
+            let ok = false; try { ok = document.execCommand("copy"); } catch (e2) {}
+            ta.remove(); return ok;
+          }
+        };
+        window.openStoryPopup = async function () {
+          modal.hidden = false; document.body.style.overflow = "hidden";
+          body.innerHTML = `<p class="tab-intro">Loading your league's storylines…</p>`;
+          try {
+            if (typeof window.renderStorylines === "function") await window.renderStorylines();
+            const src = document.getElementById("story-out");
+            body.innerHTML = src ? src.innerHTML : `<p class="tab-intro">Storylines aren't available right now.</p>`;
+          } catch (e) {
+            body.innerHTML = `<p class="tab-intro">Couldn't load storylines — try again in a moment.</p>`;
+          }
+        };
+        const btn = document.getElementById("cc-story-btn");
+        if (btn) btn.addEventListener("click", () => window.openStoryPopup());
+        modal.querySelectorAll("[data-story-close]").forEach(el => el.addEventListener("click", close));
+        document.addEventListener("keydown", e => { if (e.key === "Escape" && !modal.hidden) close(); });
+        const cp = document.getElementById("story-copy");
+        if (cp) cp.addEventListener("click", async () => { if (await copyText()) flashCopied(); });
+        const sh = document.getElementById("story-share");
+        if (sh) sh.addEventListener("click", async () => {
+          const t = synopsisText(); if (!t) return;
+          if (navigator.share) { try { await navigator.share({ title: "League Storylines", text: t }); } catch (e) {} }
+          else if (await copyText()) flashCopied();
+        });
+        const op = document.getElementById("story-open");
+        if (op) op.addEventListener("click", () => {
+          close();
+          if (typeof window.goLeagueSub === "function") window.goLeagueSub("storylines");
+          else if (typeof window.activateNav === "function") window.activateNav("league");
+        });
       })();
     </script>
 </body>
