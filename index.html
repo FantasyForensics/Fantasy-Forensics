@@ -2171,6 +2171,8 @@
       }
       .rt-clear:hover { color: var(--ink); border-color: rgba(255,255,255,.25); }
       .rt-count { color: var(--ink-2); font-size: 14px; margin: 2px 0 12px; }
+      .rt-market { color: var(--ink-2); font-size: 13.5px; margin: -6px 0 12px; }
+      .rt-market strong { color: var(--ink); }
       .rt-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 12px; }
       .rt-card-top { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 11px; }
       .rt-date { font-weight: 800; font-size: 14.5px; }
@@ -2850,6 +2852,7 @@
         <button type="button" role="tab" data-pnav-sub="values" data-group="players" aria-selected="true">Player Values</button>
         <button type="button" role="tab" data-pnav-sub="risers" data-group="players" aria-selected="false">Risers &amp; Fallers</button>
         <button type="button" role="tab" data-pnav-sub="radar" data-group="players" aria-selected="false">Opportunity Radar</button>
+        <button type="button" role="tab" data-pnav-sub="ineff" data-group="players" aria-selected="false">Inefficiency Board</button>
         <button type="button" role="tab" data-pnav-sub="power" data-group="league" aria-selected="false" hidden>Power Rankings</button>
         <button type="button" role="tab" data-pnav-sub="rosters" data-group="league" aria-selected="false" hidden>Rosters</button>
         <button type="button" role="tab" data-pnav-sub="outlook" data-group="league" aria-selected="false" hidden>Season Outlook</button>
@@ -2857,6 +2860,7 @@
         <button type="button" role="tab" data-pnav-sub="ppath" data-group="league" aria-selected="false" hidden>Playoff Path</button>
         <button type="button" role="tab" data-pnav-sub="psched" data-group="league" aria-selected="false" hidden>Schedule Difficulty</button>
         <button type="button" role="tab" data-pnav-sub="results" data-group="league" aria-selected="false" hidden>League Results</button>
+        <button type="button" role="tab" data-pnav-sub="storylines" data-group="league" aria-selected="false" hidden>Storylines</button>
       </div>
       <style>
         .subnav-mount.subnav-head { display: none !important; }
@@ -3024,6 +3028,11 @@
         <div id="odds-panel"></div>
         <div id="pp-explorer"></div>
         <div id="po-sched"></div>
+        <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
+      </div>
+        <div id="lg-story" data-subview="storylines">
+        <h2 class="block-title">League Storylines</h2>
+        <div id="story-out"><p class="tab-intro">Your league's storylines load here.</p></div>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
       </section>
@@ -3205,6 +3214,13 @@
         <p class="radar-sub">Players whose role is bigger than their scoring — history says the scoring usually catches up.</p>
         <p class="tab-intro">Each player below is getting starter-level opportunities over his last three games but scoring like a backup. Most flags still don't break out — every card shows how often flags like it actually have, measured on <strong>2024–25</strong>, seasons this screen was never tuned on.</p>
         <div id="radar-out"></div>
+      </section>
+
+      <section class="tab" id="tab-ineff" role="tabpanel">
+        <h2 class="block-title">Inefficiency Board<span class="launch-badge">Free during launch</span></h2>
+        <p class="radar-sub">Where the stat sheet and the price disagree.</p>
+        <p class="tab-intro" id="ineff-intro"></p>
+        <div id="ineff-out"></div>
       </section>
 
       <section class="tab" id="tab-bye" role="tabpanel">
@@ -3875,12 +3891,34 @@
         const wireTrades = [];
 
         /* (1b) Injury designations — global (NFL-wide), straight off the board */
+        /* Next Man Up — QB/RB only (backtested: WR/TE volume
+           redistributes instead of cascading). Usage backup = best
+           actual PPG on the same team at the position; waiver signal
+           = heavy trending adds on a different teammate. */
+        const nmuFor = p => {
+          if (p.pos !== "QB" && p.pos !== "RB") return "";
+          const cands = DATA.players.filter(q => q.team === p.team && q.pos === p.pos && q.id !== p.id && q.inj !== "IR");
+          if (!cands.length) return "";
+          const adds = q => { const t = (window.SLEEPER_TRENDING || {})[q.id]; return t ? (t.adds || 0) : 0; };
+          const usage = cands.filter(q => (q.gp || 0) >= 2 && (q.ppg || 0) > 0)
+            .sort((a, b) => (b.ppg || 0) - (a.ppg || 0))[0] || null;
+          const waiver = cands.filter(q => adds(q) >= 8000)
+            .sort((a, b) => adds(b) - adds(a))[0] || null;
+          const kAdds = q => Math.round(adds(q) / 1000) + "k adds";
+          if (usage && waiver && usage.id !== waiver.id)
+            return ` \u00b7 Next man up: ${usage.name} \u2014 but the waiver wire is grabbing ${waiver.name} (${kAdds(waiver)})`;
+          if (usage && waiver)
+            return ` \u00b7 Next man up: ${usage.name} (waiver wire agrees \u2014 ${kAdds(waiver)})`;
+          if (usage) return ` \u00b7 Next man up: ${usage.name}`;
+          if (waiver) return ` \u00b7 Next man up: ${waiver.name} (waiver wire's pick \u2014 ${kAdds(waiver)})`;
+          return "";
+        };
         const wireInj = DATA.players
           .filter(p => p.inj === "Out" || p.inj === "IR")
           .sort((a, b) => b.value - a.value).slice(0, 4)
           .map(p => ({
             cat: "INJURY", who: p.name,
-            head: `${p.name} (${p.team}) — ${p.inj}${p.ibp ? " · " + p.ibp : ""}${p.inote ? " (" + p.inote + ")" : ""}`,
+            head: `${p.name} (${p.team}) — ${p.inj}${p.ibp ? " · " + p.ibp : ""}${p.inote ? " (" + p.inote + ")" : ""}${nmuFor(p)}`, 
             when: new Date(window.INJ_PULL_DATE || DATA.league.snapshot).toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " pull"
           }));
 
@@ -4735,7 +4773,7 @@
          switching is a display swap, never an anchor scroll. The last
          sub-view is remembered for the session; deep links and the
          connect landing pick one explicitly via __subnavNext. */
-      const SUBNAV_DEFS = { league: [["power", "Power Rankings"], ["rosters", "Rosters"], ["outlook", "Season Outlook"], ["odds", "Playoff Odds"]] };
+      const SUBNAV_DEFS = { league: [["power", "Power Rankings"], ["rosters", "Rosters"], ["outlook", "Season Outlook"], ["odds", "Playoff Odds"], ["storylines", "Storylines"]] };
       window.__subnavState = { league: "power" };
       window.__subnavNext = {};
       function renderSubnavs(tab) {
@@ -10527,6 +10565,7 @@ ${rdP ? "" : `
           const key = sec ? sec.id.replace(/^tab-/, "") : "";
           if (key === "bye" && typeof window.renderByeView === "function") window.renderByeView();
           else if (key === "radar" && typeof window.renderRadar === "function") window.renderRadar();
+          else if (key === "ineff" && typeof window.renderIneff === "function") window.renderIneff();
           else if (key === "teamport" && typeof window.tpRender === "function") window.tpRender();
           else if (key === "tradeboard" && typeof window.ff4TBEnsure === "function") window.ff4TBEnsure(false);
           else if (key === "command" && typeof window.ff4RenderCC === "function") window.ff4RenderCC();
@@ -12845,6 +12884,17 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           if (state.filter !== "all") list = list.filter(t => t.f === state.filter);
           return list;
         }
+        function rtMarketHtml(pid) {
+          try {
+            const pkgs = returnPkgs(pid, state.filter === "all" ? null : state.filter);
+            if (!pkgs || pkgs.length < 2) return "";
+            const vals = pkgs.map(p => p.value);
+            const med = medianOf(vals), lo = pctileOf(vals, 0.25), hi = pctileOf(vals, 0.75);
+            if (med == null || lo == null || hi == null) return "";
+            const arch = archetypeOf(pkgs);
+            return `<p class="rt-market"><strong>Market check:</strong> ${pkgs.length} clean one-player returns on record · typical return \u2248 <strong>${fmt(Math.round(med))}</strong> (middle half ${fmt(Math.round(lo))}\u2013${fmt(Math.round(hi))}) · usually ${esc(arch.label)}</p>`;
+          } catch (e) { return ""; }
+        }
         function renderBrowser() {
           rtSyncFmt();
           const list = filteredTrades();
@@ -12857,7 +12907,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
               ${v != null ? `<span class="rt-pval">Our value: ${fmt(v)}</span>` : ""}
               <button type="button" class="rt-clear" id="rt-clear">Clear ✕</button>
             </div>
-            <p class="rt-count">${fmt(list.length)} real trade${list.length === 1 ? "" : "s"} involving ${esc(info[0])}${state.filter !== "all" ? " · " + (state.filter === "d" ? "dynasty" : "redraft") + " only" : ""}, newest first. What did people actually pay?</p>`;
+            <p class="rt-count">${fmt(list.length)} real trade${list.length === 1 ? "" : "s"} involving ${esc(info[0])}${state.filter !== "all" ? " · " + (state.filter === "d" ? "dynasty" : "redraft") + " only" : ""}, newest first. What did people actually pay?</p>` + rtMarketHtml(state.player);
             const clr = document.getElementById("rt-clear");
             if (clr) clr.addEventListener("click", () => selectPlayer(null));
           } else {
@@ -18768,7 +18818,7 @@ window.__lifeline = (function () {
         if (key === "roster") {
           if (typeof window.renderMyRoster === "function") window.renderMyRoster();
           window.activateNav("roster");
-        } else if (key === "power" || key === "rosters" || key === "outlook" || key === "odds") {
+        } else if (key === "power" || key === "rosters" || key === "outlook" || key === "odds" || key === "storylines") {
           window.__subnavNext = window.__subnavNext || {};
           window.__subnavNext.league = key;
           window.activateNav("league");
@@ -18935,6 +18985,177 @@ window.__lifeline = (function () {
         }
       } catch (e) {}
     });
+    </script>
+
+    <style>
+      .ineff-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+      @media (max-width: 760px) { .ineff-cols { grid-template-columns: 1fr; } }
+      .ineff-h { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 16px; margin: 4px 0 10px; }
+      .ineff-h.buy { color: #C6FF00; } .ineff-h.sell { color: #FF2E88; }
+      .ineff-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid rgba(255,255,255,.09); border-radius: 12px; margin-bottom: 8px; background: rgba(255,255,255,.02); }
+      .ineff-main { flex: 1; min-width: 0; }
+      .ineff-name { font-weight: 700; font-size: 15px; }
+      .ineff-meta { color: var(--ink-2); font-size: 12.5px; margin-top: 1px; }
+      .ineff-gap { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15px; white-space: nowrap; }
+      .ineff-gap.buy { color: #C6FF00; } .ineff-gap.sell { color: #FF2E88; }
+      .ineff-none { color: var(--ink-2); font-size: 14px; }
+    </style>
+    <script>
+      "use strict";
+      /* ================= Inefficiency Board (Eric, Nov 1, 2026) =================
+         Production vs price, ranked within position. ppg/gp are the
+         actuals already applied to every player at boot; price is the
+         mode-aware dispVal. Gap = price rank - production rank:
+         positive means he is producing above his price (buy), negative
+         means he is priced above his production (sell). */
+      window.renderIneff = function renderIneff() {
+        const out = document.getElementById("ineff-out");
+        const intro = document.getElementById("ineff-intro");
+        if (!out) return;
+        const rd = typeof VALMODE !== "undefined" && VALMODE === "redraft";
+        if (intro) intro.innerHTML = rd
+          ? `Rest-of-season price vs. what he has actually done, through Week ${DATA.league.week}. Producing above the price means the projection has not caught up yet; priced above the production means you are paying for a name.`
+          : `Season production vs. current price, through Week ${DATA.league.week}. Producing above his price — a buy before the market catches up. Priced above his production — a sell while the name still carries the number.`;
+        const pool = DATA.players.filter(p => !p.unpriced && dispVal(p) > 0 && (p.gp || 0) >= 4 && (p.ppg || 0) > 0);
+        const byPos = {};
+        pool.forEach(p => { (byPos[p.pos] = byPos[p.pos] || []).push(p); });
+        const rows = [];
+        Object.keys(byPos).forEach(pos => {
+          const g = byPos[pos];
+          const vr = {}, pr = {};
+          g.slice().sort((a, b) => dispVal(b) - dispVal(a)).forEach((p, i) => vr[p.id] = i + 1);
+          g.slice().sort((a, b) => (b.ppg || 0) - (a.ppg || 0)).forEach((p, i) => pr[p.id] = i + 1);
+          g.forEach(p => rows.push({ p, vr: vr[p.id], pr: pr[p.id], gap: vr[p.id] - pr[p.id] }));
+        });
+        const buys = rows.filter(r => r.gap >= 8).sort((a, b) => b.gap - a.gap).slice(0, 10);
+        const sells = rows.filter(r => r.gap <= -8).sort((a, b) => a.gap - b.gap).slice(0, 10);
+        const rowHtml = (r, cls) => `<div class="ineff-row"><div class="ineff-main"><div class="ineff-name">${esc(r.p.name)}</div><div class="ineff-meta">${esc(r.p.team)} · ${r.p.pos} · producing ${r.p.pos}${r.pr} (${(r.p.ppg || 0).toFixed(1)} pts/gm) · priced ${r.p.pos}${r.vr} (${fmt(dispVal(r.p))})</div></div><div class="ineff-gap ${cls}">${r.gap > 0 ? "+" : ""}${r.gap} spots</div></div>`;
+        out.innerHTML = `<div class="ineff-cols">
+          <div><div class="ineff-h buy">Producing above their price</div>${buys.length ? buys.map(r => rowHtml(r, "buy")).join("") : `<p class="ineff-none">No big gaps this week.</p>`}</div>
+          <div><div class="ineff-h sell">Priced above their production</div>${sells.length ? sells.map(r => rowHtml(r, "sell")).join("") : `<p class="ineff-none">No big gaps this week.</p>`}</div>
+        </div>`;
+      };
+      (function () {
+        const orig = window.activateNav;
+        if (typeof orig === "function") {
+          window.activateNav = function (k, a) {
+            const r = orig(k, a);
+            if (k === "ineff") window.renderIneff();
+            return r;
+          };
+        }
+        window.addEventListener("modechange", () => { const s = document.getElementById("tab-ineff"); if (s && s.classList.contains("active")) window.renderIneff(); });
+        window.renderIneff();
+      })();
+    </script>
+
+    <style>
+      .story-card { border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 16px 18px; margin-bottom: 14px; background: linear-gradient(150deg, rgba(0,229,255,.05), rgba(255,255,255,.012)); }
+      .story-card h3 { font-family: "Space Grotesk", sans-serif; font-size: 16px; margin: 0 0 6px; }
+      .story-card p { color: var(--ink-2); font-size: 14.5px; line-height: 1.55; margin: 0; }
+      .story-card p strong { color: var(--ink); }
+    </style>
+    <script>
+      "use strict";
+      /* ================= League Storylines (Eric, Nov 1, 2026) =================
+         Auto-written weekly recap for the connected Sleeper league.
+         Completed weeks only — live in-progress scores never appear
+         (players-remaining differ by team, so live comparisons are
+         not fair). Luck = all-play expected wins; bubble odds from a
+         2,000-run simulation of the remaining schedule on each team's
+         scoring mean/spread. Cached per league for the session. */
+      window.renderStorylines = async function renderStorylines() {
+        const out = document.getElementById("story-out");
+        if (!out) return;
+        const conn = window.CONN_LEAGUE;
+        const lid = conn && conn.platform === "sleeper" ? conn.leagueId : null;
+        if (!lid || typeof slpGet !== "function") {
+          out.innerHTML = `<p class="tab-intro">Storylines are written from your connected Sleeper league — the race at the top, schedule luck, form and the playoff bubble, recapped from completed weeks. Connect your league and this page writes itself every week.</p>`;
+          return;
+        }
+        if (window.__storyCache && window.__storyCache.lid === lid) { out.innerHTML = window.__storyCache.html; return; }
+        out.innerHTML = `<p class="tab-intro">Reading your league…</p>`;
+        try {
+          const state = await slpGet("/state/nfl");
+          const completed = Math.max(0, ((state && state.week) || 1) - 1);
+          const league = await slpGet("/league/" + lid);
+          if (!league || completed < 2) { out.innerHTML = `<p class="tab-intro">Not enough completed weeks yet — storylines start once a couple of weeks are in the books.</p>`; return; }
+          const rosters = await slpGet("/league/" + lid + "/rosters");
+          const users = await slpGet("/league/" + lid + "/users");
+          const uname = {}; (users || []).forEach(u => uname[u.user_id] = (u.metadata && u.metadata.team_name) || u.display_name);
+          const T = {};
+          (rosters || []).forEach(r => { const s = r.settings || {}; T[r.roster_id] = { name: uname[r.owner_id] || ("Team " + r.roster_id), w: s.wins || 0, l: s.losses || 0, pf: (s.fpts || 0) + (s.fpts_decimal || 0) / 100, weekly: {} }; });
+          const ids = Object.keys(T);
+          const regEnd = ((league.settings && league.settings.playoff_week_start) || 15) - 1;
+          const pTeams = (league.settings && league.settings.playoff_teams) || 6;
+          const weeks = []; for (let w = 1; w <= Math.min(completed, regEnd); w++) weeks.push(w);
+          const mByWeek = {};
+          await Promise.all(weeks.map(async w => { mByWeek[w] = await slpGet(`/league/${lid}/matchups/${w}`).catch(() => null); }));
+          weeks.forEach(w => { (mByWeek[w] || []).forEach(e => { if (T[e.roster_id] && typeof e.points === "number") T[e.roster_id].weekly[w] = e.points; }); });
+          ids.forEach(id => {
+            const t = T[id]; let ew = 0;
+            weeks.forEach(w => { if (t.weekly[w] == null) return; ids.forEach(o => { if (o !== id && T[o].weekly[w] != null) { if (t.weekly[w] > T[o].weekly[w]) ew += 1; else if (t.weekly[w] === T[o].weekly[w]) ew += 0.5; } }); });
+            t.exp = +(ew / Math.max(1, ids.length - 1)).toFixed(1);
+            t.luck = +(t.w - t.exp).toFixed(1);
+            const last3 = weeks.slice(-3).map(w => t.weekly[w]).filter(x => x != null);
+            t.form = last3.length ? +(last3.reduce((a, b) => a + b, 0) / last3.length).toFixed(1) : 0;
+            const all = weeks.map(w => t.weekly[w]).filter(x => x != null);
+            t.mean = all.length ? all.reduce((a, b) => a + b, 0) / all.length : 100;
+            let vv = 0; all.forEach(x => vv += (x - t.mean) * (x - t.mean));
+            t.sd = Math.max(18, all.length ? Math.sqrt(vv / all.length) : 25);
+          });
+          const remWeeks = []; for (let w = completed + 1; w <= regEnd; w++) remWeeks.push(w);
+          const pairs = [];
+          await Promise.all(remWeeks.map(async w => {
+            const mm = await slpGet(`/league/${lid}/matchups/${w}`).catch(() => null);
+            const by = {}; (mm || []).forEach(e => { (by[e.matchup_id] = by[e.matchup_id] || []).push(e.roster_id); });
+            Object.values(by).forEach(pr => { if (pr.length === 2) pairs.push(pr); });
+          }));
+          const counts = {}; ids.forEach(id => counts[id] = 0);
+          const SIMS = 2000, gauss = () => (Math.random() + Math.random() + Math.random() + Math.random() - 2) / 2;
+          for (let s = 0; s < SIMS; s++) {
+            const wins = {}, pts = {}; ids.forEach(id => { wins[id] = T[id].w; pts[id] = T[id].pf; });
+            pairs.forEach(pr => { const a = pr[0], b = pr[1]; const sa = T[a].mean + gauss() * T[a].sd * 1.73, sb = T[b].mean + gauss() * T[b].sd * 1.73; pts[a] += sa; pts[b] += sb; if (sa > sb) wins[a]++; else wins[b]++; });
+            ids.slice().sort((x, y) => (wins[y] - wins[x]) || (pts[y] - pts[x])).slice(0, pTeams).forEach(id => counts[id]++);
+          }
+          ids.forEach(id => T[id].odds = Math.round(counts[id] / SIMS * 100));
+          const standings = ids.map(id => T[id]).sort((a, b) => (b.w - a.w) || (b.pf - a.pf));
+          const luckiest = standings.slice().sort((a, b) => b.luck - a.luck)[0];
+          const unluckiest = standings.slice().sort((a, b) => a.luck - b.luck)[0];
+          const hottest = standings.slice().sort((a, b) => b.form - a.form)[0];
+          const bubble = standings.filter(t => t.odds >= 10 && t.odds <= 90).sort((a, b) => b.odds - a.odds).slice(0, 4);
+          const lw = weeks[weeks.length - 1];
+          const byM = {}; (mByWeek[lw] || []).forEach(e => { (byM[e.matchup_id] = byM[e.matchup_id] || []).push(e); });
+          const games = Object.values(byM).filter(pr => pr.length === 2 && pr[0].points != null && pr[1].points != null)
+            .map(pr => { const srt = pr.slice().sort((x, y) => y.points - x.points); return { w: T[srt[0].roster_id], wp: srt[0].points, l: T[srt[1].roster_id], lp: srt[1].points, m: +(srt[0].points - srt[1].points).toFixed(1) }; })
+            .sort((a, b) => b.m - a.m);
+          const topScore = ids.map(id => ({ t: T[id], pts: T[id].weekly[lw] })).filter(x => x.pts != null).sort((a, b) => b.pts - a.pts)[0];
+          let html = `<p class="tab-intro">Through Week ${completed} — completed weeks only. The race, the luck and the bubble for ${esc(league.name || "your league")}.</p>`;
+          if (standings[1]) html += `<div class="story-card"><h3>The race at the top</h3><p><strong>${esc(standings[0].name)}</strong> (${standings[0].w}-${standings[0].l}, ${fmt(Math.round(standings[0].pf))} pts) and <strong>${esc(standings[1].name)}</strong> (${standings[1].w}-${standings[1].l}) set the pace. Playoff odds: ${standings[0].odds}% and ${standings[1].odds}%.</p></div>`;
+          html += `<div class="story-card"><h3>Schedule luck</h3><p>Luckiest: <strong>${esc(luckiest.name)}</strong> is ${luckiest.w}-${luckiest.l} with ${luckiest.exp} expected wins — ${luckiest.luck > 0 ? "+" : ""}${luckiest.luck} wins of pure schedule luck. Unluckiest: <strong>${esc(unluckiest.name)}</strong>, ${unluckiest.exp} expected wins but only ${unluckiest.w} in the bank.</p></div>`;
+          html += `<div class="story-card"><h3>Form</h3><p>Hottest over the last three weeks: <strong>${esc(hottest.name)}</strong> at ${hottest.form} points a week.</p></div>`;
+          if (bubble.length) html += `<div class="story-card"><h3>The bubble</h3><p>${pTeams} teams make the playoffs. Living on the line: ${bubble.map(t => `<strong>${esc(t.name)}</strong> (${t.odds}%)`).join(", ")}.</p></div>`;
+          if (games.length && topScore) {
+            const closest = games[games.length - 1], blowout = games[0];
+            html += `<div class="story-card"><h3>Week ${lw} recap</h3><p><strong>${esc(topScore.t.name)}</strong> hung ${topScore.pts.toFixed(1)} on the board — the week's top score. Closest game: ${esc(closest.w.name)} ${closest.wp.toFixed(1)}–${closest.lp.toFixed(1)} over ${esc(closest.l.name)}. Biggest blowout: ${esc(blowout.w.name)} by ${blowout.m} over ${esc(blowout.l.name)}.</p></div>`;
+          }
+          window.__storyCache = { lid, html };
+          out.innerHTML = html;
+        } catch (e) {
+          out.innerHTML = `<p class="tab-intro">Couldn't load your league's storylines just now — reopen the tab to try again.</p>`;
+        }
+      };
+      (function () {
+        const orig = window.showSubNav;
+        if (typeof orig === "function") {
+          window.showSubNav = function (tab, sub) {
+            const r = orig(tab, sub);
+            if (tab === "league" && sub === "storylines") window.renderStorylines();
+            return r;
+          };
+        }
+        window.addEventListener("modechange", () => { window.__storyCache = null; });
+      })();
     </script>
 </body>
 </html>
