@@ -15568,8 +15568,10 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
          the verdict does (MutationObserver — the same pattern the
          Real Trades calculator strip uses). The gap it balances is
          the gap between the two sides' trade values exactly as the
-         verdict displays them; for a true 1-for-1 the trade values
-         are the raw sums, so the raw gap is what gets balanced. */
+         verdict displays them, and every candidate add is sized by
+         simulating the add and recomputing both sides' adjustments
+         (adding a leg changes asset counts, so the value adjustment
+         moves with it — a candidate's raw price is NOT its effect). */
       function ff4Balancer() {
         const mount = document.getElementById("balancer");
         if (!mount) return;
@@ -15621,13 +15623,32 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           const surplus = (counts[p.pos] || 0) > (POS_DEPTH[p.pos] || 2) ? 0 : 1;
           cands.push({ kind: "player", id: p.id, label: `${p.name} (${p.pos}${p.posRank}, ${p.team})`, value: v, pref: 1, surplus });
         });
+        /* Size every candidate by SIMULATING the add: append its
+           value to the trailing side's value vector, recompute both
+           sides' adjusted totals through the value adjustment, and
+           measure the gap that would actually remain if the user
+           clicked it. Adding a leg to a 1-for-1 switches the
+           adjustment ON (asset counts change), and adding to a
+           package re-solves it — so ranking by raw price vs. the gap
+           (the old sizing) routinely landed short and the box just
+           demanded another leg. Only adds that shrink the gap rank. */
+        const trailVals = assetsOf(trail).map(assetValue);
+        const leadVals = assetsOf(lead).map(assetValue);
+        const adjOf = (mine, theirs) => mine.reduce((s, v) => s + v, 0) + valueAdjustmentFor(mine, theirs);
         const sized = cands
-          .map(c => ({ ...c, off: Math.abs(c.value - gap) / Math.max(gap, 1) }))
-          .sort((x, y) => (x.pref - y.pref) || ((x.surplus || 0) - (y.surplus || 0)) || (x.off - y.off));
-        let picks3 = sized.filter(c => c.off <= 0.15).slice(0, 3);
-        if (picks3.length < 3) picks3 = sized.filter(c => c.off <= 0.35).slice(0, 3);
+          .map(c => {
+            const trial = trailVals.concat([c.value]);
+            const newTrail = adjOf(trial, leadVals);
+            const newLead = adjOf(leadVals, trial);
+            const newGap = Math.abs(newTrail - newLead);
+            return { ...c, newGap, newPct: newGap / Math.max(newTrail, newLead, 1) };
+          })
+          .filter(c => c.newGap < gap)
+          .sort((x, y) => ((x.newPct <= 0.05 ? 0 : 1) - (y.newPct <= 0.05 ? 0 : 1)) || (x.pref - y.pref) || ((x.surplus || 0) - (y.surplus || 0)) || (x.newGap - y.newGap));
+        let picks3 = sized.filter(c => c.newPct <= 0.05).slice(0, 3);
+        if (picks3.length < 3) picks3 = sized.slice(0, 3);
         if (!picks3.length) {
-          mount.innerHTML = `<div class="bal-box"><div class="bal-head">${window.__counterMode ? "Counteroffers — balance this trade" : "Balance this trade"}</div><p class="bal-note">${esc(tName(trail))} trails by ${fmt(Math.round(gap))} in trade value — no single pick or player near that size is available to add.</p></div>`;
+          mount.innerHTML = `<div class="bal-box"><div class="bal-head">${window.__counterMode ? "Counteroffers — balance this trade" : "Balance this trade"}</div><p class="bal-note">${esc(tName(trail))} trails by ${fmt(Math.round(gap))} in trade value — no single pick or player closes that gap once the value adjustment re-prices the bigger package.</p></div>`;
           return;
         }
         mount.innerHTML = `<div class="bal-box">
