@@ -10159,10 +10159,20 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
             unpriced: true, tier: "Unpriced", why: "",
           });
         });
+        /* Playoff Path pairs (Eric, 2026-11-03): the Explorer's
+           "This week" games must be the week TO BE PLAYED — the same
+           source the opponent map above already uses (oppSrc: the
+           next week's pairings once the display week's results are
+           in the records). Building them from the display week's
+           matchups unconditionally left the Explorer conditioning a
+           finished week every Tuesday until Sleeper's display week
+           rolled over. The choice is recomputed from the records on
+           every connect, so when the display week does roll, both
+           sources name the same week and nothing shifts. */
         let matchupPairs = null;
-        if (b.matchups && b.matchups.length) {
+        if (oppSrc && oppSrc.length) {
           const mg = {};
-          b.matchups.forEach(m => { (mg[m.matchup_id] = mg[m.matchup_id] || []).push(m.roster_id); });
+          oppSrc.forEach(m => { (mg[m.matchup_id] = mg[m.matchup_id] || []).push(m.roster_id); });
           const prs = Object.values(mg).filter(g => g.length === 2).map(g => [g[0], g[1]]);
           if (prs.length) matchupPairs = prs;
         }
