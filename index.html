@@ -9231,6 +9231,23 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
         renderPartnerPick("uf-partners", team.rid, (DATA.teams || []).filter(t => t.rid !== team.rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty"))), () => { ufState.cacheKey = ""; ufState.cacheHtml = ""; renderUpgradeFinderTrades(); });
         renderUpgradeFinder(team, team.rid, "uf-trades-wrap");
       }
+      /* Activation render (Eric, 2026-11-03): the Upgrade Finder only
+         renders when called — it is never built at connect/apply — so
+         every route that lands here must call it. The other
+         activation-rendered views (Radar, Team Portfolio, Trade Board,
+         Inefficiency) hook activateNav the same way; the Finder was
+         missing its hook, so links that navigate without rendering
+         first (the Command Center tool links) landed on a blank tab. */
+      (function () {
+        const orig = window.activateNav;
+        if (typeof orig === "function") {
+          window.activateNav = function (k, a) {
+            const r = orig(k, a);
+            if (k === "upgrades") renderUpgradeFinderTrades();
+            return r;
+          };
+        }
+      })();
       if (!window.__ufWired) {
         window.__ufWired = true;
         document.addEventListener("click", e => {
