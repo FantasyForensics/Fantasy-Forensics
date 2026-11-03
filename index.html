@@ -6133,10 +6133,17 @@ ${rdP ? "" : `
                  every other gate but lands in [NEAR_MISS_MIN_GAIN,
                  DYNASTY_MIN_GAIN) is collected as a near miss for the
                  strip under the main list, not dropped silently. */
+              /* Partner fit (Eric, 2026-11-03): the deal a partner
+                 actually takes — the best player going out fills a
+                 position where they are thin (positional value well
+                 below the league median) and starts for them. Fits
+                 score higher, and the card says why. */
+              const fitA = pkg.filter(a => a.kind === "player" && needScore(partner.rid, a.p.pos) > 400)
+                .find(a => pkgStartsForPartner(partner, target, [a]));
               const [cTgt, cPkg] = vaPair([target.value], pkg.map(a => a.value));
               const adjTarget = target.value + cTgt;
               const gapPct = Math.abs((pkgValue(pkg) + cPkg) - adjTarget) / adjTarget;
-              const score = dPpg * 6 + windowBonus + Math.max(0, 8 - gapPct * 20) + Math.min(3, target.value / 3000);
+              const score = dPpg * 6 + windowBonus + Math.max(0, 8 - gapPct * 20) + Math.min(3, target.value / 3000) + (fitA ? 4 : 0);
               if (VALMODE !== "redraft" && mine.arch === "dynasty") {
                 if (dPpg < DYNASTY_CLEAR_GAIN) {
                   const pickShare = pkg.filter(a => a.kind === "pick").reduce((s2, a) => s2 + a.value, 0) / Math.max(pkgValue(pkg), 1);
@@ -6145,11 +6152,11 @@ ${rdP ? "" : `
                 }
                 if (dPpg < DYNASTY_MIN_GAIN) {
                   if (collectNear && dPpg >= NEAR_MISS_MIN_GAIN)
-                    nearOut.push({ dir: "buy", partner, target, pkg, dPpg, score, basePpg: base, nearMiss: true });
+                    nearOut.push({ dir: "buy", partner, target, pkg, dPpg, score, basePpg: base, nearMiss: true, fitPos: fitA ? fitA.p.pos : null, fitName: fitA ? fitA.p.name : null });
                   return;
                 }
               }
-              out.push({ dir: "buy", partner, target, pkg, dPpg, score, basePpg: base });
+              out.push({ dir: "buy", partner, target, pkg, dPpg, score, basePpg: base, fitPos: fitA ? fitA.p.pos : null, fitName: fitA ? fitA.p.name : null });
             });
         });
         out.nearMisses = nearOut.sort((a, b) => b.dPpg - a.dPpg).slice(0, 3);
@@ -6206,8 +6213,12 @@ ${rdP ? "" : `
             const myNew = myIds.filter(id => id !== vet.id).concat(pOut);
             const dPpg = optimalLineup(myNew).total - base;
             const futureGain = Math.round(getsAdj - vetAdj);
-            const score = futureGain / 120 + windowBonus + (myLineup.has(vet.id) ? 2 : 0) + Math.max(0, pD);
-            out.push({ dir: "sell", partner, vet, pkg, dPpg, futureGain, score, basePpg: base });
+            /* Partner fit (Eric, 2026-11-03): the veteran fills a
+               hole for them — they are thin at his position and he
+               raises their lineup. Fits score higher. */
+            const fitPos = (needScore(partner.rid, vet.pos) > 400 && pD > 0) ? vet.pos : null;
+            const score = futureGain / 120 + windowBonus + (myLineup.has(vet.id) ? 2 : 0) + Math.max(0, pD) + (fitPos ? 4 : 0);
+            out.push({ dir: "sell", partner, vet, pkg, dPpg, futureGain, score, basePpg: base, fitPos });
           });
         });
         return out;
@@ -6563,6 +6574,7 @@ ${rdP ? "" : `
             why.push(VALMODE === "redraft"
               ? `${esc(t.name)} ${lineupSet(s.partner.rid).has(t.id) ? "starts for" : "is depth on"} ${esc(s.partner.name)} — in redraft, a pure lineup fit.`
               : `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be trading production for future capital.`);
+            if (s.fitPos) why.push(`${esc(s.fitName)} fills a hole for them: ${esc(s.partner.name)} is thin at ${s.fitPos}, and he starts for them there — the kind of deal a partner actually says yes to.`);
             why.push(`${esc(t.name)} projects <strong>${rosProj(t).toFixed(1)} pts/wk</strong> the rest of the way and lifts your optimal lineup ${s.basePpg.toFixed(1)} → ${(s.basePpg + s.dPpg).toFixed(1)} projected pts/week.`);
             if (VALMODE === "redraft") why.push(`Priced on rest-of-season production alone: the ${rosProj(t).toFixed(1)} projected pts/wk is the whole price.`);
             else if ((t.age ?? 99) <= 24) why.push(`Premium price: at ${t.age}, ${esc(t.name)} is young <em>and</em> producing — the most expensive profile in dynasty, so the offer stacks ${s.pkg.length} asset${s.pkg.length > 1 ? "s" : ""} to reach his price.`);
@@ -6576,6 +6588,7 @@ ${rdP ? "" : `
               ? `<span class="dir-tag sell">Rebuilder sell</span>Rebuilder move: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season — production your roster isn't contending with, converted into picks and youth.`
               : `<span class="dir-tag sell">Rebuild path</span>The other direction for a Crossroads team: sells a veteran for the future: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season.`;
             why.push(`${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be paying future capital for production now.`);
+            if (s.fitPos) why.push(`${esc(v.name)} fills a hole for them: ${esc(s.partner.name)} is thin at ${s.fitPos}, and he starts for them there — the kind of deal a partner actually says yes to.`);
             why.push(`${esc(v.name)} (age ${v.age ?? "—"}) still produces — ${rosProj(v).toFixed(1)} projected pts/wk — but his value peaks before your roster's window opens. The return is all picks and players 24 or younger.`);
             why.push(s.dPpg >= -0.05
               ? `It barely touches this season: your optimal lineup holds at ~${(s.basePpg + s.dPpg).toFixed(1)} projected pts/week without him.`
@@ -9092,7 +9105,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
           return starterCache.get(partnerRid);
         };
         const band = [], value = [];
-        const partners = DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty")) && partnerAllowed(t.rid));
+        /* All teams are partners now (Eric, 2026-11-03) — contenders
+           included, in dynasty too. The counterparty sanity below
+           keeps deals with them honest: a non-rebuilding partner's
+           package must give them a starter back. */
+        const partners = DATA.teams.filter(t => t.rid !== rid && partnerAllowed(t.rid));
         partners.forEach(partner => {
           teamPlayers(partner.rid)
             .filter(p => slotCands.includes(p.pos) && dispVal(p) >= floor && (p.ros || 0) > 0)
@@ -9117,6 +9134,14 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
               if (!pkgs.length) return;
               const rec = { partner, cand, ros, gain: ros - anchorRos, pkgs: pkgs.slice(0, 2),
                 role: startsFor(partner.rid).has(cand.id) ? "starts for" : "is depth on" };
+              /* Partner fit (Eric, 2026-11-03): the player being
+                 upgraded from is the natural piece to send back, and
+                 the deal fits best when he fills a hole for them —
+                 the partner is thin at his position (their positional
+                 value sits well below the league median) and he would
+                 start for them once the target leaves. Fits rank
+                 first in both lists below and the row says so. */
+              rec.fit = pkgs.some(p => p.withAnchor) && needScore(partner.rid, anchor.pos) > 400 && pkgStartsForPartner(partner, cand, [anchorAsset]);
               /* Two lists, one pass. The band is the asked bump, loose.
                  The value list is everything ABOVE the band — players
                  projecting significantly more than asked — ranked by
@@ -9131,8 +9156,8 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
               else value.push(rec);
             });
         });
-        band.sort((a, b) => Math.abs(a.gain - bump) - Math.abs(b.gain - bump) || b.ros - a.ros);
-        value.sort((a, b) => (dispVal(a.cand) / a.ros) - (dispVal(b.cand) / b.ros) || b.ros - a.ros);
+        band.sort((a, b) => (b.fit ? 1 : 0) - (a.fit ? 1 : 0) || Math.abs(a.gain - bump) - Math.abs(b.gain - bump) || b.ros - a.ros);
+        value.sort((a, b) => (b.fit ? 1 : 0) - (a.fit ? 1 : 0) || (dispVal(a.cand) / a.ros) - (dispVal(b.cand) / b.ros) || b.ros - a.ros);
         return { band: band.slice(0, 10), value: value.slice(0, 5) };
       }
       function ufPkgGrade(pkg, tv) {
@@ -9164,7 +9189,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
         } else {
           const { band, value } = ufFind(rid, team, anchor, slotCands, bump);
           if (!band.length && !value.length) {
-            html = `<div class="diag"><h3>No fit at that bump</h3><p>${partnerPick.sel ? "No player on the teams you picked" : VALMODE === "redraft" ? "No player on another roster" : "No player on a selling team"} fits that bump for the ${esc(slotLabel)} slot. Try a smaller bump, or a different player${partnerPick.sel ? ", or add teams back in the Trade partners menu" : ""}.</p></div>`;
+            html = `<div class="diag"><h3>No fit at that bump</h3><p>${partnerPick.sel ? "No player on the teams you picked" : "No player on another roster"} fits that bump for the ${esc(slotLabel)} slot. Try a smaller bump, or a different player${partnerPick.sel ? ", or add teams back in the Trade partners menu" : ""}.</p></div>`;
           } else {
             /* Concise by default (Eric, 2026-10-27): one line per
                target — name plus added points — and the trade itself
@@ -9177,7 +9202,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
                 const grade = ufPkgGrade(pkg, dispVal(r.cand));
                 return `<div style="margin-top:8px;"><span class="who">You send: ${assets}</span><div class="sub">${withAnchor ? `Includes ${esc(anchor.name)} - the player being replaced` : `Keeps ${esc(anchor.name)} on your bench`}${grade ? ` - ${grade} of fair` : ""}</div>${ufGradeBtn(rid, r.partner.rid, pkg, r.cand)}</div>`;
               }).join("");
-              return `<div class="mv-row" style="display:block;"><div>${hsImg(r.cand, "phs-sm")}<span class="who">${esc(r.cand.name)}${desigChip(r.cand)}</span> <span class="lu-delta up">+${ufF1(r.gain)} pts/wk</span> <span class="sub">${logoImg(r.cand.team)}${esc(r.cand.team)} - ${r.cand.pos}${r.cand.posRank} - ${esc(r.role)} ${esc(r.partner.name)}${arch}</span></div><button type="button" class="uf-show" data-uf-show="toggle" aria-expanded="false" style="margin-top:6px;">See who to trade for ▸</button><div class="uf-pkgs" hidden>${pkgHtml}</div></div>`;
+              return `<div class="mv-row" style="display:block;"><div>${hsImg(r.cand, "phs-sm")}<span class="who">${esc(r.cand.name)}${desigChip(r.cand)}</span> <span class="lu-delta up">+${ufF1(r.gain)} pts/wk</span> <span class="sub">${logoImg(r.cand.team)}${esc(r.cand.team)} - ${r.cand.pos}${r.cand.posRank} - ${esc(r.role)} ${esc(r.partner.name)}${arch}${r.fit ? ` · fills their ${anchor.pos} hole` : ""}</span></div><button type="button" class="uf-show" data-uf-show="toggle" aria-expanded="false" style="margin-top:6px;">See who to trade for ▸</button><div class="uf-pkgs" hidden>${pkgHtml}</div></div>`;
             };
             const groupHtml = (title, rows) => rows.length ? `<div style="font-weight:700;margin:12px 0 4px;">${title}</div>` + rows.map(rowHtml).join("") : "";
             html = `<div class="wv-card"><h3>Upgrades around +${bump.toFixed(1)} a week for ${esc(anchor.name)}</h3>` + groupHtml("Close to your target", band) + groupHtml("Best value — bigger jump, cheaper to buy", value) + `</div>`;
@@ -9228,7 +9253,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
         if (window.GUEST_MODE) { showNote(); return; }
         const team = (DATA.teams || []).find(t => t.isUser) || null;
         if (!team) { showNote(); return; }
-        renderPartnerPick("uf-partners", team.rid, (DATA.teams || []).filter(t => t.rid !== team.rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty"))), () => { ufState.cacheKey = ""; ufState.cacheHtml = ""; renderUpgradeFinderTrades(); });
+        renderPartnerPick("uf-partners", team.rid, (DATA.teams || []).filter(t => t.rid !== team.rid), () => { ufState.cacheKey = ""; ufState.cacheHtml = ""; renderUpgradeFinderTrades(); });
         renderUpgradeFinder(team, team.rid, "uf-trades-wrap");
       }
       /* Activation render (Eric, 2026-11-03): the Upgrade Finder only
