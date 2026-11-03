@@ -959,6 +959,25 @@
         padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px;
         background: rgba(0,0,0,.35); color: var(--ink); font-weight: 600;
       }
+      /* Trade-partner picker (Player Targets + Upgrade Finder) */
+      #finder-partners { flex: 1 1 100%; }
+      #uf-partners { margin: 0 0 14px; }
+      .ppick-btn {
+        padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px;
+        background: rgba(0,0,0,.35); color: var(--ink); font-weight: 600; cursor: pointer;
+      }
+      .ppick-btn strong { color: var(--accent); }
+      .ppick-panel {
+        margin-top: 8px; padding: 10px 12px; width: min(420px, 100%);
+        border: 1px solid var(--line); border-radius: 10px; background: rgba(12,12,28,.97);
+      }
+      .ppick-actions { display: flex; gap: 8px; margin-bottom: 6px; }
+      .ppick-actions button {
+        padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.24);
+        background: rgba(255,255,255,.05); color: var(--ink); font-weight: 700; cursor: pointer;
+      }
+      .ppick-row { display: flex; align-items: center; gap: 9px; padding: 6px 2px; cursor: pointer; font-weight: 600; }
+      .ppick-row input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
       /* The "I want" position target: a high-contrast panel at the
          top of the finder, in both value modes. It scrolls away with
          the page (was sticky: the pinned panel rode over the trade
@@ -3113,6 +3132,7 @@
         <div class="finder-controls finder-part">
           <label for="finder-team"><strong>Find trades for:</strong></label>
           <select id="finder-team"></select>
+          <div id="finder-partners"></div>
         </div>
         <div class="want-panel finder-part" role="group" aria-label="Position to target">
           <span class="want-label">I want<span class="want-hint">filters every trade idea below</span></span>
@@ -3151,6 +3171,7 @@
       </section>
 
       <section class="tab" id="tab-upgrades" role="tabpanel">
+        <div id="uf-partners"></div>
         <div id="uf-trades-wrap"></div>
       </section>
 
@@ -5803,6 +5824,49 @@ ${rdP ? "" : `
          by mirror window — buyers shop from rebuilders, sellers shop to
          contenders, never two contenders swapping starters sideways. */
       const finderState = { want: "" };
+      /* Trade-partner picker (Eric, 2026-11-03): one shared selection
+         for Player Targets and the Upgrade Finder. sel = null means
+         every eligible team is in play (the long-standing default);
+         a Set restricts deals to the picked teams only. */
+      const partnerPick = { sel: null };
+      const ppickOpen = {};
+      function partnerAllowed(rid) { return !partnerPick.sel || partnerPick.sel.has(Number(rid)); }
+      function partnerPickSig() { return partnerPick.sel ? [...partnerPick.sel].sort((a, b) => a - b).join(",") : "all"; }
+      function renderPartnerPick(mountId, myRid, eligible, onChange) {
+        const mount = document.getElementById(mountId);
+        if (!mount) return;
+        const sel = partnerPick.sel;
+        const label = !sel ? "All teams" : sel.size === 0 ? "None picked" : sel.size + " of " + eligible.length + " teams";
+        const rows = eligible.map(t => {
+          const on = !sel || sel.has(Number(t.rid));
+          const tag = VALMODE === "redraft" ? "" : ` <span class="p-sub">${archTag(t.arch)}</span>`;
+          return `<label class="ppick-row"><input type="checkbox" data-ppick-team="${t.rid}" ${on ? "checked" : ""}><span>${esc(t.name)}</span>${tag}</label>`;
+        }).join("");
+        mount.innerHTML = `<div class="ppick"><button type="button" class="ppick-btn" data-ppick-toggle aria-expanded="${ppickOpen[mountId] ? "true" : "false"}">Trade partners: <strong>${label}</strong> ▾</button>
+          <div class="ppick-panel" ${ppickOpen[mountId] ? "" : "hidden"}>
+            <div class="ppick-actions"><button type="button" data-ppick-all>All teams</button><button type="button" data-ppick-none>None</button></div>
+            ${rows || `<p class="wv-sub">No other teams in this league.</p>`}
+          </div></div>`;
+        const applyFromPanel = () => {
+          const boxes = [...mount.querySelectorAll("[data-ppick-team]")];
+          const checked = boxes.filter(b => b.checked).map(b => Number(b.dataset.ppickTeam));
+          partnerPick.sel = (!boxes.length || checked.length === boxes.length) ? null : new Set(checked);
+          renderPartnerPick(mountId, myRid, eligible, onChange);
+          if (typeof onChange === "function") onChange();
+        };
+        const toggle = mount.querySelector("[data-ppick-toggle]");
+        if (toggle) toggle.addEventListener("click", () => {
+          ppickOpen[mountId] = !ppickOpen[mountId];
+          const panel = mount.querySelector(".ppick-panel");
+          if (panel) panel.hidden = !ppickOpen[mountId];
+          toggle.setAttribute("aria-expanded", String(!!ppickOpen[mountId]));
+        });
+        mount.querySelectorAll("[data-ppick-team]").forEach(b => b.addEventListener("change", applyFromPanel));
+        const allBtn = mount.querySelector("[data-ppick-all]");
+        if (allBtn) allBtn.addEventListener("click", () => { partnerPick.sel = null; renderPartnerPick(mountId, myRid, eligible, onChange); if (typeof onChange === "function") onChange(); });
+        const noneBtn = mount.querySelector("[data-ppick-none]");
+        if (noneBtn) noneBtn.addEventListener("click", () => { partnerPick.sel = new Set(); renderPartnerPick(mountId, myRid, eligible, onChange); if (typeof onChange === "function") onChange(); });
+      }
       function rosProj(p) { return rosScore(p); }
       function optimalLineup(ids) {
         const pool = ids.map(id => PBY[id]).filter(Boolean).slice().sort((a, b) => rosProj(b) - rosProj(a));
@@ -6299,6 +6363,13 @@ ${rdP ? "" : `
           all = [...buys, ...sellSuggestions(rid, mine)];
           nearRaw = buys.nearMisses || [];
         }
+        /* Trade-partner picker (Eric, 2026-11-03): a picked set
+           restricts every suggestion — near misses included — to
+           deals with those teams. */
+        if (partnerPick.sel) {
+          all = all.filter(s => partnerAllowed(s.partner.rid));
+          nearRaw = nearRaw.filter(s => partnerAllowed(s.partner.rid));
+        }
         // dedupe by direction+partner+headline asset, diversify partners
         const seen = new Set(); const out = []; const perPartner = {}; const perDir = {};
         all.sort((a, b) => b.score - a.score);
@@ -6377,6 +6448,10 @@ ${rdP ? "" : `
       function renderFinder() {
         const rid = Number(document.getElementById("finder-team").value);
         if (window.GUEST_MODE || !TBY[rid]) { const el = document.getElementById("finder-out"); if (el) el.innerHTML = ""; return; }
+        renderPartnerPick("finder-partners", rid, (DATA.teams || []).filter(t => t.rid !== rid), () => renderFinder());
+        const ppNote = !partnerPick.sel ? "" : partnerPick.sel.size === 0
+          ? `<p><strong>Trade partners:</strong> every team is unticked, so no deals can be built — tick at least one team in the Trade partners menu above.</p>`
+          : `<p><strong>Trade partners:</strong> only the ${partnerPick.sel.size} team${partnerPick.sel.size === 1 ? "" : "s"} you picked — deals with anyone else are hidden.</p>`;
         const { suggestions, mine, posNote, nearMisses } = findTrades(rid);
         const el = document.getElementById("finder-out");
         const basePpg = optimalLineup(mine.playerIds).total;
@@ -6401,7 +6476,7 @@ ${rdP ? "" : `
           return `<p>${bits.join(" · ")}.</p>`;
         })();
         let html = `<div class="diag"><h3>${esc(mine.name)} — diagnosis</h3>
-          <p>${VALMODE === "redraft" ? "" : `Tagged <strong>${archTag(mine.arch)}</strong>. `}${strat}${want ? ` Targeting: <strong>${esc(wantName)}</strong>.` : ""}</p>${standing}${posNote ? `<p>${posNote}</p>` : ""}</div>`;
+          <p>${VALMODE === "redraft" ? "" : `Tagged <strong>${archTag(mine.arch)}</strong>. `}${strat}${want ? ` Targeting: <strong>${esc(wantName)}</strong>.` : ""}</p>${standing}${posNote ? `<p>${posNote}</p>` : ""}${ppNote}</div>`;
         if (!suggestions.length) {
           const why = VALMODE === "redraft"
             ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every producer who would raise this lineup either can't be priced fairly with your bench depth, or the deal would cost a starter to make the values balance. Try another position, or build the deal by hand in the calculator.`
@@ -9017,7 +9092,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
           return starterCache.get(partnerRid);
         };
         const band = [], value = [];
-        const partners = DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty")));
+        const partners = DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty")) && partnerAllowed(t.rid));
         partners.forEach(partner => {
           teamPlayers(partner.rid)
             .filter(p => slotCands.includes(p.pos) && dispVal(p) >= floor && (p.ros || 0) > 0)
@@ -9081,7 +9156,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
         return `<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Grade it in the calculator \u2192</button>`;
       }
       function ufResultsHtml(team, rid, anchor, slotLabel, slotCands, bump) {
-        const key = [rid, anchor.id, ufState.slotKey, bump].join("|");
+        const key = [rid, anchor.id, ufState.slotKey, bump, partnerPickSig()].join("|");
         if (ufState.cacheKey === key && ufState.cacheHtml) return ufState.cacheHtml;
         let html;
         if (anchor.unpriced) {
@@ -9089,7 +9164,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
         } else {
           const { band, value } = ufFind(rid, team, anchor, slotCands, bump);
           if (!band.length && !value.length) {
-            html = `<div class="diag"><h3>No fit at that bump</h3><p>${VALMODE === "redraft" ? "No player on another roster" : "No player on a selling team"} fits that bump for the ${esc(slotLabel)} slot. Try a smaller bump, or a different player.</p></div>`;
+            html = `<div class="diag"><h3>No fit at that bump</h3><p>${partnerPick.sel ? "No player on the teams you picked" : VALMODE === "redraft" ? "No player on another roster" : "No player on a selling team"} fits that bump for the ${esc(slotLabel)} slot. Try a smaller bump, or a different player${partnerPick.sel ? ", or add teams back in the Trade partners menu" : ""}.</p></div>`;
           } else {
             /* Concise by default (Eric, 2026-10-27): one line per
                target — name plus added points — and the trade itself
@@ -9149,10 +9224,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
         const wrap = document.getElementById("uf-trades-wrap");
         if (!wrap) return;
         const note = `<div class="mv-card"><h3>Upgrade Finder</h3><p class="wv-sub">Connect a league to find upgrades for your lineup.</p><button type="button" class="locked-cta" data-uf-connect="1">Connect your league</button></div>`;
-        const showNote = () => { wrap.innerHTML = note; const cb = wrap.querySelector("[data-uf-connect]"); if (cb) cb.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); }); };
+        const showNote = () => { const pm = document.getElementById("uf-partners"); if (pm) pm.innerHTML = ""; wrap.innerHTML = note; const cb = wrap.querySelector("[data-uf-connect]"); if (cb) cb.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); }); };
         if (window.GUEST_MODE) { showNote(); return; }
         const team = (DATA.teams || []).find(t => t.isUser) || null;
         if (!team) { showNote(); return; }
+        renderPartnerPick("uf-partners", team.rid, (DATA.teams || []).filter(t => t.rid !== team.rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty"))), () => { ufState.cacheKey = ""; ufState.cacheHtml = ""; renderUpgradeFinderTrades(); });
         renderUpgradeFinder(team, team.rid, "uf-trades-wrap");
       }
       if (!window.__ufWired) {
