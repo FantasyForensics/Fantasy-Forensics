@@ -16836,7 +16836,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
           wvBody = d.waiverAllRostered ? `<p class="cc-tile-sub">This week's most-added players are all rostered in this league.</p>` : `<p class="cc-tile-sub">No trending adds this week.</p>`;
         }
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="waivers" style="--tile-accent:#448AFF"><div class="cc-tile-h">Most Added This Week</div><div class="cc-tile-body">${wvBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="waivers">Waiver Targets →</button></div></div>`);
-        /* Fantasy Tools tile (Eric, 2026-10-27): eight links — the
+        /* Fantasy Tools tile (Eric, 2026-10-27): nine links — the
            tile body already scrolls inside the fixed 240px tile,
            so about four show and the rest scroll into view, exactly
            as the other tiles scroll their rows. Real Trades shows
@@ -16844,6 +16844,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         const toolsLinks = `<button type="button" class="cc-tool-link" data-cc-grid-tool="bye">Bye Week Planner</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="ppath">Playoff Path</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="trades">Trade Calculator</button>
+          <button type="button" class="cc-tool-link" data-cc-grid-tool="upgrades">Upgrade Finder</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="lineup">Lineup Analyzer</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="realtrades">Real Trades</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="risers">Risers &amp; Fallers</button>
@@ -19176,7 +19177,7 @@ window.__lifeline = (function () {
         const conn = window.CONN_LEAGUE;
         const lid = conn && conn.platform === "sleeper" ? conn.leagueId : null;
         if (!lid || typeof slpGet !== "function") {
-          out.innerHTML = `<p class="tab-intro">Storylines are written from your connected Sleeper league — the race at the top, schedule luck, form and the playoff bubble, recapped from completed weeks. Connect your league and this page writes itself every week.</p>`;
+          out.innerHTML = `<p class="tab-intro">Connect your Sleeper league and this page tells its story — the race at the top, schedule luck, form and the playoff bubble, updated every week.</p>`;
           return;
         }
         if (window.__storyCache && window.__storyCache.lid === lid) { out.innerHTML = window.__storyCache.html; return; }
@@ -19185,7 +19186,7 @@ window.__lifeline = (function () {
           const state = await slpGet("/state/nfl");
           const completed = Math.max(0, ((state && state.week) || 1) - 1);
           const league = await slpGet("/league/" + lid);
-          if (!league || completed < 2) { out.innerHTML = `<p class="tab-intro">Not enough completed weeks yet — storylines start once a couple of weeks are in the books.</p>`; return; }
+          if (!league || completed < 2) { out.innerHTML = `<p class="tab-intro">Too early yet — your league's storylines start once a couple of weeks are in the books.</p>`; return; }
           const rosters = await slpGet("/league/" + lid + "/rosters");
           const users = await slpGet("/league/" + lid + "/users");
           const uname = {}; (users || []).forEach(u => uname[u.user_id] = (u.metadata && u.metadata.team_name) || u.display_name);
@@ -19236,7 +19237,7 @@ window.__lifeline = (function () {
             .map(pr => { const srt = pr.slice().sort((x, y) => y.points - x.points); return { w: T[srt[0].roster_id], wp: srt[0].points, l: T[srt[1].roster_id], lp: srt[1].points, m: +(srt[0].points - srt[1].points).toFixed(1) }; })
             .sort((a, b) => b.m - a.m);
           const topScore = ids.map(id => ({ t: T[id], pts: T[id].weekly[lw] })).filter(x => x.pts != null).sort((a, b) => b.pts - a.pts)[0];
-          let html = `<p class="tab-intro">Through Week ${completed} — completed weeks only. The race, the luck and the bubble for ${esc(league.name || "your league")}.</p>`;
+          let html = `<p class="tab-intro">Your league through Week ${completed} — the race at the top, the schedule luck, and who's living on the playoff bubble in ${esc(league.name || "your league")}.</p>`;
           if (standings[1]) html += `<div class="story-card"><h3>The race at the top</h3><p><strong>${esc(standings[0].name)}</strong> (${standings[0].w}-${standings[0].l}, ${fmt(Math.round(standings[0].pf))} pts) and <strong>${esc(standings[1].name)}</strong> (${standings[1].w}-${standings[1].l}) set the pace. Playoff odds: ${standings[0].odds}% and ${standings[1].odds}%.</p></div>`;
           html += `<div class="story-card"><h3>Schedule luck</h3><p>Luckiest: <strong>${esc(luckiest.name)}</strong> is ${luckiest.w}-${luckiest.l} with ${luckiest.exp} expected wins — ${luckiest.luck > 0 ? "+" : ""}${luckiest.luck} wins of pure schedule luck. Unluckiest: <strong>${esc(unluckiest.name)}</strong>, ${unluckiest.exp} expected wins but only ${unluckiest.w} in the bank.</p></div>`;
           html += `<div class="story-card"><h3>Form</h3><p>Hottest over the last three weeks: <strong>${esc(hottest.name)}</strong> at ${hottest.form} points a week.</p></div>`;
