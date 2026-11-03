@@ -6073,10 +6073,13 @@ ${rdP ? "" : `
 
       /* BUY: the user sends picks / prospects / bench depth and receives
          one producer — any age, priced on the youth+production curve.
-         Partners are rebuilders first, then crossroads teams; fellow
-         contenders (Win-Now and Dynasty alike) are never shopped. The
-         guardrail is absolute: unless the deal raises the user's
-         optimal-lineup projection, it does not exist. */
+         Partners are rebuilders first (window bonus), then everyone
+         else — all teams are shopped now (Eric, 2026-11-03, matching
+         the Upgrade Finder); deals with a non-rebuilding partner stay
+         honest through the counterparty sanity below (their package
+         must include a player who starts for them). The guardrail is
+         absolute: unless the deal raises the user's optimal-lineup
+         projection, it does not exist. */
       function buySuggestions(rid, mine, opts) {
         const myIds = mine.playerIds;
         const base = optimalLineup(myIds).total;
@@ -6089,12 +6092,11 @@ ${rdP ? "" : `
         ];
         if (!payPool.length) return [];
         const out = [];
-        /* Dynasty matches buyers with mirror windows (rebuilders and
-           crossroads teams sell production; fellow contenders are
-           never shopped).
-           Redraft has no windows: every team is playing for this season,
-           so every other roster is a potential partner. */
-        DATA.teams.filter(t => t.rid !== rid && (VALMODE === "redraft" || (t.arch !== "win-now" && t.arch !== "dynasty"))).forEach(partner => {
+        /* Every other roster is a potential partner (Eric,
+           2026-11-03): rebuilders still score a window bonus, and the
+           counterparty sanity below keeps contender deals honest.
+           Redraft is unchanged — it always shopped everyone. */
+        DATA.teams.filter(t => t.rid !== rid).forEach(partner => {
           const windowBonus = VALMODE === "redraft" ? 2 : partner.arch === "rebuilder" ? 5 : 1.5;
           const pool = teamPlayers(partner.rid)
             .filter(p => dispVal(p) >= tradeFloors().target && (p.ros || 0) > 0 && wantMatch(p.pos));
@@ -6492,7 +6494,7 @@ ${rdP ? "" : `
           const why = VALMODE === "redraft"
             ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every producer who would raise this lineup either can't be priced fairly with your bench depth, or the deal would cost a starter to make the values balance. Try another position, or build the deal by hand in the calculator.`
             : mine.arch === "win-now"
-            ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every available producer who would raise this lineup either plays for another contender — not a window fit — or can't be priced fairly with your picks and depth. Try another position, or build the deal by hand in the calculator.`
+            ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every available producer who would raise this lineup either can't be priced fairly with your picks and depth, or the deal couldn't give his team a starter back. Try another position, or build the deal by hand in the calculator.`
             : mine.arch === "dynasty"
               ? `No buy cleared the Dynasty bar${want ? ` at ${esc(wantName)}` : ""}: this core only trades for clear upgrades — at least +3.0 projected pts/week, paid for with draft capital — and no available producer met it at a fair price today. That is the strategy working as designed; build the deal by hand in the calculator if you see one we don't.`
             : mine.arch === "rebuilder"
@@ -6573,7 +6575,9 @@ ${rdP ? "" : `
               : `<span class="dir-tag">Win-now path</span>One direction for a Crossroads team — buys production now: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc} — future capital spent on this season.`;
             why.push(VALMODE === "redraft"
               ? `${esc(t.name)} ${lineupSet(s.partner.rid).has(t.id) ? "starts for" : "is depth on"} ${esc(s.partner.name)} — in redraft, a pure lineup fit.`
-              : `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be trading production for future capital.`);
+              : (s.partner.arch === "win-now" || s.partner.arch === "dynasty")
+                ? `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — a contender, not a seller: this deal only works because the package hands them a starter back, so both lineups come out ahead.`
+                : `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be trading production for future capital.`);
             if (s.fitPos) why.push(`${esc(s.fitName)} fills a hole for them: ${esc(s.partner.name)} is thin at ${s.fitPos}, and he starts for them there — the kind of deal a partner actually says yes to.`);
             why.push(`${esc(t.name)} projects <strong>${rosProj(t).toFixed(1)} pts/wk</strong> the rest of the way and lifts your optimal lineup ${s.basePpg.toFixed(1)} → ${(s.basePpg + s.dPpg).toFixed(1)} projected pts/week.`);
             if (VALMODE === "redraft") why.push(`Priced on rest-of-season production alone: the ${rosProj(t).toFixed(1)} projected pts/wk is the whole price.`);
@@ -6618,7 +6622,7 @@ ${rdP ? "" : `
           const buys = suggestions.filter(s => s.dir === "buy");
           const sells = suggestions.filter(s => s.dir === "sell");
           html += `<h3 class="path-head">Go Win-Now ⏳</h3><p class="path-desc">Chase this season: production comes in, picks and youth go out — every deal below raises your projected points per week.</p>`;
-          html += buys.length ? buys.map(cardFor).join("") : `<div class="diag"><p>No win-now buy cleared the bar right now — every producer who would raise this lineup either plays for another contender, or can't be priced fairly with your picks and depth.</p></div>`;
+          html += buys.length ? buys.map(cardFor).join("") : `<div class="diag"><p>No win-now buy cleared the bar right now — every producer who would raise this lineup either can't be priced fairly with your picks and depth, or the deal couldn't give his team a starter back.</p></div>`;
           html += `<h3 class="path-head">Go Rebuilder 🔨</h3><p class="path-desc">Play for next year: your aging veterans go to contenders, and picks and young players come back — this season gets worse on purpose.</p>`;
           html += sells.length ? sells.map(cardFor).join("") : `<div class="diag"><p>No rebuild sell cleared the bar right now — no contender can pay full value for your veterans in picks and youth today.</p></div>`;
         } else {
@@ -9040,13 +9044,14 @@ window.NMU_TEAMS = {"TB|RB":{"wk":7,"starter":"11584","snaps":{"11584":0.587,"95
          From the Trades tab: your rest-of-season best lineup, every slot
          shown, each player clickable. Click a player, pick roughly how
          many more points a week you want from that slot, and the finder
-         shows players on selling teams who project in a loose band
+         shows players on other rosters who project in a loose band
          around that bump - closest to the bump first - each with a
          projected trade to get him: the player you clicked, a bench
          player, picks, or a mix. Win-now by construction: you are buying
-         points now, so in dynasty the partners are rebuilding and
-         crossroads teams (the mirror of the Targets buy path); in
-         redraft every other roster is fair game. Packages come from the
+         points now. Every roster is a partner in both modes (Eric,
+         2026-11-03); deals with a team that isn't rebuilding must hand
+         them a starter back (the counterparty sanity in ufFind).
+         Packages come from the
          same offer builder the Targets cards use, and every package
          loads into the Trade Calculator with the same "Grade it" button.
          Nothing here is hardcoded: every number comes from the
