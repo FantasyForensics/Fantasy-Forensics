@@ -2745,6 +2745,13 @@
       /* ---------- founding waitlist band ---------- */
       .waitlist-band { display: flex; align-items: center; gap: 14px 22px; flex-wrap: wrap; margin: 18px 0 4px; padding: 14px 18px; background: #14122B; border: 1px solid var(--line); border-radius: 14px; }
       .waitlist-band.foot { margin: 26px 0 14px; }
+      /* One founders band per view (Eric, 2026-11-04): Player Values, the
+         Trade Calculator and Player Targets each carry their own in-tab
+         band, so the global footer band stands down on exactly those
+         tabs — every other tab keeps the footer band as its one. */
+      .wrap:has(> section#tab-values.active) > .waitlist-band.foot,
+      .wrap:has(> section#tab-trades.active) > .waitlist-band.foot,
+      .wrap:has(> section#tab-targets.active) > .waitlist-band.foot { display: none; }
       .wl-txt { flex: 1 1 320px; min-width: 240px; }
       .wl-kicker { display: block; font-family: "Space Grotesk", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 3px; }
       .wl-line { display: block; color: var(--ink-2); font-size: 14px; line-height: 1.45; }
