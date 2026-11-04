@@ -2,6 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- Google tag (gtag.js) — same GA4 property + owner opt-out gate as the main site -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0LN6ZHJN6C"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+window.__ffGaOwners = ['thefantasyforensics@gmail.com'];
+try {
+  var ffGaQ = new URLSearchParams(location.search);
+  if (ffGaQ.get('ff_ga') === 'off') localStorage.setItem('ff_ga_off', '1');
+  if (ffGaQ.get('ff_ga') === 'on') localStorage.removeItem('ff_ga_off');
+  for (var ffK = 0; ffK < localStorage.length; ffK++) {
+    var ffKey = localStorage.key(ffK) || '';
+    if (ffKey.indexOf('firebase:authUser:') === 0) {
+      var ffU = JSON.parse(localStorage.getItem(ffKey) || 'null');
+      if (ffU && ffU.email && window.__ffGaOwners.indexOf(String(ffU.email).toLowerCase()) >= 0) localStorage.setItem('ff_ga_off', '1');
+    }
+  }
+  window.__ffGaOff = localStorage.getItem('ff_ga_off') === '1';
+} catch (e) { window.__ffGaOff = false; }
+if (!window.__ffGaOff) {
+  gtag('js', new Date());
+  gtag('config', 'G-0LN6ZHJN6C');
+}
+</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jeremiyah Love Dynasty Value, Ranking &amp; Trade Advice</title>
 <meta name="description" content="Jeremiyah Love (RB, ARI) is the RB7 in dynasty fantasy football, valued at 5,907 by Fantasy Forensics with a +3.5% recent trend. See his ranking, value trend and whether to buy, sell or hold.">
@@ -44,7 +69,7 @@ footer{border-top:1px solid var(--line);margin-top:36px;padding-top:14px;color:v
 <p class="sub"><a href="https://thefantasyforensics.com/players/">Dynasty Rankings</a> › RB › Jeremiyah Love</p>
 <h1>Jeremiyah Love Dynasty Value</h1>
 <p class="sub">RB · ARI · Age 21 · B — High-end starter</p>
-<p><span class='pill'>Status: Out</span></p>
+<p><span class='pill'>Status: IR</span></p>
 <div class="kv">
 <div><b>5,907</b><span>Dynasty value</span></div>
 <div><b>#15</b><span>Overall rank</span></div>
