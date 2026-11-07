@@ -2894,6 +2894,7 @@
         <button type="button" role="tab" data-pnav-sub="radar" data-group="players" aria-selected="false">Opportunity Radar</button>
         <button type="button" role="tab" data-pnav-sub="ineff" data-group="players" aria-selected="false">Inefficiency Board</button>
         <button type="button" role="tab" data-pnav-sub="power" data-group="league" aria-selected="false" hidden>Power Rankings</button>
+        <button type="button" role="tab" data-pnav-sub="mscore" data-group="league" aria-selected="false" hidden>Manager Score</button>
         <button type="button" role="tab" data-pnav-sub="rosters" data-group="league" aria-selected="false" hidden>Rosters</button>
         <button type="button" role="tab" data-pnav-sub="outlook" data-group="league" aria-selected="false" hidden>Season Outlook</button>
         <button type="button" role="tab" data-pnav-sub="odds" data-group="league" aria-selected="false" hidden>Playoff Odds</button>
@@ -3066,6 +3067,11 @@
         <div id="lg-story" data-subview="storylines">
         <h2 class="block-title">League Storylines</h2>
         <div id="story-out"><p class="tab-intro">Your league's storylines load here.</p></div>
+        <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
+      </div>
+        <div id="lg-mscore" data-subview="mscore">
+        <h2 class="block-title">Manager Score</h2>
+        <div id="ms-view"></div>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
       </section>
@@ -4842,12 +4848,13 @@
          switching is a display swap, never an anchor scroll. The last
          sub-view is remembered for the session; deep links and the
          connect landing pick one explicitly via __subnavNext. */
-      const SUBNAV_DEFS = { league: [["power", "Power Rankings"], ["rosters", "Rosters"], ["outlook", "Season Outlook"], ["odds", "Playoff Odds"], ["storylines", "Storylines"]] };
+      const SUBNAV_DEFS = { league: [["power", "Power Rankings"], ["mscore", "Manager Score"], ["rosters", "Rosters"], ["outlook", "Season Outlook"], ["odds", "Playoff Odds"], ["storylines", "Storylines"]] };
       /* Guest gate copy per League subtab (owner fix, 2026-11-02):
          each section describes itself instead of every subtab
          showing the same paragraph. */
       const LEAGUE_GATE_TEXT = {
         power: `Connect a league and this page opens with <strong>your team</strong> — power rank, playoff odds, this week's matchup, and top waiver targets — followed by <strong>power rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨. You're browsing as a guest, so there's no league to show yet.`,
+        mscore: `Connect a league and your <strong>Manager Score</strong> grades how you're running it — roster, assets, results, playoff outlook and future, each scored against the other teams in the league. You're browsing as a guest, so there's no score yet.`,
         rosters: `Connect a league to see <strong>every roster in it</strong> — starters, bench, and draft picks for every team, each player priced for your league's scoring. You're browsing as a guest, so there's no league to show yet.`,
         outlook: `Connect a league and the rest of its season is <strong>simulated 3,000 times</strong> — projected records, playoff odds, and title odds for every team. You're browsing as a guest, so there's no league to show yet.`,
         odds: `Connect a league to see <strong>playoff odds</strong> for every team — who's in, who's on the bubble, and what each remaining game swings. You're browsing as a guest, so there's no league to show yet.`,
@@ -4869,6 +4876,7 @@
         if (tab === "league") {
           const gateP = document.getElementById("league-gate-text");
           if (gateP && LEAGUE_GATE_TEXT[sub]) gateP.innerHTML = LEAGUE_GATE_TEXT[sub];
+          if (sub === "mscore" && typeof window.ffMSRenderView === "function") { try { window.ffMSRenderView(); } catch (e) {} }
         }
         const sec = document.getElementById("tab-" + tab);
         if (sec) sec.querySelectorAll("[data-subview]").forEach(v => { v.style.display = v.dataset.subview === sub ? "" : "none"; });
@@ -16947,7 +16955,10 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (d.powerArch) archBits.push((typeof archTag === "function") ? archTag(d.powerArch) : d.powerArch);
         if (archBits.length) powerExtra += `<div class="cc-power-meta">${archBits.map(b => `<span>${esc(b)}</span>`).join("")}</div>`;
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="power" style="--tile-accent:#00E5FF"><div class="cc-tile-h">Power Rank</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(powerBig)}</div>${powerExtra}</div></div>`);
-        try { if (typeof window.ffMSTileHtml === "function") { const msTileHtml = window.ffMSTileHtml(idx, d); if (msTileHtml) tiles.push(msTileHtml); } } catch (e) { /* Manager Score tile is best-effort */ }
+        /* Manager Score is NOT a grid tile (Eric, 2026-11-07): the
+           grid stays the original nine tiles in their original
+           order; the score rides in a slim bar under the grid —
+           see ffMSBarHtml and ff4CCRenderSpot. */
         let tickerChart = "";
         let tickerBig = "";
         if (d.ticker && d.ticker.sums && d.ticker.sums.length >= 2) {
@@ -17100,12 +17111,14 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         /* Spot footnotes retired (Eric, 2026-10-27): the magic
            number now lives in the Playoff Odds tile; the swing
            game and value-trend lines are gone entirely. */
+        let ccMSBar = "";
+        try { if (typeof window.ffMSBarHtml === "function") ccMSBar = window.ffMSBarHtml(idx, d) || ""; } catch (e) { /* Manager Score bar is best-effort */ }
         spot.innerHTML = `<div class="cc-spot-top"><div>
             <div class="cc-spot-team">${esc(d.teamName)}${d.record ? ` <span class="cc-spot-record">${esc(d.record)}</span>` : ""} <span class="you-tag">Your team</span></div>
             <div class="cc-spot-league">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div>
             <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
           </div><div class="cc-spot-actions"><button type="button" class="cc-enter" data-cc-open="1">Open league →</button><button type="button" class="cc-hide" data-cc-hide="1">Hide league</button></div></div>
-          <div class="cc-grid">${ff4CCGridHtml(idx, d)}</div>`;
+          <div class="cc-grid">${ff4CCGridHtml(idx, d)}</div>${ccMSBar}`;
         const ob = spot.querySelector("[data-cc-open]"); if (ob) ob.addEventListener("click", () => ff4CCOpen(idx));
         const hb = spot.querySelector("[data-cc-hide]"); if (hb) hb.addEventListener("click", () => ff4CCHideLeague(idx));
         spot.querySelectorAll("[data-cc-grid-tool]").forEach(b => b.addEventListener("click", () => ff4CCGoTool(idx, b.dataset.ccGridTool)));
@@ -19116,7 +19129,7 @@ window.__lifeline = (function () {
         if (key === "roster") {
           if (typeof window.renderMyRoster === "function") window.renderMyRoster();
           window.activateNav("roster");
-        } else if (key === "power" || key === "rosters" || key === "outlook" || key === "odds" || key === "storylines") {
+        } else if (key === "power" || key === "mscore" || key === "rosters" || key === "outlook" || key === "odds" || key === "storylines") {
           window.__subnavNext = window.__subnavNext || {};
           window.__subnavNext.league = key;
           window.activateNav("league");
@@ -19563,6 +19576,34 @@ window.__lifeline = (function () {
   .ms-lg { margin-bottom: 12px; }
   .ms-signup { background: none; border: 0; padding: 0; color: #00E5FF; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; text-align: left; }
   .ms-signup:hover { text-decoration: underline; }
+  /* Manager Score bar + dedicated view (Eric, 2026-11-07): the score
+     left the CC grid — a slim bar under the grid and a full section
+     in the League tab carry it now. */
+  .ms-power-line[data-ms-open] { cursor: pointer; }
+  .ms-power-line[data-ms-open]:hover { border-color: rgba(255,171,64,.7); }
+  .ms-line-go { color: #00E5FF; font-size: 13px; font-weight: 700; white-space: nowrap; }
+  /* The bar lives inside .cc-spot, a grid item in .cc-layout: without this,
+     the bar's min-content (long league names) blows the track out past the
+     viewport on phones. min-width:0 keeps the track at 1fr and lets the
+     bar's sub-label ellipsize instead. */
+  .cc-spot { min-width: 0; }
+  .cc-ms-bar { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 10px 16px; border: 1px solid rgba(255,255,255,.12); border-top: 3px solid #FFAB40; border-radius: 16px; background: linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.008)); color: var(--ink); font: inherit; text-align: left; cursor: pointer; box-sizing: border-box; }
+  .cc-ms-bar:hover { border-color: rgba(255,171,64,.55); border-top-color: #FFAB40; }
+  .cc-ms-bar-label { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: .05em; color: #FFAB40; white-space: nowrap; }
+  .cc-ms-bar-score { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 24px; line-height: 1; }
+  .cc-ms-bar-sub { color: var(--ink-2); font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 1 auto; min-width: 0; }
+  .cc-ms-bar-arrow { margin-left: auto; color: #00E5FF; font-size: 18px; font-weight: 700; }
+  .ms-hero { border: 1px solid rgba(255,171,64,.35); border-radius: 16px; padding: 18px 20px; background: linear-gradient(150deg, rgba(255,171,64,.08), rgba(255,255,255,.012)); margin-bottom: 16px; }
+  .ms-hero-score { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 44px; line-height: 1.05; }
+  .ms-hero-sub { font-weight: 700; font-size: 15px; margin-top: 2px; }
+  .ms-hero-line { color: var(--ink-2); font-size: 14.5px; line-height: 1.5; margin: 8px 0 0; }
+  .ms-how { margin-bottom: 18px; }
+  .ms-how h3, .ms-cards-h { font-family: "Space Grotesk", sans-serif; font-size: 17px; margin: 0 0 8px; }
+  .ms-how p { color: var(--ink-2); font-size: 14.5px; line-height: 1.55; margin: 0 0 10px; }
+  .ms-card { border: 1px solid rgba(255,255,255,.12); border-top: 3px solid #FFAB40; border-radius: 16px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.008)); margin-bottom: 12px; }
+  .ms-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .ms-card-name { font-weight: 700; font-size: 15.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ms-card-score { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 24px; white-space: nowrap; }
 </style>
 <script>
 /* === MS injury-freeze bakes (bake_ms_frozen.py — Manager Score only) === */
@@ -19900,6 +19941,7 @@ window.MS_FROZEN_ROS = {"10212":{"rec":0.054,"rec_yds":0.45},"10226":{"rec":1.61
       if (MS.updTimer) clearTimeout(MS.updTimer);
       MS.updTimer = setTimeout(() => {
         try { if (typeof ff4CCRenderSpot === "function" && document.getElementById("cc-spot")) ff4CCRenderSpot(); } catch (e) {}
+        try { if (window.__subnavState && window.__subnavState.league === "mscore" && typeof window.ffMSRenderView === "function") window.ffMSRenderView(); } catch (e) {}
         msMaybeWrite();
       }, 450);
     }
@@ -20031,7 +20073,11 @@ window.MS_FROZEN_ROS = {"10212":{"rec":0.054,"rec_yds":0.45},"10226":{"rec":1.61
     function msInsertLine(el, entry) {
       const line = document.createElement("div");
       line.className = "ms-power-line";
-      line.innerHTML = `Your Manager Score in this league: <b>${entry.score}</b>${entry.provisional ? `<span class="ms-prov">Provisional</span>` : ""}`;
+      line.setAttribute("data-ms-open", "1");
+      line.setAttribute("role", "button");
+      line.setAttribute("tabindex", "0");
+      line.title = "See your Manager Score breakdown";
+      line.innerHTML = `Your Manager Score in this league: <b>${entry.score}</b>${entry.provisional ? `<span class="ms-prov">Provisional</span>` : ""} <span class="ms-line-go">Breakdown →</span>`;
       el.insertBefore(line, el.firstChild);
     }
     window.ffMSPowerLine = function (el) {
@@ -20119,9 +20165,86 @@ window.MS_FROZEN_ROS = {"10212":{"rec":0.054,"rec_yds":0.45},"10226":{"rec":1.61
         return `<div class="cc-tile" style="--tile-accent:#FFAB40"><div class="cc-tile-h">Manager Score</div><div class="cc-tile-body">${body}</div>${foot}</div>`;
       } catch (e) { return ""; }
     };
+
+    /* ---- Command Center bar + dedicated League view (Eric, 2026-11-07) ----
+       The score left the tile grid: a slim bar under the grid carries
+       the same number the tile showed (aggregate when signed in, else
+       the focused league's score, else the teaser) and opens the
+       dedicated Manager Score section in the League tab, where the
+       breakdown now lives. Presentation only — every value comes
+       from the same MS.leagues state the tile read. */
+    function msResolveFocus(idx) {
+      let key = null;
+      try {
+        const lg = (typeof ff4 !== "undefined" && ff4 && ff4.ccLeagues) ? ff4.ccLeagues[idx] : null;
+        if (lg && typeof ff4CCLeagueKey === "function") key = ff4CCLeagueKey(lg);
+      } catch (e) {}
+      if (!key) { try { if (typeof connLeagueKey === "string" && connLeagueKey) key = connLeagueKey; } catch (e) {} }
+      if (!key && window.GUEST_MODE) key = "guest:d74";
+      return key ? MS.leagues[key] : null;
+    }
+    window.ffMSBarHtml = function (idx, d) {
+      try {
+        const focused = msResolveFocus(idx);
+        const agg = msSignedIn() ? msAggregate() : null;
+        let mid = "";
+        if (agg) {
+          const sub = agg.count === 1 ? esc(agg.entries[0].name) : `Across ${agg.count} leagues`;
+          mid = `<span class="cc-ms-bar-score">${agg.score}</span>${agg.provisional ? `<span class="ms-prov">Provisional</span>` : ""}<span class="cc-ms-bar-sub">${sub}</span>`;
+        } else if (focused && typeof focused.score === "number") {
+          mid = `<span class="cc-ms-bar-score">${focused.score}</span>${focused.provisional ? `<span class="ms-prov">Provisional</span>` : ""}<span class="cc-ms-bar-sub">${esc(focused.name)}</span>`;
+        } else {
+          mid = `<span class="cc-ms-bar-sub">See how you grade as a manager</span>`;
+        }
+        return `<button type="button" class="cc-ms-bar" data-ms-open="1"><span class="cc-ms-bar-label">Manager Score</span>${mid}<span class="cc-ms-bar-arrow" aria-hidden="true">→</span></button>`;
+      } catch (e) { return ""; }
+    };
+    window.ffMSRenderView = function () {
+      const el = document.getElementById("ms-view");
+      if (!el) return;
+      try {
+        const signedIn = msSignedIn();
+        const guest = !!window.GUEST_MODE;
+        const agg = signedIn ? msAggregate() : null;
+        const entries = Object.values(MS.leagues).filter(e => e && typeof e.score === "number").sort((a, b) => b.score - a.score);
+        const how = `<div class="ms-how"><h3>How it works</h3>
+          <p>Your Manager Score grades the job you're doing as a manager, from 0 to 100. Every league is graded on its own, and every part of the score is a percentile against the other teams in that league — an 80 means you're ahead of 80% of the league at it.</p>
+          <p>Dynasty leagues are graded on roster strength, total assets (your players plus your draft picks), results, playoff outlook, and your future — how well the team is set up for the seasons after this one. Redraft leagues swap in bench depth for assets and future, because this season is the whole game.</p>
+          <p>Schedule luck and injury burden are shown for context only — they never move your score. And in redraft leagues, a hurt star's value inside the score freezes at his pre-injury level, so one injury doesn't crater a well-built team's grade.</p></div>`;
+        let top = "", cards = "";
+        if (agg) {
+          top = `<div class="ms-hero"><div class="ms-hero-score">${agg.score}${agg.provisional ? `<span class="ms-prov">Provisional</span>` : ""}</div><div class="ms-hero-sub">${agg.count === 1 ? "Your Manager Score in " + esc(agg.entries[0].name) : "Your Manager Score across " + agg.count + " leagues"}</div><p class="ms-hero-line">One number for how you're running your teams — every part of it graded against the other teams in each league.</p></div>`;
+        } else if (!guest && entries.length) {
+          let lead = null;
+          try { if (typeof connLeagueKey === "string" && connLeagueKey) lead = MS.leagues[connLeagueKey] || null; } catch (e) {}
+          if (!lead) lead = entries[0];
+          top = `<div class="ms-hero"><div class="ms-hero-score">${lead.score}${lead.provisional ? `<span class="ms-prov">Provisional</span>` : ""}</div><div class="ms-hero-sub">Your Manager Score in ${esc(lead.name)}</div><p class="ms-hero-line">Graded against the other teams in this league — the breakdown is below.</p><div style="margin-top:10px"><button type="button" class="ms-signup" data-ms-signup="1">Create a free account and connect your other leagues to build one Manager Score across all of them →</button></div></div>`;
+        } else {
+          top = `<div class="ms-hero"><p class="ms-hero-line">Your Manager Score builds from your leagues — how strong your roster is, your results, and where the season is heading.</p><div style="margin-top:10px"><button type="button" class="ms-signup" data-ms-signup="1">Create a free account and connect your leagues to see yours →</button></div></div>`;
+        }
+        if (!guest && entries.length) {
+          cards = `<h3 class="ms-cards-h">Your leagues</h3>` + entries.map(e => `<div class="ms-card"><div class="ms-card-head"><span class="ms-card-name">${esc(e.name)}</span><span class="ms-card-score">${e.score}${e.provisional ? `<span class="ms-prov">Provisional</span>` : ""}</span></div>${e.light ? `<div class="cc-tile-sub">Background snapshot — open the league for the full grade.</div>` : ""}${msFactorRows(e)}${msContextLine(e)}<div class="cc-tile-sub">Each number is your percentile against the other teams in this league.</div></div>`).join("")
+            + `<p class="cc-tile-sub">A public leaderboard opens as more managers join.</p>`;
+        }
+        el.innerHTML = top + how + cards;
+      } catch (e) {}
+    };
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      const t = e.target;
+      if (!t || !t.closest || t.tagName === "BUTTON") return;
+      if (t.closest("[data-ms-open]")) {
+        e.preventDefault();
+        try { if (typeof window.goLeagueSub === "function") window.goLeagueSub("mscore"); } catch (err) {}
+      }
+    });
     document.addEventListener("click", (e) => {
       const t = e.target;
       if (!t || !t.closest) return;
+      if (t.closest("[data-ms-open]")) {
+        try { if (typeof window.goLeagueSub === "function") window.goLeagueSub("mscore"); } catch (err) {}
+        return;
+      }
       if (t.closest("[data-ms-expand]")) {
         MS.whyOpen = !MS.whyOpen;
         try { if (typeof ff4CCRenderSpot === "function") ff4CCRenderSpot(); } catch (err) {}
