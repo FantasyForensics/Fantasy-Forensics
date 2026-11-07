@@ -2872,7 +2872,7 @@
         <button role="tab" type="button" data-pnav="myteam" aria-selected="false">My Team</button>
         <button role="tab" type="button" data-pnav="trades" aria-selected="false">Trades</button>
         <button role="tab" type="button" data-pnav="players" aria-selected="true">Players</button>
-        <button role="tab" type="button" data-pnav="league" aria-selected="false">League<span class="nav-lock" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2" fill="currentColor" stroke="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span></button>
+        <button role="tab" type="button" data-pnav="league" aria-selected="false">League</button>
         <button role="tab" type="button" data-nav="draft" aria-selected="false">Draft Room</button>
       </nav>
       <div class="subnav" id="site-sub" role="tablist" aria-label="Fantasy Forensics subsections">
@@ -3454,7 +3454,7 @@
   <!-- ============ 2. ROOKIE POOL ============ -->
   <section id="pool">
     <div class="sec-head"><span class="tag">02 · The Pool</span><h2>Player pool &amp; rookies</h2></div>
-    <p class="sec-sub">The full value board, with a <b>Rookies</b> filter that isolates the rookie-eligible class and shows each player's <b>draft-capital prior</b> — where the NFL actually took them, the single best predictor for young players with thin stat lines. Values come from the same proprietary algorithm as Fantasy Forensics.</p>
+    <p class="sec-sub">The full value board, with a <b>Rookies</b> filter that isolates the rookie-eligible class and shows each player's <b>draft-capital prior</b> — where the NFL actually took them, the single best predictor for young players with thin stat lines. Values are our proprietary player values.</p>
     <div class="toolbar">
       <input type="search" id="poolSearch" placeholder="Search players…" style="flex:1; min-width:170px" />
       <div class="chips" id="poolChips">
@@ -3750,7 +3750,7 @@
           <p class="wl-msg" role="status" aria-live="polite"></p>
         </div>
         <footer id="page-footer"></footer>
-        <div class="ff-foot-links"><button type="button" class="ff-foot-link" id="ff-privacy-open">Privacy</button></div>
+        <div class="ff-foot-links"><button type="button" class="ff-foot-link" id="ff-privacy-open">Privacy</button><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.instagram.com/fantasy.forensics" target="_blank" rel="noopener">Instagram</a><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.youtube.com/@fantasyforensics" target="_blank" rel="noopener">YouTube</a><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.tiktok.com/@fantasy.forensics" target="_blank" rel="noopener">TikTok</a><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.facebook.com/61595994395469" target="_blank" rel="noopener">Facebook</a></div>
     </div>
 
     <script>window.GUEST_MODE = true;</script>
@@ -4961,6 +4961,7 @@ ${rdP ? "" : `
             </div>
             <p class="expl">${esc(explTxt)}</p>
             <div class="stat-row">
+              ${rdP ? `<div><span>Proj. pts/wk ROS · best lineup</span><b>${Math.round(t.rosOpt || 0)}</b></div>` : ""}
               <div><span>Starters value · best-ball</span><b>${fmt(rdP ? stDisp : t.starterVal)}</b></div>
               <div><span>Roster value</span><b>${fmt(rdP ? totDisp : t.totalVal)}</b></div>
               ${rdP ? "" : `<div><span>Pick capital</span><b>${fmt(t.picksVal)}</b></div>`}
@@ -7668,19 +7669,19 @@ ${rdP ? "" : `
             <td>${i + 1}</td>
             <td><span class="p-name">${esc(r.t.name)}</span>${r.t.isUser ? ' <span class="you-tag">Your team</span>' : ""}<div class="p-sub">${esc(r.t.record)}</div></td>
             <td><b>${r.diff}/10</b> · ${label(r.diff)}</td>
-            <td>${cellTxt(r.softest)}<div class="p-sub">allows ${r.softest ? r.softest.ppg.toFixed(1) : "—"}/g</div></td>
-            <td>${cellTxt(r.toughest)}<div class="p-sub">allows ${r.toughest ? r.toughest.ppg.toFixed(1) : "—"}/g</div></td>
+            <td>${cellTxt(r.softest)}<div class="p-sub">${r.softest ? `#${r.softest.rank} vs ${r.softest.p.pos}s · allows ${r.softest.ppg.toFixed(1)}/g` : "—"}</div></td>
+            <td>${cellTxt(r.toughest)}<div class="p-sub">${r.toughest ? `#${r.toughest.rank} vs ${r.toughest.p.pos}s · allows ${r.toughest.ppg.toFixed(1)}/g` : "—"}</div></td>
           </tr>`).join("");
           return `<div class="team-card playoff-card">
             <h3 style="font-size:20px">Playoff schedule difficulty — Weeks 15–17</h3>
             ${(() => { const ps = playoffStartWeek(); return (ps && ps !== 15) ? `<p class="expl"><strong>Playoff-window note:</strong> this league's fantasy playoffs start in <strong>Week ${ps}</strong>, not Week 15 — so its real championship path runs ${ps < 15 ? "a week earlier" : "a week later"} than the window graded below. The grades use the Weeks 15–17 NFL schedule (the window the underlying data covers); read them as the December path, shifted by that week.</p>` : ""; })()}
-            <p class="expl">The fantasy bracket isn't set yet, but the NFL half of it is. Every team's projected starters are graded against the defenses they'll actually face in Weeks 15–17 — defenses ranked by fantasy points allowed per game to each position (this season's results, in the snapshot's scoring). Difficulty runs 0–10: 0 is the softest possible path, 10 the hardest. A tough path at your strongest position is a reason to deal before the deadline; a soft one argues for buying.</p>
+            <p class="expl">The fantasy bracket isn't set yet, but the NFL half of it is. Every team's projected starters are graded against the defenses they'll actually face in Weeks 15–17 — defenses ranked by fantasy points allowed per game to each position (this season's results, in the snapshot's scoring). Difficulty runs 0–10: 0 is the softest possible path, 10 the hardest. Softest and toughest matchups below are picked by each defense's rank against that position (rank 1 = allows the most to the position, 32 = the fewest), so the points allowed beside them don't compare across positions. A tough path at your strongest position is a reason to deal before the deadline; a soft one argues for buying.</p>
             ${mine ? `<div class="playoff-mine">
               <div class="po-score"><div class="bs-num">${mine.diff}/10</div><div class="bs-lbl">${label(mine.diff)} — your playoff path</div></div>
               <ul class="po-insights">${insights(mine).map(s => `<li>${s}</li>`).join("") || "<li>No extreme matchups on your path — it's the strength of your lineup, not the schedule, that decides your December.</li>"}</ul>
             </div>
             ${mine.diff >= 7 ? `<p class="expl">That's a below-average path — if you're buying, buy the positions this schedule picks on; if you're on the fence about selling a starter with a December gauntlet, this is the case for it.</p>` : mine.diff <= 3 ? `<p class="expl">That's a better-than-average path — your starters' December matchups do some of the work for you, which strengthens the case for a win-now move.</p>` : ""}` : ""}
-            <div class="po-scroll"><table class="mini po-table"><thead><tr><th>#</th><th>Team</th><th>Difficulty</th><th>Softest starter matchup</th><th>Toughest starter matchup</th></tr></thead><tbody>${table}</tbody></table></div>
+            <div class="po-scroll"><table class="mini po-table"><thead><tr><th>#</th><th>Team</th><th>Difficulty</th><th>Softest starter matchup (by rank)</th><th>Toughest starter matchup (by rank)</th></tr></thead><tbody>${table}</tbody></table></div>
           </div>`;
         }
 
@@ -16589,10 +16590,13 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
            starter on this week's projection (the same wkOptimal
            engine the Lineup Analyzer uses, gain >= 0.5 pts as a
            noise floor, each displaced starter used once); (2) one
-           waiver add — dynasty: the highest-value available player
-           above your lowest-valued priced bench player (drop him);
-           redraft: the highest ROS pts/wk available player above
-           your lowest-ROS priced bench player; (3) bye cover a week
+           waiver add — only when the player improves the optimal
+           lineup, tested the Waiver Targets way (B30, Eric,
+           2026-11-07): re-run the whole ROS optimal lineup with him
+           in it and require the total to rise; never suggested on
+           raw value alone. The drop paired with it is the
+           lowest-valued priced bench player outside the optimal
+           lineup and the swap pass's start-ins; (3) bye cover a week
            out — a starter on bye next week with no available backup
            at that slot. Priced players only on both sides: unpriced
            entities never drive a recommendation. Capped at 3. */
@@ -16641,7 +16645,15 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
               });
             }
           } catch (e) {}
-          /* (2) One waiver add. */
+          /* (2) One waiver add — the Waiver Targets standard (B30,
+             Eric, 2026-11-07): suggest the add only when the player
+             actually improves the optimal lineup, tested exactly the
+             way Waiver Targets tests it — re-run the whole ROS
+             optimal lineup with the candidate in it (wvOptimal) and
+             require the total to rise (add > 0). Among improvers,
+             the biggest lineup gain wins. The drop stays the
+             lowest-valued priced bench player, still excluding the
+             swap pass's start-ins and the optimal lineup. */
           try {
             const isRd = (typeof tpIsRedraft === "function") ? tpIsRedraft() : false;
             const rostered = new Set();
@@ -16649,19 +16661,19 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             const valOf = pp => isRd ? (pp.ros || 0) : (pp.value || 0);
             const benchPriced = bench.filter(priced);
             const dropPool = benchPriced.filter(pp => !nmStartIns.has(pp.id) && !nmOptIds.has(pp.id));
-            if (dropPool.length) {
+            if (dropPool.length && typeof wvOptimal === "function") {
               const low = dropPool.slice().sort((a, b) => valOf(a) - valOf(b))[0];
-              const lowV = valOf(low);
-              let best = null, bestV = lowV;
+              const myIds = me.playerIds || [];
+              const baseTotal = wvOptimal(myIds).total;
+              let best = null, bestAdd = 0;
               Object.keys(PBY).forEach(id => {
                 const pp = PBY[id];
                 if (!pp || !priced(pp) || rostered.has(String(id))) return;
-                const v = valOf(pp);
-                if (v > bestV) { bestV = v; best = pp; }
+                const add = wvOptimal(myIds.concat([pp.id])).total - baseTotal;
+                if (add > bestAdd) { bestAdd = add; best = pp; }
               });
               if (best) {
-                const diff = bestV - lowV;
-                moves.push({ kind: 2, player: `Add ${best.name}`, issue: isRd ? `Drop ${low.name} (ROS ${bestV.toFixed(1)} vs ${lowV.toFixed(1)} pts/wk)` : `Drop ${low.name} (worth ${fmt(diff)} more)`, cls: "", tool: "waivers" });
+                moves.push({ kind: 2, player: `Add ${best.name}`, issue: `Drop ${low.name} (+${bestAdd.toFixed(1)} pts/wk to your lineup)`, cls: "", tool: "waivers" });
               }
             }
           } catch (e) {}
