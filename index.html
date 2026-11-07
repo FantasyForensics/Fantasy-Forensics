@@ -2873,6 +2873,7 @@
         <button role="tab" type="button" data-pnav="trades" aria-selected="false">Trades</button>
         <button role="tab" type="button" data-pnav="players" aria-selected="true">Players</button>
         <button role="tab" type="button" data-pnav="league" aria-selected="false">League</button>
+        <button role="tab" type="button" data-pnav="tools" aria-selected="false">Tools</button>
         <button role="tab" type="button" data-nav="draft" aria-selected="false">Draft Room</button>
       </nav>
       <div class="subnav" id="site-sub" role="tablist" aria-label="Fantasy Forensics subsections">
@@ -3244,6 +3245,82 @@
         <h2 class="block-title">Command Center<span class="launch-badge">Free during launch</span></h2>
         <p class="cc-story-row"><button type="button" class="share-btn" id="cc-story-btn">📖 League Storylines</button></p>
         <div id="cc-out"></div>
+      </section>
+
+      <style>
+        /* Tools hub (Eric, 2026-11-07): one directory screen of compact
+           pills in the Command Center tile family. Desktop ~4 across so
+           the whole directory fits on one screen; phones go 2-across
+           and compact. Additive only — every pill dispatches to the
+           tool's real nav control (see the wiring script below), so
+           behavior — gates, anchors, counter mode, session caching —
+           is exactly the site's own. */
+        .tools-group { margin-top: 20px; }
+        .tools-group-h { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); margin: 0 0 8px; }
+        .tools-pills { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+        .tools-pill { border: 1px solid rgba(255,255,255,.12); border-top: 3px solid var(--tile-accent, rgba(255,255,255,.12)); border-radius: 14px; padding: 9px 12px 10px; background: linear-gradient(160deg, rgba(255,255,255,.035), rgba(255,255,255,.008)); color: var(--ink); font: inherit; text-align: left; cursor: pointer; min-width: 0; min-height: 52px; box-sizing: border-box; }
+        .tools-pill:hover { border-color: var(--tile-accent, rgba(255,255,255,.35)); }
+        .tools-pill-t { display: block; font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tools-pill-s { display: block; color: var(--ink-2); font-size: 11.5px; line-height: 1.3; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        @media (max-width: 760px) {
+          .tools-pills { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+          .tools-pill { min-height: 58px; }
+          .tools-pill-s { white-space: normal; }
+        }
+      </style>
+      <section class="tab" id="tab-tools" role="tabpanel">
+        <h2 class="block-title">Tools</h2>
+        <p class="tab-intro">Every tool on the site, in one place — tap a pill to jump straight to it.</p>
+        <div class="tools-group">
+          <h3 class="tools-group-h">Your Team</h3>
+          <div class="tools-pills">
+            <button type="button" class="tools-pill" style="--tile-accent:#B388FF" data-tools-pill="lineup" data-tools-group="myteam"><span class="tools-pill-t">Lineup Analyzer</span><span class="tools-pill-s">Your best lineup for this week</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#448AFF" data-tools-pill="waivers" data-tools-group="myteam"><span class="tools-pill-t">Waiver Targets</span><span class="tools-pill-s">Adds that improve your lineup</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#00E5FF" data-tools-pill="bye" data-tools-group="myteam"><span class="tools-pill-t">Bye Week Planner</span><span class="tools-pill-s">Cover every bye-week gap</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FF2E88" data-tools-pill="risk" data-tools-group="myteam"><span class="tools-pill-t">Starters at Risk</span><span class="tools-pill-s">Starters who might sit</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FF6B35" data-tools-pill="moves" data-tools-group="myteam"><span class="tools-pill-t">Next Moves</span><span class="tools-pill-s">Your best moves, ranked</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FFC400" data-tools-pill="teamport" data-tools-group="myteam"><span class="tools-pill-t">Team Portfolio</span><span class="tools-pill-s">Your roster value over time</span></button>
+          </div>
+        </div>
+        <div class="tools-group">
+          <h3 class="tools-group-h">Trades</h3>
+          <div class="tools-pills">
+            <button type="button" class="tools-pill" style="--tile-accent:#C6FF00" data-tools-pill="trades" data-tools-group="trades"><span class="tools-pill-t">Trade Calculator</span><span class="tools-pill-s">Grade any trade, both sides</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#69F0AE" data-tools-pill="targets" data-tools-group="trades"><span class="tools-pill-t">Player Targets</span><span class="tools-pill-s">Players worth trading for</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#00E5FF" data-tools-pill="counter" data-tools-group="trades"><span class="tools-pill-t">Counteroffers</span><span class="tools-pill-s">Build a fair counteroffer</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#B388FF" data-tools-pill="upgrades" data-tools-group="trades"><span class="tools-pill-t">Upgrade Finder</span><span class="tools-pill-s">Deals that upgrade your starters</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FFC400" data-tools-pill="tradeboard" data-tools-group="trades"><span class="tools-pill-t">Trade Board</span><span class="tools-pill-s">Proposed trades awaiting an answer</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#448AFF" data-tools-pill="realtrades" data-tools-group="trades"><span class="tools-pill-t">Real Trades</span><span class="tools-pill-s">Real league deals, graded</span></button>
+          </div>
+        </div>
+        <div class="tools-group">
+          <h3 class="tools-group-h">Players</h3>
+          <div class="tools-pills">
+            <button type="button" class="tools-pill" style="--tile-accent:#C6FF00" data-tools-pill="values" data-tools-group="players"><span class="tools-pill-t">Player Values</span><span class="tools-pill-s">Every player, priced</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FF6B35" data-tools-pill="risers" data-tools-group="players"><span class="tools-pill-t">Risers &amp; Fallers</span><span class="tools-pill-s">The week's biggest movers</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FF4081" data-tools-pill="radar" data-tools-group="players"><span class="tools-pill-t">Opportunity Radar</span><span class="tools-pill-s">Roles bigger than the scoring</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#69F0AE" data-tools-pill="ineff" data-tools-group="players"><span class="tools-pill-t">Inefficiency Board</span><span class="tools-pill-s">Where stats and price disagree</span></button>
+          </div>
+        </div>
+        <div class="tools-group">
+          <h3 class="tools-group-h">League</h3>
+          <div class="tools-pills">
+            <button type="button" class="tools-pill" style="--tile-accent:#00E5FF" data-tools-pill="power" data-tools-group="league"><span class="tools-pill-t">Power Rankings</span><span class="tools-pill-s">Every team in your league, ranked</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#C6FF00" data-tools-pill="odds" data-tools-group="league"><span class="tools-pill-t">Playoff Odds</span><span class="tools-pill-s">Who's in, who's on the bubble</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#448AFF" data-tools-pill="ppath" data-tools-group="league"><span class="tools-pill-t">Playoff Path</span><span class="tools-pill-s">Your road to the playoffs</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#B388FF" data-tools-pill="outlook" data-tools-group="league"><span class="tools-pill-t">Season Outlook</span><span class="tools-pill-s">Records and title odds, projected</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FFC400" data-tools-pill="psched" data-tools-group="league"><span class="tools-pill-t">Schedule Difficulty</span><span class="tools-pill-s">Playoff schedules, ranked</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#69F0AE" data-tools-pill="results" data-tools-group="league"><span class="tools-pill-t">League Results</span><span class="tools-pill-s">Final scores from last week</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FF4081" data-tools-pill="storylines" data-tools-group="league"><span class="tools-pill-t">Storylines</span><span class="tools-pill-s">Your league's story, written up</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FFC400" data-tools-pill="mscore" data-tools-group="league"><span class="tools-pill-t">Manager Score</span><span class="tools-pill-s">How well you're running your teams</span></button>
+          </div>
+        </div>
+        <div class="tools-group">
+          <h3 class="tools-group-h">Draft</h3>
+          <div class="tools-pills">
+            <button type="button" class="tools-pill" style="--tile-accent:#FF2E88" data-tools-draft="1"><span class="tools-pill-t">Draft Room</span><span class="tools-pill-s">Rookie and snake draft rooms</span></button>
+          </div>
+        </div>
       </section>
 
       <section class="tab" id="tab-moves" role="tabpanel">
@@ -4750,7 +4827,7 @@
         "Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot. Injury designations refresh daily after it; the values themselves re-price with each new snapshot.";
 
       /* ---------- tabs ---------- */
-      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", upgrades: "tab-upgrades", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", moves: "tab-moves", roster: "tab-roster", ineff: "tab-ineff" };
+      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", upgrades: "tab-upgrades", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", moves: "tab-moves", roster: "tab-roster", ineff: "tab-ineff", tools: "tab-tools" };
       const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, tradeboard: 1, teamport: 1, command: 1, radar: 1, format: 1, how: 1 };
       function activateNav(key, arg) {
         const viewKey = key === "risk" ? "lineup" : key;
@@ -13083,12 +13160,104 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           const adjs = sideAdjRT(t);
           const sides = t.s.map((sd, i) => sideHtml(sd, hlPid, adjs[i])).join(`<div class="rt-swap" aria-hidden="true">⇄</div>`);
           const take = tradeTake(t);
+          const shareBtn = rtShareable(t) ? `<div class="share-row"><button type="button" class="share-btn" data-rt-share="${RT.trades.indexOf(t)}">Share trade as image</button></div>` : "";
           return `<div class="rt-card">
             <div class="rt-card-top"><span class="rt-date">${fmtDate(t.d)}</span>${badge}<span class="rt-league">${esc(t.lg)} · ${t.nt} teams</span></div>
             <div class="rt-sides${t.s.length > 2 ? " rt-sides-3" : ""}">${sides}</div>
             ${take ? `<div class="rt-take rt-take-${take.kind}">${take.html}</div>` : ""}
+            ${shareBtn}
           </div>`;
         }
+
+        /* ---------- share card for a graded real trade ----------
+           Mirrors the calculator verdict card: the same fairness
+           bands, the same adjusted ("trade value") totals the card
+           prints, and the team labels exactly as shown here, so the
+           Real Trades anonymization stays intact on the image. Only
+           fully graded two-side deals get the button — every piece
+           priced, both sides totaled — so the image never carries a
+           verdict the site itself didn't print. A piece the board
+           can't price (an already-drafted pick) still draws as
+           "unpriced" and stays out of the totals, like the card. */
+        function rtShareable(t) {
+          try {
+            if (!t || t.s.length !== 2) return false;
+            let missing = false;
+            t.s.forEach(sd => {
+              sd.p.forEach(pid => { if (ourVal(pid) == null) missing = true; });
+              sd.k.forEach(([ss, rr]) => { if (pickVal(ss, rr) == null && !pastClass(ss)) missing = true; });
+            });
+            if (missing) return false;
+            const adjs = sideAdjRT(t);
+            return adjs.every(e => e != null) && t.s.every(sd => sideTotal(sd) != null);
+          } catch (e) { return false; }
+        }
+        window.shareRTImage = function (t) {
+          try {
+            if (!t || !rtShareable(t)) return;
+            if (typeof SH === "undefined" || typeof shChrome !== "function" || typeof shDeliver !== "function") return;
+            const adjs = sideAdjRT(t);
+            const e0 = adjs[0], e1 = adjs[1];
+            const pct = Math.abs(e0 - e1) / Math.max(e0, e1);
+            const win = e0 >= e1 ? t.s[0].t : t.s[1].t;
+            let headline;
+            if (pct <= 0.05) headline = "Fair trade — values within 5%";
+            else if (pct <= 0.10) headline = `Close — slight edge to ${win}`;
+            else headline = `Lopsided — favors ${win} by ${fmt(Math.round(Math.abs(e0 - e1)))}`;
+            const lists = t.s.map(sd => {
+              const arr = [];
+              sd.p.forEach(pid => {
+                const info = RT.players[pid] || ["Unknown player", "", ""];
+                arr.push({ label: info[0] + (info[1] ? ` · ${info[1]}` : "") + (info[2] ? ` · ${info[2]}` : ""), v: ourVal(pid) });
+              });
+              sd.k.forEach(([ss, rr]) => {
+                arr.push({ label: pickLabel(ss, rr) + (pastClass(ss) ? " · already drafted" : ""), v: pickVal(ss, rr) });
+              });
+              return arr;
+            });
+            const rows = Math.max(lists[0].length, lists[1].length, 1);
+            const W = 1080, top = 300, rowH = 46, H = top + rows * rowH + 210;
+            const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+            const ctx = cv.getContext("2d");
+            let sub = `${fmtDate(t.d)} · ${t.f === "d" ? "Dynasty" : "Redraft"} · ${t.lg} · ${t.nt} teams`;
+            ctx.font = shFont(500, 27);
+            while (ctx.measureText(sub).width > W - 112 && sub.length > 4) sub = sub.slice(0, -2);
+            shChrome(ctx, W, H, "FANTASY FORENSICS · REAL TRADE", "Real Trade", sub);
+            ctx.fillStyle = SH.lime; ctx.font = shFont(700, 40);
+            shWrap(ctx, headline, 56, 238, W - 112, 48, 2);
+            const colW = (W - 112 - 24) / 2, xA = 56, xB = 56 + colW + 24;
+            function drawSide(x, side, list, raw, adj) {
+              ctx.fillStyle = SH.panel; ctx.beginPath(); ctx.roundRect(x, top - 24, colW, rows * rowH + 118, 14); ctx.fill();
+              ctx.fillStyle = SH.ink; ctx.font = shFont(700, 28);
+              let nm = side.t; while (ctx.measureText(nm).width > colW - 28 && nm.length > 4) nm = nm.slice(0, -2);
+              ctx.fillText(nm, x + 20, top + 18);
+              ctx.fillStyle = SH.ink3; ctx.font = shFont(600, 20);
+              ctx.fillText("GOT", x + 20, top + 44);
+              list.forEach((as, i) => {
+                const y = top + 82 + i * rowH;
+                ctx.fillStyle = SH.ink; ctx.font = shFont(600, 25);
+                let lb = as.label; while (ctx.measureText(lb).width > colW - 130 && lb.length > 4) lb = lb.slice(0, -2);
+                ctx.fillText(lb, x + 20, y);
+                if (as.v != null) {
+                  ctx.fillStyle = SH.cyan; ctx.font = shFont(700, 25); ctx.textAlign = "right";
+                  ctx.fillText(fmt(as.v), x + colW - 20, y); ctx.textAlign = "left";
+                } else {
+                  ctx.fillStyle = SH.ink3; ctx.font = shFont(500, 21); ctx.textAlign = "right";
+                  ctx.fillText("unpriced", x + colW - 20, y); ctx.textAlign = "left";
+                }
+              });
+              if (!list.length) { ctx.fillStyle = SH.ink3; ctx.font = shFont(500, 24); ctx.fillText("—", x + 20, top + 82); }
+              const ty = top + 82 + rows * rowH;
+              ctx.fillStyle = SH.ink2; ctx.font = shFont(600, 23);
+              ctx.fillText(`Raw ${fmt(raw)} · Trade value ${fmt(Math.round(adj))}`, x + 20, ty + 16);
+            }
+            drawSide(xA, t.s[0], lists[0], sideTotal(t.s[0]), e0);
+            drawSide(xB, t.s[1], lists[1], sideTotal(t.s[1]), e1);
+            ctx.fillStyle = SH.ink2; ctx.font = shFont(500, 23);
+            shWrap(ctx, "Graded on today's values, with the value adjustment applied.", 56, H - 128, W - 112, 30, 2);
+            shDeliver(cv, "fantasy-forensics-real-trade.png");
+          } catch (e) {}
+        };
 
         /* ---------- browser state ---------- */
         const state = { player: null, filter: "all", shown: 12 };
@@ -13246,6 +13415,15 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         });
         renderBrowser();
 
+        /* Share buttons on graded cards (full cards + calculator
+           strip minis) — one delegated listener survives re-renders. */
+        document.addEventListener("click", e => {
+          const b = e.target && e.target.closest ? e.target.closest("[data-rt-share]") : null;
+          if (!b) return;
+          const t = RT.trades[+b.dataset.rtShare];
+          if (t && typeof window.shareRTImage === "function") window.shareRTImage(t);
+        });
+
         /* ---------- calculator tie-in: "Recently traded for" strip ---------- */
         const stripEl = document.getElementById("rt-calc-strip");
         function gotSummary(side, hlPid) {
@@ -13285,7 +13463,8 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             }).join("");
           } catch (e) { totals = ""; }
           const take = tradeTake(t);
-          return `<div class="rt-mini"><div class="rt-mini-top"><span class="rt-date">${fmtDate(t.d)}</span>${badge}</div>${lines}${totals}${take ? `<div class="rt-take rt-take-${take.kind}">${take.html}</div>` : ""}</div>`;
+          const shareLink = rtShareable(t) ? `<button type="button" class="rt-strip-link" data-rt-share="${RT.trades.indexOf(t)}">Share as image</button>` : "";
+          return `<div class="rt-mini"><div class="rt-mini-top"><span class="rt-date">${fmtDate(t.d)}</span>${badge}</div>${lines}${totals}${take ? `<div class="rt-take rt-take-${take.kind}">${take.html}</div>` : ""}${shareLink}</div>`;
         }
         function syncStrip() {
           if (!stripEl || typeof calc === "undefined") return;
@@ -14316,7 +14495,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         ctx.fillStyle = SH.ink3; ctx.font = shFont(600, 23); ctx.textAlign = "left";
         ctx.fillText("FANTASY FORENSICS", 56, H - 34);
         ctx.fillStyle = SH.ink3; ctx.font = shFont(500, 23); ctx.textAlign = "right";
-        ctx.fillText("fantasy-forensics-nine.vercel.app", W - 56, H - 34);
+        ctx.fillText("thefantasyforensics.com", W - 56, H - 34);
         ctx.textAlign = "left";
       }
       function shDeliver(canvas, filename) {
@@ -19109,6 +19288,7 @@ window.__lifeline = (function () {
       }
       function syncNav(key, arg) {
         if (key === "draft" || key === "format" || key === "how") { setMainSel(""); showGroup(null); return; }
+        if (key === "tools") { setMainSel("tools"); showGroup(null); return; }
         var main = MAIN_FOR[key];
         if (!main) return;
         setMainSel(main);
@@ -19187,6 +19367,7 @@ window.__lifeline = (function () {
         btn.addEventListener("click", function () {
           var key = btn.dataset.pnav;
           if (key === "command") { window.activateNav("command"); window.scrollTo({ top: 0 }); return; }
+          if (key === "tools") { window.activateNav("tools"); window.scrollTo({ top: 0 }); return; }
           showGroup(key);
           var def = DEFAULTS[key];
           goSub(def);
@@ -19228,6 +19409,25 @@ window.__lifeline = (function () {
       var homeBtn = document.querySelector('#site-sub [data-pnav-sub="values"][data-group="players"]');
       if (homeBtn) setSubSel(homeBtn);
     })();
+    </script>
+    <script>
+    /* Tools hub wiring (Eric, 2026-11-07): a pill click dispatches to
+       the tool's REAL nav control — the #site-sub button for its
+       section, the Draft Room nav button for the Draft pill — so the
+       landing is the site's own navigation in every state (guest
+       gates, counter mode, risk/risers/results anchors, subnav
+       memory, session caching), never a reimplementation. */
+    document.addEventListener("click", function (e) {
+      var pill = e.target && e.target.closest ? e.target.closest("[data-tools-pill], [data-tools-draft]") : null;
+      if (!pill) return;
+      if (pill.hasAttribute("data-tools-draft")) {
+        var d = document.querySelector('#site-main [data-nav="draft"]');
+        if (d) d.click();
+        return;
+      }
+      var btn = document.querySelector('#site-sub [data-pnav-sub="' + pill.getAttribute("data-tools-pill") + '"][data-group="' + pill.getAttribute("data-tools-group") + '"]');
+      if (btn) btn.click();
+    });
     </script>
     <script>
     /* My Team > Roster: the user's own roster — set starters first,
@@ -20226,7 +20426,70 @@ window.MS_FROZEN_ROS = {"10212":{"rec":0.054,"rec_yds":0.45},"10226":{"rec":1.61
           cards = `<h3 class="ms-cards-h">Your leagues</h3>` + entries.map(e => `<div class="ms-card"><div class="ms-card-head"><span class="ms-card-name">${esc(e.name)}</span><span class="ms-card-score">${e.score}${e.provisional ? `<span class="ms-prov">Provisional</span>` : ""}</span></div>${e.light ? `<div class="cc-tile-sub">Background snapshot — open the league for the full grade.</div>` : ""}${msFactorRows(e)}${msContextLine(e)}<div class="cc-tile-sub">Each number is your percentile against the other teams in this league.</div></div>`).join("")
             + `<p class="cc-tile-sub">A public leaderboard opens as more managers join.</p>`;
         }
-        el.innerHTML = top + how + cards;
+        const shareRow = (agg || (!guest && entries.length)) ? `<div class="share-row"><button type="button" class="share-btn" data-ms-share="1">Share Manager Score as image</button></div>` : "";
+        el.innerHTML = top + shareRow + how + cards;
+      } catch (e) {}
+    };
+    /* ---- Manager Score share card (Eric, 2026-11-07) ----
+       Same canvas system as the Power Rankings / verdict cards:
+       the aggregate (or the focused league's score when there's no
+       account aggregate) over one row per league entry — every
+       number read from the same MS.leagues state the view renders,
+       never recomputed here. */
+    window.shareMSImage = function () {
+      try {
+        if (typeof SH === "undefined" || typeof shChrome !== "function" || typeof shDeliver !== "function") return;
+        const signedIn = msSignedIn();
+        const guest = !!window.GUEST_MODE;
+        const agg = signedIn ? msAggregate() : null;
+        const entries = Object.values(MS.leagues).filter(e => e && typeof e.score === "number").sort((a, b) => b.score - a.score);
+        let heroScore = null, heroProv = false, heroSub = "", rows = [];
+        if (agg) {
+          heroScore = agg.score; heroProv = !!agg.provisional; rows = agg.entries;
+          heroSub = agg.count === 1 ? `In ${agg.entries[0].name}` : `Across ${agg.count} leagues`;
+        } else if (!guest && entries.length) {
+          let lead = null;
+          try { if (typeof connLeagueKey === "string" && connLeagueKey) lead = MS.leagues[connLeagueKey] || null; } catch (e) {}
+          if (!lead) lead = entries[0];
+          heroScore = lead.score; heroProv = !!lead.provisional; rows = entries;
+          heroSub = `In ${lead.name}`;
+        }
+        if (heroScore == null || !rows.length) return;
+        const wk = (agg && agg.week) || (typeof DATA !== "undefined" && DATA.league && DATA.league.week) || null;
+        const W = 1080, rowH = 84, rowsTop = 478;
+        const rowsEnd = rowsTop + rows.length * rowH;
+        const H = rowsEnd + 210;
+        const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+        const ctx = cv.getContext("2d");
+        shChrome(ctx, W, H, "FANTASY FORENSICS · MANAGER SCORE", "Manager Score", wk ? `NFL Week ${wk}` : "This season");
+        ctx.fillStyle = SH.ink3; ctx.font = shFont(600, 24);
+        ctx.fillText("YOUR MANAGER SCORE", 56, 252);
+        ctx.fillStyle = SH.lime; ctx.font = shFont(700, 118);
+        ctx.fillText(String(heroScore), 56, 372);
+        if (heroProv) {
+          const sw = ctx.measureText(String(heroScore)).width;
+          ctx.fillStyle = SH.gold; ctx.font = shFont(700, 28);
+          ctx.fillText("PROVISIONAL", 56 + sw + 26, 372);
+        }
+        ctx.fillStyle = SH.ink2; ctx.font = shFont(500, 28);
+        ctx.fillText(heroSub, 56, 424);
+        rows.forEach((e, i) => {
+          const y = rowsTop + i * rowH;
+          ctx.fillStyle = i % 2 ? SH.panel : SH.panel2;
+          ctx.beginPath(); ctx.roundRect(40, y, W - 80, rowH - 12, 14); ctx.fill();
+          ctx.fillStyle = SH.ink; ctx.font = shFont(700, 30);
+          let nm = e.name; while (ctx.measureText(nm).width > 620 && nm.length > 4) nm = nm.slice(0, -2);
+          ctx.fillText(nm, 72, y + 47);
+          ctx.fillStyle = e.score >= 65 ? SH.lime : e.score >= 40 ? SH.cyan : SH.pink; ctx.font = shFont(700, 38); ctx.textAlign = "right";
+          ctx.fillText(String(e.score), W - 72, y + 40); ctx.textAlign = "left";
+          if (e.provisional) {
+            ctx.fillStyle = SH.gold; ctx.font = shFont(600, 19); ctx.textAlign = "right";
+            ctx.fillText("PROVISIONAL", W - 72, y + 64); ctx.textAlign = "left";
+          }
+        });
+        ctx.fillStyle = SH.ink2; ctx.font = shFont(500, 25);
+        ctx.fillText("Every league graded against its own teams.", 56, rowsEnd + 62);
+        shDeliver(cv, "fantasy-forensics-manager-score.png");
       } catch (e) {}
     };
     document.addEventListener("keydown", (e) => {
@@ -20248,6 +20511,10 @@ window.MS_FROZEN_ROS = {"10212":{"rec":0.054,"rec_yds":0.45},"10226":{"rec":1.61
       if (t.closest("[data-ms-expand]")) {
         MS.whyOpen = !MS.whyOpen;
         try { if (typeof ff4CCRenderSpot === "function") ff4CCRenderSpot(); } catch (err) {}
+        return;
+      }
+      if (t.closest("[data-ms-share]")) {
+        try { if (typeof window.shareMSImage === "function") window.shareMSImage(); } catch (err) {}
         return;
       }
       if (t.closest("[data-ms-signup]")) {
