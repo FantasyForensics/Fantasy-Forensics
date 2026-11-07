@@ -4986,6 +4986,7 @@ ${rdP ? "" : `
             </div>
           </article>`;
         }).join("");
+        try { if (typeof window.ffMSPowerLine === "function") window.ffMSPowerLine(el); } catch (e) { /* Manager Score line is best-effort */ }
         el.querySelectorAll("[data-expand]").forEach(btn => {
           btn.addEventListener("click", () => {
             const d = document.getElementById("detail-" + btn.dataset.expand);
@@ -12383,12 +12384,19 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           }
           async function pushDoc(user, leagues) {
             try {
-              await fsMod.setDoc(fsMod.doc(db, "users", user.uid), {
+              const payload = {
                 email: user.email || null,
                 leagues: (leagues || []).map(clean).filter(Boolean),
                 ccPrefs: (function () { try { return window.__ffPrefs ? window.__ffPrefs.get() : null; } catch (e) { return null; } })(),
                 updatedAt: new Date().toISOString(),
-              });
+              };
+              /* Manager Score snapshot (Nov 2026): rides this same
+                 write (merge, so fields the payload doesn't carry
+                 are never wiped) — the score module owns the shape
+                 via window.__ffMsDocFields; absent or uncomputed,
+                 nothing is added. */
+              try { if (typeof window.__ffMsDocFields === "function") { const msF = window.__ffMsDocFields(); if (msF) Object.assign(payload, msF); } } catch (e) { /* score fields are best-effort */ }
+              await fsMod.setDoc(fsMod.doc(db, "users", user.uid), payload, { merge: true });
             } catch (e) { /* offline/rules hiccup: local mirror stands */ }
           }
           async function syncOnSignIn(user, isNewUser) {
@@ -12429,6 +12437,10 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
               if (auth.currentUser) pushDoc(auth.currentUser, list);
             };
           }
+          /* Manager Score module trigger: after it recomputes an
+             aggregate it asks for a push through this one writer, so
+             its fields land with the same merge as everything else. */
+          window.__ffMsPushDoc = () => { try { if (auth.currentUser && saved) pushDoc(auth.currentUser, saved.list()); } catch (e) { /* best-effort */ } };
           /* Mirror Command Center prefs to the doc whenever they
              change locally — same whole-doc pushDoc, so prefs can
              never be wiped by a league sync (pushDoc carries them). */
@@ -16187,7 +16199,18 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (hit && hit.fp === fp) return hit;
         const sim = window.buildSeasonSim({ sims: 3000, seed: 20261017 });
         if (!sim || !sim.results[me.rid]) return null;
-        const out = { fp, odds: sim.results[me.rid].playoff, clinched: !!sim.results[me.rid].clinched };
+        /* oddsPct: the user's playoff odds percentiled across every
+           team in the same sim (Manager Score's Playoff Equity input;
+           average rank on ties, same convention the score uses). */
+        let oddsPct = null;
+        try {
+          const allO = Object.values(sim.results).map(r => r.playoff);
+          const mineO = sim.results[me.rid].playoff;
+          let gr = 0, eq = 0;
+          allO.forEach(v => { if (v > mineO) gr++; else if (v === mineO) eq++; });
+          oddsPct = allO.length > 1 ? Math.round((allO.length - (gr + (eq + 1) / 2)) / (allO.length - 1) * 1000) / 10 : 50;
+        } catch (e) { oddsPct = null; }
+        const out = { fp, odds: sim.results[me.rid].playoff, clinched: !!sim.results[me.rid].clinched, oddsPct };
         ff4.ccSimCache[ck] = out;
         return out;
       }
@@ -16216,7 +16239,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             if (!me) throw new Error("user team not found");
             snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
-              try { const ccSim = ff4CCSimCached("Sleeper:" + lg.league_id, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; } } catch (e) { /* odds stay blank */ }
+              try { const ccSim = ff4CCSimCached("Sleeper:" + lg.league_id, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
             try { if (typeof ff4CCIsActive === "function" && ff4CCIsActive(lg) && window.SeasonSim && window.SeasonSim.recFp && window.SeasonSim.recFp === ff4CCRecFp() && window.SeasonSim.results && window.SeasonSim.results[me.rid]) { snap.odds = window.SeasonSim.results[me.rid].playoff; snap.clinched = !!window.SeasonSim.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
             try { if (ff4.ccDetail[idx] && snap.odds != null && ff4.ccDetail[idx].odds !== snap.odds) { delete ff4.ccDetail[idx]; if (ff4.ccFocus === idx) ff4CCDetail(idx); } } catch (e) {}
             }
@@ -16228,6 +16251,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             try { snap.qCount = ff4CCStarters(me).filter(p => p.inj === "Questionable").length; } catch (e) { snap.qCount = 0; }
             const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
             const streak = myRoster.settings && myRoster.settings.streak ? String(myRoster.settings.streak) : null;
+            try { if (typeof window.ffMSNoteCC === "function") window.ffMSNoteCC({ platform: "sleeper", leagueId: String(lg.league_id), name: snap.leagueName, format: (snap.chips && snap.chips[0] === "Redraft") ? "redraft" : "dynasty", me, oddsPct: (typeof snap.__oddsPct === "number") ? snap.__oddsPct : null }); } catch (e) { /* Manager Score never breaks the pass */ }
             if (byeNames.length) snap.status = `${byeNames.length} starter${byeNames.length === 1 ? "" : "s"} on bye in Week ${wk + 1}: ${byeNames.slice(0, 3).join(", ")}${byeNames.length > 3 ? "…" : ""}`;
             else snap.status = `Currently ${standing}${["th", "st", "nd", "rd"][(standing % 100 > 10 && standing % 100 < 14) ? 0 : Math.min(standing % 10, 4)] || "th"} of ${DATA.teams.length}${streak ? ` · ${streak} streak` : ""}`;
           } finally { ff4CCRestore(cap); }
@@ -16319,7 +16343,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             if (!me) throw new Error("user team not found");
             snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
-              try { const ccSim = ff4CCSimCached("ESPN:" + entry.leagueId, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; } } catch (e) { /* odds stay blank */ }
+              try { const ccSim = ff4CCSimCached("ESPN:" + entry.leagueId, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
             try { if (typeof ff4CCIsActive === "function" && ff4CCIsActive(entry) && window.SeasonSim && window.SeasonSim.recFp && window.SeasonSim.recFp === ff4CCRecFp() && window.SeasonSim.results && window.SeasonSim.results[me.rid]) { snap.odds = window.SeasonSim.results[me.rid].playoff; snap.clinched = !!window.SeasonSim.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
             try { if (ff4.ccDetail[idx] && snap.odds != null && ff4.ccDetail[idx].odds !== snap.odds) { delete ff4.ccDetail[idx]; if (ff4.ccFocus === idx) ff4CCDetail(idx); } } catch (e) {}
             }
@@ -16331,6 +16355,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
             if (byeNames.length) snap.status = `${byeNames.length} starter${byeNames.length === 1 ? "" : "s"} on bye in Week ${wk + 1}: ${byeNames.slice(0, 3).join(", ")}${byeNames.length > 3 ? "…" : ""}`;
             else snap.status = `Currently ${standing}${["th", "st", "nd", "rd"][(standing % 100 > 10 && standing % 100 < 14) ? 0 : Math.min(standing % 10, 4)] || "th"} of ${DATA.teams.length}`;
+            try { if (typeof window.ffMSNoteCC === "function") window.ffMSNoteCC({ platform: "espn", leagueId: String(entry.leagueId), name: snap.leagueName, format: (snap.chips && snap.chips[0] === "Redraft") ? "redraft" : "dynasty", me, oddsPct: (typeof snap.__oddsPct === "number") ? snap.__oddsPct : null, raw }); } catch (e) { /* Manager Score never breaks the pass */ }
           } finally { ff4CCRestore(cap); }
         } catch (e) { snap.failed = true; }
         ff4CCAfterLight(idx);
@@ -16685,6 +16710,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             d.radarWatch = fas.slice(0, 8).map(f => ({ id: f.player_id, name: f.name, pos: f.position, team: f.team, head: (typeof rdHeadline === "function") ? rdHeadline(f) : "" }));
           } else d.radarWatch = null;
         } catch (e) { d.radarWatch = null; }
+        try { if (typeof window.ffMSNoteDetail === "function") window.ffMSNoteDetail({ idx, d, sim, me }); } catch (e) { /* Manager Score never breaks the detail */ }
         return d;
       }
 
@@ -16897,6 +16923,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
         if (d.powerArch) archBits.push((typeof archTag === "function") ? archTag(d.powerArch) : d.powerArch);
         if (archBits.length) powerExtra += `<div class="cc-power-meta">${archBits.map(b => `<span>${esc(b)}</span>`).join("")}</div>`;
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="power" style="--tile-accent:#00E5FF"><div class="cc-tile-h">Power Rank</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(powerBig)}</div>${powerExtra}</div></div>`);
+        try { if (typeof window.ffMSTileHtml === "function") { const msTileHtml = window.ffMSTileHtml(idx, d); if (msTileHtml) tiles.push(msTileHtml); } } catch (e) { /* Manager Score tile is best-effort */ }
         let tickerChart = "";
         let tickerBig = "";
         if (d.ticker && d.ticker.sums && d.ticker.sums.length >= 2) {
@@ -19492,5 +19519,687 @@ window.__lifeline = (function () {
         });
       })();
     </script>
+<style>
+  .ms-prov { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #0A0A1A; background: #FFAB40; border-radius: 99px; padding: 2px 8px; vertical-align: middle; margin-left: 6px; }
+  .ms-power-line { font-size: 15px; font-weight: 600; margin: 0 0 14px; padding: 12px 16px; border: 1px solid rgba(255,171,64,.35); border-radius: 12px; background: linear-gradient(150deg, rgba(255,171,64,.08), rgba(255,255,255,.012)); }
+  .ms-power-line b { color: #FFAB40; font-family: "Space Grotesk", sans-serif; font-size: 17px; }
+  .ms-why { margin-top: 10px; }
+  .ms-why[hidden] { display: none; }
+  .ms-lg { margin-bottom: 12px; }
+  .ms-signup { background: none; border: 0; padding: 0; color: #00E5FF; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; text-align: left; }
+  .ms-signup:hover { text-decoration: underline; }
+</style>
+<script>
+  "use strict";
+  /* ================= Manager Score (Nov 2026) =================
+     One 0–100 rating per manager, built per league from percentiles
+     inside that league, then combined across a signed-in user's
+     leagues. Per-league snapshots come from three sources, strongest
+     wins: a full snapshot while a league's own context is loaded
+     (Command Center detail pass, or the live league on the Power
+     Rankings view), the Command Center load pass over the session's
+     leagues, and an idle-time light pass over the account's other
+     saved Sleeper leagues (public API, priced off the board already
+     in the page; no sim there, so the outlook part stays out and the
+     rest carries the score). ESPN leagues score only from a live
+     in-session context — nothing about an ESPN login is ever stored.
+     Luck and injury burden are context only, never scored. The
+     aggregate is mirrored to the account doc through the accounts
+     layer's own writer (window.__ffMsDocFields / __ffMsPushDoc). */
+  (function () {
+    const MS = { leagues: {}, ap: {}, apBusy: {}, uidCache: {}, lgInfo: {}, whyOpen: false, lightState: 0, lastUid: undefined, lastSig: "", updTimer: null };
+    window.__ffMS = MS;
+    const OUT_INJ = { Out: 1, IR: 1, PUP: 1, DNR: 1 };
+    const PEAKS = { QB: 31, RB: 26, WR: 28, TE: 28 };
+    const W_DY = { roster: 25, assets: 15, results: 20, equity: 10, future: 5 };
+    const W_RD = { results: 30, roster: 20, equity: 15, depth: 5 };
+    const FACTOR_NAMES = { roster: "Roster strength", assets: "Total assets", results: "Results", equity: "Playoff outlook", future: "Future", depth: "Depth" };
+
+    /* Percentile of `mine` among `vals`, 0–100: average rank on
+       ties, top of the field = 100, bottom = 0. */
+    function msPctFromValues(vals, mine) {
+      const clean = (vals || []).filter(v => typeof v === "number" && isFinite(v));
+      if (mine == null || typeof mine !== "number" || !clean.length) return null;
+      if (clean.length === 1) return 50;
+      let gr = 0, eq = 0;
+      clean.forEach(v => { if (v > mine) gr++; else if (v === mine) eq++; });
+      const rank = gr + (eq + 1) / 2;
+      return Math.round((clean.length - rank) / (clean.length - 1) * 1000) / 10;
+    }
+    function msPctFromRank(rank, n) {
+      if (rank == null || !n) return null;
+      if (n === 1) return 50;
+      return Math.round((n - rank) / (n - 1) * 1000) / 10;
+    }
+    function msParseRecord(rec) {
+      const m = /(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/.exec(String(rec || ""));
+      if (!m) return { w: 0, l: 0, t: 0, games: 0, winPct: 0 };
+      const w = +m[1], l = +m[2], t = m[3] ? +m[3] : 0;
+      const games = w + l + t;
+      return { w, l, t, games, winPct: games ? (w + 0.5 * t) / games : 0 };
+    }
+    function msPV(p) {
+      if (!p) return 0;
+      try { if (typeof VALMODE !== "undefined" && VALMODE === "redraft" && typeof dispVal === "function") return dispVal(p) || 0; } catch (e) {}
+      return (typeof p.value === "number") ? p.value : 0;
+    }
+    function msBenchVal(t) {
+      const startIds = new Set();
+      if (Array.isArray(t.bestLineup)) t.bestLineup.forEach(l => { if (l && l.p) startIds.add(l.p.id); });
+      if (!startIds.size && Array.isArray(t.lineup)) t.lineup.forEach(l => { if (l && l.id != null) startIds.add(l.id); });
+      let s = 0;
+      (t.playerIds || []).forEach(id => {
+        if (startIds.has(id)) return;
+        const p = (typeof PBY !== "undefined") ? PBY[id] : null;
+        if (p) s += msPV(p);
+      });
+      return s;
+    }
+    function msComposite(format, subs, active) {
+      const W = format === "redraft" ? W_RD : W_DY;
+      let sw = 0, ss = 0;
+      Object.keys(W).forEach(k => { if (active && active[k] && typeof subs[k] === "number") { sw += W[k]; ss += W[k] * subs[k]; } });
+      return sw ? Math.round(ss / sw) : null;
+    }
+    function msBlendResults(parts, ap) {
+      if (!parts) return null;
+      if (ap && typeof ap.apPct === "number" && parts.pfPct != null && parts.recPct != null)
+        return Math.round((0.5 * ap.apPct + 0.25 * parts.pfPct + 0.25 * parts.recPct) * 10) / 10;
+      if (parts.pfPct != null && parts.recPct != null) return Math.round((0.5 * parts.pfPct + 0.5 * parts.recPct) * 10) / 10;
+      return parts.pfPct != null ? parts.pfPct : parts.recPct;
+    }
+    function msRoundSubs(subs) {
+      const out = {};
+      Object.keys(subs || {}).forEach(k => { if (typeof subs[k] === "number") out[k] = Math.round(subs[k]); });
+      return out;
+    }
+
+    /* ---- in-context per-league computation ----
+       DATA / TBY / PBY must currently point at the league being
+       scored (a Command Center swap, the detail pass, or the live
+       connected league). o = {key, platform, leagueId, name, format,
+       me, oddsPct}. */
+    function msComputeContext(o) {
+      const teams = (typeof DATA !== "undefined" && DATA.teams) || [];
+      const me = o.me;
+      if (!me || !teams.length) return null;
+      const n = teams.length;
+      const rd = o.format === "redraft";
+      const subs = {}, active = {};
+      if (me.powerRank != null) { subs.roster = msPctFromRank(me.powerRank, n); active.roster = true; }
+      if (!rd) {
+        const av = teams.map(t => (t.totalVal || 0) + (t.picksVal || 0));
+        subs.assets = msPctFromValues(av, (me.totalVal || 0) + (me.picksVal || 0));
+        active.assets = subs.assets != null;
+        /* Future: core age measured against positional peaks —
+           younger than the peak profile scores higher. */
+        const coreDelta = t => {
+          try { if (typeof slpCoreAge === "function") { const ca = slpCoreAge(t); if (ca && typeof ca.delta === "number") return ca.delta; } } catch (e) {}
+          return (typeof t.coreAgeDelta === "number") ? t.coreAgeDelta : null;
+        };
+        const neg = teams.map(t => { const d = coreDelta(t); return d == null ? null : -d; });
+        const myD = coreDelta(me);
+        subs.future = msPctFromValues(neg, myD == null ? null : -myD);
+        active.future = subs.future != null;
+      } else {
+        const bv = teams.map(t => msBenchVal(t));
+        subs.depth = msPctFromValues(bv, msBenchVal(me));
+        active.depth = subs.depth != null;
+      }
+      const rec = msParseRecord(me.record);
+      const parts = {
+        pfPct: msPctFromValues(teams.map(t => t.pf || 0), me.pf || 0),
+        recPct: msPctFromValues(teams.map(t => msParseRecord(t.record).winPct), rec.winPct),
+      };
+      if (rec.games > 0) {
+        subs.results = msBlendResults(parts, MS.ap[o.key]);
+        active.results = subs.results != null;
+      }
+      if (typeof o.oddsPct === "number") { subs.equity = o.oddsPct; active.equity = true; }
+      let tot = 0, out = 0;
+      (me.playerIds || []).forEach(id => {
+        const p = (typeof PBY !== "undefined") ? PBY[id] : null;
+        if (!p) return;
+        const v = msPV(p);
+        tot += v;
+        if (p.inj && OUT_INJ[p.inj]) out += v;
+      });
+      const score = msComposite(o.format, subs, active);
+      if (score == null) return null;
+      const ap = MS.ap[o.key];
+      return {
+        key: o.key, platform: o.platform, leagueId: String(o.leagueId), name: o.name || "League",
+        format: o.format, score, subs: msRoundSubs(subs), active, parts,
+        luck: ap && typeof ap.expWins === "number" ? Math.round((ap.expWins - rec.w) * 10) / 10 : null,
+        injury: tot > 0 ? Math.round(out / tot * 1000) / 10 : 0,
+        weeks: rec.games, wins: rec.w, teams: n,
+        week: (typeof DATA !== "undefined" && DATA.league && Number(DATA.league.week)) || 0,
+        provisional: rec.games < 3, rid: me.rid,
+      };
+    }
+
+    /* ---- snapshot store: full > Command Center pass > light ---- */
+    function msRankOf(e) { return e.full ? 3 : (e.cc ? 2 : 1); }
+    function msStore(entry, kind) {
+      if (!entry) return null;
+      entry.full = kind === "full";
+      entry.cc = kind === "cc";
+      entry.light = kind === "light";
+      const cur = MS.leagues[entry.key];
+      if (cur && msRankOf(cur) > msRankOf(entry)) { msApplyAp(cur); return cur; }
+      MS.leagues[entry.key] = entry;
+      msApplyAp(entry);
+      msAfterUpdate();
+      return entry;
+    }
+    function msApplyAp(entry) {
+      const ap = MS.ap[entry.key];
+      if (!ap) return;
+      if (entry.active && entry.active.results && entry.parts) {
+        const blended = msBlendResults(entry.parts, ap);
+        if (blended != null) {
+          entry.subs.results = Math.round(blended);
+          const s = msComposite(entry.format, entry.subs, entry.active);
+          if (s != null) entry.score = s;
+        }
+      }
+      if (typeof ap.expWins === "number" && typeof entry.wins === "number")
+        entry.luck = Math.round((ap.expWins - entry.wins) * 10) / 10;
+    }
+
+    /* ---- aggregate across leagues ---- */
+    function msAggregate() {
+      const entries = Object.values(MS.leagues).filter(e => e && typeof e.score === "number");
+      if (!entries.length) return null;
+      let sw = 0, ss = 0, prov = false, wk = 0, anyLight = false;
+      entries.forEach(e => {
+        const w = Math.sqrt(e.teams || 12) * Math.max(e.weeks || 0, 1);
+        sw += w; ss += w * e.score;
+        if (e.provisional) prov = true;
+        if ((e.week || 0) > wk) wk = e.week || 0;
+        if (e.light) anyLight = true;
+      });
+      return {
+        score: Math.round((ss + 150) / (sw + 3)), count: entries.length,
+        provisional: prov, week: wk, anyLight,
+        entries: entries.slice().sort((a, b) => b.score - a.score),
+      };
+    }
+    window.__ffMsDocFields = function () {
+      const agg = msAggregate();
+      if (!agg) return null;
+      const perLeague = {};
+      Object.values(MS.leagues).forEach(e => {
+        if (e && typeof e.score === "number")
+          perLeague[e.leagueId] = { score: e.score, subscores: e.subs, format: e.format };
+      });
+      return { managerScore: agg.score, managerScoreWeek: agg.week, managerScoreUpdatedAt: new Date().toISOString(), perLeague };
+    };
+    function msSignedIn() {
+      try { return !!(window.__ffAuth && window.__ffAuth.user); } catch (e) { return false; }
+    }
+    function msMaybeWrite() {
+      if (!msSignedIn()) return;
+      const f = window.__ffMsDocFields();
+      if (!f) return;
+      const sig = f.managerScore + "|" + JSON.stringify(f.perLeague);
+      if (sig === MS.lastSig) return;
+      MS.lastSig = sig;
+      try { if (typeof window.__ffMsPushDoc === "function") window.__ffMsPushDoc(); } catch (e) { /* silent */ }
+    }
+    function msAfterUpdate() {
+      if (MS.updTimer) clearTimeout(MS.updTimer);
+      MS.updTimer = setTimeout(() => {
+        try { if (typeof ff4CCRenderSpot === "function" && document.getElementById("cc-spot")) ff4CCRenderSpot(); } catch (e) {}
+        msMaybeWrite();
+      }, 450);
+    }
+
+    /* ---- all-play: schedule-neutral results + luck ----
+       pts: { rid: { period: points } } over completed periods. */
+    function msApFromPts(pts, periods, myRid) {
+      const rids = Object.keys(pts);
+      if (!rids.length) return null;
+      const winPctBy = {}, expBy = {};
+      rids.forEach(r => {
+        let beaten = 0, played = 0;
+        periods.forEach(w => {
+          const mine = pts[r][w];
+          if (mine == null) return;
+          let cnt = 0;
+          rids.forEach(o2 => {
+            if (o2 === r || pts[o2][w] == null) return;
+            cnt++;
+            if (mine > pts[o2][w]) beaten += 1;
+            else if (mine === pts[o2][w]) beaten += 0.5;
+          });
+          if (cnt) played++;
+        });
+        const denom = played * (rids.length - 1);
+        winPctBy[r] = denom ? (beaten / denom) * 100 : null;
+        expBy[r] = (rids.length - 1) ? beaten / (rids.length - 1) : null;
+      });
+      const myPct = winPctBy[String(myRid)];
+      if (myPct == null) return null;
+      return {
+        apPct: msPctFromValues(Object.values(winPctBy).filter(v => v != null), myPct),
+        expWins: expBy[String(myRid)],
+      };
+    }
+    async function msLeagueInfo(lid) {
+      if (MS.lgInfo[lid]) return MS.lgInfo[lid];
+      try {
+        const lg = await slpGet("/league/" + lid);
+        if (lg) MS.lgInfo[lid] = lg;
+        return lg;
+      } catch (e) { return null; }
+    }
+    function msKickAp(key, lid, rid, games) {
+      if (MS.ap[key] || MS.apBusy[key]) return;
+      if (!games || games < 1) return;
+      if (typeof slpGet !== "function") return;
+      MS.apBusy[key] = true;
+      (async () => {
+        try {
+          const lg = await msLeagueInfo(lid);
+          const regEnd = ((lg && lg.settings && Number(lg.settings.playoff_week_start)) || 15) - 1;
+          const last = Math.max(1, Math.min(games, regEnd));
+          const weeks = [];
+          for (let w = 1; w <= last; w++) weeks.push(w);
+          const per = {};
+          await Promise.all(weeks.map(async w => { per[w] = await slpGet("/league/" + lid + "/matchups/" + w).catch(() => null); }));
+          const pts = {};
+          weeks.forEach(w => {
+            (per[w] || []).forEach(en => {
+              if (en && en.roster_id != null && typeof en.points === "number")
+                (pts[String(en.roster_id)] = pts[String(en.roster_id)] || {})[w] = en.points;
+            });
+          });
+          const res = msApFromPts(pts, weeks, rid);
+          if (!res) return;
+          MS.ap[key] = res;
+          const entry = MS.leagues[key];
+          if (entry) { msApplyAp(entry); msAfterUpdate(); }
+        } catch (e) { /* all-play is best-effort */ }
+        finally { MS.apBusy[key] = false; }
+      })();
+    }
+    function msEspnAp(key, raw, myRid) {
+      try {
+        if (MS.ap[key] || !raw || !Array.isArray(raw.schedule)) return;
+        const pts = {}, periodSet = {};
+        raw.schedule.forEach(m => {
+          if (!m || !m.home || !m.away) return;
+          const hp = m.home.totalPoints, ap2 = m.away.totalPoints;
+          if (typeof hp !== "number" || typeof ap2 !== "number") return;
+          if (!(m.winner === "HOME" || m.winner === "AWAY") && !(hp > 0 || ap2 > 0)) return;
+          const p = m.matchupPeriodId;
+          periodSet[p] = true;
+          (pts[String(m.home.teamId)] = pts[String(m.home.teamId)] || {})[p] = hp;
+          (pts[String(m.away.teamId)] = pts[String(m.away.teamId)] || {})[p] = ap2;
+        });
+        const res = msApFromPts(pts, Object.keys(periodSet), myRid);
+        if (res) MS.ap[key] = res;
+      } catch (e) { /* best-effort */ }
+    }
+
+    /* ---- note hooks (called from the Command Center passes) ---- */
+    window.ffMSNoteCC = function (o) {
+      try {
+        if (!o || !o.me) return;
+        const key = o.platform + ":" + o.leagueId;
+        if (o.platform === "espn" && o.raw) msEspnAp(key, o.raw, o.me.rid);
+        const entry = msComputeContext({ key, platform: o.platform, leagueId: o.leagueId, name: o.name, format: o.format, me: o.me, oddsPct: o.oddsPct });
+        if (entry) msStore(entry, "cc");
+        if (o.platform === "sleeper") msKickAp(key, String(o.leagueId), o.me.rid, entry ? entry.weeks : 0);
+      } catch (e) {}
+    };
+    window.ffMSNoteDetail = function (o) {
+      try {
+        if (!o || !o.d || !o.me) return;
+        let key = null, platform = null;
+        try {
+          const lg = (typeof ff4 !== "undefined" && ff4 && ff4.ccLeagues) ? ff4.ccLeagues[o.idx] : null;
+          if (lg && typeof ff4CCLeagueKey === "function") { key = ff4CCLeagueKey(lg); platform = key.split(":")[0]; }
+        } catch (e) {}
+        if (!key) {
+          try { if (typeof connLeagueKey === "string" && connLeagueKey) { key = connLeagueKey; platform = key.split(":")[0]; } } catch (e) {}
+        }
+        if (!key) return;
+        const chips = o.d.chips || [];
+        const format = chips[0] === "Redraft" ? "redraft" : chips[0] === "Dynasty" ? "dynasty"
+          : ((typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "redraft" : "dynasty");
+        let oddsPct = null;
+        if (o.sim && o.sim.results && o.sim.results[o.me.rid])
+          oddsPct = msPctFromValues(Object.values(o.sim.results).map(r => r.playoff), o.sim.results[o.me.rid].playoff);
+        const entry = msComputeContext({ key, platform, leagueId: key.split(":").slice(1).join(":"), name: o.d.leagueName, format, me: o.me, oddsPct });
+        if (entry) msStore(entry, "full");
+        if (platform === "sleeper") msKickAp(key, key.split(":").slice(1).join(":"), o.me.rid, entry ? entry.weeks : 0);
+      } catch (e) {}
+    };
+
+    /* ---- Power Rankings line ---- */
+    function msInsertLine(el, entry) {
+      const line = document.createElement("div");
+      line.className = "ms-power-line";
+      line.innerHTML = `Your Manager Score in this league: <b>${entry.score}</b>${entry.provisional ? `<span class="ms-prov">Provisional</span>` : ""}`;
+      el.insertBefore(line, el.firstChild);
+    }
+    window.ffMSPowerLine = function (el) {
+      try {
+        if (!el || typeof DATA === "undefined" || !DATA.teams || !DATA.teams.length) return;
+        const me = DATA.teams.find(t => t.isUser);
+        if (!me) return;
+        let key = null;
+        try { if (typeof connLeagueKey === "string" && connLeagueKey) key = connLeagueKey; } catch (e) {}
+        if (!key && window.GUEST_MODE) key = "guest:d74";
+        if (!key) return;
+        let connMatch = key === "guest:d74";
+        if (!connMatch) {
+          try { connMatch = !!(window.CONN_LEAGUE && window.CURRENT_LEAGUE === "conn" && !window.GUEST_MODE && DATA.teams === window.CONN_LEAGUE.teams); } catch (e) { connMatch = false; }
+        }
+        let entry = MS.leagues[key];
+        if (!entry && connMatch) {
+          const format = (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "redraft" : "dynasty";
+          let oddsPct = null;
+          try {
+            if (window.SeasonSim && window.SeasonSim.results && window.SeasonSim.results[me.rid])
+              oddsPct = msPctFromValues(Object.values(window.SeasonSim.results).map(r => r.playoff), window.SeasonSim.results[me.rid].playoff);
+          } catch (e) {}
+          const platform = key.indexOf("espn:") === 0 ? "espn" : key.indexOf("sleeper:") === 0 ? "sleeper" : "guest";
+          entry = msComputeContext({ key, platform, leagueId: key.split(":").slice(1).join(":"), name: (DATA.league && DATA.league.name) || "This league", format, me, oddsPct });
+          if (entry) {
+            msStore(entry, "full");
+            if (platform === "sleeper") msKickAp(key, entry.leagueId, me.rid, entry.weeks);
+          }
+        }
+        if (entry && typeof entry.score === "number") msInsertLine(el, entry);
+      } catch (e) {}
+    };
+
+    /* ---- Command Center tile ---- */
+    function msFactorRows(entry) {
+      const order = entry.format === "redraft" ? ["results", "roster", "equity", "depth"] : ["roster", "assets", "results", "equity", "future"];
+      return order.filter(k => entry.active && entry.active[k] && typeof entry.subs[k] === "number").map(k => {
+        const v = entry.subs[k];
+        const col = v >= 65 ? "#C6FF00" : v >= 40 ? "#00E5FF" : "#FF2E88";
+        return `<div class="cc-tile-row"><span class="t-name">${FACTOR_NAMES[k]}</span><span class="t-val">${v}</span></div><div class="cc-tile-bar" style="margin:2px 0 8px"><div style="width:${v}%;background:${col}"></div></div>`;
+      }).join("");
+    }
+    function msContextLine(entry) {
+      const bits = [];
+      if (entry && typeof entry.luck === "number" && Math.abs(entry.luck) >= 0.05) {
+        const disp = Math.round(-entry.luck * 10) / 10;
+        bits.push(`Schedule luck: ${disp > 0 ? "+" : ""}${disp} wins vs your all-play pace`);
+      }
+      if (entry && entry.injury > 0) bits.push(`Injuries: ${entry.injury}% of roster value is out`);
+      return bits.length ? `<div class="cc-tile-sub">${esc(bits.join(" · "))}</div>` : "";
+    }
+    window.ffMSTileHtml = function (idx, d) {
+      try {
+        let key = null;
+        try {
+          const lg = (typeof ff4 !== "undefined" && ff4 && ff4.ccLeagues) ? ff4.ccLeagues[idx] : null;
+          if (lg && typeof ff4CCLeagueKey === "function") key = ff4CCLeagueKey(lg);
+        } catch (e) {}
+        if (!key) { try { if (typeof connLeagueKey === "string" && connLeagueKey) key = connLeagueKey; } catch (e) {} }
+        if (!key && window.GUEST_MODE) key = "guest:d74";
+        const focused = key ? MS.leagues[key] : null;
+        const signedIn = msSignedIn();
+        const agg = signedIn ? msAggregate() : null;
+        const whyBtn = `<div class="cc-tile-foot"><button type="button" data-ms-expand="1">${MS.whyOpen ? "Hide the breakdown ▴" : "Why this score? ▾"}</button></div>`;
+        let body = "", foot = "";
+        if (agg) {
+          const sub = agg.count === 1 ? esc(agg.entries[0].name) : `Across ${agg.count} leagues`;
+          body = `<div class="cc-tile-big">${agg.score}${agg.provisional ? `<span class="ms-prov">Provisional</span>` : ""}</div>
+            <div class="cc-tile-sub">${sub}</div>
+            ${focused ? msContextLine(focused) : ""}
+            <div class="ms-why" ${MS.whyOpen ? "" : "hidden"}>${agg.entries.map(e => `<div class="ms-lg"><div class="cc-tile-row"><span class="t-name">${esc(e.name)}</span><span class="t-val">${e.score}${e.provisional ? " · Prov." : ""}</span></div>${msFactorRows(e)}${msContextLine(e)}</div>`).join("")}<div class="cc-tile-sub">Each league is graded against its own teams — roster, assets, results, outlook and future. A public leaderboard opens as more managers join.</div></div>`;
+          foot = whyBtn;
+        } else if (focused && typeof focused.score === "number") {
+          body = `<div class="cc-tile-big">${focused.score}${focused.provisional ? `<span class="ms-prov">Provisional</span>` : ""}</div>
+            <div class="cc-tile-sub">${esc(focused.name)}</div>
+            ${msContextLine(focused)}
+            <div class="ms-why" ${MS.whyOpen ? "" : "hidden"}>${msFactorRows(focused)}<div class="cc-tile-sub">Graded against the other teams in this league — roster, assets, results, outlook and future.</div></div>`;
+          foot = whyBtn;
+          if (!signedIn) body += `<div style="margin-top:8px"><button type="button" class="ms-signup" data-ms-signup="1">Create a free account and connect your other leagues to build one Manager Score across all of them →</button></div>`;
+        } else {
+          body = `<div class="cc-tile-sub">Your Manager Score builds from this league — how strong your roster is, your results, and where the season is heading.</div>`;
+          if (!signedIn) body += `<div style="margin-top:8px"><button type="button" class="ms-signup" data-ms-signup="1">Create a free account and connect your leagues to see yours →</button></div>`;
+        }
+        return `<div class="cc-tile" style="--tile-accent:#FFAB40"><div class="cc-tile-h">Manager Score</div><div class="cc-tile-body">${body}</div>${foot}</div>`;
+      } catch (e) { return ""; }
+    };
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      if (!t || !t.closest) return;
+      if (t.closest("[data-ms-expand]")) {
+        MS.whyOpen = !MS.whyOpen;
+        try { if (typeof ff4CCRenderSpot === "function") ff4CCRenderSpot(); } catch (err) {}
+        return;
+      }
+      if (t.closest("[data-ms-signup]")) {
+        try { if (window.__ffAuth && typeof window.__ffAuth.openPanel === "function") window.__ffAuth.openPanel("signup"); } catch (err) {}
+      }
+    });
+
+    /* ---- background light pass (saved Sleeper leagues) ----
+       For a signed-in account: any saved Sleeper league the live
+       passes haven't covered gets scored off the public API —
+       league, rosters, users, traded picks, then matchup history
+       for all-play — with rosters priced off the board already in
+       the page. No sim runs here, so the outlook part stays out.
+       Results are cached in localStorage by board week + snapshot. */
+    const MS_ELIG = { QB: ["QB"], RB: ["RB"], WR: ["WR"], TE: ["TE"], K: ["K"], DEF: ["DEF"], DL: ["DL"], LB: ["LB"], DB: ["DB"], FLEX: ["RB", "WR", "TE"], WRRB_FLEX: ["RB", "WR"], SUPER_FLEX: ["QB", "RB", "WR", "TE"], REC_FLEX: ["WR", "TE"], IDP_FLEX: ["DL", "LB", "DB"] };
+    function msSlotFill(players, positions, priceFn) {
+      const pool = players.slice().sort((a, b) => priceFn(b) - priceFn(a));
+      const used = new Set();
+      let total = 0;
+      const starters = [];
+      (positions || []).forEach(slot => {
+        if (slot === "BN" || slot === "IR") return;
+        const e = MS_ELIG[slot];
+        if (!e) return;
+        const pick = pool.find(p => !used.has(p.id) && e.indexOf(p.pos) !== -1);
+        if (pick) { used.add(pick.id); total += priceFn(pick); starters.push(pick); }
+      });
+      return { total, starters };
+    }
+    function msCoreNeg(starters) {
+      let ws = 0, acc = 0;
+      (starters || []).forEach(p => {
+        const wgt = Math.max(p.value || 0, 1);
+        ws += wgt;
+        acc += wgt * ((p.age || 0) - (PEAKS[p.pos] || 28));
+      });
+      return ws ? -(acc / ws) : null;
+    }
+    function msLightPicks(league, rosters, teamsL, traded) {
+      const out = {};
+      try {
+        if (typeof SLP_LADDER === "undefined" || typeof pickTierFromRank !== "function") return out;
+        const season = Number(league.season) || 2026;
+        const n = rosters.length;
+        const pfRank = {};
+        teamsL.slice().sort((a, b) => b.pf - a.pf).forEach((t2, i) => { pfRank[t2.rid] = i + 1; });
+        const draftRds = Math.min(4, Math.max(1, Number((league.settings && league.settings.draft_rounds) || 3)));
+        const own = {};
+        for (let yr = season + 1; yr <= season + 3; yr++)
+          for (let rd = 1; rd <= draftRds; rd++)
+            rosters.forEach(r => { own[yr + "-" + rd + "-" + r.roster_id] = r.roster_id; });
+        (traded || []).forEach(tp => {
+          const k = tp.season + "-" + tp.round + "-" + tp.roster_id;
+          if (k in own) own[k] = tp.owner_id;
+        });
+        const TIDX = { Early: 0, Mid: 1, Late: 2 };
+        Object.keys(own).forEach(k => {
+          const parts = k.split("-").map(Number);
+          const yr = parts[0], rd = parts[1], orig = parts[2];
+          const dy = Math.min(Math.max(yr - season, 1), 3);
+          const tier = pickTierFromRank(pfRank[orig] || Math.ceil(n / 2), n);
+          const row = SLP_LADDER[dy];
+          if (!row || !row[rd - 1]) return;
+          const v = row[rd - 1][TIDX[tier]] || 0;
+          out[own[k]] = (out[own[k]] || 0) + v;
+        });
+      } catch (e) {}
+      return out;
+    }
+    async function msLightLeague(e) {
+      const lid = String(e.leagueId);
+      const key = "sleeper:" + lid;
+      const uname = String(e.username || "").trim();
+      if (!uname || typeof slpGet !== "function") return;
+      let uid = MS.uidCache[uname.toLowerCase()];
+      if (!uid) {
+        const u = await slpGet("/user/" + encodeURIComponent(uname)).catch(() => null);
+        if (!u || !u.user_id) return;
+        uid = u.user_id;
+        MS.uidCache[uname.toLowerCase()] = uid;
+      }
+      const [league, rosters, users, traded] = await Promise.all([
+        slpGet("/league/" + lid).catch(() => null),
+        slpGet("/league/" + lid + "/rosters").catch(() => null),
+        slpGet("/league/" + lid + "/users").catch(() => null),
+        slpGet("/league/" + lid + "/traded_picks").catch(() => []),
+      ]);
+      if (!league || !rosters || !users) return;
+      MS.lgInfo[lid] = league;
+      const myRoster = rosters.find(r => r.owner_id === uid || (r.co_owners || []).includes(uid));
+      if (!myRoster) return;
+      const format = (typeof slpLeagueType === "function")
+        ? slpLeagueType(league)
+        : ((league.settings && Number(league.settings.type) === 2) ? "dynasty" : "redraft");
+      const rd = format === "redraft";
+      const positions = league.roster_positions || [];
+      const price = p => rd ? (p.ros || 0) : (p.value || 0);
+      const board = id => (typeof PBY !== "undefined" && PBY[id]) ? PBY[id] : null;
+      const teamsL = rosters.map(r => {
+        const players = (r.players || []).map(board).filter(Boolean);
+        const s = r.settings || {};
+        const w = s.wins || 0, l = s.losses || 0, t = s.ties || 0;
+        const games = w + l + t;
+        return {
+          rid: r.roster_id, players, fill: msSlotFill(players, positions, price),
+          w, games, winPct: games ? (w + 0.5 * t) / games : 0,
+          pf: (s.fpts || 0) + (s.fpts_decimal || 0) / 100,
+        };
+      });
+      const mine = teamsL.find(t2 => t2.rid === myRoster.roster_id);
+      if (!mine) return;
+      const subs = {}, active = {};
+      subs.roster = msPctFromValues(teamsL.map(t2 => t2.fill.total), mine.fill.total);
+      active.roster = subs.roster != null;
+      if (!rd) {
+        const picksValByRid = msLightPicks(league, rosters, teamsL, traded);
+        const rosterVal = t2 => t2.players.reduce((s2, p) => s2 + (p.value || 0), 0);
+        subs.assets = msPctFromValues(teamsL.map(t2 => rosterVal(t2) + (picksValByRid[t2.rid] || 0)), rosterVal(mine) + (picksValByRid[mine.rid] || 0));
+        active.assets = subs.assets != null;
+        subs.future = msPctFromValues(teamsL.map(t2 => msCoreNeg(t2.fill.starters)), msCoreNeg(mine.fill.starters));
+        active.future = subs.future != null;
+      } else {
+        const benchOf = t2 => {
+          const st = new Set(t2.fill.starters.map(p => p.id));
+          return t2.players.filter(p => !st.has(p.id)).reduce((s2, p) => s2 + (p.ros || 0), 0);
+        };
+        subs.depth = msPctFromValues(teamsL.map(benchOf), benchOf(mine));
+        active.depth = subs.depth != null;
+      }
+      const parts = {
+        pfPct: msPctFromValues(teamsL.map(t2 => t2.pf), mine.pf),
+        recPct: msPctFromValues(teamsL.map(t2 => t2.winPct), mine.winPct),
+      };
+      if (mine.games > 0) {
+        subs.results = msBlendResults(parts, null);
+        active.results = subs.results != null;
+      }
+      let tot = 0, out = 0;
+      mine.players.forEach(p => {
+        const v = p.value || 0;
+        tot += v;
+        if (p.inj && OUT_INJ[p.inj]) out += v;
+      });
+      const entry = {
+        key, platform: "sleeper", leagueId: lid, name: league.name || e.name || "League", format,
+        score: msComposite(format, subs, active), subs: msRoundSubs(subs), active, parts,
+        luck: null, injury: tot > 0 ? Math.round(out / tot * 1000) / 10 : 0,
+        weeks: mine.games, wins: mine.w, teams: rosters.length, week: Number(league.week) || 0,
+        provisional: mine.games < 3, rid: mine.rid,
+      };
+      if (entry.score == null) return;
+      msStore(entry, "light");
+      msSaveLight();
+      if (mine.games > 0 && !MS.ap[key]) msKickAp(key, lid, mine.rid, mine.games);
+    }
+    function msCacheKey() {
+      try {
+        if (typeof DATA_D74 !== "undefined" && DATA_D74.league)
+          return String(DATA_D74.league.week || "") + "|" + String(DATA_D74.league.snapshot || "");
+      } catch (e) {}
+      return "";
+    }
+    function msHydrateLight() {
+      try {
+        const raw = localStorage.getItem("ff_ms_light_v1");
+        if (!raw) return;
+        const j = JSON.parse(raw);
+        if (!j || j.k !== msCacheKey() || !j.entries) return;
+        Object.keys(j.entries).forEach(k => {
+          if (!MS.leagues[k]) {
+            const e = j.entries[k];
+            e.light = true; e.full = false; e.cc = false;
+            MS.leagues[k] = e;
+          }
+        });
+      } catch (e) {}
+    }
+    function msSaveLight() {
+      try {
+        const entries = {};
+        Object.values(MS.leagues).forEach(e => { if (e && e.light) entries[e.key] = e; });
+        localStorage.setItem("ff_ms_light_v1", JSON.stringify({ k: msCacheKey(), entries }));
+      } catch (e) {}
+    }
+    function msLightPass() {
+      if (MS.lightState) return;
+      if (!msSignedIn()) return;
+      let saved = [];
+      try { saved = (window.__ffSaved && window.__ffSaved.list) ? window.__ffSaved.list() : []; } catch (e) {}
+      const todo = saved
+        .filter(e => e && e.platform === "sleeper" && e.leagueId && e.username)
+        .filter(e => { const cur = MS.leagues["sleeper:" + e.leagueId]; return !cur || (!cur.full && !cur.cc); });
+      if (!todo.length) { MS.lightState = 2; return; }
+      MS.lightState = 1;
+      const run = async () => {
+        for (const e of todo) {
+          const cur = MS.leagues["sleeper:" + e.leagueId];
+          if (cur && (cur.full || cur.cc)) continue;
+          try { await msLightLeague(e); } catch (err) { /* one league never blocks the rest */ }
+          await new Promise(r => setTimeout(r, 500));
+        }
+        MS.lightState = 2;
+      };
+      if (typeof requestIdleCallback === "function") requestIdleCallback(() => { run(); }, { timeout: 5000 });
+      else setTimeout(run, 1800);
+    }
+
+    /* ---- boot: hydrate light snapshots, watch for sign-in ---- */
+    msHydrateLight();
+    let msPolls = 0;
+    const msPoll = setInterval(() => {
+      msPolls++;
+      let uid = null;
+      try { uid = (window.__ffAuth && window.__ffAuth.user && window.__ffAuth.user.uid) || null; } catch (e) {}
+      if (uid !== MS.lastUid) {
+        MS.lastUid = uid;
+        if (uid) msMaybeWrite();
+        try { if (typeof ff4CCRenderSpot === "function" && document.getElementById("cc-spot")) ff4CCRenderSpot(); } catch (e) {}
+      }
+      if (uid && document.getElementById("cc-out")) msLightPass();
+      if (MS.lightState === 2 || msPolls > 400) clearInterval(msPoll);
+    }, 3000);
+  })();
+</script>
+
 </body>
 </html>
