@@ -2415,6 +2415,7 @@
       .trending-strip {
         border: 1px solid var(--line); border-radius: var(--radius);
         background: var(--surface); padding: 14px 18px 16px; margin-bottom: 16px;
+        overflow-x: clip;
       }
       .trending-strip h3 {
         font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15px;
@@ -2426,7 +2427,7 @@
       }
       .trending-strip .tr-row { display: flex; gap: 10px; flex-wrap: wrap; }
       .tr-chip {
-        display: flex; align-items: center; gap: 7px;
+        display: flex; align-items: center; gap: 7px; flex-wrap: wrap;
         border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px;
         font-size: 13.5px; background: var(--surface-2, transparent);
       }
