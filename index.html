@@ -422,7 +422,7 @@
       .chip strong { color: var(--ink); }
 
       /* ---------- hero (Values tab) ---------- */
-      .hero { position: relative; padding: 2px 0 14px; }
+      .hero { position: relative; padding: 2px 0 14px; overflow-x: clip; }
       .hero .orb {
         position: absolute; width: 220px; height: 220px; border-radius: 50%;
         background: radial-gradient(circle, rgba(198,255,0,.15) 0%, transparent 65%);
@@ -4743,7 +4743,7 @@
         "Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot. Injury designations refresh daily after it; the values themselves re-price with each new snapshot.";
 
       /* ---------- tabs ---------- */
-      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", upgrades: "tab-upgrades", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", moves: "tab-moves", roster: "tab-roster" };
+      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", upgrades: "tab-upgrades", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", moves: "tab-moves", roster: "tab-roster", ineff: "tab-ineff" };
       const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, tradeboard: 1, teamport: 1, command: 1, radar: 1, format: 1, how: 1 };
       function activateNav(key, arg) {
         const viewKey = key === "risk" ? "lineup" : key;
@@ -10472,6 +10472,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           window.SeasonSim = rebuilt;
           restampPickTiers();
           rebuilt.renderSeason();
+          renderPower();
           renderTeamStrip();
           renderFinder();
           renderVerdict();
@@ -10543,6 +10544,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
                 window.SeasonSim = window.SIM_BY_LEAGUE.conn;
                 restampPickTiers();
                 window.SeasonSim.renderSeason();
+                renderPower();
                 renderTeamStrip();
                 renderFinder();
                 renderVerdict();
@@ -16600,12 +16602,20 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             : new Set(((typeof ff4CCStarters === "function") ? ff4CCStarters(me) : []).map(pp => pp.id));
           const bench = (me.playerIds || []).map(id => PBY[id]).filter(pp => pp && !starterIds.has(pp.id));
           const priced = pp => pp && !pp.unpriced;
+          /* Players the swap pass below recommends STARTING (its ins
+             and everyone in this week's optimal lineup) are protected
+             from the waiver move's drop slot — without this the same
+             three moves could say "Start Kamara" and "Drop Kamara"
+             (the Nov 7 review contradiction). */
+          const nmStartIns = new Set();
+          let nmOptIds = new Set();
           /* (1) Lineup swaps, this week. */
           try {
             if (curLineup.length && typeof wkOptimal === "function" && typeof wkActiveWeek === "function" && typeof wkProjLineup === "function") {
               const wk = wkActiveWeek();
               const opt = wkOptimal(me.playerIds || [], wk);
               const optIds = new Set((opt.lineup || []).map(l => l.p.id));
+              nmOptIds = optIds;
               const slots = (typeof starterSlots === "function") ? starterSlots() : [];
               const curProj = curLineup.map(r => ({ r, proj: wkProjLineup(r.p, wk) })).filter(x => !x.proj.unpriced);
               const cands = [];
@@ -16625,6 +16635,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
               cands.forEach(c => {
                 if (usedOut.has(c.outP.id)) return;
                 usedOut.add(c.outP.id);
+                nmStartIns.add(c.inP.id);
                 moves.push({ kind: 1, gain: c.gain, player: `Start ${c.inP.name}`, issue: `over ${c.outP.name} (+${c.gain.toFixed(1)} pts this week)`, cls: "", tool: "lineup" });
               });
             }
@@ -16636,8 +16647,9 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
             (DATA.teams || []).forEach(t => (t.playerIds || []).forEach(id => rostered.add(String(id))));
             const valOf = pp => isRd ? (pp.ros || 0) : (pp.value || 0);
             const benchPriced = bench.filter(priced);
-            if (benchPriced.length) {
-              const low = benchPriced.slice().sort((a, b) => valOf(a) - valOf(b))[0];
+            const dropPool = benchPriced.filter(pp => !nmStartIns.has(pp.id) && !nmOptIds.has(pp.id));
+            if (dropPool.length) {
+              const low = dropPool.slice().sort((a, b) => valOf(a) - valOf(b))[0];
               const lowV = valOf(low);
               let best = null, bestV = lowV;
               Object.keys(PBY).forEach(id => {
@@ -19056,7 +19068,7 @@ window.__lifeline = (function () {
       var mainBtns = document.querySelectorAll("#site-main [data-pnav]");
       var subBar = document.getElementById("site-sub");
       var subBtns = document.querySelectorAll("#site-sub [data-pnav-sub]");
-      var MAIN_FOR = { values: "players", radar: "players", roster: "myteam", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", upgrades: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "command" };
+      var MAIN_FOR = { values: "players", radar: "players", ineff: "players", roster: "myteam", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", upgrades: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "command" };
       var GROUP_FOR = { players: "players", myteam: "myteam", trades: "trades", league: "league" };
       function setMainSel(key) {
         mainBtns.forEach(function (b) { b.setAttribute("aria-selected", b.dataset.pnav === key ? "true" : "false"); });
@@ -19105,6 +19117,10 @@ window.__lifeline = (function () {
         } else if (key === "counter") {
           window.__counterMode = true;
           window.activateNav("trades");
+          /* The balancer only re-renders on verdict mutations, so
+             entering counter mode must render it explicitly — without
+             this the flag flips and nothing on screen changes. */
+          if (typeof window.ff4Balancer === "function") window.ff4Balancer();
           setTimeout(function () { var el = document.getElementById("balancer"); if (el) el.scrollIntoView({ block: "start" }); }, 60);
         } else if (key === "risers") {
           window.activateNav("values");
@@ -19123,6 +19139,7 @@ window.__lifeline = (function () {
         } else {
           if (key === "trades") window.__counterMode = false;
           window.activateNav(key);
+          if (key === "trades" && typeof window.ff4Balancer === "function") window.ff4Balancer();
           if (key === "risk") {
             /* Starters at Risk is the Lineup view anchored on the risk
                panel: poll for the panel (it renders with the lineup)
@@ -19392,6 +19409,12 @@ window.__lifeline = (function () {
             ids.slice().sort((x, y) => (wins[y] - wins[x]) || (pts[y] - pts[x])).slice(0, pTeams).forEach(id => counts[id]++);
           }
           ids.forEach(id => T[id].odds = Math.round(counts[id] / SIMS * 100));
+          /* Story odds print through the site's shared odds formatter
+             (99% ceiling, "<1%" floor) — never the raw sim percent:
+             a 2,000-run sweep can read 100 for a team that has not
+             clinched, and Power Rankings would call the same number
+             99%. T[].odds is a 0-100 percent; oddsPct takes 0-1. */
+          const storyOdds = p => oddsPct(p / 100);
           const standings = ids.map(id => T[id]).sort((a, b) => (b.w - a.w) || (b.pf - a.pf));
           const luckiest = standings.slice().sort((a, b) => b.luck - a.luck)[0];
           const unluckiest = standings.slice().sort((a, b) => a.luck - b.luck)[0];
@@ -19404,10 +19427,10 @@ window.__lifeline = (function () {
             .sort((a, b) => b.m - a.m);
           const topScore = ids.map(id => ({ t: T[id], pts: T[id].weekly[lw] })).filter(x => x.pts != null).sort((a, b) => b.pts - a.pts)[0];
           let html = `<p class="tab-intro">Your league through Week ${completed} — the race at the top, the schedule luck, and who's living on the playoff bubble in ${esc(league.name || "your league")}.</p>`;
-          if (standings[1]) html += `<div class="story-card"><h3>The race at the top</h3><p><strong>${esc(standings[0].name)}</strong> (${standings[0].w}-${standings[0].l}, ${fmt(Math.round(standings[0].pf))} pts) and <strong>${esc(standings[1].name)}</strong> (${standings[1].w}-${standings[1].l}) set the pace. Playoff odds: ${standings[0].odds}% and ${standings[1].odds}%.</p></div>`;
+          if (standings[1]) html += `<div class="story-card"><h3>The race at the top</h3><p><strong>${esc(standings[0].name)}</strong> (${standings[0].w}-${standings[0].l}, ${fmt(Math.round(standings[0].pf))} pts) and <strong>${esc(standings[1].name)}</strong> (${standings[1].w}-${standings[1].l}) set the pace. Playoff odds: ${storyOdds(standings[0].odds)} and ${storyOdds(standings[1].odds)}.</p></div>`;
           html += `<div class="story-card"><h3>Schedule luck</h3><p>Luckiest: <strong>${esc(luckiest.name)}</strong> is ${luckiest.w}-${luckiest.l} with ${luckiest.exp} expected wins — ${luckiest.luck > 0 ? "+" : ""}${luckiest.luck} wins of pure schedule luck. Unluckiest: <strong>${esc(unluckiest.name)}</strong>, ${unluckiest.exp} expected wins but only ${unluckiest.w} in the bank.</p></div>`;
           html += `<div class="story-card"><h3>Form</h3><p>Hottest over the last three weeks: <strong>${esc(hottest.name)}</strong> at ${hottest.form} points a week.</p></div>`;
-          if (bubble.length) html += `<div class="story-card"><h3>The bubble</h3><p>${pTeams} teams make the playoffs. Living on the line: ${bubble.map(t => `<strong>${esc(t.name)}</strong> (${t.odds}%)`).join(", ")}.</p></div>`;
+          if (bubble.length) html += `<div class="story-card"><h3>The bubble</h3><p>${pTeams} teams make the playoffs. Living on the line: ${bubble.map(t => `<strong>${esc(t.name)}</strong> (${storyOdds(t.odds)})`).join(", ")}.</p></div>`;
           if (games.length && topScore) {
             const closest = games[games.length - 1], blowout = games[0];
             html += `<div class="story-card"><h3>Week ${lw} recap</h3><p><strong>${esc(topScore.t.name)}</strong> hung ${topScore.pts.toFixed(1)} on the board — the week's top score. Closest game: ${esc(closest.w.name)} ${closest.wp.toFixed(1)}–${closest.lp.toFixed(1)} over ${esc(closest.l.name)}. Biggest blowout: ${esc(blowout.w.name)} by ${blowout.m} over ${esc(blowout.l.name)}.</p></div>`;
