@@ -3097,7 +3097,7 @@
         <div id="lineup-out"></div>
         <details class="how-box inseason">
           <summary>How this works</summary>
-          <p class="tab-intro">The weekly question: <strong>who do I start Sunday?</strong> For the team you pick, this builds the <strong>optimal lineup for the current week</strong> from the weekly projections ESPN and Rotowire publish — printed exactly as the sources project them, never scaled up or down on this page. An injury designation rides as a tag on the player's name (<strong>Q</strong>, <strong>D</strong>, <strong>Out</strong>) for you to weigh yourself. A player on <strong>bye</strong>, or one the sources don't project at all, projects for zero and is auto-benched; a player listed Out who is nevertheless projected to play keeps his projection and is flagged a <strong>status conflict</strong> instead — a stale designation never erases a real projection. A player with <strong>no NFL team</strong> — unsigned, per the same live Sleeper players feed that carries the injury designations — projects for zero, is labeled Unsigned, and is <strong>excluded from the optimal lineup entirely</strong>, whatever his dynasty value says. A signed player outside the priced pool shows <strong>Unpriced</strong> rather than a fake zero: his projection is unknown, and he starts only when no priced option exists. Below it, the current <strong>real Sleeper matchup</strong>: both teams' optimal lineups, a win probability, and the decisions the game swings on. Same separation rule as everything else here — <strong>projections never touch dynasty values</strong>, and nothing in this tab moves a price on the board.</p>
+          <p class="tab-intro">The weekly question: <strong>who do I start Sunday?</strong> For the team you pick, this builds the <strong>optimal lineup for the current week</strong> from published weekly projections — printed exactly as projected, never scaled up or down on this page. An injury designation rides as a tag on the player's name (<strong>Q</strong>, <strong>D</strong>, <strong>Out</strong>) for you to weigh yourself. A player on <strong>bye</strong>, or one the sources don't project at all, projects for zero and is auto-benched; a player listed Out who is nevertheless projected to play keeps his projection and is flagged a <strong>status conflict</strong> instead — a stale designation never erases a real projection. A player with <strong>no NFL team</strong> — unsigned, per the same live Sleeper players feed that carries the injury designations — projects for zero, is labeled Unsigned, and is <strong>excluded from the optimal lineup entirely</strong>, whatever his dynasty value says. A signed player outside the priced pool shows <strong>Unpriced</strong> rather than a fake zero: his projection is unknown, and he starts only when no priced option exists. Below it, the current <strong>real Sleeper matchup</strong>: both teams' optimal lineups, a win probability, and the decisions the game swings on. Same separation rule as everything else here — <strong>projections never touch dynasty values</strong>, and nothing in this tab moves a price on the board.</p>
         </details>
 
       </section>
@@ -3469,13 +3469,13 @@
       <table>
         <thead><tr>
           <th style="width:5%" class="r">Rank</th><th>Player</th><th style="width:7%">Pos</th><th style="width:6%">Team</th>
-          <th style="width:6%" class="r">Age</th><th style="width:11%" class="r">Value</th><th style="width:6%" class="r">ADP</th><th style="width:9%" class="r">SF $ · per ESPN</th><th style="width:19%">Draft capital / status</th>
+          <th style="width:6%" class="r">Age</th><th style="width:11%" class="r">Value</th><th style="width:6%" class="r">ADP</th><th style="width:9%" class="r">SF $</th><th style="width:19%">Draft capital / status</th>
         </tr></thead>
         <tbody id="poolBody"></tbody>
       </table>
     </div>
     <p class="note" id="poolCount" style="margin-top:10px"></p>
-    <p class="note" style="margin-top:4px">Market overlay (ADP snapshot Oct 20, 2026; SF $ refreshed weekly from ESPN): <b style="color:var(--ink)">ADP</b> is the player's average dynasty-draft position, <b style="color:var(--ink)">SF $</b> is ESPN's SUPERFLEX auction value. A dash means no published figure for that player.</p>
+    <p class="note" style="margin-top:4px">Market overlay (ADP snapshot Oct 20, 2026): <b style="color:var(--ink)">ADP</b> is the player's average dynasty-draft position, <b style="color:var(--ink)">SF $</b> is his SUPERFLEX auction value. A dash means no published figure for that player.</p>
     <div class="honest">The rookie class below is the <strong>2026 class</strong> — already drafted, already priced by the algorithm. Looking ahead? The <strong>2027 Rookie Class</strong> board in the Draft Room ranks the upcoming class and prices what your 2027 picks are worth.</div>
   </section>
 
@@ -3587,13 +3587,13 @@
       <table>
         <thead><tr>
           <th style="width:5%" class="r">Rank</th><th>Player</th><th style="width:6%">Pos</th><th style="width:5%">Team</th>
-          <th style="width:5%" class="r">Age</th><th style="width:11%" class="r">Redraft value</th><th style="width:6%" class="r">ADP</th><th style="width:8%" class="r">SF $ · per ESPN</th><th style="width:12%" class="r">Dynasty price</th><th style="width:9%">Tier</th>
+          <th style="width:5%" class="r">Age</th><th style="width:11%" class="r">Redraft value</th><th style="width:6%" class="r">ADP</th><th style="width:8%" class="r">SF $</th><th style="width:12%" class="r">Dynasty price</th><th style="width:9%">Tier</th>
         </tr></thead>
         <tbody id="snakeBody"></tbody>
       </table>
     </div>
     <p class="note" id="snakeCount" style="margin-top:10px"></p>
-    <p class="note" style="margin-top:4px">Market overlay (ADP updated October 27, 2026; SF $ refreshed weekly from ESPN): <b style="color:var(--ink)">ADP</b> is the player's redraft average draft position from CBS Sports drafts (PPR and non-PPR) and Fantasy Football Calculator (half-PPR), pulled October 27, 2026; switch PPR / half-PPR / non-PPR with the toggle above — players with no published ADP show an estimated ADP (Est.) derived from our redraft values, <b style="color:var(--ink)">SF $</b> is ESPN's SUPERFLEX auction value. <b style="color:var(--ink)">Own</b> is the share of ESPN leagues rostering him, banded into tiers: Core 90%+, Rostered 60–90%, Streamer 25–60%, Deep under 25%. A dash means no published figure for that player.</p>
+    <p class="note" style="margin-top:4px">Market overlay (ADP updated October 27, 2026): <b style="color:var(--ink)">ADP</b> is the player's redraft average draft position (PPR, half-PPR and non-PPR figures), pulled October 27, 2026; switch PPR / half-PPR / non-PPR with the toggle above — players with no published ADP show an estimated ADP (Est.) derived from our redraft values. <b style="color:var(--ink)">SF $</b> is his SUPERFLEX auction value. <b style="color:var(--ink)">Own</b> is the share of leagues rostering him, banded into tiers: Core 90%+, Rostered 60–90%, Streamer 25–60%, Deep under 25%. A dash means no published figure for that player.</p>
   </section>
 
   <!-- ============ S2. SNAKE ROOM ============ -->
@@ -3734,7 +3734,7 @@
 
   <footer>
     <p style="margin:0 0 6px"><b style="color:var(--ink)">Fantasy Forensics — Draft Room</b> — the rookie-draft room inside <a href="../dynasty-analyzer/">Fantasy Forensics</a>, where the full value board, trade calculator, and season simulator live.</p>
-    <p style="margin:0">Player values: our proprietary dynasty value algorithm. Redraft values: the Fantasy Forensics rest-of-season engine — the same prices as the main site's Redraft mode. Pick ladder: the Fantasy Forensics value algorithm — the same ladder as the main site. Draft overlay: ADP and SUPERFLEX auction values (per ESPN) — market context shown next to our values; it does not change any price, recommendation, or grade. Grades score each pick against the ladder value of its slot — a pick is a steal when the player beats the slot, a reach when the slot beats the player.</p>
+    <p style="margin:0">Player values: our proprietary dynasty value algorithm. Redraft values: the Fantasy Forensics rest-of-season engine — the same prices as the main site's Redraft mode. Pick ladder: the Fantasy Forensics value algorithm — the same ladder as the main site. Draft overlay: ADP and SUPERFLEX auction values — market context shown next to our values; it does not change any price, recommendation, or grade. Grades score each pick against the ladder value of its slot — a pick is a steal when the player beats the slot, a reach when the slot beats the player.</p>
   </footer>
 </div>
 <div class="toast" id="toast"></div>
@@ -7776,7 +7776,7 @@ ${rdP ? "" : `
           <p>The Season Outlook tab prices players a completely different way from the dynasty board, and the two never mix: <strong>dynasty value is never an input to a projection, and a projection never moves a dynasty value or the trade calculator’s verdict.</strong> The only place the engines meet is trade advice, where a suggestion shows its dynasty fairness and its title-odds swing side by side.</p>
           <ul>
             <li><strong>Rest-of-season PPG.</strong> Each player’s actual points per game through Week ${DATA.league.week - 1}, calculated from Sleeper’s weekly stats in this league’s exact scoring, is combined with a prior — the algorithm’s <em>single-season</em> value, its rest-of-season price — with the preseason expectation as the fallback where no single-season price exists. The prior steadies the small samples early in the season; by Week ${DATA.league.week}, a player’s own games carry most of the weight.</li>
-            <li><strong>Strength of schedule.</strong> Each NFL defense's fantasy points allowed per game to each position was computed from Weeks 1–${DATA.league.week - 1} in this league's scoring: Detroit has allowed 68% more points to quarterbacks than the league average, Green Bay 46% fewer; against tight ends the spread runs from Detroit +96% to the Rams −69%. Short samples are noisy, so the adjustment stays modest: a player's ROS projection reflects the average points-allowed of his remaining opponents (Weeks ${DATA.league.week}–14, bye weeks skipped), and his start/sit projection reflects this week's opponent alone — the note rides on his line in the Lineup tab ("soft matchup: +8% vs MIA"). Schedule lives only in this engine; it never touches a dynasty value.</li>
+            <li><strong>Strength of schedule.</strong> Each NFL defense's fantasy points allowed per game to each position was computed from Weeks 1–${DATA.league.week - 1} in this league's scoring: the spread between the softest and toughest defenses is wide at every position. Short samples are noisy, so schedule is shown as context, never baked into a number: a player's ROS projection is his own projection, unadjusted for his remaining opponents, and the note on his Lineup tab line describes this week's opponent ("soft matchup: +8% vs MIA"). Schedule lives only in this engine; it never touches a dynasty value.</li>
             <li><strong>Availability &amp; role.</strong> The projection accounts for expected availability — a player set to miss time projects for fewer games — and leans toward his role where role and production disagree: when a projection and the prior disagree wildly, usage leads points. Players who haven’t appeared in a game yet are discounted heavily: a backup’s projection is mostly the chance he plays.</li>
             <li><strong>Team projection.</strong> Each week, a team fields its optimal lineup under this league’s own starter slots, by rest-of-season PPG. That sum is the team’s projected score — typically a little above its actual scoring pace, because real managers don’t set a perfect lineup every week.</li>
             <li><strong>The simulation.</strong> 3,000 simulated finishes. For a connected league, each remaining week (${DATA.league.week}–14) plays the league's actual remaining schedule — the same opponents in every finish, with each score drawn around the team's projection with a realistic week-to-week spread. Where a league's real schedule isn't available to read, that league's pairings are drawn at random instead, so its odds carry a little more noise. The first of those weeks is priced from this week’s actual weekly projections — the same ESPN/Rotowire numbers behind the Lineup tab, bye weeks and all — while every later week uses the rest-of-season projection; if a week’s projections aren’t published yet, that week falls back to the rest-of-season number. That spread is measured from this league’s actual weekly scores, not guessed. Standings seed by wins, then total points; the top ${FIELD} make the playoffs (Weeks 15–17${FIELD === 6 ? ", top two seeds bye" : ""}, bracket reseeds).</li>
@@ -8797,13 +8797,13 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             swings = pairs.slice()
               .sort((a, b) => (b.inn.proj.pts - b.out.proj.pts) - (a.inn.proj.pts - a.out.proj.pts))
               .slice(0, 3).map(({ inn, out }) =>
-                `<div class="mv-row"><div>${hsImg(inn.p, "phs-sm")}<span class="who">${esc(inn.p.name)}</span> <span class="sub">in for ${esc(out.p.name)}</span></div><div class="delta"><span class="lu-delta up">${(inn.proj.unpriced || out.proj.unpriced) ? "Unpriced" : "+" + f1(inn.proj.pts - out.proj.pts) + " pts"}</span></div></div>`);
+                `<div class="mv-row"><div>${hsImg(inn.p, "phs-sm")}<span class="who">${esc(inn.p.name)}</span> <span class="sub">in for ${esc(out.p.name)}</span></div><div class="delta"><span class="lu-delta up">${(inn.proj.unpriced || out.proj.unpriced) ? "Unpriced" : "+" + f1((Math.round(inn.proj.pts * 10) - Math.round(out.proj.pts * 10)) / 10) + " pts"}</span></div></div>`);
           } else {
             const bench = team.playerIds.map(id => PBY[id]).filter(Boolean).filter(p => !optIds.has(p.id))
               .map(p => ({ p, proj: wkProj(p) }));
             swings = opt.lineup.map(l => {
               const alt = bench.filter(b => SLOT_ELIG[l.slot].includes(b.p.pos)).sort((a, b) => b.proj.pts - a.proj.pts)[0];
-              return alt ? { l, alt, margin: l.proj.pts - alt.proj.pts } : null;
+              return alt ? { l, alt, margin: (Math.round(l.proj.pts * 10) - Math.round(alt.proj.pts * 10)) / 10 } : null;
             }).filter(Boolean).sort((a, b) => a.margin - b.margin).slice(0, 3)
               .map(({ l, alt, margin }) =>
                 `<div class="mv-row"><div>${hsImg(l.p, "phs-sm")}<span class="who">${esc(l.p.name)}</span> <span class="sub">${l.slot} · holds off ${esc(alt.p.name)} (${projTxt(alt.proj)})</span></div><div class="delta"><span class="lu-delta ${margin < 2 ? "dn" : "flat"}">${alt.proj.unpriced || l.proj.unpriced ? "Unpriced" : "margin " + f1(margin)}</span></div></div>`);
@@ -8830,7 +8830,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
 
         document.getElementById("lineup-out").innerHTML = `
           <div class="diag"><h3>${esc(team.name)} — Week ${VW} lineup check</h3>
-            <p>Starters as set in the ${DATA.league.snapshot} snapshot project for <strong>${f1(curTotR)}</strong>. The optimal lineup — this league's ${opt.lineup.length + kdSlots.length} starter slots — projects for <strong>${f1(optTotR)}</strong>${kdSlots.length ? " — total excludes K/DEF" : ""} — ${gainR > 0.05 ? `<strong>${f1(gainR)} points are sitting on the bench.</strong>` : `<strong>nothing is being left on the table.</strong>`} ${isNext ? `Week ${VW} projections carry no strength-of-schedule nudge (matchup factors publish with the current week) and use injury statuses as of today — plan accordingly.` : `Every projection includes a strength-of-schedule adjustment for this week's NFL opponent (points allowed to the position), noted on each player's line.`}</p>
+            <p>Starters as set in the ${DATA.league.snapshot} snapshot project for <strong>${f1(curTotR)}</strong>. The optimal lineup — this league's ${opt.lineup.length + kdSlots.length} starter slots — projects for <strong>${f1(optTotR)}</strong>${kdSlots.length ? " — total excludes K/DEF" : ""} — ${gainR > 0.05 ? `<strong>${f1(gainR)} points are sitting on the bench.</strong>` : `<strong>nothing is being left on the table.</strong>`} ${isNext ? `Week ${VW} projections use injury statuses as of today — plan accordingly.` : `Projections are not adjusted for schedule — each player's line notes this week's matchup (his opponent's points allowed to the position) as context only.`}</p>
           </div>
           ${movesHtml}
           <div class="mv-grid">${tbl("Current starters (snapshot)", cur, curTotR, kdSlots.length ? { rows: "", totNote: true } : null)}${tbl("Optimal Week " + VW, opt.lineup, optTotR, kdSlots.length ? { rows: kdSlots.map(kdRowHtml).join(""), totNote: true } : null)}</div>
@@ -13267,10 +13267,9 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
               const raw = sideTotal(sd);
               if (raw == null) return "";
               const unpriced = sd.p.some(pid => ourVal(pid) == null) || sd.k.some(([ss, rr]) => pickVal(ss, rr) == null && !pastClass(ss));
-              if (unpriced) return "";
-              const adj = adjs[i];
+              const adj = unpriced ? null : adjs[i];
               const adjTxt = (adj != null && Math.round(adj) !== Math.round(raw)) ? ` · with value adjustment: <strong>${fmt(Math.round(adj))}</strong>` : "";
-              return `<div class="rt-got rt-got-total"><strong>${esc(sd.t)}</strong> total <strong>${fmt(raw)}</strong>${adjTxt}</div>`;
+              return `<div class="rt-got rt-got-total"><strong>${esc(sd.t)}</strong> total <strong>${fmt(raw)}</strong>${unpriced ? ` <span class="rt-asub">(priced pieces only)</span>` : ""}${adjTxt}</div>`;
             }).join("");
           } catch (e) { totals = ""; }
           const take = tradeTake(t);
@@ -19990,7 +19989,7 @@ window.__lifeline = (function () {
        for all-play — with rosters priced off the board already in
        the page. No sim runs here, so the outlook part stays out.
        Results are cached in localStorage by board week + snapshot. */
-    const MS_ELIG = { QB: ["QB"], RB: ["RB"], WR: ["WR"], TE: ["TE"], K: ["K"], DEF: ["DEF"], DL: ["DL"], LB: ["LB"], DB: ["DB"], FLEX: ["RB", "WR", "TE"], WRRB_FLEX: ["RB", "WR"], SUPER_FLEX: ["QB", "RB", "WR", "TE"], REC_FLEX: ["WR", "TE"], IDP_FLEX: ["DL", "LB", "DB"] };
+    const MS_ELIG = { QB: ["QB"], RB: ["RB"], WR: ["WR"], TE: ["TE"], FLEX: ["RB", "WR", "TE"], WRRB_FLEX: ["RB", "WR"], SUPER_FLEX: ["QB", "RB", "WR", "TE"], REC_FLEX: ["WR", "TE"] };
     function msSlotFill(players, positions, priceFn) {
       const pool = players.slice().sort((a, b) => priceFn(b) - priceFn(a));
       const used = new Set();
