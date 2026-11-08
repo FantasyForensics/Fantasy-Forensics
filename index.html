@@ -4453,7 +4453,14 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            league's +0.75 default that's ×1.132, replacing the old ×1.22 —
            the old factor overcooked TEs ~8% vs the market.
          - The passing-TD term is unchanged: a QB-only estimate, ≈+5%
-           across 4→6 pts. */
+           across 4→6 pts.
+         - Passing yards (Nov 2026): QBs only, factor = 1 + 4.0 ×
+           (passYds − 0.04) — 0.05/yd prices QBs ×1.040, 0.03 ×0.960,
+           and the standard 0.04 rate is exactly ×1.000 (no change).
+           Replacement-relative calibration on the actual stat means
+           (QB25 boundary; QB1 value-over-replacement +3.3%, top-12
+           pool +6.4%), bracketed below the pass-TD lever as the
+           gross-points ratio requires. */
       const PPR_MARKET = { // [ppr, value factor relative to ppr = 1.0]
         RB: [[0, 1.006], [0.5, 0.999], [1, 1.0]],
         WR: [[0, 0.982], [0.5, 0.993], [1, 1.0]],
@@ -4473,7 +4480,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         return 1;
       }
       function posFactor(pos, s) {
-        if (pos === "QB") return 1.10 * (s.sf ? 1 : 0.514) * (1 + 0.0272727 * (s.ptd - 4));
+        if (pos === "QB") return 1.10 * (s.sf ? 1 : 0.514) * (1 + 0.0272727 * (s.ptd - 4)) * (1 + 4.0 * ((s.passYds != null ? s.passYds : 0.04) - 0.04));
         if (pos === "TE") return (1 + 0.176 * s.tep) * pprFactor("TE", s.ppr);
         if (pos === "WR") return pprFactor("WR", s.ppr);
         if (pos === "RB") return pprFactor("RB", s.ppr);
