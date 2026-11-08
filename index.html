@@ -2125,7 +2125,7 @@
 #tab-draft footer a{color:var(--cyan)}
 #tab-draft .legend{display:flex; gap:14px; flex-wrap:wrap; color:var(--mut); font-size:12.5px; margin-top:8px}
 #tab-draft [hidden]{display:none !important}
-#tab-draft .modebar{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:26px}
+#tab-draft .modebar{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:26px}
 #tab-draft .modebar .mb-lab{grid-column:1/-1; font-family:"Space Grotesk"; font-weight:700; font-size:11.5px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase}
 #tab-draft .hmode{
     text-align:left; cursor:pointer; border-radius:var(--r); padding:16px 18px; color:var(--ink);
@@ -2165,6 +2165,47 @@
 #tab-draft #pool .chip{font-size:11px; padding:2px 7px}
 #tab-draft #sboard th:nth-child(4), #tab-draft #sboard td:nth-child(4), #tab-draft #sboard th:nth-child(5), #tab-draft #sboard td:nth-child(5), #tab-draft #sboard th:nth-child(8), #tab-draft #sboard td:nth-child(8), #tab-draft #sboard th:nth-child(9), #tab-draft #sboard td:nth-child(9), #tab-draft #sboard th:nth-child(10), #tab-draft #sboard td:nth-child(10), #tab-draft #sboard th:nth-child(11), #tab-draft #sboard td:nth-child(11), #tab-draft #sboard th:nth-child(12), #tab-draft #sboard td:nth-child(12){display:none}
 #tab-draft .msub{display:block; color:var(--mut); font-size:12px; font-weight:400; margin-top:1px}}
+/* ===== Draft Sheet (Eric, 2026-11-08) ===== */
+#tab-draft .sheet-actions{margin:16px 0 4px}
+#tab-draft .sheet-pos-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start}
+@media (max-width:860px){#tab-draft .sheet-pos-grid{grid-template-columns:1fr}}
+#tab-draft .sheet-league h3{margin:0 0 4px; font-size:21px}
+#tab-draft .sheet-league .fmtline{color:var(--mut); font-size:13.5px}
+#tab-draft .sheet-gridwrap{overflow-x:auto}
+#tab-draft table.sheet-grid{border-collapse:collapse; font-size:12.5px; width:100%}
+#tab-draft table.sheet-grid th, #tab-draft table.sheet-grid td{border:1px solid rgba(255,255,255,.10); padding:6px 7px; text-align:left; vertical-align:top}
+#tab-draft table.sheet-grid th{background:rgba(255,255,255,.04); color:var(--ink); font-size:11px; letter-spacing:.05em}
+#tab-draft table.sheet-grid th .slotno{display:block; font-family:"Space Grotesk"; font-size:14px; color:var(--lime)}
+#tab-draft table.sheet-grid td.rd{font-family:"Space Grotesk"; font-weight:700; white-space:nowrap}
+#tab-draft table.sheet-grid .own{font-weight:700}
+#tab-draft table.sheet-grid .via{display:block; color:var(--mut); font-size:11px}
+#tab-draft table.sheet-grid td.traded-cell{background:rgba(198,255,0,.05)}
+#tab-draft .sheet-grid-narrow{display:none}
+@media (max-width:760px){
+#tab-draft .sheet-grid-wide{display:none}
+#tab-draft table.sheet-grid-narrow{display:table}
+#tab-draft .sheet-board .col-age, #tab-draft .sheet-pos .col-age{display:none}
+}
+@media print{
+@page{margin:11mm}
+body.ff-sheet-mode > *:not(.wrap){display:none !important}
+body.ff-sheet-mode .wrap > *:not(#tab-draft){display:none !important}
+body.ff-sheet-mode #tab-draft .modebar, body.ff-sheet-mode #tab-draft .hero, body.ff-sheet-mode #tab-draft footer, body.ff-sheet-mode .sheet-actions{display:none !important}
+body.ff-sheet-mode, body.ff-sheet-mode #tab-draft{background:#fff !important; color:#111 !important}
+body.ff-sheet-mode #tab-draft .wrap{max-width:none; padding:0}
+body.ff-sheet-mode #modeSheet h2, body.ff-sheet-mode #modeSheet h3{color:#111 !important}
+body.ff-sheet-mode #modeSheet .sec-sub, body.ff-sheet-mode #modeSheet .sub, body.ff-sheet-mode #modeSheet .fmtline{color:#444 !important}
+body.ff-sheet-mode #modeSheet .card{background:#fff !important; border-color:#bbb !important; box-shadow:none !important}
+body.ff-sheet-mode #modeSheet th{color:#333 !important; background:#f2f2f2 !important}
+body.ff-sheet-mode #modeSheet td{border-color:#bbb !important; color:#111 !important}
+body.ff-sheet-mode #modeSheet table.sheet-grid th, body.ff-sheet-mode #modeSheet table.sheet-grid td{border-color:#999 !important}
+body.ff-sheet-mode #modeSheet .pospill, body.ff-sheet-mode #modeSheet .chip{color:#111 !important; border-color:#888 !important; background:none !important}
+body.ff-sheet-mode #modeSheet .grouprow td{background:#e8e8e8 !important; color:#111 !important}
+body.ff-sheet-mode #modeSheet .sheet-grid-narrow{display:none !important}
+body.ff-sheet-mode #modeSheet .sheet-grid-wide{display:table !important}
+body.ff-sheet-mode #modeSheet tr{page-break-inside:avoid}
+body.ff-sheet-mode #modeSheet .valbar{display:none}
+}
     </style>
     <style>
       /* ---------- real trades ---------- */
@@ -3328,6 +3369,7 @@
           <h3 class="tools-group-h">Draft</h3>
           <div class="tools-pills">
             <button type="button" class="tools-pill" style="--tile-accent:#FF2E88" data-tools-draft="1"><span class="tools-pill-t">Draft Room</span><span class="tools-pill-s">Rookie and snake draft rooms</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#69F0AE" data-tools-draft="sheet"><span class="tools-pill-t">Draft Sheet</span><span class="tools-pill-s">Printable board, draft order &amp; CSV</span></button>
           </div>
         </div>
       </section>
@@ -3482,6 +3524,10 @@
       <span class="hm-t">Mock Draft<small>VS AI</small></span>
       <span class="hm-s">You against AI drafters working off our board — snake or rookie, instant picks, and post-draft grades when it's over.</span>
     </button>
+    <button class="hmode" data-setmode="sheet" aria-pressed="false">
+      <span class="hm-t">Draft Sheet<small>PRINTABLE BOARD</small></span>
+      <span class="hm-s">Your league's board on one sheet — rankings, tiers, and the full draft order with traded picks. Print it or take the spreadsheet.</span>
+    </button>
   </div>
 
   <div class="hero" id="heroRookie">
@@ -3499,6 +3545,12 @@
     <span class="kicker" style="color:var(--mag); border-color:rgba(255,46,136,.4); background:rgba(255,46,136,.06)">Fantasy Forensics · Draft Room</span>
     <h1>RUN THE<br /><span style="color:var(--mag); text-shadow:0 0 34px rgba(255,46,136,.45)">MOCK DRAFT.</span></h1>
     <p>AI opponents drafting off <b>the same value board you see</b> — value-first, with positional scarcity and tier awareness, plus a light random streak so no two mocks fall the same way. Snake or rookie format, your slot, your call on every pick. When it's over, the analyzer grades your draft.</p>
+  </div>
+
+  <div class="hero" id="heroSheet" hidden>
+    <span class="kicker">Fantasy Forensics · Draft Room</span>
+    <h1>YOUR DRAFT,<br /><span class="glow">ON ONE SHEET.</span></h1>
+    <p>The board, the tiers, and — with your league connected — <b>your full draft order with every traded pick</b>, laid out to print on draft day or download as a spreadsheet. Prices are our proprietary player values, shown in whichever format you're browsing.</p>
   </div>
 
   <div id="modeRookie">
@@ -3824,6 +3876,29 @@
     <div id="mockResults"></div>
   </section>
   </div><!-- /modeMock -->
+
+  <div id="modeSheet" hidden>
+  <!-- ============ S1. DRAFT SHEET ============ -->
+  <section id="sheetsec">
+    <div class="sec-head"><span class="tag">01 · The Sheet</span><h2>Draft sheet</h2></div>
+    <p class="sec-sub">One printable board: the top of the value board with its tiers, every position broken out, and — with a league connected — <b>your draft order with every traded pick shown under its current owner</b>. Print it for draft day or download the rankings as a spreadsheet.</p>
+    <div id="sheetHead"></div>
+    <div class="toolbar sheet-actions">
+      <button class="btn solid" id="sheetPrint">Print sheet</button>
+      <button class="btn cy" id="sheetCsv">Download CSV</button>
+      <span class="note" id="sheetNote"></span>
+    </div>
+    <h3 style="margin:22px 0 8px; font-size:18px">Overall board</h3>
+    <div class="card" style="padding:6px 14px"><table class="sheet-board">
+      <thead><tr><th style="width:6%" class="r">#</th><th>Player</th><th style="width:10%">Pos</th><th style="width:11%">Team</th><th style="width:9%" class="r col-age">Age</th><th style="width:14%" class="r">Value</th><th style="width:12%">Tier</th></tr></thead>
+      <tbody id="sheetBody"></tbody>
+    </table></div>
+    <p class="sub" id="sheetCount" style="margin-top:8px"></p>
+    <h3 style="margin:26px 0 8px; font-size:18px">By position</h3>
+    <div class="sheet-pos-grid sheet-pos" id="sheetPos"></div>
+    <div id="sheetOrder"></div>
+  </section>
+  </div><!-- /modeSheet -->
 
   <footer>
     <p style="margin:0 0 6px"><b style="color:var(--ink)">Fantasy Forensics — Draft Room</b> — the rookie-draft room, alongside the full value board, trade calculator, and season simulator.</p>
@@ -16137,14 +16212,16 @@ let MODE = "rookie";
 /* ---------- mode switcher ---------- */
 function setMode(m){
   MODE = m;
-  const snake = m === "snake", mock = m === "mock";
-  $("#modeRookie").hidden = snake || mock;
+  const snake = m === "snake", mock = m === "mock", sheet = m === "sheet";
+  $("#modeRookie").hidden = snake || mock || sheet;
   $("#modeSnake").hidden = !snake;
   $("#modeMock").hidden = !mock;
-  $("#heroRookie").hidden = snake || mock;
+  $("#modeSheet").hidden = !sheet;
+  $("#heroRookie").hidden = snake || mock || sheet;
   $("#heroSnake").hidden = !snake;
   $("#heroMock").hidden = !mock;
-  const _nvR = $("#navRookie"); if (_nvR) _nvR.style.display = (!snake && !mock) ? "contents" : "none";
+  $("#heroSheet").hidden = !sheet;
+  const _nvR = $("#navRookie"); if (_nvR) _nvR.style.display = (!snake && !mock && !sheet) ? "contents" : "none";
   const _nvS = $("#navSnake"); if (_nvS) _nvS.style.display = snake ? "contents" : "none";
   const _nvM = $("#navMock"); if (_nvM) _nvM.style.display = mock ? "contents" : "none";
   drRoot.querySelectorAll("[data-setmode]").forEach(b=>{
@@ -16154,11 +16231,176 @@ function setMode(m){
   });
   if(snake) renderSnakeRoom();
   if(mock) renderMockSetup();
+  if(sheet) renderSheet();
+  document.body.classList.toggle("ff-sheet-mode", sheet);
 }
 drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click", ()=>{
   setMode(b.dataset.setmode);
   drRoot.scrollIntoView({ behavior: "smooth", block: "start" });
 }));
+
+/* ---------- 6. draft sheet (Eric, 2026-11-08) ----------
+   One printable board: the overall top 100 and by-position lists with
+   tier breaks, plus — for a connected league — the league header and
+   the draft order with every pick under its CURRENT owner. Prices
+   follow the site's current format (VALMODE): dynasty values off the
+   synced pool, redraft values off the snake board — the same numbers
+   the other Draft Room modes show. Tiers reuse the Draft Room's own
+   rule (the snake board's retier): a new tier starts when a value
+   falls under 85% of the current tier's top value. */
+let SHEET_ROWS = [];
+function sheetIsRedraft(){ return (typeof VALMODE !== "undefined" && VALMODE === "redraft"); }
+function sheetTier(list){
+  let tier = 1, top = list.length ? list[0].value : 0;
+  list.forEach((p, i) => { if (i > 0 && p.value < top * 0.85) { tier++; top = p.value; } p.tier = tier; });
+  return list;
+}
+function sheetRows(){
+  if (sheetIsRedraft()) return SNAKE.slice(0, 100).map(p => ({ name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, value: p.value, tier: p.tier, posRank: p.posRank }));
+  const all = DATA.pool.filter(p => p && p.value > 0).slice().sort((a, b) => b.value - a.value);
+  return sheetTier(all.slice(0, 100)).map(p => ({ name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, value: p.value, tier: p.tier, posRank: p.posRank }));
+}
+function sheetPosRows(pos){
+  const base = sheetIsRedraft()
+    ? SNAKE.filter(p => p.pos === pos)
+    : DATA.pool.filter(p => p && p.pos === pos && p.value > 0).slice().sort((a, b) => b.value - a.value);
+  return sheetTier(base.map(p => ({ name: p.name, team: p.team, age: p.age, inj: p.inj, value: p.value }))).slice(0, 25);
+}
+function sheetConn(){
+  const C = window.CONN_LEAGUE;
+  if (!C || window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE) return null;
+  return C;
+}
+function sheetFmtLine(C){
+  const bits = [sheetIsRedraft() ? "Redraft" : "Dynasty"];
+  if (C.league && C.league.teams) bits.push(C.league.teams + " teams");
+  if (C.league && Array.isArray(C.league.scoring) && C.league.scoring.length) bits.push(C.league.scoring.join(" · "));
+  else if (C.format) {
+    bits.push(C.format.sf ? "Superflex" : "1 QB");
+    bits.push(C.format.ppr === 1 ? "Full PPR" : C.format.ppr === 0.5 ? "Half PPR" : C.format.ppr === 0 ? "0 PPR" : C.format.ppr + "-pt PPR");
+    if (C.format.tep > 0) bits.push("TE +" + C.format.tep + " premium");
+    bits.push(C.format.ptd + "-pt passing TD");
+  }
+  if (C.league && C.league.season) bits.push(C.league.season + " season");
+  return bits.join(" · ");
+}
+function renderSheetHead(C){
+  const head = $("#sheetHead");
+  if (!C) {
+    head.innerHTML = "<div class='locked-state'><div class='locked-body'><h2>This sheet gets personal with your league</h2>"
+      + "<p>Connect your league and the sheet picks up <strong>your league's name and scoring</strong> plus its <strong>full draft order — every pick under its current owner</strong>, traded picks included. Until then, the board below is the full preset board.</p>"
+      + "<div class='locked-actions'><button type='button' class='locked-cta' id='sheetConnect'>Connect your league</button></div>"
+      + "<p class='locked-note' hidden>Use the connect control at the top of the site to load your league, then come back to this sheet.</p></div></div>";
+    const b = $("#sheetConnect");
+    if (b) b.addEventListener("click", () => {
+      if (typeof window.openSleeperConnect === "function") { window.openSleeperConnect(); return; }
+      const note = head.querySelector(".locked-note"); if (note) note.hidden = false;
+    });
+    return;
+  }
+  head.innerHTML = "<div class='card glow sheet-league'><h3>" + esc(C.league && C.league.name ? C.league.name : "Your league") + "</h3>"
+    + "<div class='fmtline'>" + esc(sheetFmtLine(C)) + "</div></div>";
+}
+function sheetOrderModel(C){
+  const teams = (C.teams || []).filter(t => t);
+  if (!teams.length) return null;
+  const all = [];
+  teams.forEach(t => (t.picks || []).forEach(pk => all.push({ pk, owner: t })));
+  if (!all.length) return null;
+  const season = Math.min.apply(null, all.map(x => x.pk.season));
+  const inSeason = all.filter(x => x.pk.season === season);
+  const rounds = Array.from(new Set(inSeason.map(x => x.pk.round))).sort((a, b) => a - b);
+  const slots = teams.slice().sort((a, b) => ((a.pf || 0) - (b.pf || 0)) || ((a.rid || 0) - (b.rid || 0)));
+  const byOrig = {};
+  inSeason.forEach(x => { byOrig[x.pk.round + "|" + x.pk.orig] = x; });
+  return { season, rounds, slots, byOrig, n: slots.length };
+}
+function sheetCell(x, origName){
+  if (!x) return "<td class='sub'>—</td>";
+  const traded = Number(x.owner.rid) !== Number(x.pk.orig);
+  return "<td" + (traded ? " class='traded-cell'" : "") + "><span class='own'>" + esc(x.owner.name) + "</span>"
+    + (traded ? "<span class='via'>via " + esc(origName) + "</span>" : "") + "</td>";
+}
+function sheetOrderHtml(C){
+  const O = sheetOrderModel(C);
+  if (!O) return "<h3 style='margin:26px 0 8px; font-size:18px'>Draft order</h3><p class='sub'>No draft picks are attached to this league yet, so there is no order to print.</p>";
+  const rd = sheetIsRedraft();
+  let head = "<tr><th>Round</th>";
+  O.slots.forEach((t, i) => { head += "<th><span class='slotno'>" + (i + 1) + "</span>" + esc(t.name) + "</th>"; });
+  head += "</tr>";
+  let body = "";
+  O.rounds.forEach(r => {
+    body += "<tr><td class='rd'>R" + r + "</td>";
+    for (let c = 0; c < O.n; c++) {
+      const origTeam = O.slots[(rd && r % 2 === 0) ? (O.n - 1 - c) : c];
+      body += sheetCell(O.byOrig[r + "|" + origTeam.rid], origTeam.name);
+    }
+    body += "</tr>";
+  });
+  const wide = "<div class='sheet-gridwrap'><table class='sheet-grid sheet-grid-wide'><thead>" + head + "</thead><tbody>" + body + "</tbody></table></div>";
+  const nhead = "<tr><th>Team</th>" + O.rounds.map(r => "<th>R" + r + "</th>").join("") + "</tr>";
+  let nbody = "";
+  O.slots.forEach((t, i) => {
+    nbody += "<tr><td><span class='slotno' style='display:inline'> " + (i + 1) + "</span> <span class='own'>" + esc(t.name) + "</span></td>";
+    O.rounds.forEach(r => {
+      const x = O.byOrig[r + "|" + t.rid];
+      nbody += x ? "<td>" + esc(x.owner.name) + "</td>" : "<td class='sub'>—</td>";
+    });
+    nbody += "</tr>";
+  });
+  const narrow = "<table class='sheet-grid sheet-grid-narrow'><thead>" + nhead + "</thead><tbody>" + nbody + "</tbody></table>";
+  return "<h3 style='margin:26px 0 4px; font-size:18px'>" + O.season + " draft order</h3>"
+    + "<p class='sub' style='margin:0 0 10px'>" + (rd ? "Snake order — every other round runs in reverse. " : "Projected from the current standings, fewest points scored picking first. ")
+    + "Every pick sits under its <b style='color:var(--ink)'>current owner</b>; a pick that changed hands names the team it came from.</p>"
+    + wide + narrow;
+}
+function sheetPosHtml(pos, rows){
+  let body = "", lastTier = 0;
+  rows.forEach((r, i) => {
+    if (r.tier !== lastTier) { lastTier = r.tier; body += "<tr class='grouprow'><td colspan='5'>Tier " + lastTier + "</td></tr>"; }
+    body += "<tr><td class='r num sub'>" + (i + 1) + "</td><td><b>" + esc(r.name) + "</b>"
+      + (r.inj ? " <span class='chip inj'>" + esc(r.inj) + "</span>" : "") + "</td>"
+      + "<td class='sub'>" + esc(r.team || "FA") + "</td>"
+      + "<td class='r num col-age'>" + (r.age != null ? r.age : "—") + "</td>"
+      + "<td class='r num' style='font-weight:700'>" + fmt(r.value) + "</td></tr>";
+  });
+  return "<div class='card' style='padding:6px 14px'><h3 style='margin:10px 0 6px; font-size:16px'>" + pos + "</h3>"
+    + "<table><thead><tr><th class='r' style='width:8%'>#</th><th>Player</th><th style='width:14%'>Team</th><th class='r col-age' style='width:11%'>Age</th><th class='r' style='width:16%'>Value</th></tr></thead>"
+    + "<tbody>" + body + "</tbody></table></div>";
+}
+function renderSheet(){
+  const C = sheetConn();
+  renderSheetHead(C);
+  SHEET_ROWS = sheetRows();
+  let body = "", lastTier = 0;
+  SHEET_ROWS.forEach((r, i) => {
+    if (r.tier !== lastTier) { lastTier = r.tier; body += "<tr class='grouprow'><td colspan='7'>Tier " + lastTier + "</td></tr>"; }
+    body += "<tr><td class='r num sub'>" + (i + 1) + "</td><td><b>" + esc(r.name) + "</b>"
+      + (r.inj ? " <span class='chip inj'>" + esc(r.inj) + "</span>" : "") + "</td>"
+      + "<td><span class='pospill pos-" + r.pos + "'>" + r.pos + "</span> <span class='sub'>" + r.pos + (r.posRank != null ? r.posRank : "") + "</span></td>"
+      + "<td class='sub'>" + esc(r.team || "FA") + "</td>"
+      + "<td class='r num col-age'>" + (r.age != null ? r.age : "—") + "</td>"
+      + "<td class='r num' style='font-weight:700'>" + fmt(r.value) + "</td>"
+      + "<td><span class='chip tier'>Tier " + r.tier + "</span></td></tr>";
+  });
+  $("#sheetBody").innerHTML = body || "<tr><td colspan='7' class='sub'>No players on the board.</td></tr>";
+  const rd = sheetIsRedraft();
+  $("#sheetCount").textContent = "The top " + SHEET_ROWS.length + " players on the " + (rd ? "redraft" : "dynasty") + " board · values are our proprietary player values" + (rd ? " for the rest of the season" : "") + ".";
+  $("#sheetPos").innerHTML = ["QB", "RB", "WR", "TE"].map(pos => sheetPosHtml(pos, sheetPosRows(pos))).join("");
+  $("#sheetOrder").innerHTML = C ? sheetOrderHtml(C) : "";
+  $("#sheetNote").textContent = C ? "" : "Connect a league to add its draft order to this sheet.";
+}
+$("#sheetPrint").addEventListener("click", () => { window.print(); });
+$("#sheetCsv").addEventListener("click", () => {
+  const lines = ["rank,player,position,team,value,tier"];
+  const q = v => { const s = String(v == null ? "" : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  SHEET_ROWS.forEach((r, i) => lines.push([i + 1, q(r.name), r.pos, q(r.team || "FA"), r.value, r.tier].join(",")));
+  const url = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = "fantasy-forensics-draft-sheet.csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+});
 
 /* ---------- snake shared links on load ---------- */
 (function(){
@@ -16179,7 +16421,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
   ["ladder","pool","analyzer","room","sboard","sroom","mocksetup","mockroomsec","mockresults"].forEach(id=>{ const el=document.getElementById(id); if(el) obs.observe(el); });
 })();
 
-  window.drDraft = { setMode: setMode, mode: function () { return MODE; } };
+  window.drDraft = { setMode: setMode, renderSheet: renderSheet, mode: function () { return MODE; } };
 })();
 </script>
     <script>
@@ -16195,6 +16437,7 @@ drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click"
     if (lastDraftMode === m) return;
     lastDraftMode = m;
     if (window.drDraft.mode() === "mock") return;
+    if (window.drDraft.mode() === "sheet") { if (window.drDraft.renderSheet) window.drDraft.renderSheet(); return; }
     window.drDraft.setMode(m);
   };
   document.addEventListener("click", function (e) {
@@ -19591,6 +19834,7 @@ window.__lifeline = (function () {
       if (pill.hasAttribute("data-tools-draft")) {
         var d = document.querySelector('#site-main [data-nav="draft"]');
         if (d) d.click();
+        if (pill.getAttribute("data-tools-draft") === "sheet" && window.drDraft && window.drDraft.setMode) window.drDraft.setMode("sheet");
         return;
       }
       var btn = document.querySelector('#site-sub [data-pnav-sub="' + pill.getAttribute("data-tools-pill") + '"][data-group="' + pill.getAttribute("data-tools-group") + '"]');
