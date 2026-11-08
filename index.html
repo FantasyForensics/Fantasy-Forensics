@@ -2189,7 +2189,7 @@
 @media print{
 @page{margin:11mm}
 body.ff-sheet-mode > *:not(.wrap){display:none !important}
-body.ff-sheet-mode .wrap > *:not(#tab-draft){display:none !important}
+body.ff-sheet-mode > .wrap > *:not(#tab-draft){display:none !important}
 body.ff-sheet-mode #tab-draft .modebar, body.ff-sheet-mode #tab-draft .hero, body.ff-sheet-mode #tab-draft footer, body.ff-sheet-mode .sheet-actions{display:none !important}
 body.ff-sheet-mode, body.ff-sheet-mode #tab-draft{background:#fff !important; color:#111 !important}
 body.ff-sheet-mode #tab-draft .wrap{max-width:none; padding:0}
@@ -3889,10 +3889,10 @@ body.ff-sheet-mode #modeSheet .valbar{display:none}
       <span class="note" id="sheetNote"></span>
     </div>
     <h3 style="margin:22px 0 8px; font-size:18px">Overall board</h3>
-    <div class="card" style="padding:6px 14px"><table class="sheet-board">
+    <div class="card" style="padding:6px 14px"><div class="sheet-gridwrap"><table class="sheet-board">
       <thead><tr><th style="width:6%" class="r">#</th><th>Player</th><th style="width:10%">Pos</th><th style="width:11%">Team</th><th style="width:9%" class="r col-age">Age</th><th style="width:14%" class="r">Value</th><th style="width:12%">Tier</th></tr></thead>
       <tbody id="sheetBody"></tbody>
-    </table></div>
+    </table></div></div>
     <p class="sub" id="sheetCount" style="margin-top:8px"></p>
     <h3 style="margin:26px 0 8px; font-size:18px">By position</h3>
     <div class="sheet-pos-grid sheet-pos" id="sheetPos"></div>
@@ -16365,8 +16365,8 @@ function sheetPosHtml(pos, rows){
       + "<td class='r num' style='font-weight:700'>" + fmt(r.value) + "</td></tr>";
   });
   return "<div class='card' style='padding:6px 14px'><h3 style='margin:10px 0 6px; font-size:16px'>" + pos + "</h3>"
-    + "<table><thead><tr><th class='r' style='width:8%'>#</th><th>Player</th><th style='width:14%'>Team</th><th class='r col-age' style='width:11%'>Age</th><th class='r' style='width:16%'>Value</th></tr></thead>"
-    + "<tbody>" + body + "</tbody></table></div>";
+    + "<div class='sheet-gridwrap'><table><thead><tr><th class='r' style='width:8%'>#</th><th>Player</th><th style='width:14%'>Team</th><th class='r col-age' style='width:11%'>Age</th><th class='r' style='width:16%'>Value</th></tr></thead>"
+    + "<tbody>" + body + "</tbody></table></div></div>";
 }
 function renderSheet(){
   const C = sheetConn();
