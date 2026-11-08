@@ -5452,8 +5452,9 @@ ${rdP ? "" : `
       /* Pick search (Eric, 2026-10-23): with the chip grid gone, the
          full-pool modes (guest / Any Player) find picks through the
          same search box. Every query token must name a pick facet —
-         a year ("2027", or "27"), a round ("1st", "first", "1"), or
-         a tier ("early" / "mid" / "late") — and the pick matches
+         a year ("2027", or "27", or a partial year still being
+         typed — "2", "20", "202"), a round ("1st", "first", "1"),
+         or a tier ("early" / "mid" / "late") — and the pick matches
          when every named facet fits it, so "2027 1st mid", "mid
          first" and "2028 2nd early" all land on the right slot.
          Prices are the ladder's, via guestPickValue — identical to
@@ -5463,18 +5464,32 @@ ${rdP ? "" : `
       function pickSearchMatches(side, q) {
         const st = calc[side];
         if (!(window.GUEST_MODE || st.src === "any") || VALMODE === "redraft" || !q) return [];
-        let year = null, round = null, tier = null;
+        let year = null, round = null, tier = null, yearPrefix = null;
+        const bareNums = [];
         for (const tok of q.split(/\s+/)) {
           if (/^\d{4}$/.test(tok)) year = Number(tok);
           else if (/^\d{2}$/.test(tok) && GUEST_PICKS.some(pk => pk.year === 2000 + Number(tok))) year = 2000 + Number(tok);
+          else if (/^\d+$/.test(tok) && GUEST_PICKS.some(pk => String(pk.year).startsWith(tok))) bareNums.push(tok);
           else if (PICK_ROUND_TOKENS[tok] != null) round = PICK_ROUND_TOKENS[tok];
           else if (PICK_TIER_TOKENS[tok] != null) tier = PICK_TIER_TOKENS[tok];
           else return [];
         }
-        if (year == null && round == null && tier == null) return [];
+        /* A bare number that prefixes a pick year is a year still
+           being typed ("2", "20", "202" on the way to "2027"): hold
+           it and filter by year prefix so results narrow as the year
+           is typed instead of vanishing until it is complete. When a
+           full year is already named, the number can only be a round
+           ("2027 2" = the 2027 2nd). */
+        for (const tok of bareNums) {
+          if (year == null && yearPrefix == null) yearPrefix = tok;
+          else if (PICK_ROUND_TOKENS[tok] != null) round = PICK_ROUND_TOKENS[tok];
+          else return [];
+        }
+        if (year == null && yearPrefix == null && round == null && tier == null) return [];
         const chosen = new Set(st.assets.filter(a => a.kind === "pick" && a.fromTeam === "G").map(a => a.key));
         return GUEST_PICKS.filter(pk => !chosen.has(pk.key)
           && (year == null || pk.year === year)
+          && (yearPrefix == null || String(pk.year).startsWith(yearPrefix))
           && (round == null || pk.roundNum === round)
           && (tier == null || pk.tierIdx === tier));
       }
