@@ -62,7 +62,7 @@
       if ("scrollRestoration" in history) history.scrollRestoration = "manual";
       document.addEventListener("DOMContentLoaded", function () {
         var h = location.hash || "";
-        var deepLink = /(?:^#|[#&])trade=/.test(h) || h.indexOf("#/insights") === 0 ||
+        var deepLink = /(?:^#|[#&])trade=/.test(h) || h.indexOf("#/insights") === 0 || h.indexOf("#/draft/") === 0 ||
           /(^#|[#&])(report|room|snake|mock)=/.test(h);
         if (!deepLink) window.scrollTo(0, 0);
       });
@@ -2129,6 +2129,17 @@
 #tab-draft .formattabs .ftab{flex:1; border:none; background:transparent; color:var(--ink-2); border-radius:999px; min-height:46px; font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:16.5px; letter-spacing:.02em; cursor:pointer}
 #tab-draft .formattabs .ftab.on{background:var(--accent); color:var(--accent-ink); box-shadow:0 0 16px rgba(198,255,0,.30)}
 #tab-draft .formattabs .ftab.cy.on{background:var(--cyan); color:#04222b; box-shadow:0 0 16px rgba(0,229,255,.30)}
+/* Quick-access row (Round 2): one tap per tool, each on its own view */
+#tab-draft .drquick{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px}
+#tab-draft .drquick[hidden]{display:none}
+#tab-draft .drq{border:1px solid var(--line); background:rgba(255,255,255,.04); color:var(--ink-2); border-radius:999px; padding:8px 14px; min-height:40px; font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:14px; letter-spacing:.01em; cursor:pointer}
+#tab-draft .drq:hover{border-color:rgba(255,255,255,.28); color:var(--ink)}
+#tab-draft .drq.on{background:rgba(198,255,0,.13); border-color:rgba(198,255,0,.55); color:var(--ink)}
+#tab-draft #drQuickRd .drq.on{background:rgba(0,229,255,.10); border-color:rgba(0,229,255,.55)}
+/* Your picks in the sheet's draft order (screen) */
+#tab-draft table.sheet-grid td.mine-cell{background:rgba(198,255,0,.13)}
+#tab-draft table.sheet-grid td .mine-dot{color:var(--lime); font-size:10px; margin-right:4px}
+#tab-draft .live-dot{color:var(--lime); font-weight:700}
 #tab-draft .modebar{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:26px}
 #tab-draft .modebar .mb-lab{grid-column:1/-1; font-family:"Space Grotesk"; font-weight:700; font-size:11.5px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase}
 #tab-draft .hmode{
@@ -2195,7 +2206,10 @@
 @page{margin:7mm}
 body.ff-sheet-mode > *:not(.wrap){display:none !important}
 body.ff-sheet-mode > .wrap > *:not(#tab-draft){display:none !important}
-body.ff-sheet-mode #tab-draft .modebar, body.ff-sheet-mode #tab-draft .hero, body.ff-sheet-mode #tab-draft footer, body.ff-sheet-mode .sheet-actions{display:none !important}
+body.ff-sheet-mode #tab-draft .modebar, body.ff-sheet-mode #tab-draft .hero, body.ff-sheet-mode #tab-draft footer, body.ff-sheet-mode .sheet-actions, body.ff-sheet-mode #tab-draft .drquick{display:none !important}
+body.ff-sheet-mode #modeSheet{display:block !important}
+body.ff-sheet-mode #modeSheet table.sheet-grid td.mine-cell{background:#d9d9d9 !important; font-weight:700}
+body.ff-sheet-mode #modeSheet table.sheet-grid td .mine-dot{color:#111 !important}
 body.ff-sheet-mode #tab-draft .formattabs, body.ff-sheet-mode #fmtDynasty, body.ff-sheet-mode #fmtRedraft, body.ff-sheet-mode #liveDynasty, body.ff-sheet-mode #liveRedraft, body.ff-sheet-mode #modeMock{display:none !important}
 body.ff-sheet-mode, body.ff-sheet-mode #tab-draft{background:#fff !important; color:#111 !important}
 body.ff-sheet-mode #tab-draft .wrap{max-width:none; padding:0}
@@ -3553,28 +3567,28 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
     <button class="ftab cy" data-roomfmt="redraft" role="tab" aria-selected="false">Redraft</button>
   </div>
 
-  <div class="hero" id="heroRookie">
-    <span class="kicker">Fantasy Forensics · Draft Room</span>
-    <h1>OWN THE<br /><span class="glow">DYNASTY DRAFT.</span></h1>
-    <p>The full dynasty board — pick values with the veteran each pick is actually worth, the player pool with draft-capital priors, <b>startup and rookie mock drafts</b>, and your printable draft sheet, all powered by our proprietary player values.</p>
+  <!-- Quick-access row (Round 2, Eric 2026-11-08): one tap per tool,
+       each tool on its own view — the landing stays short. -->
+  <div class="drquick" id="drQuickDyn" role="navigation" aria-label="Dynasty draft tools">
+    <button type="button" class="drq on" data-drview="picks">Picks &amp; veteran equivalents</button>
+    <button type="button" class="drq" data-drview="pool">Player pool</button>
+    <button type="button" class="drq" data-drview="sheet">Draft Sheet</button>
+    <button type="button" class="drq" data-drview="mock">Mock draft</button>
+    <button type="button" class="drq" data-drview="analyzer">Draft analyzer</button>
+    <button type="button" class="drq" data-drview="room">Live room</button>
   </div>
-  <div class="hero" id="heroSnake" hidden>
-    <span class="kicker" style="color:var(--cyan); border-color:rgba(0,229,255,.4); background:rgba(0,229,255,.06)">Fantasy Forensics · Draft Room</span>
-    <h1>OWN THE<br /><span style="color:var(--cyan); text-shadow:0 0 34px rgba(0,229,255,.45)">REDRAFT.</span></h1>
-    <p>Every player priced on <b>rest-of-season value</b> — the same redraft values as the site's Redraft mode. The full board, a <b>mock draft</b> that re-prices to your league's scoring settings, and your printable draft sheet.</p>
+  <div class="drquick" id="drQuickRd" role="navigation" aria-label="Redraft draft tools" hidden>
+    <button type="button" class="drq on" data-drview="pool">Player pool</button>
+    <button type="button" class="drq" data-drview="sheet">Draft Sheet</button>
+    <button type="button" class="drq" data-drview="mock">Mock draft</button>
+    <button type="button" class="drq" data-drview="room">Live room</button>
   </div>
 
   <div id="modeRookie">
-  <!-- ============ 1. PICK LADDER ============ -->
+  <!-- ============ 1. PICKS & VETERAN EQUIVALENTS ============ -->
   <section id="ladder">
-    <div class="sec-head"><span class="tag">01 · The Ladder</span><h2>Rookie pick ladder</h2></div>
-    <p class="sec-sub">Every pick priced by the Fantasy Forensics value algorithm and matched to the <b>veteran it would take to buy it</b>. An early 1st isn't an abstraction: it's a low-end fantasy starter. The ladder and the player board below run on the same scale, so every pick's price reads straight against the veterans beside it.</p>
-
-    <div class="stats">
-      <div class="stat"><div class="v num">1.21×</div><div class="l">Early 1st vs Mid 1st — the top tier of the round is worth about a fifth again the middle</div></div>
-      <div class="stat"><div class="v cy num">1.31×</div><div class="l">Early 1st vs Late 1st — draft position inside the round moves the price by about a third</div></div>
-      <div class="stat"><div class="v mg num">1.25×</div><div class="l">2027 Early 1st vs 2028 Early 1st — the one-year wait costs you about 20% of the value</div></div>
-    </div>
+    <div class="sec-head"><span class="tag">Picks</span><h2>Picks &amp; veteran equivalents</h2></div>
+    <p class="sec-sub">Every pick priced on the same scale as the player board, matched to the <b>veteran it would take to buy it</b>. An early 1st isn't an abstraction: it's a low-end fantasy starter.</p>
 
     <div class="card" style="padding:6px 14px">
       <table>
@@ -3585,25 +3599,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <tbody id="ladderBody"></tbody>
       </table>
     </div>
-    <p class="note" style="margin-top:10px">Every slot on this ladder carries an <b style="color:var(--ink)">Early / Mid / Late</b> price — there is no single generic price for a pick, because where a pick lands inside its round is worth real value (see the tier gaps above). The prices are the Fantasy Forensics algorithm's, on the same scale as the main board, with future years discounted for the wait.</p>
-
-    <div class="grid2" style="margin-top:16px">
-      <div class="card glow">
-        <h3 style="margin:0 0 4px; font-size:19px">Picks appreciate into the draft</h3>
-        <p class="sub" style="margin:0 0 8px">Value index of a future 1st across the 12 months before its draft (12 months out = 100). Modeled seasonal pattern: an in-season trough while veterans win games, then a steady climb through the combine to the <b style="color:var(--ink)">April–May rookie-fever peak</b> at the NFL Draft. Sell picks at the peak; buy them in October.</p>
-        <div id="curve"></div>
-      </div>
-      <div class="card">
-        <h3 style="margin:0 0 8px; font-size:19px">How to read the ladder</h3>
-        <ul style="margin:0; padding-left:18px; color:var(--mut); font-size:14px">
-          <li><b style="color:var(--ink)">Early 1st ≈ rank ~<span id="guide-rank-early1">18</span> veteran.</b> A genuine starter — never throw one into a deal as a sweetener.</li>
-          <li><b style="color:var(--ink)">Mid 1st ≈ rank ~<span id="guide-rank-mid1">33</span>.</b> A solid WR2/RB2. Late 1st ≈ rank ~<span id="guide-rank-late1">47</span>, flex territory.</li>
-          <li><b style="color:var(--ink)">Early 2nd ≈ rank ~<span id="guide-rank-early2">79</span>.</b> Bench-with-upside money. The drop from late 1st to early 2nd is only 1.27× — the softest round-boundary cliff on the board, and the classic trade-back target.</li>
-          <li><b style="color:var(--ink)">Round-over-round:</b> early 2nd → early 3rd falls 1.48×. After the 3rd, picks flatten out (~1,200–2,400) and become fungible throw-ins.</li>
-          <li><b style="color:var(--ink)">Future years decay fast</b> — a 2028 1st prices like a late 2027 1st; a 2029 1st like an early 2027 2nd.</li>
-        </ul>
-      </div>
-    </div>
+    <p class="note" style="margin-top:10px">Every slot carries an <b style="color:var(--ink)">Early / Mid / Late</b> price — where a pick lands inside its round is worth real value, and future years are discounted for the wait.</p>
   </section>
 
   <!-- ============ 2. ROOKIE POOL ============ -->
@@ -3670,6 +3666,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
     <p class="sec-sub">A draft board that thinks while you pick: best-available recommendations tuned to the clock, <b>tier-cliff alerts</b> when a position is about to run dry, <b>positional-run detection</b>, and <b>trade-back windows</b> when your slot is worth more than anyone left on the board. Copy the room code and your co-owner follows the same board pick by pick — the code carries the draft's current state, so re-copy it after new picks to keep them current.</p>
 
     <div id="followBanner"></div>
+    <p class="note" id="liveStatusR" style="margin:0 0 10px"></p>
     <div class="card glow">
       <div class="toolbar" style="margin-bottom:10px">
         <label class="sub" for="yourTeam">Your team</label>
@@ -3758,6 +3755,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
     <p class="sec-sub">A 12-team, 15-round board that thinks while you pick: <b>best-available recommendations priced on rest-of-season value</b>, <b>tier-cliff alerts</b> when a position is about to run dry, <b>positional-run detection</b>, and a warning when a tier won't survive until your next turn comes back around. Copy the room code and your co-owner follows the same board pick by pick.</p>
 
     <div id="followBannerS"></div>
+    <p class="note" id="liveStatusS" style="margin:0 0 10px"></p>
     <div class="card" style="border-color:rgba(0,229,255,.35); box-shadow:0 0 0 1px rgba(0,229,255,.12), 0 12px 44px rgba(0,229,255,.06)">
       <div class="toolbar" style="margin-bottom:10px">
         <label class="sub" for="yourTeamS">Your team</label>
@@ -15291,34 +15289,10 @@ function snakeSeq(order){
     });
   });
   $("#ladderBody").innerHTML = html;
-  /* "How to read the ladder" guide: its rank lines are filled from
-     the same rows the table just printed, so guide and table can
-     never disagree (owner fix, 2026-11-02). */
-  [["guide-rank-early1", "2027 1st (Early)"], ["guide-rank-mid1", "2027 1st (Mid)"], ["guide-rank-late1", "2027 1st (Late)"], ["guide-rank-early2", "2027 2nd (Early)"]].forEach(([gid, lab]) => {
-    const gel = document.getElementById(gid);
-    if (gel && guideRank[lab] != null && guideRank[lab] !== "—") gel.textContent = guideRank[lab];
-  });
-
-  // seasonal appreciation curve (modeled index)
-  const pts = [["May ’26",100],["Jun",101],["Jul",102],["Aug",103],["Sep",102],["Oct",103],["Nov",105],["Dec",108],["Jan ’27",112],["Feb",116],["Mar",120],["Apr",126]];
-  const W=520, H=190, PL=34, PR=10, PT=16, PB=26, lo=96, hi=130;
-  const X = i => PL + i*(W-PL-PR)/(pts.length-1), Y = v => PT + (hi-v)*(H-PT-PB)/(hi-lo);
-  let d = "", area = "";
-  pts.forEach((p,i)=>{ d += (i? " L":"M") + X(i).toFixed(1) + " " + Y(p[1]).toFixed(1); });
-  area = d + " L" + X(pts.length-1) + " " + (H-PB) + " L" + X(0) + " " + (H-PB) + " Z";
-  let grid = "";
-  [100,110,120].forEach(v=>{ grid += '<line x1="'+PL+'" x2="'+(W-PR)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="rgba(255,255,255,.07)"/><text x="'+(PL-5)+'" y="'+(Y(v)+4)+'" fill="#6d6d85" font-size="10" text-anchor="end" font-family="Inter">'+v+"</text>"; });
-  let labels = "";
-  pts.forEach((p,i)=>{ if(i%2===0 || i===pts.length-1) labels += '<text x="'+X(i)+'" y="'+(H-8)+'" fill="#9A9AB0" font-size="10" text-anchor="middle" font-family="Inter">'+p[0]+"</text>"; });
-  const peak = pts.length-1;
-  $("#curve").innerHTML =
-    '<svg viewBox="0 0 '+W+" "+H+'" style="width:100%; height:auto" role="img" aria-label="Modeled pick appreciation curve peaking at the April NFL Draft">'
-    + grid + '<path d="'+area+'" fill="rgba(198,255,0,.10)"/><path d="'+d+'" fill="none" stroke="#C6FF00" stroke-width="2.5" stroke-linejoin="round"/>'
-    + '<circle cx="'+X(peak)+'" cy="'+Y(126)+'" r="4.5" fill="#FF2E88"/><circle cx="'+X(4)+'" cy="'+Y(102)+'" r="3.5" fill="#00E5FF"/>'
-    + '<text x="'+X(peak)+'" y="'+(Y(126)-12)+'" fill="#FF2E88" font-size="11.5" font-weight="700" text-anchor="end" font-family="Space Grotesk">NFL DRAFT · PEAK 126</text>'
-    + '<text x="'+X(4)+'" y="'+(Y(102)+18)+'" fill="#00E5FF" font-size="11" font-weight="600" text-anchor="middle" font-family="Inter">in-season trough</text>'
-    + labels + "</svg>"
-    + '<p class="note" style="margin:2px 0 0">Modeled index, not a price feed: the shape is the documented seasonal pattern (picks climb ~25% from the in-season trough to draft week). The same pick bought in October costs a full tier less than in April.</p>';
+  /* Round 2 (2026-11-08): the "How to read the ladder" guide and the
+     appreciation curve went away with the ladder section — the picks
+     table is the whole view now. guideRank is still collected above
+     only because the row builder computes it inline. */
 })();
 
 /* ---------- 2. rookie pool ---------- */
@@ -15394,18 +15368,36 @@ const A = { order: DATA.defaultOrder.slice(), picks: new Array(48).fill(null) };
 $("#orderRowA").innerHTML = orderRowHTML("a");
 fillOrder("a", A.order);
 wireOrder("a", ()=>A.order, v=>A.order=v, ()=>renderBoardA());
+/* Real-draft overlay for the analyzer (Round 2): team names + players from
+   a loaded Sleeper draft; empty while the demo board is in use. */
+const ALIVE = { names: {}, extra: {} };
+const NOTE_A0 = $("#sleeperNoteA") ? $("#sleeperNoteA").textContent : "";
+function aTeamName(tid){ return ALIVE.names[tid] || TEAMNAME[tid] || ("Team " + tid); }
+function aPlayer(pid){ if (pid == null) return null; return ROOKIES[RBYIDX[pid]] || ALIVE.extra[pid] || null; }
+function aResetLive(){
+  const was = Object.keys(ALIVE.names).length > 0;
+  ALIVE.names = {}; ALIVE.extra = {};
+  if (was) {
+    A.order = DATA.defaultOrder.slice();
+    fillOrder("a", A.order);
+    drRoot.querySelectorAll('[data-ord^="a"]').forEach(sel => { sel.disabled = false; });
+    const note = $("#sleeperNoteA");
+    if (note) { note.textContent = NOTE_A0; note.style.color = ""; }
+  }
+}
 
 function renderBoardA(){
   const seq = snakeSeq(A.order);
   $("#boardA").style.gridTemplateColumns = "repeat(12, 1fr)";
   $("#boardA").innerHTML = seq.map((s, idx)=>{
     const pid = A.picks[idx];
-    const opts = '<option value="">— no pick —</option>' + ROOKIES.map((r, ri)=>{
+    const extraOpt = (pid && !ROOKIES[RBYIDX[pid]] && ALIVE.extra[pid]) ? '<option value="'+pid+'" selected>'+esc(ALIVE.extra[pid].name)+" ("+ALIVE.extra[pid].pos+") · "+fmt(ALIVE.extra[pid].value)+"</option>" : "";
+    const opts = '<option value="">— no pick —</option>' + extraOpt + ROOKIES.map((r, ri)=>{
       const takenAt = A.picks.indexOf(r.id);
       const dis = takenAt>=0 && takenAt!==idx ? " disabled" : "";
       return '<option value="'+r.id+'"'+(pid===r.id?" selected":"")+dis+">"+esc(r.name)+" ("+r.pos+") · "+fmt(r.value)+"</option>";
     }).join("");
-    return '<div class="bcell"><div class="slot">'+slotLabel(s.round, s.slot)+'</div><div class="tm">'+esc(TEAMNAME[s.teamId])+'</div>'
+    return '<div class="bcell"><div class="slot">'+slotLabel(s.round, s.slot)+'</div><div class="tm">'+esc(aTeamName(s.teamId))+'</div>'
       + '<select data-apick="'+idx+'">'+opts+"</select></div>";
   }).join("");
   drRoot.querySelectorAll("[data-apick]").forEach(sel=>{
@@ -15414,7 +15406,7 @@ function renderBoardA(){
 }
 renderBoardA();
 
-$("#demoBtn").addEventListener("click", ()=>{
+$("#demoBtn").addEventListener("click", ()=>{ aResetLive();
   // plausible human draft: mostly best-available, occasional reaches (deterministic pattern)
   const taken = new Set(); A.picks = new Array(48).fill(null);
   const seq = snakeSeq(A.order);
@@ -15429,12 +15421,73 @@ $("#demoBtn").addEventListener("click", ()=>{
   renderBoardA(); gradeDraft();
   toast("Demo draft loaded and graded — edit any pick and re-grade");
 });
-$("#clearBtnA").addEventListener("click", ()=>{ A.picks = new Array(48).fill(null); $("#gradeOut").innerHTML=""; $("#shareBtnA").disabled = true; renderBoardA(); });
-function sleeperMsg(el){
-  el.textContent = "Live Sleeper fetch needs the hosted version of Fantasy Forensics — this build runs on the built-in Demo League, so enter picks manually (or load the demo draft). Your draft ID is saved in the box for when sync ships.";
-  el.style.color = "#ffd97a";
+$("#clearBtnA").addEventListener("click", ()=>{ aResetLive(); A.picks = new Array(48).fill(null); $("#gradeOut").innerHTML=""; $("#shareBtnA").disabled = true; renderBoardA(); });
+/* The analyzer loads a real Sleeper draft the same way the rooms bind:
+   a pasted draft ID, or the connected league's draft (league drafts
+   endpoint). Picks land on the board by pick number; grading is
+   untouched. The board is a 12-team grid, so other sizes are declined
+   with a plain note rather than scrambled onto the wrong slots. */
+async function analyzerFetch(){
+  const note = $("#sleeperNoteA");
+  const setNote = (msg, warn) => { if (note) { note.textContent = msg; note.style.color = warn ? "#ffd97a" : ""; } };
+  const idEl = $("#sleeperIdA");
+  const manualId = idEl && idEl.value.trim() ? idEl.value.trim() : null;
+  const C = sheetConn();
+  try {
+    let draft = null;
+    if (manualId) draft = await liveFetch("/draft/" + encodeURIComponent(manualId));
+    else if (C && C.platform === "sleeper" && C.leagueId) {
+      setNote("Looking up your league's draft…");
+      const ds = await liveFetch("/league/" + encodeURIComponent(C.leagueId) + "/drafts");
+      draft = liveChooseDraft(Array.isArray(ds) ? ds : []);
+      if (draft && !draft.slot_to_roster_id) draft = await liveFetch("/draft/" + encodeURIComponent(draft.draft_id));
+    }
+    if (!draft || !draft.draft_id) {
+      setNote(C ? "No draft found for your league yet — paste a draft ID in the box to load one." : "Connect your Sleeper league — or paste a draft ID in the box — and the analyzer loads that draft's real board.", true);
+      return;
+    }
+    const slots = draft.slot_to_roster_id || {};
+    const order = Object.keys(slots).map(Number).sort((a, b) => a - b).map(k => slots[String(k)]);
+    if (order.length !== 12) { setNote("That draft has " + (order.length || "?") + " teams — the analyzer board is built for 12-team drafts, so this one can't load here.", true); return; }
+    setNote("Loading the draft board…");
+    const picks = await liveFetch("/draft/" + encodeURIComponent(draft.draft_id) + "/picks");
+    ALIVE.names = {}; ALIVE.extra = {};
+    if (C && String(C.leagueId) === String(draft.league_id)) (C.teams || []).forEach(t => { if (t) ALIVE.names[t.rid] = t.name; });
+    if (!Object.keys(ALIVE.names).length && draft.league_id) {
+      try {
+        const both = await Promise.all([liveFetch("/league/" + encodeURIComponent(draft.league_id) + "/users"), liveFetch("/league/" + encodeURIComponent(draft.league_id) + "/rosters")]);
+        const byId = {}; (both[0] || []).forEach(u => { byId[u.user_id] = u; });
+        (both[1] || []).forEach(r => { const u = byId[r.owner_id]; ALIVE.names[r.roster_id] = (u && u.metadata && u.metadata.team_name) || (u && u.display_name) || ("Roster " + r.roster_id); });
+      } catch (e) { /* names are cosmetic */ }
+    }
+    A.order = order.slice();
+    A.picks = new Array(48).fill(null);
+    let n = 0;
+    (Array.isArray(picks) ? picks : []).forEach(pk => {
+      const idx = pk.pick_no - 1;
+      if (idx < 0 || idx >= 48) return;
+      const pid = String(pk.player_id);
+      A.picks[idx] = pid; n++;
+      if (!ROOKIES[RBYIDX[pid]] && !ALIVE.extra[pid]) {
+        const md = pk.metadata || {};
+        const pb = (typeof PBY !== "undefined" && PBY[pid]) ? PBY[pid] : null;
+        ALIVE.extra[pid] = { id: pid, name: ((md.first_name || "") + " " + (md.last_name || "")).trim() || (pb ? pb.name : "Player " + pid), pos: md.position || (pb ? pb.pos : "—"), team: md.team || (pb ? pb.team : ""), value: pb ? pb.value : 0, tier: null };
+      }
+    });
+    drRoot.querySelectorAll('[data-ord^="a"]').forEach((sel, i) => {
+      sel.innerHTML = order.map(rid => '<option value="' + rid + '"' + (Number(rid) === Number(A.order[i]) ? " selected" : "") + ">" + esc(aTeamName(rid)) + "</option>").join("");
+      sel.disabled = true;
+    });
+    $("#gradeOut").innerHTML = ""; $("#shareBtnA").disabled = true;
+    renderBoardA();
+    setNote(draft.status === "complete"
+      ? "Loaded the real draft — " + n + " picks on the board. Grade it below."
+      : "Loaded the draft so far — " + n + " picks on the board. Grade it any time.");
+  } catch (e) {
+    setNote("Couldn't reach Sleeper just now — the demo draft and manual entry still work.", true);
+  }
 }
-$("#sleeperBtnA").addEventListener("click", ()=>sleeperMsg($("#sleeperNoteA")));
+$("#sleeperBtnA").addEventListener("click", ()=>{ analyzerFetch(); });
 
 function gradeLetter(avg){
   if(avg==null) return "—";
@@ -15448,7 +15501,7 @@ function gradeDraft(){
   const per = {}; let bestSteal = null, worstReach = null, made = 0;
   seq.forEach((s, idx)=>{
     const pid = A.picks[idx]; if(!pid) return; made++;
-    const r = ROOKIES[RBYIDX[pid]]; if(!r) return;
+    const r = aPlayer(pid); if(!r) return;
     const exp = expectedAt(s.round, s.slot), ratio = r.value / exp;
     const rec = { slot: slotLabel(s.round, s.slot), name: r.name, pos: r.pos, value: r.value, exp, ratio, teamId: s.teamId };
     (per[s.teamId] = per[s.teamId] || []).push(rec);
@@ -15472,17 +15525,17 @@ function gradeDraft(){
     const g = gradeLetter(avg);
     return { tid:+tid, avg, tot, expTot, g, best, worst, n: recs.length, posLine,
       html: '<div class="gcard'+(avg>=1.04?" top":"")+'"><div class="gt"><div class="grade '+(g[0]==="A"?"gA":g[0]==="B"?"gB":g[0]==="C"?"gC":"gD")+'">'+g+'</div>'
-      + '<div><h3>'+esc(TEAMNAME[tid])+'</h3><div class="gsub">'+recs.length+' picks · drafted '+fmt(tot)+' of value vs '+fmt(expTot)+' slot expectation ('+(avg>=1?"+":"")+(Math.round((avg-1)*100))+'%)</div></div></div>'
+      + '<div><h3>'+esc(aTeamName(tid))+'</h3><div class="gsub">'+recs.length+' picks · drafted '+fmt(tot)+' of value vs '+fmt(expTot)+' slot expectation ('+(avg>=1?"+":"")+(Math.round((avg-1)*100))+'%)</div></div></div>'
       + '<ul><li>Best pick: <b>'+esc(best.name)+'</b> at '+best.slot+' — '+(best.ratio>=1? '<span class="steal">'+Math.round((best.ratio-1)*100)+'% over slot value</span>' : '<span class="reach">'+Math.round((1-best.ratio)*100)+'% under slot value</span>')+'</li>'
       + '<li>Worst pick: <b>'+esc(worst.name)+'</b> at '+worst.slot+' — '+(worst.ratio>=1? '<span class="steal">'+Math.round((worst.ratio-1)*100)+'% over</span>' : '<span class="reach">'+Math.round((1-worst.ratio)*100)+'% under slot value</span>')+'</li>'
       + '<li>Class mix: '+posLine+'</li></ul></div>' };
   }).sort((a,b)=>b.avg-a.avg);
   const winner = cards[0], loser = cards[cards.length-1];
   let summary = '<div class="card glow" style="margin-bottom:14px"><h3 style="margin:0 0 8px; font-size:20px">Draft report card</h3>'
-    + '<p style="margin:0; color:var(--mut)">🏆 <b style="color:var(--ink)">Winner: '+esc(TEAMNAME[winner.tid])+'</b> ('+winner.g+') — beat slot value by '+Math.round((winner.avg-1)*100)+'% across '+winner.n+' picks.'
-    + (loser.tid!==winner.tid ? ' Toughest draft: <b style="color:var(--ink)">'+esc(TEAMNAME[loser.tid])+'</b> ('+loser.g+'), leaving '+Math.round((1-loser.avg)*100)+'% of slot value on the table.' : '')
-    + '</p><p style="margin:8px 0 0; color:var(--mut)">Biggest steal: <b style="color:var(--ink)">'+esc(bestSteal.name)+'</b> at '+bestSteal.slot+' to '+esc(TEAMNAME[bestSteal.teamId])+' — worth '+fmt(bestSteal.value)+' from a slot priced at '+fmt(bestSteal.exp)+' (<span class="steal">+'+Math.round((bestSteal.ratio-1)*100)+'%</span>). '
-    + 'Biggest reach: <b style="color:var(--ink)">'+esc(worstReach.name)+'</b> at '+worstReach.slot+' to '+esc(TEAMNAME[worstReach.teamId])+' — worth '+fmt(worstReach.value)+' from a '+fmt(worstReach.exp)+' slot (<span class="reach">−'+Math.round((1-worstReach.ratio)*100)+'%</span>).</p></div>';
+    + '<p style="margin:0; color:var(--mut)">🏆 <b style="color:var(--ink)">Winner: '+esc(aTeamName(winner.tid))+'</b> ('+winner.g+') — beat slot value by '+Math.round((winner.avg-1)*100)+'% across '+winner.n+' picks.'
+    + (loser.tid!==winner.tid ? ' Toughest draft: <b style="color:var(--ink)">'+esc(aTeamName(loser.tid))+'</b> ('+loser.g+'), leaving '+Math.round((1-loser.avg)*100)+'% of slot value on the table.' : '')
+    + '</p><p style="margin:8px 0 0; color:var(--mut)">Biggest steal: <b style="color:var(--ink)">'+esc(bestSteal.name)+'</b> at '+bestSteal.slot+' to '+esc(aTeamName(bestSteal.teamId))+' — worth '+fmt(bestSteal.value)+' from a slot priced at '+fmt(bestSteal.exp)+' (<span class="steal">+'+Math.round((bestSteal.ratio-1)*100)+'%</span>). '
+    + 'Biggest reach: <b style="color:var(--ink)">'+esc(worstReach.name)+'</b> at '+worstReach.slot+' to '+esc(aTeamName(worstReach.teamId))+' — worth '+fmt(worstReach.value)+' from a '+fmt(worstReach.exp)+' slot (<span class="reach">−'+Math.round((1-worstReach.ratio)*100)+'%</span>).</p></div>';
   $("#gradeOut").innerHTML = summary + '<div class="gradegrid">' + cards.map(c=>c.html).join("") + "</div>";
   $("#shareBtnA").disabled = false;
 }
@@ -15505,15 +15558,27 @@ $("#loadBtnA").addEventListener("click", ()=>{
 
 /* ---------- 4. live draft room ---------- */
 const R = { order: DATA.defaultOrder.slice(), picks: new Array(48).fill(null), mine: 4, follow: false };
+/* Live sync state (Round 2, Eric 2026-11-08): when a room is bound to
+   a real Sleeper draft, LIVE carries the draft's identity, its team
+   names, its pick sequence, and any picked player who sits outside
+   the room's own pool (a veteran in a startup draft, say). Declared
+   here — before the parse-time bootstraps render either room — so
+   the resolvers below can read it safely. The engine itself
+   (liveBind/livePollNow/…) lives with the Round 2 view layer. */
+const LIVE = { room: null, bound: false, polling: false, binding: false, draftId: null, leagueId: null, status: null, name: "", type: "snake", rounds: 4, seq: null, names: {}, extra: {}, lastAt: 0, timer: null, agoTimer: null };
+function liveActive(room){ return LIVE.bound && LIVE.room === room && !window.__liveStale; }
+function liveTeamName(tid){ return (LIVE.bound && LIVE.names[tid]) || TEAMNAME[tid] || ("Team " + tid); }
+function roomPl(pid){ if (pid == null) return null; const r = ROOKIES[RBYIDX[pid]]; if (r) return r; return LIVE.extra[pid] || null; }
+function snakePl(pid){ if (pid == null) return null; const p = SNAKE[SBYIDX[pid]]; if (p) return p; return LIVE.extra[pid] || null; }
 $("#orderRowR").innerHTML = orderRowHTML("r");
 fillOrder("r", R.order);
 wireOrder("r", ()=>R.order, v=>R.order=v, ()=>renderRoom());
 const yt = $("#yourTeam");
 yt.innerHTML = TEAMS.map(t=>'<option value="'+t.id+'"'+(t.id===4?" selected":"")+">"+esc(t.name)+"</option>").join("");
 yt.addEventListener("change", ()=>{ R.mine = +yt.value; renderRoom(); });
-$("#sleeperBtnR").addEventListener("click", ()=>sleeperMsg($("#sleeperNoteR")));
+$("#sleeperBtnR").addEventListener("click", ()=>{ liveBind("r", true); });
 
-function roomSeq(){ return snakeSeq(R.order); }
+function roomSeq(){ if (liveActive("r") && LIVE.seq) return LIVE.seq; return snakeSeq(R.order); }
 function currentIdx(){ return R.picks.findIndex(p=>!p); }
 function takenSet(){ return new Set(R.picks.filter(Boolean)); }
 function availRookies(){ const t = takenSet(); return ROOKIES.filter(r=>!t.has(r.id)); }
@@ -15521,30 +15586,31 @@ function availRookies(){ const t = takenSet(); return ROOKIES.filter(r=>!t.has(r
 function renderRoom(){
   const seq = roomSeq(), cur = currentIdx();
   // board
-  $("#boardR").style.gridTemplateColumns = "repeat(12, 1fr)";
+  const colsR = seq.filter(s => s.round === 1).length || 12;
+  $("#boardR").style.gridTemplateColumns = "repeat(" + colsR + ", 1fr)";
   $("#boardR").innerHTML = seq.map((s, idx)=>{
-    const pid = R.picks[idx]; const r = pid ? ROOKIES[RBYIDX[pid]] : null;
+    const pid = R.picks[idx]; const r = pid ? roomPl(pid) : null;
     const cls = "bcell" + (s.teamId===R.mine ? " mine" : "") + (idx===cur && !R.follow ? " clock" : "");
     return '<div class="'+cls+'"><div class="slot">'+slotLabel(s.round, s.slot)+(idx===cur? " · ON THE CLOCK" : "")+'</div>'
-      + '<div class="tm">'+esc(TEAMNAME[s.teamId])+"</div>"
-      + (r ? '<div class="pl">'+esc(r.name)+' <span class="pospill pos-'+r.pos+'">'+r.pos+'</span></div><div class="plv num">'+fmt(r.value)+' · Tier '+r.tier+"</div>"
+      + '<div class="tm">'+esc(liveTeamName(s.teamId))+"</div>"
+      + (r ? '<div class="pl">'+esc(r.name)+' <span class="pospill pos-'+r.pos+'">'+r.pos+'</span></div><div class="plv num">'+fmt(r.value)+(r.tier != null ? ' · Tier '+r.tier : "")+"</div>"
            : '<div class="pl" style="color:var(--dim)">—</div>') + "</div>";
   }).join("");
 
   // clock + recommendations
   const avail = availRookies();
   if(cur === -1){
-    $("#clockBox").innerHTML = '<h3 style="margin:0; font-size:19px">Draft complete 🎉</h3><p class="sub" style="margin:4px 0 0">All 48 picks are in. Take this board to the <a href="#analyzer">Draft Analyzer</a> for grades — or copy the room code so the league can see how it fell.</p>';
+    $("#clockBox").innerHTML = '<h3 style="margin:0; font-size:19px">Draft complete 🎉</h3><p class="sub" style="margin:4px 0 0">All 48 picks are in. Take this board to the <a data-drview="analyzer" style="cursor:pointer; text-decoration:underline">Draft Analyzer</a> for grades — or copy the room code so the league can see how it fell.</p>';
     $("#recList").innerHTML = '<button class="btn" id="sendToAnalyzer" style="width:100%">Send this draft to the Analyzer</button>';
     const b = $("#sendToAnalyzer"); if(b) b.addEventListener("click", sendToAnalyzer);
   } else {
     const s = seq[cur];
     const untilMine = seq.findIndex((x, i)=> i>cur && x.teamId===R.mine);
     $("#clockBox").innerHTML = '<div class="sub" style="letter-spacing:.08em; font-weight:700">ON THE CLOCK · PICK '+slotLabel(s.round, s.slot)+"</div>"
-      + '<h3 style="margin:2px 0; font-size:21px">'+esc(TEAMNAME[s.teamId])+(s.teamId===R.mine ? ' <span class="chip tier">YOUR PICK</span>' : "")+"</h3>"
+      + '<h3 style="margin:2px 0; font-size:21px">'+esc(liveTeamName(s.teamId))+(s.teamId===R.mine ? ' <span class="chip tier">YOUR PICK</span>' : "")+"</h3>"
       + '<div class="sub">What this slot returns in this class: <b style="color:var(--ink)">'+fmt(expectedAt(s.round, s.slot))+'</b> (the grading baseline)'
       + (untilMine>0 ? ' · your next pick is '+slotLabel(seq[untilMine].round, seq[untilMine].slot)+' ('+(untilMine-cur)+' picks away)' : (s.teamId===R.mine ? "" : ' · you have no picks left')) + "</div>";
-    const myPos = {}; R.picks.forEach((pid, i)=>{ if(pid && seq[i].teamId===R.mine){ const rr = ROOKIES[RBYIDX[pid]]; myPos[rr.pos]=(myPos[rr.pos]||0)+1; } });
+    const myPos = {}; R.picks.forEach((pid, i)=>{ if(pid && seq[i].teamId===R.mine){ const rr = roomPl(pid); if(rr) myPos[rr.pos]=(myPos[rr.pos]||0)+1; } });
     $("#recList").innerHTML = avail.slice(0, 7).map((r, i)=>{
       const cliffs = avail.filter(x=>x.pos===r.pos && x.tier===r.tier).length;
       let why = "Tier "+r.tier+" "+r.pos+(r.posRank? " · "+r.pos+r.posRank+" overall" : "");
@@ -15562,7 +15628,7 @@ function renderIntel(cur, seq, avail){
   // positional run: 3+ of the position in the last 5 picks
   const madeIdx = R.picks.map((p,i)=>p?i:-1).filter(i=>i>=0);
   if(madeIdx.length >= 3){
-    const last5 = madeIdx.slice(-5).map(i=>ROOKIES[RBYIDX[R.picks[i]]].pos);
+    const last5 = madeIdx.slice(-5).map(i=>{ const rr = roomPl(R.picks[i]); return rr ? rr.pos : null; }).filter(Boolean);
     const cnt = {}; last5.forEach(p=>cnt[p]=(cnt[p]||0)+1);
     const hot = Object.keys(cnt).find(p=>cnt[p]>=3);
     if(hot) alerts.push({ cls:"run", ic:"RUN", txt:"<b>"+hot+" run in progress</b> — "+cnt[hot]+" of the last "+last5.length+" picks were "+hot+"s. If you want one, the tier is moving now, not at your next turn." });
@@ -15605,8 +15671,10 @@ function makePick(pid){
   toast(slotLabel(roomSeq()[cur].round, roomSeq()[cur].slot) + " — " + r.name + " off the board");
 }
 function sendToAnalyzer(){
+  if (typeof LIVE !== "undefined" && LIVE.bound) { toast("This board is following a live draft — the Analyzer grades the demo draft format, so it stays with manual boards."); return; }
   A.order = R.order.slice(); A.picks = R.picks.slice();
   fillOrder("a", A.order); renderBoardA(); gradeDraft();
+  drShowView("analyzer");
   document.getElementById("analyzer").scrollIntoView({ behavior:"smooth" });
 }
 $("#undoBtn").addEventListener("click", ()=>{
@@ -15617,11 +15685,12 @@ $("#undoBtn").addEventListener("click", ()=>{
 });
 $("#resetBtnR").addEventListener("click", ()=>{ if(R.follow) return; R.picks = new Array(48).fill(null); renderRoom(); toast("Draft room reset"); });
 $("#shareBtnR").addEventListener("click", ()=>{
-  const payload = { o: R.order, m: R.mine, p: R.picks.map(id => id ? RBYIDX[id] : -1) };
+  const payload = { o: R.order, m: R.mine, p: R.picks.map(id => (id && RBYIDX[id] != null) ? RBYIDX[id] : -1) };
   copyText(encodePayload("room", payload), R.picks.some(Boolean) ? "Room code copied — your co-owner pastes it under 'Join room'" : "Room code copied — share it before the draft starts");
 });
 function applyRoom(room, follow){
   if(!room || !Array.isArray(room.p)) return false;
+  window.__liveStale = true;   /* a pasted room code supersedes any live binding */
   R.order = room.o || R.order; R.mine = room.m || 4;
   R.picks = room.p.map(i => (i>=0 && ROOKIES[i]) ? ROOKIES[i].id : null);
   while(R.picks.length < 48) R.picks.push(null);
@@ -15645,11 +15714,12 @@ $("#loadBtnR").addEventListener("click", ()=>{
   const rep = readHash("report");
   if(rep && applyReport(rep)){
     window.__draftPin = "dynasty";
+    window.__draftRoute = { fmt: "dynasty", view: "analyzer" };
     setTimeout(()=>document.getElementById("analyzer").scrollIntoView(), 60);
     toast("Shared draft report loaded");
   }
   const room = readHash("room");
-  if(room){ window.__draftPin = "dynasty"; applyRoom(room, true); }
+  if(room){ window.__draftPin = "dynasty"; window.__draftRoute = { fmt: "dynasty", view: "room" }; applyRoom(room, true); }
   renderRoom();
 })();
 
@@ -15731,15 +15801,15 @@ wireOrder("s", ()=>S.order, v=>S.order=v, ()=>renderSnakeRoom());
 const ytS = $("#yourTeamS");
 ytS.innerHTML = TEAMS.map(t=>'<option value="'+t.id+'"'+(t.id===4?" selected":"")+">"+esc(t.name)+"</option>").join("");
 ytS.addEventListener("change", ()=>{ S.mine = +ytS.value; renderSnakeRoom(); });
-$("#sleeperBtnS").addEventListener("click", ()=>sleeperMsg($("#sleeperNoteS")));
+$("#sleeperBtnS").addEventListener("click", ()=>{ liveBind("s", true); });
 
-function sSeq(){ return snakeSeqN(S.order, SROUNDS); }
+function sSeq(){ if (liveActive("s") && LIVE.seq) return LIVE.seq; return snakeSeqN(S.order, SROUNDS); }
 function sCurrentIdx(){ return S.picks.findIndex(p=>!p); }
 function sAvail(){ const t = new Set(S.picks.filter(Boolean)); return SNAKE.filter(p=>!t.has(p.id)); }
 const STARTERS = { QB:1, RB:2, WR:2, TE:1 };
 function mySnakePos(seq){
   const c = { QB:0, RB:0, WR:0, TE:0 };
-  S.picks.forEach((pid, i)=>{ if(pid && seq[i].teamId===S.mine){ c[SNAKE[SBYIDX[pid]].pos]++; } });
+  S.picks.forEach((pid, i)=>{ if(pid && seq[i].teamId===S.mine){ const pp = snakePl(pid); if(pp && c[pp.pos] != null) c[pp.pos]++; } });
   return c;
 }
 function slotNoteS(p, myPos){
@@ -15753,26 +15823,27 @@ function slotNoteS(p, myPos){
 }
 function renderSnakeRoom(){
   const seq = sSeq(), cur = sCurrentIdx();
-  $("#boardS").style.gridTemplateColumns = "repeat(12, 1fr)";
+  const colsS = seq.filter(s => s.round === 1).length || 12;
+  $("#boardS").style.gridTemplateColumns = "repeat(" + colsS + ", 1fr)";
   $("#boardS").innerHTML = seq.map((s, idx)=>{
-    const pid = S.picks[idx]; const p = pid ? SNAKE[SBYIDX[pid]] : null;
+    const pid = S.picks[idx]; const p = pid ? snakePl(pid) : null;
     const cls = "bcell" + (s.teamId===S.mine ? " mine" : "") + (idx===cur && !S.follow ? " clock" : "");
     return '<div class="'+cls+'"><div class="slot">'+slotLabel(s.round, s.slot)+(idx===cur? " · ON THE CLOCK" : "")+'</div>'
-      + '<div class="tm">'+esc(TEAMNAME[s.teamId])+"</div>"
-      + (p ? '<div class="pl">'+esc(p.name)+' <span class="pospill pos-'+p.pos+'">'+p.pos+'</span></div><div class="plv num" style="color:var(--cyan)">'+fmt(p.value)+' · Tier '+p.tier+"</div>"
+      + '<div class="tm">'+esc(liveTeamName(s.teamId))+"</div>"
+      + (p ? '<div class="pl">'+esc(p.name)+' <span class="pospill pos-'+p.pos+'">'+p.pos+'</span></div><div class="plv num" style="color:var(--cyan)">'+fmt(p.value)+(p.tier != null ? ' · Tier '+p.tier : "")+"</div>"
            : '<div class="pl" style="color:var(--dim)">—</div>') + "</div>";
   }).join("");
 
   const avail = sAvail();
   if(cur === -1){
-    $("#clockBoxS").innerHTML = '<h3 style="margin:0; font-size:19px">Draft complete 🎉</h3><p class="sub" style="margin:4px 0 0">All '+SPICKS+' picks are in. Copy the room code above so the league can see how it fell.</p>';
+    $("#clockBoxS").innerHTML = '<h3 style="margin:0; font-size:19px">Draft complete 🎉</h3><p class="sub" style="margin:4px 0 0">All '+seq.length+' picks are in. Copy the room code above so the league can see how it fell.</p>';
     $("#recListS").innerHTML = "";
     $("#draftSearchResS").innerHTML = "";
   } else {
     const s = seq[cur];
     const myNext = seq.map((x,i)=>({x,i})).filter(o=> o.i>cur && o.x.teamId===S.mine).slice(0,2);
     $("#clockBoxS").innerHTML = '<div class="sub" style="letter-spacing:.08em; font-weight:700">ON THE CLOCK · PICK '+slotLabel(s.round, s.slot)+' · OVERALL #'+(cur+1)+"</div>"
-      + '<h3 style="margin:2px 0; font-size:21px">'+esc(TEAMNAME[s.teamId])+(s.teamId===S.mine ? ' <span class="chip tier">YOUR PICK</span>' : "")+"</h3>"
+      + '<h3 style="margin:2px 0; font-size:21px">'+esc(liveTeamName(s.teamId))+(s.teamId===S.mine ? ' <span class="chip tier">YOUR PICK</span>' : "")+"</h3>"
       + '<div class="sub">Pre-draft value curve at this slot: <b style="color:var(--ink)">'+fmt(SNAKE[Math.min(cur, SNAKE.length-1)].value)+'</b>'
       + (myNext.length ? ' · your next pick'+(myNext.length>1?"s are ":" is ")+myNext.map(o=>slotLabel(o.x.round, o.x.slot)+" ("+(o.i-cur)+' away)').join(" and ") : (s.teamId===S.mine ? "" : ' · you have no picks left')) + "</div>";
     const myPos = mySnakePos(seq);
@@ -15805,7 +15876,7 @@ function renderSnakeIntel(cur, seq, avail){
   const alerts = [];
   const madeIdx = S.picks.map((p,i)=>p?i:-1).filter(i=>i>=0);
   if(madeIdx.length >= 3){
-    const last5 = madeIdx.slice(-5).map(i=>SNAKE[SBYIDX[S.picks[i]]].pos);
+    const last5 = madeIdx.slice(-5).map(i=>{ const pp = snakePl(S.picks[i]); return pp ? pp.pos : null; }).filter(Boolean);
     const cnt = {}; last5.forEach(p=>cnt[p]=(cnt[p]||0)+1);
     const hot = Object.keys(cnt).find(p=>cnt[p]>=3);
     if(hot) alerts.push({ cls:"run", ic:"RUN", txt:"<b>"+hot+" run in progress</b> — "+cnt[hot]+" of the last "+last5.length+" picks were "+hot+"s. If you want one, the tier is moving now, not at your next turn." });
@@ -15857,11 +15928,12 @@ $("#undoBtnS").addEventListener("click", ()=>{
 });
 $("#resetBtnS").addEventListener("click", ()=>{ if(S.follow) return; S.picks = new Array(SPICKS).fill(null); renderSnakeRoom(); toast("Snake room reset"); });
 $("#shareBtnS").addEventListener("click", ()=>{
-  const payload = { o: S.order, m: S.mine, p: S.picks.map(id => id ? SBYIDX[id] : -1) };
+  const payload = { o: S.order, m: S.mine, p: S.picks.map(id => (id && SBYIDX[id] != null) ? SBYIDX[id] : -1) };
   copyText(encodePayload("snake", payload), S.picks.some(Boolean) ? "Snake room code copied — your co-owner pastes it under 'Join room'" : "Snake room code copied — share it before the draft starts");
 });
 function applySnakeRoom(room, follow){
   if(!room || !Array.isArray(room.p)) return false;
+  window.__liveStale = true;   /* a pasted room code supersedes any live binding */
   S.order = room.o || S.order; S.mine = room.m || 4;
   S.picks = room.p.map(i => (i>=0 && SNAKE[i]) ? SNAKE[i].id : null);
   while(S.picks.length < SPICKS) S.picks.push(null);
@@ -16371,7 +16443,10 @@ function applyMockShare(pl){
 }
 (function(){
   const pl = readHash("mock");
-  if(pl && applyMockShare(pl)) toast("Shared mock draft loaded — the full board and grades");
+  if(pl && applyMockShare(pl)){
+    window.__draftRoute = { fmt: M.fmt === "snake" ? "redraft" : "dynasty", view: "mock" };
+    toast("Shared mock draft loaded — the full board and grades");
+  }
 })();
 
 /* ---------- format-first layout (Eric, 2026-11-08) ----------
@@ -16418,31 +16493,306 @@ function buildRoomLayout(){
 function applyRoomFormat(){
   const fmt = roomFmt();
   const dyn = fmt === "dynasty";
-  $("#fmtDynasty").hidden = !dyn;
-  $("#liveDynasty").hidden = !dyn;
-  $("#fmtRedraft").hidden = dyn;
-  $("#liveRedraft").hidden = dyn;
-  $("#heroRookie").hidden = !dyn;
-  $("#heroSnake").hidden = dyn;
-  drRoot.querySelectorAll("[data-roomfmt]").forEach(b=>{
-    const on = b.dataset.roomfmt === fmt;
-    b.classList.toggle("on", on);
-    b.setAttribute("aria-selected", on ? "true" : "false");
-  });
   document.body.classList.add("ff-sheet-mode");
   if (!dyn) { if (M.fmt !== "snake") M.fmt = "snake"; }
   else if (M.fmt === "snake") M.fmt = "startup";
   renderMockSetup();
   renderSheet();
   if (!dyn) renderSnakeRoom();
+  drApplyView();
+}
+function drSetFormat(fmt){
+  window.__draftPin = null;
+  if (typeof setValMode === "function") setValMode(fmt);
+  endMockView();
+  DR_VIEW = DR_DEFAULT_VIEW[fmt];
+  DR_VIEW_MEM[fmt] = DR_DEFAULT_VIEW[fmt];
+  applyRoomFormat();
 }
 drRoot.querySelectorAll("[data-roomfmt]").forEach(b=> b.addEventListener("click", ()=>{
-  window.__draftPin = null;
-  if (typeof setValMode === "function") setValMode(b.dataset.roomfmt);
-  endMockView();
-  applyRoomFormat();
+  drSetFormat(b.dataset.roomfmt);
   drRoot.scrollIntoView({ behavior: "smooth", block: "start" });
 }));
+
+/* ---------- Round 2: one view per tool (Eric, 2026-11-08) ----------
+   The format landing stays short: format tabs, the quick-access row,
+   and ONE tool. Each tool lives on its own view inside the format tab,
+   addressed by a hash route (#/draft/<format>/<view>) so views are
+   deep-linkable and the browser's back/forward moves between them.
+   The other formats' containers keep Round 1's shape — this layer
+   only decides which single tool is on stage. */
+const DR_VIEWS = { dynasty: ["picks", "pool", "sheet", "mock", "analyzer", "room"], redraft: ["pool", "sheet", "mock", "room"] };
+const DR_DEFAULT_VIEW = { dynasty: "picks", redraft: "pool" };
+let DR_VIEW = null;
+const DR_VIEW_MEM = {};
+function drViewFor(fmt){
+  const want = DR_VIEW_MEM[fmt] || DR_VIEW || DR_DEFAULT_VIEW[fmt];
+  return DR_VIEWS[fmt].includes(want) ? want : DR_DEFAULT_VIEW[fmt];
+}
+function drRoute(){
+  return "#/draft/" + roomFmt() + "/" + drViewFor(roomFmt());
+}
+function drApplyView(){
+  const fmt = roomFmt(), dyn = fmt === "dynasty";
+  const view = drViewFor(fmt);
+  DR_VIEW = view; DR_VIEW_MEM[fmt] = view;
+  const show = (el, on) => { if (el) el.hidden = !on; };
+  show($("#fmtDynasty"), dyn && (view === "picks" || view === "pool"));
+  show($("#liveDynasty"), dyn && (view === "analyzer" || view === "room"));
+  show($("#fmtRedraft"), !dyn && view === "pool");
+  show($("#liveRedraft"), !dyn && view === "room");
+  show($("#modeMock"), view === "mock");
+  show($("#modeSheet"), view === "sheet");
+  const lad = $("#ladder"), pool = $("#pool"), ana = $("#analyzer"), room = $("#room");
+  if (lad) lad.hidden = view !== "picks";
+  if (pool) pool.hidden = view !== "pool";
+  if (ana) ana.hidden = view !== "analyzer";
+  if (room) room.hidden = view !== "room";
+  show($("#drQuickDyn"), dyn);
+  show($("#drQuickRd"), !dyn);
+  drRoot.querySelectorAll("[data-roomfmt]").forEach(b=>{
+    const on = b.dataset.roomfmt === fmt;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  drRoot.querySelectorAll("[data-drview]").forEach(b=>{
+    b.classList.toggle("on", b.dataset.drview === view && b.closest(dyn ? "#drQuickDyn" : "#drQuickRd") != null);
+  });
+  /* Live polling lives and dies with the room view. */
+  if (view === "room") liveBind(dyn ? "r" : "s");
+  else liveStop();
+}
+function drShowView(view, opts){
+  opts = opts || {};
+  const fmt = roomFmt();
+  if (!DR_VIEWS[fmt].includes(view)) view = DR_DEFAULT_VIEW[fmt];
+  DR_VIEW = view;
+  DR_VIEW_MEM[fmt] = view;
+  drApplyView();
+  if (opts.push !== false) {
+    const r = drRoute();
+    if (location.hash !== r) { try { history.pushState(null, "", r); } catch (e) {} }
+  }
+  if (opts.scroll !== false) drRoot.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+drRoot.addEventListener("click", e=>{
+  const b = e.target && e.target.closest ? e.target.closest("[data-drview]") : null;
+  if (b) drShowView(b.dataset.drview);
+});
+function drParseRoute(){
+  const m = /^#\/draft\/(dynasty|redraft)\/(picks|pool|sheet|mock|analyzer|room)\/?$/.exec(location.hash || "");
+  return m ? { fmt: m[1], view: m[2] } : null;
+}
+function drApplyRoute(rt, opts){
+  if (!rt) return;
+  opts = opts || {};
+  if (rt.fmt !== roomFmt()) drSetFormat(rt.fmt);
+  drShowView(rt.view, { push: false, scroll: opts.scroll });
+}
+window.addEventListener("popstate", ()=>{ const rt = drParseRoute(); if (rt) drApplyRoute(rt, { scroll: false }); });
+window.addEventListener("hashchange", ()=>{ const rt = drParseRoute(); if (rt) drApplyRoute(rt, { scroll: false }); });
+
+/* ---------- Live draft sync (Round 2, Eric 2026-11-08) ----------
+   The Live Room follows the connected league's real Sleeper draft.
+   The visitor's own browser polls that draft's picks feed about
+   every 20 seconds while the room view is open — per-browser by
+   design, no central relay, so a busy draft day scales with the
+   visitors themselves and any rate limit lands on one poller, never
+   the site. Guests, ESPN leagues, and leagues with no draft keep
+   the built-in demo room, labeled as the demo. */
+const LIVE_API = "https://api.sleeper.app/v1";
+async function liveFetch(path){
+  const r = await fetch(LIVE_API + path);
+  if (!r.ok) throw new Error("draft feed " + r.status);
+  return r.json();
+}
+function liveBuildSeq(order, rounds, type){
+  if (type === "linear") {
+    const s = [];
+    for (let rd = 1; rd <= rounds; rd++) order.forEach((tid, i) => s.push({ round: rd, slot: i + 1, teamId: tid }));
+    return s;
+  }
+  return snakeSeqN(order, rounds);
+}
+function liveChooseDraft(ds){
+  const rec = (a, b) => (Number(b.start_time || b.created || 0) - Number(a.start_time || a.created || 0));
+  return ds.filter(d => d && d.status === "drafting").sort(rec)[0]
+      || ds.filter(d => d && d.status === "pre_draft").sort(rec)[0]
+      || ds.filter(d => d && d.status === "complete").sort(rec)[0] || null;
+}
+function liveAgo(){
+  if (!LIVE.lastAt) return "just now";
+  const s = Math.max(0, Math.round((Date.now() - LIVE.lastAt) / 1000));
+  return s < 5 ? "just now" : s + "s ago";
+}
+function liveStatusFor(room){
+  const C = sheetConn();
+  if (LIVE.bound && LIVE.room === room) {
+    if (LIVE.status === "complete") return "Draft complete · <b style='color:var(--ink)'>" + esc(LIVE.name) + "</b> — the final board, straight from the draft feed.";
+    return "<span class='live-dot'>● LIVE</span> · <b style='color:var(--ink)'>" + esc(LIVE.name) + "</b> — this room follows the real draft; new picks land on their own. Updated " + liveAgo() + ".";
+  }
+  if (C && C.platform === "espn") return "Demo league — live draft sync follows Sleeper drafts, and this league is on ESPN, so the room runs on the built-in demo. Picks are manual here.";
+  if (C) return "Demo league for now — this room follows your league's draft live while it's running. Until then it runs on the built-in demo, picks manual.";
+  return "Demo league — connect your league and this room follows its draft live, pick by pick. Until then it runs on the built-in demo, picks manual.";
+}
+function liveRenderStatus(){
+  const r = $("#liveStatusR"), s = $("#liveStatusS");
+  if (r) r.innerHTML = liveStatusFor("r");
+  if (s) s.innerHTML = liveStatusFor("s");
+}
+function liveStopTimers(){
+  if (LIVE.timer) clearInterval(LIVE.timer);
+  if (LIVE.agoTimer) clearInterval(LIVE.agoTimer);
+  LIVE.timer = null; LIVE.agoTimer = null;
+}
+function liveStartPolling(){
+  liveStopTimers();
+  if (!LIVE.bound || LIVE.status === "complete") { LIVE.polling = false; return; }
+  LIVE.polling = true;
+  LIVE.timer = setInterval(() => { livePollNow(); }, 20000);
+  LIVE.agoTimer = setInterval(() => { liveRenderStatus(); }, 5000);
+}
+function liveStop(){
+  liveStopTimers();
+  LIVE.polling = false;
+  if (window.__liveStale && LIVE.bound) liveResetState();
+}
+/* Unbind. Two cases: the binding simply ended (league gone, room
+   reset) — restore the room's built-in demo state. Or a pasted room
+   code superseded the binding (__liveStale) — the followed board now
+   owns the room, so drop ONLY the live overlay and leave it alone. */
+function liveResetState(){
+  liveStopTimers();
+  const room = LIVE.room, superseded = !!window.__liveStale;
+  LIVE.bound = false; LIVE.polling = false; LIVE.draftId = null; LIVE.leagueId = null;
+  LIVE.status = null; LIVE.name = ""; LIVE.seq = null; LIVE.names = {}; LIVE.extra = {}; LIVE.lastAt = 0;
+  window.__liveStale = false;
+  if (superseded) { LIVE.room = null; liveRenderStatus(); return; }
+  if (room === "r") {
+    R.order = DATA.defaultOrder.slice(); R.picks = new Array(48).fill(null); R.mine = 4; R.follow = false;
+    yt.innerHTML = TEAMS.map(t => '<option value="' + t.id + '"' + (t.id === 4 ? " selected" : "") + ">" + esc(t.name) + "</option>").join("");
+    yt.disabled = false;
+    fillOrder("r", R.order);
+    drRoot.querySelectorAll('[data-ord^="r"]').forEach(sel => { sel.disabled = false; });
+    $("#undoBtn").disabled = false; $("#resetBtnR").disabled = false;
+    renderRoom();
+  } else if (room === "s") {
+    S.order = DATA.defaultOrder.slice(); S.picks = new Array(SPICKS).fill(null); S.mine = 4; S.follow = false;
+    ytS.innerHTML = TEAMS.map(t => '<option value="' + t.id + '"' + (t.id === 4 ? " selected" : "") + ">" + esc(t.name) + "</option>").join("");
+    ytS.disabled = false;
+    fillOrder("s", S.order);
+    drRoot.querySelectorAll('[data-ord^="s"]').forEach(sel => { sel.disabled = false; });
+    $("#undoBtnS").disabled = false; $("#resetBtnS").disabled = false; $("#draftSearchS").disabled = false;
+    renderSnakeRoom();
+  }
+  LIVE.room = null;
+  liveRenderStatus();
+}
+async function liveApplyDraft(room, draft, C){
+  const detail = draft.slot_to_roster_id ? draft : await liveFetch("/draft/" + encodeURIComponent(draft.draft_id));
+  const slots = detail.slot_to_roster_id || {};
+  const order = Object.keys(slots).map(Number).sort((a, b) => a - b).map(k => slots[String(k)]);
+  if (!order.length) throw new Error("draft has no slots");
+  const rounds = (detail.settings && Number(detail.settings.rounds)) || (room === "r" ? 4 : 15);
+  LIVE.draftId = detail.draft_id; LIVE.leagueId = detail.league_id || (C ? C.leagueId : null);
+  LIVE.status = detail.status || null; LIVE.type = detail.type || "snake";
+  LIVE.name = (detail.metadata && detail.metadata.name) || (C && C.league && C.league.name) || "Live draft";
+  LIVE.rounds = rounds;
+  LIVE.names = {}; LIVE.extra = {};
+  if (C && String(C.leagueId) === String(LIVE.leagueId)) (C.teams || []).forEach(t => { if (t) LIVE.names[t.rid] = t.name; });
+  if (!Object.keys(LIVE.names).length && LIVE.leagueId) {
+    try {
+      const [users, rosters] = await Promise.all([liveFetch("/league/" + encodeURIComponent(LIVE.leagueId) + "/users"), liveFetch("/league/" + encodeURIComponent(LIVE.leagueId) + "/rosters")]);
+      const byId = {}; (users || []).forEach(u => { byId[u.user_id] = u; });
+      (rosters || []).forEach(r => {
+        const u = byId[r.owner_id];
+        LIVE.names[r.roster_id] = (u && u.metadata && u.metadata.team_name) || (u && u.display_name) || ("Roster " + r.roster_id);
+      });
+    } catch (e) { /* names are cosmetic — slots still bind */ }
+  }
+  LIVE.seq = liveBuildSeq(order, rounds, LIVE.type);
+  const st = room === "r" ? R : S;
+  st.order = order.slice();
+  st.picks = new Array(order.length * rounds).fill(null);
+  const sel = room === "r" ? yt : ytS;
+  const myRid = (C && String(C.leagueId) === String(LIVE.leagueId)) ? sheetMyRid(C) : null;
+  if (myRid != null && order.map(Number).includes(Number(myRid))) st.mine = myRid;
+  sel.innerHTML = order.map(rid => '<option value="' + rid + '">' + esc(liveTeamName(rid)) + "</option>").join("");
+  sel.value = String(st.mine);
+  sel.disabled = false;
+  fillOrder(room, st.order);
+  st.follow = true;   /* the feed owns the board: no manual picks, undo, or reset while live */
+  LIVE.bound = true;
+  await livePollNow();
+}
+function liveApplyPicks(picks){
+  const room = LIVE.room, st = room === "r" ? R : S;
+  picks.slice().sort((a, b) => a.pick_no - b.pick_no).forEach(pk => {
+    const idx = pk.pick_no - 1;
+    if (idx < 0 || idx >= st.picks.length) return;
+    const pid = String(pk.player_id);
+    st.picks[idx] = pid;
+    const pooled = room === "r" ? ROOKIES[RBYIDX[pid]] : SNAKE[SBYIDX[pid]];
+    if (!pooled && !LIVE.extra[pid]) {
+      const md = pk.metadata || {};
+      const pb = (typeof PBY !== "undefined" && PBY[pid]) ? PBY[pid] : null;
+      LIVE.extra[pid] = { id: pid,
+        name: ((md.first_name || "") + " " + (md.last_name || "")).trim() || (pb ? pb.name : "Player " + pid),
+        pos: md.position || (pb ? pb.pos : "—"), team: md.team || (pb ? pb.team : ""),
+        value: pb ? (room === "r" ? pb.value : (pb.rdValue != null ? pb.rdValue : 0)) : 0, tier: null };
+    }
+  });
+  if (room === "r") renderRoom(); else renderSnakeRoom();
+}
+async function livePollNow(){
+  if (!LIVE.bound || !LIVE.draftId) return;
+  if (typeof document !== "undefined" && document.hidden) return;   /* no fetches from a hidden tab */
+  try {
+    const both = await Promise.all([liveFetch("/draft/" + encodeURIComponent(LIVE.draftId)), liveFetch("/draft/" + encodeURIComponent(LIVE.draftId) + "/picks")]);
+    if (!LIVE.bound) return;
+    if (both[0] && both[0].status) LIVE.status = both[0].status;
+    liveApplyPicks(Array.isArray(both[1]) ? both[1] : []);
+    LIVE.lastAt = Date.now();
+    if (LIVE.status === "complete") { liveStopTimers(); LIVE.polling = false; }
+    liveRenderStatus();
+  } catch (e) { /* keep the last good board; the next cycle retries */ liveRenderStatus(); }
+}
+async function liveBind(room, force){
+  const st = room === "r" ? R : S;
+  if (window.__liveStale) liveResetState();
+  if (st.follow && !LIVE.bound) { liveRenderStatus(); return; }   /* following a shared room code — hands off */
+  if (LIVE.binding) return;
+  const C = sheetConn();
+  const wantLeague = C && C.platform === "sleeper" ? C.leagueId : null;
+  const idEl = room === "r" ? $("#sleeperIdR") : $("#sleeperIdS");
+  const manualId = idEl && idEl.value.trim() ? idEl.value.trim() : null;
+  if (!force && LIVE.bound && LIVE.room === room && String(LIVE.leagueId || "") === String(wantLeague || "") && !manualId) {
+    liveStartPolling(); liveRenderStatus(); return;
+  }
+  if (LIVE.bound && LIVE.room !== room) liveResetState();   /* the other room was bound — restore it first */
+  LIVE.room = room;
+  if (!manualId && !wantLeague) { if (LIVE.bound) liveResetState(); LIVE.room = room; liveRenderStatus(); return; }
+  LIVE.binding = true;
+  try {
+    let draft = null;
+    if (manualId) draft = await liveFetch("/draft/" + encodeURIComponent(manualId));
+    else {
+      const ds = await liveFetch("/league/" + encodeURIComponent(wantLeague) + "/drafts");
+      draft = liveChooseDraft(Array.isArray(ds) ? ds : []);
+    }
+    if (!draft || !draft.draft_id) { if (LIVE.bound) liveResetState(); LIVE.room = room; liveRenderStatus(); LIVE.binding = false; return; }
+    LIVE.room = room;
+    await liveApplyDraft(room, draft, C);
+    LIVE.binding = false;
+    liveStartPolling();
+    liveRenderStatus();
+  } catch (e) {
+    LIVE.binding = false;
+    if (LIVE.bound) liveResetState();
+    LIVE.room = room;
+    liveRenderStatus();
+  }
+}
 
 /* ---------- 6. draft sheet (Eric, 2026-11-08) ----------
    One printable board: the overall top 100 and by-position lists with
@@ -16520,16 +16870,26 @@ function sheetOrderModel(C){
   inSeason.forEach(x => { byOrig[x.pk.round + "|" + x.pk.orig] = x; });
   return { season, rounds, slots, byOrig, n: slots.length };
 }
-function sheetCell(x, origName){
+/* The connected user's own team (Round 2 highlight): the team whose
+   picks get marked in the order grid — his originals AND any pick he
+   acquired from another team. */
+function sheetMyRid(C){
+  const t = ((C && C.teams) || []).find(t => t && t.isUser);
+  return t ? Number(t.rid) : null;
+}
+function sheetCell(x, origName, myRid){
   if (!x) return "<td class='sub'>—</td>";
   const traded = Number(x.owner.rid) !== Number(x.pk.orig);
-  return "<td" + (traded ? " class='traded-cell'" : "") + "><span class='own'>" + esc(x.owner.name) + "</span>"
+  const mine = myRid != null && Number(x.owner.rid) === myRid;
+  const cls = [traded ? "traded-cell" : "", mine ? "mine-cell" : ""].filter(Boolean).join(" ");
+  return "<td" + (cls ? " class='" + cls + "'" : "") + ">" + (mine ? "<span class='mine-dot' title='Your pick'>●</span>" : "") + "<span class='own'>" + esc(x.owner.name) + "</span>"
     + (traded ? "<span class='via'>via " + esc(origName) + "</span>" : "") + "</td>";
 }
 function sheetOrderHtml(C){
   const O = sheetOrderModel(C);
   if (!O) return "<h3 style='margin:26px 0 8px; font-size:18px'>Draft order</h3><p class='sub'>No draft picks are attached to this league yet, so there is no order to print.</p>";
   const rd = sheetIsRedraft();
+  const myRid = sheetMyRid(C);
   let head = "<tr><th>Round</th>";
   O.slots.forEach((t, i) => { head += "<th><span class='slotno'>" + (i + 1) + "</span>" + esc(t.name) + "</th>"; });
   head += "</tr>";
@@ -16538,7 +16898,7 @@ function sheetOrderHtml(C){
     body += "<tr><td class='rd'>R" + r + "</td>";
     for (let c = 0; c < O.n; c++) {
       const origTeam = O.slots[(rd && r % 2 === 0) ? (O.n - 1 - c) : c];
-      body += sheetCell(O.byOrig[r + "|" + origTeam.rid], origTeam.name);
+      body += sheetCell(O.byOrig[r + "|" + origTeam.rid], origTeam.name, myRid);
     }
     body += "</tr>";
   });
@@ -16549,14 +16909,17 @@ function sheetOrderHtml(C){
     nbody += "<tr><td><span class='slotno' style='display:inline'> " + (i + 1) + "</span> <span class='own'>" + esc(t.name) + "</span></td>";
     O.rounds.forEach(r => {
       const x = O.byOrig[r + "|" + t.rid];
-      nbody += x ? "<td>" + esc(x.owner.name) + "</td>" : "<td class='sub'>—</td>";
+      if (!x) { nbody += "<td class='sub'>—</td>"; return; }
+      const mine = myRid != null && Number(x.owner.rid) === myRid;
+      nbody += "<td" + (mine ? " class='mine-cell'" : "") + ">" + (mine ? "<span class='mine-dot' title='Your pick'>●</span>" : "") + esc(x.owner.name) + "</td>";
     });
     nbody += "</tr>";
   });
   const narrow = "<table class='sheet-grid sheet-grid-narrow'><thead>" + nhead + "</thead><tbody>" + nbody + "</tbody></table>";
   return "<h3 style='margin:26px 0 4px; font-size:18px'>" + O.season + " draft order</h3>"
     + "<p class='sub' style='margin:0 0 10px'>" + (rd ? "Snake order — every other round runs in reverse. " : "Projected from the current standings, fewest points scored picking first. ")
-    + "Every pick sits under its <b style='color:var(--ink)'>current owner</b>; a pick that changed hands names the team it came from.</p>"
+    + "Every pick sits under its <b style='color:var(--ink)'>current owner</b>; a pick that changed hands names the team it came from."
+    + (myRid != null ? " <b style='color:var(--ink)'><span class='mine-dot'>●</span> marks your picks</b> — including any you picked up in a trade." : "") + "</p>"
     + wide + narrow;
 }
 function sheetPosHtml(pos, rows){
@@ -16700,6 +17063,7 @@ $("#sheetCsv").addEventListener("click", () => {
   const room = readHash("snake");
   if(room){
     window.__draftPin = "redraft";
+    window.__draftRoute = { fmt: "redraft", view: "room" };
     if(applySnakeRoom(room, true)) toast("Shared draft room loaded — you're following along");
   }
 })();
@@ -16722,13 +17086,22 @@ window.drDraft = {
   renderSheet: ()=> renderSheet(),
   format: ()=> roomFmt(),
   mockBusy: ()=> !!(M.started && !M.done),
-  goSheet: ()=> { applyRoomFormat(); const el = document.getElementById("sheetsec"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); },
+  goSheet: ()=> { applyRoomFormat(); drShowView("sheet", { scroll: false }); const el = document.getElementById("sheetsec"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); },
+  goView: (v)=> drShowView(v),
+  view: ()=> drViewFor(roomFmt()),
+  applyRoute: ()=> { const rt = window.__draftRoute || drParseRoute(); window.__draftRoute = null; if (rt) drApplyRoute(rt, { scroll: false }); },
+  liveState: ()=> ({ bound: LIVE.bound, polling: LIVE.polling, room: LIVE.room, draftId: LIVE.draftId, leagueId: LIVE.leagueId, status: LIVE.status, name: LIVE.name, lastAt: LIVE.lastAt,
+    picks: (LIVE.room === "r" ? R.picks : LIVE.room === "s" ? S.picks : []).slice(),
+    order: (LIVE.room === "r" ? R.order : LIVE.room === "s" ? S.order : []).slice(),
+    mine: LIVE.room === "r" ? R.mine : LIVE.room === "s" ? S.mine : null }),
+  livePollNow: ()=> livePollNow(),
+  liveStop: ()=> liveStop(),
   mock: ()=> ({ fmt: M.fmt, teams: M.teams, rounds: M.rounds, draftType: M.draftType, settings: { sf: M.settings.sf, ppr: M.settings.ppr, tep: M.settings.tep, ptd: M.settings.ptd }, order: M.order.slice(), picks: M.picks.slice(), started: M.started, done: M.done, pool: (M.pool || []).map(p => ({ id: p.id, name: p.name, pos: p.pos, value: p.value })) }),
   setMode: (m)=> {
     if (m === "sheet") { window.drDraft.goSheet(); return; }
     if (m === "snake") { pinRoomFmt("redraft"); return; }
     if (m === "rookie") { pinRoomFmt("dynasty"); return; }
-    if (m === "mock") { applyRoomFormat(); const el = document.getElementById("mocksetup"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+    if (m === "mock") { drShowView("mock"); }
   },
   mode: ()=> roomFmt()
 };
@@ -16738,7 +17111,7 @@ window.drDraft = {
 (function () {
   "use strict";
   var lastDraftMode = null;
-  var hashDriven = /(^#|[#&])(report|room|snake|mock)=/.test(location.hash || "");
+  var hashDriven = /(^#|[#&])(report|room|snake|mock)=/.test(location.hash || "") || /^#\/draft\//.test(location.hash || "");
   window.drOpenDraft = function () {
     if (typeof window.__syncDraftData === "function") window.__syncDraftData();
     if (!window.drDraft) return;
@@ -16752,7 +17125,10 @@ window.drDraft = {
   try {
     var _tabDraft = document.getElementById("tab-draft");
     if (_tabDraft && window.MutationObserver) new MutationObserver(function () {
-      if (!_tabDraft.classList.contains("active")) document.body.classList.remove("ff-sheet-mode");
+      if (!_tabDraft.classList.contains("active")) {
+        document.body.classList.remove("ff-sheet-mode");
+        if (window.drDraft && window.drDraft.liveStop) window.drDraft.liveStop();   /* polling dies with the room */
+      }
     }).observe(_tabDraft, { attributes: true, attributeFilter: ["class"] });
   } catch (e) {}
   document.addEventListener("click", function (e) {
@@ -16761,7 +17137,10 @@ window.drDraft = {
     e.preventDefault();
     if (typeof activateNav === "function") { activateNav("draft"); window.scrollTo({ top: 0, behavior: "smooth" }); }
   });
-  if (hashDriven && typeof activateNav === "function") { activateNav("draft"); window.scrollTo(0, 0); }
+  if (hashDriven && typeof activateNav === "function") {
+    activateNav("draft"); window.scrollTo(0, 0);
+    if (window.drDraft && window.drDraft.applyRoute) window.drDraft.applyRoute();
+  }
 })();
 </script>
 <script>
