@@ -2186,8 +2186,9 @@
 #tab-draft table.sheet-grid-narrow{display:table}
 #tab-draft .sheet-board .col-age, #tab-draft .sheet-pos .col-age{display:none}
 }
+#tab-draft #sheetPrintDoc{display:none}
 @media print{
-@page{margin:11mm}
+@page{margin:7mm}
 body.ff-sheet-mode > *:not(.wrap){display:none !important}
 body.ff-sheet-mode > .wrap > *:not(#tab-draft){display:none !important}
 body.ff-sheet-mode #tab-draft .modebar, body.ff-sheet-mode #tab-draft .hero, body.ff-sheet-mode #tab-draft footer, body.ff-sheet-mode .sheet-actions{display:none !important}
@@ -2205,6 +2206,38 @@ body.ff-sheet-mode #modeSheet .sheet-grid-narrow{display:none !important}
 body.ff-sheet-mode #modeSheet .sheet-grid-wide{display:table !important}
 body.ff-sheet-mode #modeSheet tr{page-break-inside:avoid}
 body.ff-sheet-mode #modeSheet .valbar{display:none}
+body.ff-sheet-mode #sheetPrintMenu{display:none !important}
+body.ff-sheet-mode #sheetsec .sec-head, body.ff-sheet-mode #sheetsec > .sec-sub, body.ff-sheet-mode #sheetHead, body.ff-sheet-mode #sheetsec > h3, body.ff-sheet-mode #sheetsec > .card, body.ff-sheet-mode #sheetCount, body.ff-sheet-mode #sheetPos{display:none !important}
+body.ff-sheet-mode #sheetPrintDoc{display:block !important}
+body.ff-sheet-mode.pdoc-pos #sheetOrder{display:none !important}
+body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
+#sheetPrintDoc{font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; color:#111}
+#sheetPrintDoc .pd-hd{border-bottom:2.2pt solid #111; padding-bottom:3.5pt; margin-bottom:4pt}
+#sheetPrintDoc .pd-l1{display:flex; justify-content:space-between; align-items:baseline}
+#sheetPrintDoc .pd-brand{font-size:12.5pt; font-weight:800; letter-spacing:2.2pt}
+#sheetPrintDoc .pd-title{font-size:12.5pt; font-weight:800; letter-spacing:1pt}
+#sheetPrintDoc .pd-fmt{font-size:7.8pt; color:#333; margin-top:2pt}
+#sheetPrintDoc .pd-sec{display:flex; justify-content:space-between; align-items:baseline; font-size:8.6pt; font-weight:800; letter-spacing:1.2pt; text-transform:uppercase; border-bottom:.9pt solid #111; padding-bottom:2.2pt; margin:0 0 4pt}
+#sheetPrintDoc .pd-sec2{margin-top:5pt}
+#sheetPrintDoc .pd-note{font-size:6.8pt; font-weight:400; letter-spacing:0; text-transform:none; color:#444}
+#sheetPrintDoc .pd-colhead{display:flex; font-size:6.3pt; font-weight:700; letter-spacing:.7pt; color:#555; border-bottom:.6pt solid #999; padding-bottom:1.4pt; margin-bottom:2pt}
+#sheetPrintDoc .pd-ch-rk{width:17pt; flex:none; text-align:right; padding-right:4.5pt}
+#sheetPrintDoc .pd-ch-nm{flex:1}
+#sheetPrintDoc .pd-ch-vl{flex:none; padding-left:5pt}
+#sheetPrintDoc .pd-cols{column-count:3; column-gap:15pt}
+#sheetPrintDoc .pd-pr{display:flex; align-items:baseline; line-height:1.09; white-space:nowrap; break-inside:avoid; page-break-inside:avoid}
+#sheetPrintDoc .pd-rk{width:17pt; flex:none; font-size:7.5pt; color:#666; text-align:right; padding-right:4.5pt}
+#sheetPrintDoc .pd-nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; font-size:7.5pt; font-weight:600}
+#sheetPrintDoc .pd-mt{flex:none; font-size:6.4pt; color:#555; padding:0 4pt}
+#sheetPrintDoc .pd-vl{flex:none; font-size:7.5pt; font-weight:700}
+#sheetPrintDoc .pd-tr{display:flex; align-items:center; gap:5pt; margin:1.6pt 0 .8pt; break-inside:avoid; page-break-inside:avoid}
+#sheetPrintDoc .pd-tchip{font-size:5.9pt; font-weight:800; letter-spacing:.9pt; border:.8pt solid #111; padding:.7pt 3pt .4pt; border-radius:2pt; line-height:1.2}
+#sheetPrintDoc .pd-trule{flex:1; border-top:.8pt solid #111}
+#sheetPrintDoc .pd-posgrid{display:flex; gap:13pt}
+#sheetPrintDoc .pd-poscol{flex:1; min-width:0}
+#sheetPrintDoc .pd-poshead{font-size:8pt; font-weight:800; letter-spacing:.8pt; border-bottom:.9pt solid #111; padding-bottom:1.6pt; margin-bottom:2.2pt}
+#sheetPrintDoc .pd-posgrid .pd-tr{margin:1.2pt 0 .6pt}
+#sheetPrintDoc .pd-ft{margin-top:9pt; border-top:.6pt solid #999; padding-top:3pt; display:flex; justify-content:space-between; font-size:6.6pt; color:#666}
 }
     </style>
     <style>
@@ -3896,9 +3929,26 @@ body.ff-sheet-mode #modeSheet .valbar{display:none}
     <p class="sub" id="sheetCount" style="margin-top:8px"></p>
     <h3 style="margin:26px 0 8px; font-size:18px">By position</h3>
     <div class="sheet-pos-grid sheet-pos" id="sheetPos"></div>
+    <div id="sheetPrintDoc" aria-hidden="true"></div>
     <div id="sheetOrder"></div>
   </section>
   </div><!-- /modeSheet -->
+
+  <div class="slp-overlay" id="sheetPrintMenu" hidden>
+    <div class="slp-dialog" role="dialog" aria-modal="true" aria-labelledby="sheetPrintMenuTitle">
+      <button type="button" class="slp-x" id="sheetPrintMenuClose" aria-label="Close print options">&times;</button>
+      <h3 id="sheetPrintMenuTitle">Print sheet</h3>
+      <p class="slp-sub">Same compact cheat-sheet layout either way — the full sheet, or one list on its own.</p>
+      <div class="slp-list">
+        <button type="button" class="slp-league" data-print-kind="full"><span class="slp-league-name">Full sheet</span><span class="slp-league-meta">Overall board (1,000+ value), top 25 by position, and the draft order when a league is connected</span></button>
+        <button type="button" class="slp-league" data-print-kind="QB"><span class="slp-league-name">Quarterbacks only</span><span class="slp-league-meta">Every quarterback above 1,000 value, with tier breaks</span></button>
+        <button type="button" class="slp-league" data-print-kind="RB"><span class="slp-league-name">Running backs only</span><span class="slp-league-meta">Every running back above 1,000 value, with tier breaks</span></button>
+        <button type="button" class="slp-league" data-print-kind="WR"><span class="slp-league-name">Wide receivers only</span><span class="slp-league-meta">Every wide receiver above 1,000 value, with tier breaks</span></button>
+        <button type="button" class="slp-league" data-print-kind="TE"><span class="slp-league-name">Tight ends only</span><span class="slp-league-meta">Every tight end above 1,000 value, with tier breaks</span></button>
+        <button type="button" class="slp-league" data-print-kind="FLEX"><span class="slp-league-name">Flex only</span><span class="slp-league-meta">Running backs, wide receivers and tight ends in one list, above 1,000 value</span></button>
+      </div>
+    </div>
+  </div>
 
   <footer>
     <p style="margin:0 0 6px"><b style="color:var(--ink)">Fantasy Forensics — Draft Room</b> — the rookie-draft room, alongside the full value board, trade calculator, and season simulator.</p>
@@ -16389,8 +16439,95 @@ function renderSheet(){
   $("#sheetPos").innerHTML = ["QB", "RB", "WR", "TE"].map(pos => sheetPosHtml(pos, sheetPosRows(pos))).join("");
   $("#sheetOrder").innerHTML = C ? sheetOrderHtml(C) : "";
   $("#sheetNote").textContent = C ? "" : "Connect a league to add its draft order to this sheet.";
+  buildSheetPrintDoc();
 }
-$("#sheetPrint").addEventListener("click", () => { window.print(); });
+/* ----- Draft Sheet print doc: the compact cheat-sheet (Eric, 2026-11-08) -----
+   Print-only rendering of the sheet in the approved mock layout: a
+   flowing 3-column list at 7.5pt with tier cutouts. The overall list
+   and every position list carry only players priced above 1,000 in
+   the active format — the sub-1,000 tail is never drafted. Dynasty
+   prices come off the full Player Values board (PBY); redraft prices
+   off the same RDRAFT map the snake board carries. Tiers are computed
+   on each printed list itself. The screen sheet is untouched: this
+   markup is display:none until print. */
+let SHEET_PRINT_KIND = "full";
+const SHEET_PRINT_LABELS = { full: "Full sheet", QB: "Quarterbacks only", RB: "Running backs only", WR: "Wide receivers only", TE: "Tight ends only", FLEX: "Flex only" };
+function sheetPrintPool(){
+  const rd = sheetIsRedraft();
+  return Object.keys(PBY).map(id => PBY[id]).filter(p => p && p.name && p.pos)
+    .map(p => ({ name: p.name, pos: p.pos, team: p.team, value: rd ? (RDRAFT[p.id] != null ? RDRAFT[p.id] : null) : p.value }))
+    .filter(p => p.value != null && p.value > 0)
+    .sort((a, b) => b.value - a.value);
+}
+function pdTiered(rows){
+  return sheetTier(rows.map(p => ({ name: p.name, pos: p.pos, team: p.team, value: p.value })));
+}
+function pdListHtml(rows, meta){
+  let h = "", lastTier = 0;
+  rows.forEach((r, i) => {
+    if (r.tier !== lastTier) { lastTier = r.tier; h += "<div class='pd-tr'><span class='pd-tchip'>TIER " + lastTier + "</span><span class='pd-trule'></span></div>"; }
+    h += "<div class='pd-pr'><span class='pd-rk'>" + (i + 1) + "</span><span class='pd-nm'>" + esc(r.name) + "</span>"
+      + "<span class='pd-mt'>" + (meta === "pos" ? r.pos + " · " : "") + esc(r.team || "FA") + "</span>"
+      + "<span class='pd-vl'>" + fmt(r.value) + "</span></div>";
+  });
+  return h;
+}
+function pdSecHtml(label, note){
+  return "<div class='pd-sec'><span>" + label + "</span>" + (note ? "<span class='pd-note'>Tier breaks: a new tier starts when value drops below 85% of the tier's top value</span>" : "") + "</div>";
+}
+function pdColHeadHtml(meta){
+  return "<div class='pd-colhead'><span class='pd-ch-rk'>RK</span><span class='pd-ch-nm'>PLAYER</span><span>" + (meta === "pos" ? "POS · TM" : "TEAM") + "</span><span class='pd-ch-vl'>VALUE</span></div>";
+}
+function sheetPrintHeadHtml(){
+  const C = sheetConn();
+  const line = C
+    ? esc(C.league && C.league.name ? C.league.name : "Your league") + " · " + esc(sheetFmtLine(C))
+    : (sheetIsRedraft() ? "Redraft" : "Dynasty") + " · values are our proprietary player values" + (sheetIsRedraft() ? " for the rest of the season" : "");
+  return "<div class='pd-hd'><div class='pd-l1'><span class='pd-brand'>FANTASY FORENSICS</span><span class='pd-title'>DRAFT SHEET</span></div><div class='pd-fmt'>" + line + "</div></div>";
+}
+function buildSheetPrintDoc(){
+  const el = $("#sheetPrintDoc");
+  if (!el) return;
+  const kind = SHEET_PRINT_KIND, pool = sheetPrintPool();
+  let h = sheetPrintHeadHtml();
+  const foot = SHEET_PRINT_LABELS[kind] || "Full sheet";
+  if (kind === "full") {
+    const overall = pdTiered(pool.filter(p => p.value > 1000));
+    h += pdSecHtml("Overall — 1,000+ value", true) + pdColHeadHtml("pos")
+      + "<div class='pd-cols'>" + pdListHtml(overall, "pos") + "</div>";
+    h += "<div class='pd-sec pd-sec2'><span>By position — top 25</span></div><div class='pd-posgrid'>"
+      + ["QB", "RB", "WR", "TE"].map(pos => "<div class='pd-poscol'><div class='pd-poshead'>" + pos + "</div>"
+        + pdListHtml(pdTiered(pool.filter(p => p.pos === pos)).slice(0, 25), "team") + "</div>").join("") + "</div>";
+  } else {
+    const label = { QB: "Quarterbacks", RB: "Running backs", WR: "Wide receivers", TE: "Tight ends", FLEX: "Flex — RB · WR · TE" }[kind];
+    const meta = kind === "FLEX" ? "pos" : "team";
+    const rows = pdTiered(pool.filter(p => p.value > 1000 && (kind === "FLEX" ? (p.pos === "RB" || p.pos === "WR" || p.pos === "TE") : p.pos === kind)));
+    h += pdSecHtml(label + " — 1,000+ value", true) + pdColHeadHtml(meta)
+      + "<div class='pd-cols'>" + pdListHtml(rows, meta) + "</div>";
+  }
+  h += "<div class='pd-ft'><span>thefantasyforensics.com</span><span>" + foot + "</span></div>";
+  el.innerHTML = h;
+  document.body.classList.toggle("pdoc-full", kind === "full");
+  document.body.classList.toggle("pdoc-pos", kind !== "full");
+}
+const sheetPrintMenu = $("#sheetPrintMenu");
+function sheetPrintMenuShow(){ if (sheetPrintMenu) { sheetPrintMenu.hidden = false; document.body.style.overflow = "hidden"; } }
+function sheetPrintMenuHide(){ if (sheetPrintMenu) { sheetPrintMenu.hidden = true; document.body.style.overflow = ""; } }
+$("#sheetPrint").addEventListener("click", sheetPrintMenuShow);
+if (sheetPrintMenu) {
+  $("#sheetPrintMenuClose").addEventListener("click", sheetPrintMenuHide);
+  sheetPrintMenu.addEventListener("click", e => { if (e.target === sheetPrintMenu) sheetPrintMenuHide(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !sheetPrintMenu.hidden) sheetPrintMenuHide(); });
+  sheetPrintMenu.querySelectorAll("[data-print-kind]").forEach(b => b.addEventListener("click", () => {
+    SHEET_PRINT_KIND = b.dataset.printKind || "full";
+    buildSheetPrintDoc();
+    sheetPrintMenuHide();
+    setTimeout(() => window.print(), 40);
+  }));
+}
+window.addEventListener("afterprint", () => {
+  if (SHEET_PRINT_KIND !== "full") { SHEET_PRINT_KIND = "full"; buildSheetPrintDoc(); }
+});
 $("#sheetCsv").addEventListener("click", () => {
   const lines = ["rank,player,position,team,value,tier"];
   const q = v => { const s = String(v == null ? "" : v); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
