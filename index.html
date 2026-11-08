@@ -401,6 +401,16 @@
       }
       .ff-foot-link:hover { color: var(--ink); }
 
+      /* ---------- Report a problem dialog (2026-11-07) ---------- */
+      #ff-bug-overlay select, #ff-bug-overlay textarea, #ff-bug-overlay input {
+        width: 100%; margin-top: 8px; min-height: 52px; padding: 0 16px; font-size: 16px;
+        background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .14); border-radius: 12px; color: var(--ink);
+      }
+      #ff-bug-overlay textarea { min-height: 110px; padding: 12px 16px; resize: vertical; line-height: 1.45; }
+      #ff-bug-overlay select:focus, #ff-bug-overlay textarea:focus, #ff-bug-overlay input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+      .ff-bug-fallback { color: var(--ink-2); font-size: 13.5px; margin: 14px 0 0; }
+      .ff-bug-fallback a { color: var(--cyan); font-weight: 600; }
+
       /* ---------- compact header (shrunk 2026-10-23, Eric: content
          first — the brand is the big type now; league name, meta,
          pills and the mode row compress around it) ---------- */
@@ -3833,7 +3843,7 @@
           <p class="wl-msg" role="status" aria-live="polite"></p>
         </div>
         <footer id="page-footer"></footer>
-        <div class="ff-foot-links"><button type="button" class="ff-foot-link" id="ff-privacy-open">Privacy</button><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.instagram.com/fantasy.forensics" target="_blank" rel="noopener">Instagram</a><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.youtube.com/@fantasyforensics" target="_blank" rel="noopener">YouTube</a><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.tiktok.com/@fantasy.forensics" target="_blank" rel="noopener">TikTok</a><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.facebook.com/61595994395469" target="_blank" rel="noopener">Facebook</a></div>
+        <div class="ff-foot-links"><button type="button" class="ff-foot-link" id="ff-privacy-open">Privacy</button><span aria-hidden="true"> · </span><button type="button" class="ff-foot-link" id="ff-terms-open">Terms</button><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.instagram.com/fantasy.forensics" target="_blank" rel="noopener">Instagram</a><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.youtube.com/@fantasyforensics" target="_blank" rel="noopener">YouTube</a><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.tiktok.com/@fantasy.forensics" target="_blank" rel="noopener">TikTok</a><span aria-hidden="true"> · </span><a class="ff-foot-link" href="https://www.facebook.com/61595994395469" target="_blank" rel="noopener">Facebook</a><span aria-hidden="true"> · </span><button type="button" class="ff-foot-link" id="ff-bug-open">Report a problem</button></div>
     </div>
 
     <script>window.GUEST_MODE = true;</script>
@@ -9788,13 +9798,181 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
       <div class="slp-dialog ff-priv" role="dialog" aria-modal="true" aria-labelledby="ff-privacy-title">
         <button type="button" class="slp-x" id="ff-privacy-close" aria-label="Close privacy">&times;</button>
         <h3 id="ff-privacy-title">Privacy</h3>
-        <p><strong>If you create an account,</strong> we store your email address and your league identifiers — your Sleeper username and league IDs, or your ESPN league ID — so your saved leagues follow you between devices. That is all an account stores.</p>
+        <p><strong>If you create an account,</strong> we store your email address, your league identifiers — your Sleeper username and league IDs, or your ESPN league ID — your display preferences, and your Manager Score snapshots, so your saved leagues and settings follow you between devices. That is all an account stores.</p>
+        <p><strong>Problem reports:</strong> if you send a problem report, we receive the category, your description, the tool you were using, and your email if you choose to give one. Reports are used only to fix the problem and reply to you.</p>
         <p><strong>If you don't have an account,</strong> your saved leagues live only in this browser, on this device. Clear your browser data and they're gone — nothing about them ever reaches us.</p>
         <p><strong>We never collect passwords.</strong> Sleeper connects with your public username and ESPN with your league ID. Neither platform shares a password with us, and we never ask for one.</p>
         <p><strong>Analytics:</strong> we use Google Analytics to count overall usage — which tools get opened and where visitors come from — without identifying you.</p>
+        <p><strong>We never sell your data.</strong></p>
         <p><strong>Deleting your data:</strong> remove any saved league with the &times; next to it, any time. To delete your account and everything stored with it, email <a href="mailto:thefantasyforensics@gmail.com">thefantasyforensics@gmail.com</a>.</p>
       </div>
     </div>
+    <div class="slp-overlay" id="ff-terms-overlay" hidden>
+      <div class="slp-dialog ff-priv" role="dialog" aria-modal="true" aria-labelledby="ff-terms-title">
+        <button type="button" class="slp-x" id="ff-terms-close" aria-label="Close terms">&times;</button>
+        <h3 id="ff-terms-title">Terms of Use</h3>
+        <p><strong>What this is:</strong> Fantasy Forensics provides free fantasy football tools for information and entertainment. Values, projections, grades, and scores are estimates and opinions — not guarantees, and not financial or gambling advice. Your lineup and trade decisions are your own.</p>
+        <p><strong>Not affiliated:</strong> Fantasy Forensics is not affiliated with, endorsed by, or sponsored by Sleeper, ESPN, the NFL, or any NFL team or player.</p>
+        <p><strong>Accounts:</strong> you must be 13 or older to use the site. You're responsible for activity under your sign-in.</p>
+        <p><strong>Acceptable use:</strong> don't abuse the site — no automated hammering or scraping that degrades it, no attempts to access other users' data, and no unlawful use.</p>
+        <p><strong>As-is:</strong> the site is provided "as is," without warranties of any kind. Availability and accuracy aren't guaranteed, and to the maximum extent permitted by law, Fantasy Forensics isn't liable for losses arising from use of the site or reliance on its numbers.</p>
+        <p><strong>Changes:</strong> these terms may be updated. Continued use after an update means you accept the current version.</p>
+        <p><strong>Contact:</strong> questions about these terms — email <a href="mailto:thefantasyforensics@gmail.com">thefantasyforensics@gmail.com</a>.</p>
+      </div>
+    </div>
+    <div class="slp-overlay" id="ff-bug-overlay" hidden>
+      <div class="slp-dialog" role="dialog" aria-modal="true" aria-labelledby="ff-bug-title">
+        <button type="button" class="slp-x" id="ff-bug-close" aria-label="Close report form">&times;</button>
+        <div id="ff-bug-fields">
+          <h3 id="ff-bug-title">Report a problem</h3>
+          <p class="slp-sub">Tell us what went wrong — every report gets read.</p>
+          <label class="slp-label" for="ff-bug-cat">Category</label>
+          <select id="ff-bug-cat">
+            <option>Something is broken</option>
+            <option>A number looks wrong</option>
+            <option>A page or tool won't load</option>
+            <option>Other</option>
+          </select>
+          <label class="slp-label" for="ff-bug-tool">Tool or page</label>
+          <input id="ff-bug-tool" type="text" autocomplete="off" placeholder="Which tool were you using?" />
+          <label class="slp-label" for="ff-bug-desc">What happened?</label>
+          <textarea id="ff-bug-desc" placeholder="What did you tap, and what went wrong?"></textarea>
+          <label class="slp-label" for="ff-bug-email">Email (optional)</label>
+          <input id="ff-bug-email" type="email" autocomplete="email" placeholder="you@email.com" />
+          <p class="slp-err" id="ff-bug-err" hidden></p>
+          <button type="button" class="slp-go" id="ff-bug-send">Send report</button>
+          <p class="ff-bug-fallback">Trouble sending? <a href="https://docs.google.com/forms/d/e/1FAIpQLSeOBDpjB4NTLm9C0S5rKM3GW-sN5Mn9BvqyNv0X8egqs-8wtQ/viewform" target="_blank" rel="noopener">Open the form instead</a></p>
+        </div>
+        <div id="ff-bug-thanks" hidden>
+          <h3>Thanks — got it</h3>
+          <p class="slp-sub">Every report gets read. If you left an email, we may follow up there.</p>
+          <button type="button" class="slp-go" id="ff-bug-thanks-close">Close</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        "use strict";
+        /* ================= Report a problem =================
+           Site-styled dialog; on submit it posts into the report
+           form backend through a hidden iframe — no backend of our
+           own, no account changes. The config below is the single
+           source for the form endpoints (mapping: bug-report-form.md). */
+        var FF_BUG = {
+          postUrl: "https://docs.google.com/forms/d/e/1FAIpQLSeOBDpjB4NTLm9C0S5rKM3GW-sN5Mn9BvqyNv0X8egqs-8wtQ/formResponse",
+          entry: {
+            category: "entry.1089909011",
+            tool: "entry.1248119367",
+            description: "entry.1729240849",
+            email: "entry.1177241575",
+            context: "entry.1685327145"
+          }
+        };
+        /* Terms of Use dialog — same open/close contract as Privacy. */
+        var tOpen = document.getElementById("ff-terms-open");
+        var tOv = document.getElementById("ff-terms-overlay");
+        var tClose = document.getElementById("ff-terms-close");
+        function tShow() { if (tOv) { tOv.hidden = false; document.body.style.overflow = "hidden"; } }
+        function tHide() { if (tOv) { tOv.hidden = true; document.body.style.overflow = ""; } }
+        if (tOpen) tOpen.addEventListener("click", tShow);
+        if (tClose) tClose.addEventListener("click", tHide);
+        if (tOv) tOv.addEventListener("click", function (e) { if (e.target === tOv) tHide(); });
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape") tHide(); });
+
+        var openBtn = document.getElementById("ff-bug-open");
+        var ov = document.getElementById("ff-bug-overlay");
+        if (!openBtn || !ov) return;
+        var closeBtn = document.getElementById("ff-bug-close");
+        var fieldsEl = document.getElementById("ff-bug-fields");
+        var thanksEl = document.getElementById("ff-bug-thanks");
+        var thanksClose = document.getElementById("ff-bug-thanks-close");
+        var catEl = document.getElementById("ff-bug-cat");
+        var toolEl = document.getElementById("ff-bug-tool");
+        var descEl = document.getElementById("ff-bug-desc");
+        var emailEl = document.getElementById("ff-bug-email");
+        var errEl = document.getElementById("ff-bug-err");
+        var sendBtn = document.getElementById("ff-bug-send");
+        var sink = null, submitted = false;
+
+        function currentToolLabel() {
+          var sub = document.querySelector('[data-pnav-sub][aria-selected="true"]:not([hidden])');
+          if (sub && sub.textContent.trim()) return sub.textContent.trim();
+          var tab = document.querySelector('[data-pnav][aria-selected="true"]');
+          if (tab && tab.textContent.trim()) return tab.textContent.trim();
+          var draft = document.querySelector('[data-nav="draft"][aria-selected="true"]');
+          if (draft) return "Draft Room";
+          return "Player Values";
+        }
+        function bugShow() {
+          fieldsEl.hidden = false; thanksEl.hidden = true;
+          errEl.hidden = true; sendBtn.disabled = false; sendBtn.textContent = "Send report";
+          toolEl.value = currentToolLabel();
+          try {
+            var u = window.__ffAuth && window.__ffAuth.user;
+            if (u && u.email && !emailEl.value) emailEl.value = u.email;
+          } catch (e) { /* email prefill is best-effort */ }
+          ov.hidden = false; document.body.style.overflow = "hidden";
+        }
+        function bugHide() { ov.hidden = true; document.body.style.overflow = ""; }
+        openBtn.addEventListener("click", bugShow);
+        closeBtn.addEventListener("click", bugHide);
+        if (thanksClose) thanksClose.addEventListener("click", bugHide);
+        ov.addEventListener("click", function (e) { if (e.target === ov) bugHide(); });
+        document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !ov.hidden) bugHide(); });
+        descEl.addEventListener("input", function () { errEl.hidden = true; });
+
+        function ensureSink() {
+          if (sink) return sink;
+          sink = document.createElement("iframe");
+          sink.name = "ffBugSink";
+          sink.setAttribute("aria-hidden", "true");
+          sink.style.display = "none";
+          sink.addEventListener("load", function () {
+            if (!submitted) return; /* the first load is the blank frame, not a confirmation */
+            submitted = false;
+            fieldsEl.hidden = true; thanksEl.hidden = false;
+            sendBtn.disabled = false; sendBtn.textContent = "Send report";
+            descEl.value = "";
+          });
+          document.body.appendChild(sink);
+          return sink;
+        }
+        sendBtn.addEventListener("click", function () {
+          var desc = descEl.value.trim();
+          if (!desc) {
+            errEl.textContent = "Tell us what happened — a sentence is plenty.";
+            errEl.hidden = false; descEl.focus(); return;
+          }
+          var fmt = (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "redraft" : "dynasty";
+          var plat = "no league connected";
+          try {
+            if (window.CONN_LEAGUE && window.CONN_LEAGUE.platform === "espn") plat = "ESPN league connected";
+            else if (window.CONN_LEAGUE) plat = "Sleeper league connected";
+          } catch (e) { /* context is best-effort */ }
+          var ctx = toolEl.value.trim() + " · " + fmt + " · " + plat + " · " + location.href;
+          ensureSink();
+          var form = document.createElement("form");
+          form.method = "POST"; form.action = FF_BUG.postUrl; form.target = "ffBugSink";
+          var pairs = [
+            [FF_BUG.entry.category, catEl.value],
+            [FF_BUG.entry.tool, toolEl.value.trim()],
+            [FF_BUG.entry.description, desc],
+            [FF_BUG.entry.email, emailEl.value.trim()],
+            [FF_BUG.entry.context, ctx]
+          ];
+          pairs.forEach(function (pr) {
+            var inp = document.createElement("input");
+            inp.type = "hidden"; inp.name = pr[0]; inp.value = pr[1];
+            form.appendChild(inp);
+          });
+          document.body.appendChild(form);
+          submitted = true;
+          sendBtn.disabled = true; sendBtn.textContent = "Sending…";
+          form.submit();
+          form.remove();
+        });
+      })();
+    </script>
 
     <script>
       "use strict";
