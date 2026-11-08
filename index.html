@@ -2125,6 +2125,10 @@
 #tab-draft footer a{color:var(--cyan)}
 #tab-draft .legend{display:flex; gap:14px; flex-wrap:wrap; color:var(--mut); font-size:12.5px; margin-top:8px}
 #tab-draft [hidden]{display:none !important}
+#tab-draft .formattabs{display:flex; gap:6px; margin-top:26px; padding:4px; max-width:520px; background:rgba(255,255,255,.05); border:1px solid var(--line); border-radius:999px}
+#tab-draft .formattabs .ftab{flex:1; border:none; background:transparent; color:var(--ink-2); border-radius:999px; min-height:46px; font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:16.5px; letter-spacing:.02em; cursor:pointer}
+#tab-draft .formattabs .ftab.on{background:var(--accent); color:var(--accent-ink); box-shadow:0 0 16px rgba(198,255,0,.30)}
+#tab-draft .formattabs .ftab.cy.on{background:var(--cyan); color:#04222b; box-shadow:0 0 16px rgba(0,229,255,.30)}
 #tab-draft .modebar{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:26px}
 #tab-draft .modebar .mb-lab{grid-column:1/-1; font-family:"Space Grotesk"; font-weight:700; font-size:11.5px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase}
 #tab-draft .hmode{
@@ -2192,6 +2196,7 @@
 body.ff-sheet-mode > *:not(.wrap){display:none !important}
 body.ff-sheet-mode > .wrap > *:not(#tab-draft){display:none !important}
 body.ff-sheet-mode #tab-draft .modebar, body.ff-sheet-mode #tab-draft .hero, body.ff-sheet-mode #tab-draft footer, body.ff-sheet-mode .sheet-actions{display:none !important}
+body.ff-sheet-mode #tab-draft .formattabs, body.ff-sheet-mode #fmtDynasty, body.ff-sheet-mode #fmtRedraft, body.ff-sheet-mode #liveDynasty, body.ff-sheet-mode #liveRedraft, body.ff-sheet-mode #modeMock{display:none !important}
 body.ff-sheet-mode, body.ff-sheet-mode #tab-draft{background:#fff !important; color:#111 !important}
 body.ff-sheet-mode #tab-draft .wrap{max-width:none; padding:0}
 body.ff-sheet-mode #modeSheet h2, body.ff-sheet-mode #modeSheet h3{color:#111 !important}
@@ -3401,7 +3406,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div class="tools-group">
           <h3 class="tools-group-h">Draft</h3>
           <div class="tools-pills">
-            <button type="button" class="tools-pill" style="--tile-accent:#FF2E88" data-tools-draft="1"><span class="tools-pill-t">Draft Room</span><span class="tools-pill-s">Rookie and snake draft rooms</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FF2E88" data-tools-draft="1"><span class="tools-pill-t">Draft Room</span><span class="tools-pill-s">Dynasty + redraft values, mocks &amp; sheet</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#69F0AE" data-tools-draft="sheet"><span class="tools-pill-t">Draft Sheet</span><span class="tools-pill-s">Printable board, draft order &amp; CSV</span></button>
           </div>
         </div>
@@ -3543,47 +3548,20 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
             <section class="tab" id="tab-draft" role="tabpanel">
 <div class="wrap" id="top">
-  <div class="modebar">
-    <span class="mb-lab">Draft mode — pick your format</span>
-    <button class="hmode on" data-setmode="rookie" aria-pressed="true">
-      <span class="hm-t">Rookie Draft<small>DYNASTY · 2026 CLASS</small></span>
-      <span class="hm-s">Pick ladder with veteran equivalents, the 68-rookie pool, post-draft grades, and a rookie room your co-owner can follow by code.</span>
-    </button>
-    <button class="hmode cy" data-setmode="snake" aria-pressed="false">
-      <span class="hm-t">Snake Draft<small>REDRAFT</small></span>
-      <span class="hm-s">Rest-of-season values. A snake board with per-pick recommendations.</span>
-    </button>
-    <button class="hmode mg" data-setmode="mock" aria-pressed="false">
-      <span class="hm-t">Mock Draft<small>VS AI</small></span>
-      <span class="hm-s">You against AI drafters working off our board — snake or rookie, instant picks, and post-draft grades when it's over.</span>
-    </button>
-    <button class="hmode" data-setmode="sheet" aria-pressed="false">
-      <span class="hm-t">Draft Sheet<small>PRINTABLE BOARD</small></span>
-      <span class="hm-s">Your league's board on one sheet — rankings, tiers, and the full draft order with traded picks. Print it or take the spreadsheet.</span>
-    </button>
+  <div class="formattabs" role="tablist" aria-label="Draft format">
+    <button class="ftab on" data-roomfmt="dynasty" role="tab" aria-selected="true">Dynasty</button>
+    <button class="ftab cy" data-roomfmt="redraft" role="tab" aria-selected="false">Redraft</button>
   </div>
 
   <div class="hero" id="heroRookie">
     <span class="kicker">Fantasy Forensics · Draft Room</span>
-    <h1>OWN THE<br /><span class="glow">ROOKIE DRAFT.</span></h1>
-    <p>Pick values with the veteran each pick is actually worth, the full rookie pool with draft-capital priors, post-draft grades, and a <b>draft room your co-owner can follow from a shared code</b>, powered by our value engine.</p>
+    <h1>OWN THE<br /><span class="glow">DYNASTY DRAFT.</span></h1>
+    <p>The full dynasty board — pick values with the veteran each pick is actually worth, the player pool with draft-capital priors, <b>startup and rookie mock drafts</b>, and your printable draft sheet, all powered by our proprietary player values.</p>
   </div>
   <div class="hero" id="heroSnake" hidden>
     <span class="kicker" style="color:var(--cyan); border-color:rgba(0,229,255,.4); background:rgba(0,229,255,.06)">Fantasy Forensics · Draft Room</span>
-    <h1>OWN THE<br /><span style="color:var(--cyan); text-shadow:0 0 34px rgba(0,229,255,.45)">SNAKE DRAFT.</span></h1>
-    <p>Every player priced on <b>rest-of-season value</b> — the same redraft values as the site's Redraft mode. A <b>snake board</b> with per-pick recommendations, tier-cliff and positional-run alerts, and a room code your co-owner can follow.</p>
-  </div>
-
-  <div class="hero" id="heroMock" hidden>
-    <span class="kicker" style="color:var(--mag); border-color:rgba(255,46,136,.4); background:rgba(255,46,136,.06)">Fantasy Forensics · Draft Room</span>
-    <h1>RUN THE<br /><span style="color:var(--mag); text-shadow:0 0 34px rgba(255,46,136,.45)">MOCK DRAFT.</span></h1>
-    <p>AI opponents drafting off <b>the same value board you see</b> — value-first, with positional scarcity and tier awareness, plus a light random streak so no two mocks fall the same way. Snake or rookie format, your slot, your call on every pick. When it's over, the analyzer grades your draft.</p>
-  </div>
-
-  <div class="hero" id="heroSheet" hidden>
-    <span class="kicker">Fantasy Forensics · Draft Room</span>
-    <h1>YOUR DRAFT,<br /><span class="glow">ON ONE SHEET.</span></h1>
-    <p>The board, the tiers, and — with your league connected — <b>your full draft order with every traded pick</b>, laid out to print on draft day or download as a spreadsheet. Prices are our proprietary player values, shown in whichever format you're browsing.</p>
+    <h1>OWN THE<br /><span style="color:var(--cyan); text-shadow:0 0 34px rgba(0,229,255,.45)">REDRAFT.</span></h1>
+    <p>Every player priced on <b>rest-of-season value</b> — the same redraft values as the site's Redraft mode. The full board, a <b>mock draft</b> that re-prices to your league's scoring settings, and your printable draft sheet.</p>
   </div>
 
   <div id="modeRookie">
@@ -3776,8 +3754,8 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
   <!-- ============ S2. SNAKE ROOM ============ -->
   <section id="sroom">
-    <div class="sec-head"><span class="tag" style="color:var(--cyan)">02 · Live</span><h2>Snake draft room</h2></div>
-    <p class="sec-sub">A 12-team, 15-round snake board that thinks while you pick: <b>best-available recommendations priced on rest-of-season value</b>, <b>tier-cliff alerts</b> when a position is about to run dry, <b>positional-run detection</b>, and a warning when a tier won't survive until your next turn comes back around. Copy the room code and your co-owner follows the same board pick by pick.</p>
+    <div class="sec-head"><span class="tag" style="color:var(--cyan)">02 · Live</span><h2>Live draft room</h2></div>
+    <p class="sec-sub">A 12-team, 15-round board that thinks while you pick: <b>best-available recommendations priced on rest-of-season value</b>, <b>tier-cliff alerts</b> when a position is about to run dry, <b>positional-run detection</b>, and a warning when a tier won't survive until your next turn comes back around. Copy the room code and your co-owner follows the same board pick by pick.</p>
 
     <div id="followBannerS"></div>
     <div class="card" style="border-color:rgba(0,229,255,.35); box-shadow:0 0 0 1px rgba(0,229,255,.12), 0 12px 44px rgba(0,229,255,.06)">
@@ -3791,7 +3769,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <button class="btn ghost" id="resetBtnS">Reset</button>
       </div>
       <div class="sr-wrap" style="margin-bottom:10px">
-        <input type="text" id="loadCodeS" placeholder="Following a snake room? Paste the owner's room code (or a link containing one)…" />
+        <input type="text" id="loadCodeS" placeholder="Following a draft room? Paste the room code (or a link containing one)…" />
         <button class="btn ghost" id="loadBtnS">Join room</button>
       </div>
       <p class="note" id="sleeperNoteS" style="margin:0">The room code encodes the whole board: your co-owner pastes it above and follows the same draft — re-copy after each round so their board stays current. The code also rides in the page address (after the #), so a copied link works too.</p>
@@ -3820,7 +3798,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       <span><span class="pospill pos-RB">RB</span> position</span>
       <span>▣ lime outline = your picks</span>
       <span>▣ magenta pulse = on the clock</span>
-      <span>Values: Fantasy Forensics redraft (rest-of-season) · 12 teams · 15 rounds · snake</span>
+      <span>Values: Fantasy Forensics redraft (rest-of-season) · 12 teams · 15 rounds</span>
     </div>
   </section>
   </div><!-- /modeSnake -->
@@ -3829,18 +3807,9 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
   <!-- ============ M1. MOCK SETUP ============ -->
   <section id="mocksetup">
     <div class="sec-head"><span class="tag" style="color:var(--mag)">01 · Setup</span><h2>Mock draft setup</h2></div>
-    <p class="sec-sub">Pick your format, your league size, and your slot. The other teams are AI drafting off <b>the same board values published on this page</b> — value-first with positional scarcity and tier awareness, plus a light random streak so the board never falls the same way twice. No 8-QB teams, no nonsense picks: the AI drafts like the league mates you're actually trying to beat.</p>
+    <p class="sec-sub">Pick your draft, set the league it is for, and take your slot. The other teams draft off <b>the same board values published on this page</b> — value-first with positional scarcity and tier awareness, plus a light random streak so the board never falls the same way twice. No 8-QB teams, no nonsense picks: they draft like the league mates you're actually trying to beat.</p>
 
-    <div class="grid2">
-      <button class="hmode mg on" data-mfmt="snake" aria-pressed="true">
-        <span class="hm-t">Mock Snake<small>REDRAFT</small></span>
-        <span class="hm-s">A full redraft against the rest-of-season board — starters, a flex, and a bench across 15 rounds.</span>
-      </button>
-      <button class="hmode mg" data-mfmt="rookie" aria-pressed="false">
-        <span class="hm-t">Mock Rookie<small>DYNASTY</small></span>
-        <span class="hm-s">Four rounds of the rookie class against the dynasty value board — the rehearsal for your real rookie draft.</span>
-      </button>
-    </div>
+    <div class="grid2" id="mockFmtCards"></div>
 
     <div class="card" style="margin-top:16px">
       <div class="toolbar" style="margin-bottom:14px">
@@ -3852,6 +3821,36 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         </select>
         <span id="mockRoundsWrap" style="display:flex; gap:8px; align-items:center"></span>
       </div>
+      <div class="toolbar" style="margin-bottom:6px">
+        <label class="sub" for="mockDraftType">Draft type</label>
+        <select id="mockDraftType">
+          <option value="snake" selected>Snake</option>
+          <option value="linear">Linear</option>
+        </select>
+        <label class="sub" for="mockSf">QBs</label>
+        <select id="mockSf">
+          <option value="1qb" selected>1QB</option>
+          <option value="sf">Superflex</option>
+        </select>
+        <label class="sub" for="mockPpr">Receptions</label>
+        <select id="mockPpr">
+          <option value="1" selected>PPR</option>
+          <option value="0.5">Half PPR</option>
+          <option value="0">Non-PPR</option>
+        </select>
+        <label class="sub" for="mockTep">TE premium</label>
+        <select id="mockTep">
+          <option value="0" selected>None</option>
+          <option value="0.5">+0.5</option>
+          <option value="1">+1.0</option>
+        </select>
+        <label class="sub" for="mockPtd">Passing TD</label>
+        <select id="mockPtd">
+          <option value="4" selected>4 pts</option>
+          <option value="6">6 pts</option>
+        </select>
+      </div>
+      <p class="note" id="mockSettingsNote" style="margin:0 0 14px"></p>
       <div class="sub" style="font-weight:700; letter-spacing:.06em; margin-bottom:8px">YOUR DRAFT SLOT</div>
       <div class="chips" id="mockSlots"></div>
       <div class="toolbar" style="margin-top:18px; margin-bottom:0">
@@ -3873,7 +3872,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       <div class="toolbar" style="margin-top:12px; margin-bottom:0">
         <button class="btn cy" id="mockSim">Sim to my next pick</button>
         <button class="btn ghost" id="mockRestart">Back to setup</button>
-        <span class="note">AI picks land fast on their own — Sim fast-forwards the picks between yours.</span>
+        <span class="note">Picks land fast on their own — Sim fast-forwards the picks between yours.</span>
       </div>
     </div>
 
@@ -15100,8 +15099,8 @@ if (!wrap || !out) return;
     </script>
   <script>
 /* ================= Draft Command — the Draft Room, in-site =================
-   Ported from the Draft Room app (rookie + snake drafts, pick
-   recommendations, tier-cliff alerts, Mock vs AI, shareable codes).
+   Ported from the Draft Room app (rookie + redraft drafts, pick
+   recommendations, tier-cliff alerts, mock drafts, shareable codes).
    CSS is scoped under #tab-draft; this IIFE root-scopes every query
    to the section, so nothing collides with the main app. */
 (function () {
@@ -15638,11 +15637,12 @@ $("#loadBtnR").addEventListener("click", ()=>{
 (function(){
   const rep = readHash("report");
   if(rep && applyReport(rep)){
+    window.__draftPin = "dynasty";
     setTimeout(()=>document.getElementById("analyzer").scrollIntoView(), 60);
     toast("Shared draft report loaded");
   }
   const room = readHash("room");
-  if(room) applyRoom(room, true);
+  if(room){ window.__draftPin = "dynasty"; applyRoom(room, true); }
   renderRoom();
 })();
 
@@ -15873,16 +15873,80 @@ $("#loadBtnS").addEventListener("click", ()=>{
   else toast("That code doesn't parse — copy the whole code and try again");
 });
 
-/* ---------- 6. mock draft vs AI ---------- */
+/* ---------- 6. mock draft ---------- */
 const MINE_ID = 4;   // the demo league's "you" team, same as the live rooms
 const M = {
   fmt: "snake", teams: 12, rounds: 15, slot: 1, randomSlot: false,
+  draftType: "snake", settings: { sf: false, ppr: 1, tep: 0, ptd: 4 }, settingsFor: null,
   order: [], picks: [], started: false, done: false, fast: false, timer: null,
   jitter: {}, pool: [], byIdx: {}
 };
-function mockPool(){ return M.fmt === "snake" ? SNAKE : ROOKIES; }
-function mockStarters(){ return M.fmt === "snake" ? { QB:1, RB:2, WR:2, TE:1 } : { QB:1, RB:1, WR:2, TE:1 }; }
-function mockSeq(){ return snakeSeqN(M.order, M.rounds); }
+/* Redraft mock repricing (2026-11-08): the redraft board is baked from
+   ROS stat means at the reference format (superflex, 1.0 PPR, TE +0.75,
+   6-pt pass TD — the rebake's REF_FMT). Repricing under the mock's
+   settings runs the SAME stat-mean conversion (the wkScoreFromStats
+   arithmetic) at both formats and moves each player by the growth
+   between them — the growth mechanism the rebake itself applies to
+   unanchored players — clamped to [0.5x, 2x] as the rebake clamps. At
+   the reference settings the growth is exactly 1: the published board. */
+const MOCK_REF_FMT = { ppr: 1.0, tep: 0.75, ptd: 6, passYds: 0.04, int: -1 };
+function mockScoreStats(st, pos, s){
+  return (st.pass_td || 0) * s.ptd
+    + (st.pass_yds || 0) * (s.passYds != null ? s.passYds : 0.04)
+    + (st.int || 0) * (s.int != null ? s.int : -1)
+    + ((st.rush_yds || 0) + (st.rec_yds || 0)) / 10
+    + (st.rush_td || 0) * 6 + (st.rec_td || 0) * 6
+    + (st.rec || 0) * (pos === "TE" ? s.ppr + s.tep : s.ppr);
+}
+function mockRdValue(p, s){
+  if (!p.value) return 0;
+  const e = window.ROS_STATS ? window.ROS_STATS[p.id] : null;
+  if (!e || !e.s) return p.value;
+  const ref = mockScoreStats(e.s, p.pos, MOCK_REF_FMT);
+  if (!(ref > 0)) return p.value;
+  const usr = mockScoreStats(e.s, p.pos, s || { ppr: M.settings.ppr, tep: M.settings.tep, ptd: M.settings.ptd, passYds: 0.04, int: -1 });
+  const g = Math.min(2, Math.max(0.5, usr / ref));
+  return Math.round(p.value * g);
+}
+function retierList(list){
+  let tier = 1, top = list.length ? list[0].value : 0;
+  list.forEach((p, i) => { if (i > 0 && p.value < top * 0.85) { tier++; top = p.value; } p.tier = tier; });
+  return list;
+}
+function buildStartupPool(){
+  const byId = {};
+  DATA.pool.forEach(p => { byId[p.id] = p; });
+  ROOKIES.forEach(p => { if (!byId[p.id]) byId[p.id] = p; });
+  const list = Object.keys(byId).map(id => { const p = byId[id]; return { id: p.id, name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, value: p.value }; });
+  list.sort((a, b) => b.value - a.value);
+  const c = {}; list.forEach(p => { c[p.pos] = (c[p.pos] || 0) + 1; p.posRank = c[p.pos]; });
+  return retierList(list);
+}
+function buildRedraftPool(s){
+  const list = SNAKE.map(p => ({ id: p.id, name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, value: mockRdValue(p, s), dyn: p.dyn }));
+  list.sort((a, b) => b.value - a.value);
+  const c = {}; list.forEach(p => { c[p.pos] = (c[p.pos] || 0) + 1; p.posRank = c[p.pos]; });
+  return retierList(list);
+}
+function buildMockPool(s){
+  if (M.fmt === "rookie") return ROOKIES;
+  if (M.fmt === "startup") return buildStartupPool();
+  return buildRedraftPool(s);
+}
+function mockPool(){ return M.pool && M.pool.length ? M.pool : buildMockPool(); }
+function mockStarters(){
+  const st = M.fmt === "rookie" ? { QB:1, RB:1, WR:2, TE:1 } : { QB:1, RB:2, WR:2, TE:1 };
+  if (M.settings.sf) st.QB = 2;
+  return st;
+}
+function mockSeq(){
+  if (M.draftType === "linear") {
+    const seq = [];
+    for (let rd = 1; rd <= M.rounds; rd++) M.order.forEach((tid, i) => seq.push({ round: rd, slot: i + 1, teamId: tid }));
+    return seq;
+  }
+  return snakeSeqN(M.order, M.rounds);
+}
 function mockCur(){ return M.picks.findIndex(p=>!p); }
 function mockAvail(){ const t = new Set(M.picks.filter(Boolean)); return M.pool.filter(p=>!t.has(p.id)); }
 function mockCounts(tid){
@@ -15892,23 +15956,57 @@ function mockCounts(tid){
 }
 
 /* ----- setup ----- */
+function mockSettingsPrefill(){
+  const C = sheetConn();
+  if (!C || !C.format) return;
+  const key = (C.league && C.league.name) || "conn";
+  if (M.settingsFor === key) return;
+  M.settingsFor = key;
+  const f = C.format;
+  M.settings = {
+    sf: !!f.sf,
+    ppr: [0, 0.5, 1].includes(+f.ppr) ? +f.ppr : 1,
+    tep: [0, 0.5, 1].reduce((best, o) => Math.abs(o - (+f.tep || 0)) < Math.abs(best - (+f.tep || 0)) ? o : best, 0),
+    ptd: +f.ptd === 6 ? 6 : 4
+  };
+  if (C.league && [8, 10, 12].includes(+C.league.teams)) M.teams = +C.league.teams;
+}
 function renderMockSetup(){
-  drRoot.querySelectorAll("[data-mfmt]").forEach(b=>{
-    const on = b.dataset.mfmt === M.fmt;
-    b.classList.toggle("on", on);
-    b.setAttribute("aria-pressed", on ? "true" : "false");
-  });
+  mockSettingsPrefill();
+  const fmt = roomFmt();
+  const cards = fmt === "redraft"
+    ? [{ fmt: "snake", t: "Mock Draft", s: "REDRAFT", d: "A full draft on the rest-of-season board — starters, a flex, and a bench — re-priced to the league settings below." }]
+    : [{ fmt: "startup", t: "Startup Draft", s: "DYNASTY", d: "The full pool — veterans and rookies together at dynasty values — drafting a league from scratch." },
+       { fmt: "rookie", t: "Rookie Draft", s: "DYNASTY", d: "Four rounds of the rookie class against the dynasty value board — the rehearsal for your real rookie draft." }];
+  $("#mockFmtCards").innerHTML = cards.map(c =>
+    '<button class="hmode mg' + (M.fmt === c.fmt ? " on" : "") + '" data-mfmt="' + c.fmt + '" aria-pressed="' + (M.fmt === c.fmt) + '"><span class="hm-t">' + c.t + "<small>" + c.s + '</small></span><span class="hm-s">' + c.d + "</span></button>").join("");
+  drRoot.querySelectorAll("[data-mfmt]").forEach(b => b.addEventListener("click", ()=>{
+    M.fmt = b.dataset.mfmt;
+    if(M.fmt === "rookie") M.rounds = 4; else if(![12,15,16].includes(M.rounds)) M.rounds = 15;
+    renderMockSetup();
+  }));
   const rw = $("#mockRoundsWrap");
-  if(M.fmt === "snake"){
+  if(M.fmt === "rookie"){
+    M.rounds = 4;
+    rw.innerHTML = '<span class="sub">Rounds</span><b>4 rounds</b><span class="note">— the rookie format, same as the ladder &amp; analyzer</span>';
+  } else {
     if(![12,15,16].includes(M.rounds)) M.rounds = 15;
     rw.innerHTML = '<label class="sub" for="mockRounds">Rounds</label><select id="mockRounds">'
       + [12,15,16].map(n=>'<option value="'+n+'"'+(n===M.rounds?" selected":"")+">"+n+" rounds</option>").join("") + "</select>";
     $("#mockRounds").addEventListener("change", e=>{ M.rounds = +e.target.value; renderMockSetup(); });
-  } else {
-    M.rounds = 4;
-    rw.innerHTML = '<span class="sub">Rounds</span><b>4 rounds</b><span class="note">— the rookie format, same as the ladder &amp; analyzer</span>';
   }
   $("#mockTeams").value = String(M.teams);
+  $("#mockDraftType").value = M.draftType;
+  $("#mockSf").value = M.settings.sf ? "sf" : "1qb";
+  $("#mockPpr").value = String(M.settings.ppr);
+  $("#mockTep").value = String(M.settings.tep);
+  $("#mockPtd").value = String(M.settings.ptd);
+  const C = sheetConn();
+  $("#mockSettingsNote").textContent = C
+    ? "League settings loaded from " + (C.league && C.league.name ? C.league.name : "your league") + " — change any of them and the mock uses yours instead."
+    : (fmt === "redraft"
+      ? "League settings for this mock — the board re-prices to them through the same stat conversion the site scores with."
+      : "League settings for this mock — on the dynasty side they shape the draft (starters, order, pool); dynasty prices are market prices and don't move with scoring settings.");
   if(M.slot > M.teams) M.slot = M.teams;
   let h = "";
   for(let i=1;i<=M.teams;i++) h += '<button class="fchip'+(!M.randomSlot && M.slot===i ? " on" : "")+'" data-mslot="'+i+'">Slot '+i+"</button>";
@@ -15920,20 +16018,22 @@ function renderMockSetup(){
     renderMockSetup();
   }));
   const slotTxt = M.randomSlot ? "a random slot" : "slot " + M.slot;
-  $("#mockSetupNote").textContent = (M.fmt === "snake" ? "Redraft mock" : "Rookie mock") + ": " + M.teams + " teams × " + M.rounds
-    + " rounds, snake order. You draft from " + slotTxt + " as " + TEAMNAME[MINE_ID] + "; the other " + (M.teams-1) + " teams are AI.";
+  const fmtName = M.fmt === "startup" ? "Startup mock" : M.fmt === "rookie" ? "Rookie mock" : "Redraft mock";
+  $("#mockSetupNote").textContent = fmtName + ": " + M.teams + " teams × " + M.rounds
+    + " rounds. You draft from " + slotTxt + " as " + TEAMNAME[MINE_ID] + "; the other " + (M.teams-1) + " teams draft off the same board.";
 }
-drRoot.querySelectorAll("[data-mfmt]").forEach(b=> b.addEventListener("click", ()=>{
-  M.fmt = b.dataset.mfmt;
-  if(M.fmt === "rookie") M.rounds = 4; else if(![12,15,16].includes(M.rounds)) M.rounds = 15;
-  renderMockSetup();
-}));
 $("#mockTeams").addEventListener("change", e=>{ M.teams = +e.target.value; renderMockSetup(); });
+$("#mockDraftType").addEventListener("change", e=>{ M.draftType = e.target.value; renderMockSetup(); });
+$("#mockSf").addEventListener("change", e=>{ M.settings.sf = e.target.value === "sf"; M.settingsFor = M.settingsFor || "manual"; renderMockSetup(); });
+$("#mockPpr").addEventListener("change", e=>{ M.settings.ppr = +e.target.value; M.settingsFor = M.settingsFor || "manual"; renderMockSetup(); });
+$("#mockTep").addEventListener("change", e=>{ M.settings.tep = +e.target.value; M.settingsFor = M.settingsFor || "manual"; renderMockSetup(); });
+$("#mockPtd").addEventListener("change", e=>{ M.settings.ptd = +e.target.value; M.settingsFor = M.settingsFor || "manual"; renderMockSetup(); });
 
 function startMock(){
   clearTimeout(M.timer);
-  M.pool = mockPool();
-  M.byIdx = M.fmt === "snake" ? SBYIDX : RBYIDX;
+  M.pool = buildMockPool();
+  M.byIdx = {};
+  M.pool.forEach((p, i) => { M.byIdx[p.id] = i; });
   const others = TEAMS.map(t=>t.id).filter(id=>id!==MINE_ID).slice(0, M.teams-1);
   const slot = M.randomSlot ? 1 + Math.floor(Math.random()*M.teams) : Math.min(M.slot || 1, M.teams);
   M.order = others.slice();
@@ -15979,13 +16079,13 @@ function aiChoose(tid){
   const avail = mockAvail();
   if(!avail.length) return null;
   const counts = mockCounts(tid), st = mockStarters();
-  const caps = M.fmt === "snake" ? { QB:3, RB:8, WR:8, TE:3 } : { QB:2, RB:3, WR:4, TE:2 };
+  const longDraft = M.fmt !== "rookie";
+  const caps = longDraft ? { QB: M.settings.sf ? 4 : 3, RB:8, WR:8, TE:3 } : { QB:2, RB:3, WR:4, TE:2 };
   // plausible rosters only: hard caps first, then no early second QB/TE
   let cand = avail.filter(p=> counts[p.pos] < caps[p.pos]);
   const noPremature = cand.filter(p=>{
-    if(p.pos === "QB" && counts.QB >= 1 && round < (M.fmt === "snake" ? 9 : 4)) return false;
-    if(p.pos === "TE" && counts.TE >= 1 && M.fmt === "snake" && round < 10) return false;
-    if(p.pos === "TE" && counts.TE >= 1 && M.fmt === "rookie") return false;
+    if(p.pos === "QB" && counts.QB >= 1 && round < (longDraft ? 9 : 4)) return false;
+    if(p.pos === "TE" && counts.TE >= 1 && (M.fmt === "rookie" || round < 10)) return false;
     return true;
   });
   if(noPremature.length) cand = noPremature;
@@ -15997,8 +16097,8 @@ function aiChoose(tid){
     let sc = p.value * (jit[p.id] || 1);
     if(counts[p.pos] < (st[p.pos] || 0)) sc *= 1.12;                                   // open starter slot
     if(avail.filter(x=>x.pos===p.pos && x.tier===p.tier).length === 1) sc *= 1.07;       // last of his tier
-    if(p.pos === "QB" && counts.QB === 0 && round >= (M.fmt === "snake" ? 7 : 3)) sc *= 1.3;   // don't punt QB forever
-    if(p.pos === "TE" && counts.TE === 0 && M.fmt === "snake" && round >= 11) sc *= 1.6;       // …or TE either
+    if(p.pos === "QB" && counts.QB === 0 && round >= (longDraft ? 7 : 3)) sc *= 1.3;   // don't punt QB forever
+    if(p.pos === "TE" && counts.TE === 0 && longDraft && round >= 11) sc *= 1.6;       // …or TE either
     if(p.pos === "QB" && counts.QB >= 1 && bestNonQB && p.value < bestNonQB.value * 1.35) sc *= 0.6; // QB2 only as a steal
     if(sc > bestScore){ bestScore = sc; best = p; }
   });
@@ -16040,7 +16140,7 @@ function mockRecScore(p, myPos){
   // slot gets a nudge up, and a surplus QB/TE gets shaded down, so following the list builds
   // a roster that can actually start (a fourth QB is never the right recommendation)
   let s = p.value;
-  if(M.fmt !== "snake") return s;
+  if(M.fmt === "rookie") return s;
   const st = mockStarters(), c = myPos[p.pos] || 0;
   if(c < (st[p.pos] || 0)) s *= 1.1;
   else if(p.pos === "QB" || p.pos === "TE") s *= c >= 3 ? 0.25 : 0.55;
@@ -16070,7 +16170,7 @@ function renderMock(){
     const nxt = seq.findIndex((x, i)=> i > cur && x.teamId === MINE_ID);
     cb.innerHTML = '<div class="sub" style="letter-spacing:.08em; font-weight:700">ROUND '+s.round+" · PICK "+slotLabel(s.round, s.slot)+" · OVERALL #"+(cur+1)+" OF "+(M.teams*M.rounds)+"</div>"
       + '<h3 style="margin:2px 0; font-size:21px">'+(mine ? "You're on the clock" : esc(TEAMNAME[s.teamId]) + " is on the clock")+(mine ? ' <span class="chip tier">YOUR PICK</span>' : "")+"</h3>"
-      + '<div class="sub">'+(mine ? "Take a player from Best Available — or search the pool for your guy." : "The AI is drafting off the board values…")
+      + '<div class="sub">'+(mine ? "Take a player from Best Available — or search the pool for your guy." : "The other teams are drafting off the board values…")
       + (nxt > cur ? " · your next pick is "+slotLabel(seq[nxt].round, seq[nxt].slot)+" ("+(nxt-cur)+" picks away)" : (mine ? "" : " · your picks are done")) + "</div>";
   }
   $("#mockSim").disabled = (cur === -1 || seq[cur].teamId === MINE_ID);
@@ -16096,9 +16196,11 @@ function renderMock(){
   drRoot.querySelectorAll("[data-mpick]").forEach(b=> b.addEventListener("click", ()=>makeMockPick(b.dataset.mpick)));
   renderMockSearch();
   renderMockRoster(seq);
-  $("#mockLegend").textContent = M.fmt === "snake"
-    ? "Values: Fantasy Forensics redraft (rest-of-season) · " + M.teams + " teams · " + M.rounds + " rounds · snake"
-    : "Values: Fantasy Forensics algorithm (rookie class) · " + M.teams + " teams · 4 rounds · snake";
+  $("#mockLegend").textContent = M.fmt === "rookie"
+    ? "Values: Fantasy Forensics dynasty values (rookie class) · " + M.teams + " teams · 4 rounds"
+    : M.fmt === "startup"
+      ? "Values: Fantasy Forensics dynasty values · " + M.teams + " teams · " + M.rounds + " rounds"
+      : "Values: Fantasy Forensics redraft (rest-of-season), re-priced to the mock's league settings · " + M.teams + " teams · " + M.rounds + " rounds";
 }
 function renderMockSearch(){
   const box = $("#mockSearchRes");
@@ -16120,11 +16222,11 @@ function renderMockRoster(seq){
   if(!mine.length){ $("#mockRoster").innerHTML = '<p class="sub" style="margin:0">No picks yet — your first one is coming up.</p>'; return; }
   const tot = mine.reduce((a, x)=>a + x.p.value, 0);
   let head;
-  if(M.fmt === "snake"){
+  if(M.fmt !== "rookie"){
     const c = mockCounts(MINE_ID), st = mockStarters();
     const filled = Math.min(c.QB, st.QB) + Math.min(c.RB, st.RB) + Math.min(c.WR, st.WR) + Math.min(c.TE, st.TE);
     const flex = Math.min(1, Math.max(0, c.RB - st.RB) + Math.max(0, c.WR - st.WR) + Math.max(0, c.TE - st.TE));
-    head = '<p class="sub" style="margin:0 0 10px">Starters filled: <b style="color:var(--ink)">'+(filled + flex)+' of 7</b> (QB '+c.QB+'/1 · RB '+c.RB+'/2 · WR '+c.WR+'/2 · TE '+c.TE+'/1 · FLEX '+flex+'/1)<br />Total value drafted: <b style="color:var(--ink)">'+fmt(tot)+"</b></p>";
+    head = '<p class="sub" style="margin:0 0 10px">Starters filled: <b style="color:var(--ink)">'+(filled + flex)+' of '+(st.QB + st.RB + st.WR + st.TE + 1)+'</b> (QB '+c.QB+'/'+st.QB+' · RB '+c.RB+'/'+st.RB+' · WR '+c.WR+'/'+st.WR+' · TE '+c.TE+'/'+st.TE+' · FLEX '+flex+'/1)<br />Total value drafted: <b style="color:var(--ink)">'+fmt(tot)+"</b></p>";
   } else {
     head = '<p class="sub" style="margin:0 0 10px">'+mine.length+' of 4 picks in · total value drafted: <b style="color:var(--ink)">'+fmt(tot)+"</b></p>";
   }
@@ -16138,8 +16240,9 @@ function renderMockRoster(seq){
 
 /* ----- post-draft analyzer ----- */
 function mockExpected(idx, s){
-  if(M.fmt === "snake"){ const c = SNAKE[Math.min(idx, SNAKE.length - 1)]; return c ? c.value : 300; }
-  return expectedAt(s.round, s.slot);
+  if(M.fmt === "rookie") return expectedAt(s.round, s.slot);
+  const c = M.pool[Math.min(idx, M.pool.length - 1)];
+  return c ? c.value : 300;
 }
 function finishMock(){
   if(M.done) return;
@@ -16148,7 +16251,7 @@ function finishMock(){
   renderMock();
   gradeMock();
   $("#mockresults").hidden = false;
-  if(MODE === "mock") document.getElementById("mockresults").scrollIntoView({ behavior:"smooth" });
+  document.getElementById("mockresults").scrollIntoView({ behavior:"smooth" });
 }
 function gradeMock(){
   const seq = mockSeq(), per = {};
@@ -16171,11 +16274,12 @@ function gradeMock(){
   const mine = cards.find(c=>c.tid === MINE_ID) || cards[0];
   // a roster that can't field a starting lineup can't ace the draft, however much value it hoarded
   let lineupHole = 0;
-  if(M.fmt === "snake"){
+  if(M.fmt !== "rookie"){
     const c = mockCounts(MINE_ID), st = mockStarters();
+    const nStart = st.QB + st.RB + st.WR + st.TE + 1;
     const filled = Math.min(c.QB, st.QB) + Math.min(c.RB, st.RB) + Math.min(c.WR, st.WR) + Math.min(c.TE, st.TE)
       + Math.min(1, Math.max(0, c.RB - st.RB) + Math.max(0, c.WR - st.WR) + Math.max(0, c.TE - st.TE));
-    if(filled < 7){ lineupHole = 7 - filled;
+    if(filled < nStart){ lineupHole = nStart - filled;
       /* The cap is a GRADE cap only (Eric, 2026-10-21): the letter
          drops to C+ (any grade above the C+ band, avg >= 0.92), but
          mine.avg stays the true ratio of the printed totals —
@@ -16196,7 +16300,7 @@ function gradeMock(){
     if(m > 0 && mineV >= m * 1.15) sw.push("<li><b>"+pos+" room is a strength</b> — "+fmt(mineV)+" of drafted value, "+Math.round((mineV/m - 1) * 100)+"% above the league median.</li>");
     else if(m > 0 && mineV <= m * 0.75) sw.push("<li><b>"+pos+" is the soft spot</b> — "+fmt(mineV)+" of value against a "+fmt(m)+" league median. That's where waivers or a trade have to do work.</li>");
   });
-  if(M.fmt === "snake"){
+  if(M.fmt !== "rookie"){
     const c = mockCounts(MINE_ID);
     if(c.QB === 0) sw.push("<li><b>No quarterback drafted</b> — streaming QB in Week 1 is a plan you back into, not one you choose.</li>");
     if(c.TE === 0) sw.push("<li><b>No tight end drafted</b> — the thinnest room in fantasy; you'd be streaming it weekly.</li>");
@@ -16209,7 +16313,7 @@ function gradeMock(){
   const gCls = g => g[0] === "A" ? "gA" : g[0] === "B" ? "gB" : g[0] === "C" ? "gC" : "gD";
   $("#mockResults").innerHTML =
     '<div class="card glow" style="margin-bottom:14px"><div style="display:flex; align-items:center; gap:14px"><div class="grade '+gCls(mine.g)+'" style="width:72px; height:72px; font-size:34px">'+mine.g+"</div>"
-    + '<div><h3 style="margin:0; font-size:21px">Your mock grade: '+mine.g+'</h3><div style="color:var(--mut); font-size:13px">Slot '+(M.order.indexOf(MINE_ID) + 1)+" of "+M.teams+" · "+(M.fmt === "snake" ? "Mock Snake (redraft)" : "Mock Rookie (dynasty)")+" · drafted "+fmt(mine.tot)+" of value vs "+fmt(mine.expTot)+" slot expectation ("+(mine.avg >= 1 ? "+" : "")+Math.round((mine.avg - 1) * 100)+"%) · finished #"+(cards.indexOf(mine) + 1)+" of "+cards.length+" teams</div></div></div>"
+    + '<div><h3 style="margin:0; font-size:21px">Your mock grade: '+mine.g+'</h3><div style="color:var(--mut); font-size:13px">Slot '+(M.order.indexOf(MINE_ID) + 1)+" of "+M.teams+" · "+(M.fmt === "snake" ? "Redraft mock" : M.fmt === "startup" ? "Startup mock (dynasty)" : "Rookie mock (dynasty)")+" · drafted "+fmt(mine.tot)+" of value vs "+fmt(mine.expTot)+" slot expectation ("+(mine.avg >= 1 ? "+" : "")+Math.round((mine.avg - 1) * 100)+"%) · finished #"+(cards.indexOf(mine) + 1)+" of "+cards.length+" teams</div></div></div>"
     + '<p style="margin:10px 0 0; color:var(--mut)">Draft winner: <b style="color:var(--ink)">'+esc(TEAMNAME[winner.tid])+"</b> ("+winner.g+")"+(winner.tid === MINE_ID ? (lineupHole > 0 ? " — that's you on raw value, with an asterisk: the starting lineup never got finished (see below)." : " — that's you. Clean board.") : " — beat slot value by "+Math.round((winner.avg - 1) * 100)+"% across "+winner.n+" picks.")+"</p>"
     + '<h3 style="margin:16px 0 6px; font-size:16px">Strengths &amp; weaknesses</h3><ul style="margin:0; padding-left:17px; color:var(--mut); font-size:13.5px">'+sw.join("")+"</ul>"
     + '<div class="toolbar" style="margin-top:16px; margin-bottom:0"><button class="btn solid" id="mockAgain" style="background:var(--mag); border-color:rgba(255,46,136,.6); color:#fff">Draft again</button><button class="btn cy" id="mockShare">Copy result code</button><span class="note">The result code encodes the whole mock — anyone who opens it sees this exact board and these grades.</span></div></div>'
@@ -16229,63 +16333,107 @@ function gradeMock(){
     document.getElementById("mocksetup").scrollIntoView({ behavior:"smooth" });
   });
   $("#mockShare").addEventListener("click", ()=>{
-    const payload = { f: M.fmt, n: M.teams, r: M.rounds, o: M.order, p: M.picks.map(id=> id ? M.byIdx[id] : -1) };
+    const payload = { f: M.fmt, n: M.teams, r: M.rounds, o: M.order, p: M.picks.map(id=> id ? M.byIdx[id] : -1), s: { sf: M.settings.sf, ppr: M.settings.ppr, tep: M.settings.tep, ptd: M.settings.ptd }, d: M.draftType };
     copyText(encodePayload("mock", payload), "Mock result code copied — share the link or code to show the grade");
   });
 }
 function applyMockShare(pl){
   if(!pl || !Array.isArray(pl.p)) return false;
-  M.fmt = pl.f === "rookie" ? "rookie" : "snake";
+  M.fmt = pl.f === "rookie" ? "rookie" : pl.f === "startup" ? "startup" : "snake";
   M.teams = pl.n || 12;
-  M.rounds = pl.r || (M.fmt === "snake" ? 15 : 4);
-  M.pool = mockPool();
-  M.byIdx = M.fmt === "snake" ? SBYIDX : RBYIDX;
+  M.rounds = pl.r || (M.fmt === "rookie" ? 4 : 15);
+  if (pl.s) M.settings = { sf: !!pl.s.sf, ppr: +pl.s.ppr || 0, tep: +pl.s.tep || 0, ptd: +pl.s.ptd || 4 };
+  if (pl.d) M.draftType = pl.d === "linear" ? "linear" : "snake";
+  /* Pick indices in a share refer to the pool as built under the
+     share's own settings; legacy shares carry no settings and were
+     indexed on the published (reference-format) board. */
+  M.pool = buildMockPool(pl.s ? null : MOCK_REF_FMT);
+  M.byIdx = {};
+  M.pool.forEach((p, i) => { M.byIdx[p.id] = i; });
   M.order = (Array.isArray(pl.o) && pl.o.length === M.teams) ? pl.o.slice() : TEAMS.slice(0, M.teams).map(t=>t.id);
   M.picks = pl.p.map(i=> (i >= 0 && M.pool[i]) ? M.pool[i].id : null);
   while(M.picks.length < M.teams * M.rounds) M.picks.push(null);
   M.started = true;
   M.done = M.picks.every(Boolean);
-  setMode("mock");
+  pinRoomFmt(M.fmt === "snake" ? "redraft" : "dynasty");
   renderMockSetup();
   $("#mockroomsec").hidden = false;
   renderMock();
   if(M.done){ gradeMock(); $("#mockresults").hidden = false; }
   return true;
 }
-renderMockSetup();
-let MODE = "rookie";
 (function(){
   const pl = readHash("mock");
   if(pl && applyMockShare(pl)) toast("Shared mock draft loaded — the full board and grades");
 })();
 
-/* ---------- mode switcher ---------- */
-function setMode(m){
-  MODE = m;
-  const snake = m === "snake", mock = m === "mock", sheet = m === "sheet";
-  $("#modeRookie").hidden = snake || mock || sheet;
-  $("#modeSnake").hidden = !snake;
-  $("#modeMock").hidden = !mock;
-  $("#modeSheet").hidden = !sheet;
-  $("#heroRookie").hidden = snake || mock || sheet;
-  $("#heroSnake").hidden = !snake;
-  $("#heroMock").hidden = !mock;
-  $("#heroSheet").hidden = !sheet;
-  const _nvR = $("#navRookie"); if (_nvR) _nvR.style.display = (!snake && !mock && !sheet) ? "contents" : "none";
-  const _nvS = $("#navSnake"); if (_nvS) _nvS.style.display = snake ? "contents" : "none";
-  const _nvM = $("#navMock"); if (_nvM) _nvM.style.display = mock ? "contents" : "none";
-  drRoot.querySelectorAll("[data-setmode]").forEach(b=>{
-    const on = b.dataset.setmode === m;
-    b.classList.toggle("on", on);
-    b.setAttribute("aria-pressed", on ? "true" : "false");
-  });
-  if(snake) renderSnakeRoom();
-  if(mock) renderMockSetup();
-  if(sheet) renderSheet();
-  document.body.classList.toggle("ff-sheet-mode", sheet);
+/* ---------- format-first layout (Eric, 2026-11-08) ----------
+   The room opens on a Dynasty / Redraft choice. The format follows
+   the site's VALMODE (the same source of truth as the global toggle);
+   a shared-link hash can pin the opening format via window.__draftPin
+   until the user picks a tab. Each format shows its own values list,
+   its mock draft(s), the Draft Sheet for that format, and its live
+   room — never the other format's content. */
+var ROOM_BUILT = false;
+function roomFmt(){
+  return window.__draftPin || ((typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "redraft" : "dynasty");
 }
-drRoot.querySelectorAll("[data-setmode]").forEach(b=> b.addEventListener("click", ()=>{
-  setMode(b.dataset.setmode);
+function pinRoomFmt(f){
+  window.__draftPin = f;
+  if (ROOM_BUILT) applyRoomFormat();
+}
+function endMockView(){
+  if (!M.started) return;
+  clearTimeout(M.timer);
+  M.started = false; M.done = false;
+  $("#mockroomsec").hidden = true;
+  $("#mockresults").hidden = true;
+}
+function buildRoomLayout(){
+  const dynBox = document.createElement("div"); dynBox.id = "fmtDynasty";
+  const rdBox = document.createElement("div"); rdBox.id = "fmtRedraft";
+  const liveDyn = document.createElement("div"); liveDyn.id = "liveDynasty";
+  const liveRd = document.createElement("div"); liveRd.id = "liveRedraft";
+  dynBox.append(document.getElementById("ladder"), document.getElementById("pool"));
+  liveDyn.append(document.getElementById("analyzer"), document.getElementById("room"));
+  rdBox.append(document.getElementById("sboard"));
+  liveRd.append(document.getElementById("sroom"));
+  const mockBox = $("#modeMock"), sheetBox = $("#modeSheet");
+  mockBox.before(dynBox, rdBox);
+  sheetBox.after(liveDyn, liveRd);
+  mockBox.hidden = false;
+  sheetBox.hidden = false;
+  const mr = $("#modeRookie"), ms = $("#modeSnake");
+  if (mr) mr.remove();
+  if (ms) ms.remove();
+  ROOM_BUILT = true;
+}
+function applyRoomFormat(){
+  const fmt = roomFmt();
+  const dyn = fmt === "dynasty";
+  $("#fmtDynasty").hidden = !dyn;
+  $("#liveDynasty").hidden = !dyn;
+  $("#fmtRedraft").hidden = dyn;
+  $("#liveRedraft").hidden = dyn;
+  $("#heroRookie").hidden = !dyn;
+  $("#heroSnake").hidden = dyn;
+  drRoot.querySelectorAll("[data-roomfmt]").forEach(b=>{
+    const on = b.dataset.roomfmt === fmt;
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  document.body.classList.add("ff-sheet-mode");
+  if (!dyn) { if (M.fmt !== "snake") M.fmt = "snake"; }
+  else if (M.fmt === "snake") M.fmt = "startup";
+  renderMockSetup();
+  renderSheet();
+  if (!dyn) renderSnakeRoom();
+}
+drRoot.querySelectorAll("[data-roomfmt]").forEach(b=> b.addEventListener("click", ()=>{
+  window.__draftPin = null;
+  if (typeof setValMode === "function") setValMode(b.dataset.roomfmt);
+  endMockView();
+  applyRoomFormat();
   drRoot.scrollIntoView({ behavior: "smooth", block: "start" });
 }));
 
@@ -16544,8 +16692,8 @@ $("#sheetCsv").addEventListener("click", () => {
   renderSnakeRoom();
   const room = readHash("snake");
   if(room){
-    setMode("snake");
-    if(applySnakeRoom(room, true)) toast("Shared snake room loaded — you're following along");
+    window.__draftPin = "redraft";
+    if(applySnakeRoom(room, true)) toast("Shared draft room loaded — you're following along");
   }
 })();
 
@@ -16558,7 +16706,25 @@ $("#sheetCsv").addEventListener("click", () => {
   ["ladder","pool","analyzer","room","sboard","sroom","mocksetup","mockroomsec","mockresults"].forEach(id=>{ const el=document.getElementById(id); if(el) obs.observe(el); });
 })();
 
-  window.drDraft = { setMode: setMode, renderSheet: renderSheet, mode: function () { return MODE; } };
+buildRoomLayout();
+if (!window.__draftPin && (M.started || M.done)) window.__draftPin = M.fmt === "snake" ? "redraft" : "dynasty";
+applyRoomFormat();
+
+window.drDraft = {
+  syncFormat: ()=> applyRoomFormat(),
+  renderSheet: ()=> renderSheet(),
+  format: ()=> roomFmt(),
+  mockBusy: ()=> !!(M.started && !M.done),
+  goSheet: ()=> { applyRoomFormat(); const el = document.getElementById("sheetsec"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); },
+  mock: ()=> ({ fmt: M.fmt, teams: M.teams, rounds: M.rounds, draftType: M.draftType, settings: { sf: M.settings.sf, ppr: M.settings.ppr, tep: M.settings.tep, ptd: M.settings.ptd }, order: M.order.slice(), picks: M.picks.slice(), started: M.started, done: M.done, pool: (M.pool || []).map(p => ({ id: p.id, name: p.name, pos: p.pos, value: p.value })) }),
+  setMode: (m)=> {
+    if (m === "sheet") { window.drDraft.goSheet(); return; }
+    if (m === "snake") { pinRoomFmt("redraft"); return; }
+    if (m === "rookie") { pinRoomFmt("dynasty"); return; }
+    if (m === "mock") { applyRoomFormat(); const el = document.getElementById("mocksetup"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }
+  },
+  mode: ()=> roomFmt()
+};
 })();
 </script>
     <script>
@@ -16569,14 +16735,19 @@ $("#sheetCsv").addEventListener("click", () => {
   window.drOpenDraft = function () {
     if (typeof window.__syncDraftData === "function") window.__syncDraftData();
     if (!window.drDraft) return;
-    var m = (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "snake" : "rookie";
-    if (hashDriven && lastDraftMode === null) { lastDraftMode = m; return; }
-    if (lastDraftMode === m) return;
-    lastDraftMode = m;
-    if (window.drDraft.mode() === "mock") return;
-    if (window.drDraft.mode() === "sheet") { if (window.drDraft.renderSheet) window.drDraft.renderSheet(); return; }
-    window.drDraft.setMode(m);
+    if (hashDriven && lastDraftMode === null) { lastDraftMode = "hash"; return; }   /* a shared link pinned the format itself */
+    if (window.drDraft.mockBusy && window.drDraft.mockBusy()) return;   /* never re-render mid-mock */
+    if (window.drDraft.syncFormat) window.drDraft.syncFormat();
   };
+  /* The room carries the Draft Sheet, so entering it arms the sheet
+     print rules (body.ff-sheet-mode). Leaving the room must disarm
+     them, or printing any other tab would print the sheet instead. */
+  try {
+    var _tabDraft = document.getElementById("tab-draft");
+    if (_tabDraft && window.MutationObserver) new MutationObserver(function () {
+      if (!_tabDraft.classList.contains("active")) document.body.classList.remove("ff-sheet-mode");
+    }).observe(_tabDraft, { attributes: true, attributeFilter: ["class"] });
+  } catch (e) {}
   document.addEventListener("click", function (e) {
     var a = e.target && e.target.closest ? e.target.closest("[data-draft-go]") : null;
     if (!a) return;
@@ -19971,7 +20142,7 @@ window.__lifeline = (function () {
       if (pill.hasAttribute("data-tools-draft")) {
         var d = document.querySelector('#site-main [data-nav="draft"]');
         if (d) d.click();
-        if (pill.getAttribute("data-tools-draft") === "sheet" && window.drDraft && window.drDraft.setMode) window.drDraft.setMode("sheet");
+        if (pill.getAttribute("data-tools-draft") === "sheet" && window.drDraft && window.drDraft.goSheet) window.drDraft.goSheet();
         return;
       }
       var btn = document.querySelector('#site-sub [data-pnav-sub="' + pill.getAttribute("data-tools-pill") + '"][data-group="' + pill.getAttribute("data-tools-group") + '"]');
