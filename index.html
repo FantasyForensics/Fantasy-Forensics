@@ -3,17 +3,31 @@
   <head>
     <script>
       /* Early restoring flag (Eric, 2026-10-25): if this device has a
-         saved Sleeper league as its most recent and no share link is
-         open, the page is about to auto-reconnect — mark it before
+         saved Sleeper league the restore can land and no share link
+         is open, the page is about to auto-reconnect — mark it before
          first paint so the hero shows the loading state instead of
          flashing the username box for the seconds the restore takes.
          The saved-leagues layer owns this flag afterwards: it clears
-         it whenever no restore will run, and when an attempt resolves. */
+         it whenever no restore will run, and when an attempt resolves.
+         (Nov 9, 2026: the scan mirrors the restore picker — ANY
+         connectable entry counts, last-selected (ff_last_league)
+         first, not just the single most recent entry; and only a
+         share-payload hash (#kind=…) vetoes, never the in-app
+         routes (#/insights, #/draft/…) a reload can carry.) */
       try {
         var ffEarly = JSON.parse(localStorage.getItem("ff_saved_leagues") || "[]");
-        if (Array.isArray(ffEarly) && ffEarly.length) {
-          var ffTop = ffEarly.slice().sort(function (a, b) { return (b.lastUsed || 0) - (a.lastUsed || 0); })[0];
-          if (ffTop && String(ffTop.platform).trim().toLowerCase() === "sleeper" && !(location.hash && location.hash.length > 1)) document.documentElement.classList.add("ff-restoring");
+        if (Array.isArray(ffEarly) && ffEarly.length && !/^#[A-Za-z0-9_]+=/.test(location.hash || "")) {
+          var ffLastKey = null;
+          try { ffLastKey = localStorage.getItem("ff_last_league"); } catch (e) { /* marker is best-effort */ }
+          var ffSorted = ffEarly.slice().sort(function (a, b) { return (b.lastUsed || 0) - (a.lastUsed || 0); });
+          var ffPick = null;
+          for (var ffI = 0; ffI < ffSorted.length; ffI++) {
+            var ffE = ffSorted[ffI];
+            if (!ffE || String(ffE.platform).trim().toLowerCase() !== "sleeper" || !ffE.username) continue;
+            if (ffLastKey && ffLastKey === "sleeper:" + String(ffE.leagueId).trim()) { ffPick = ffE; break; }
+            if (!ffPick) ffPick = ffE;
+          }
+          if (ffPick) document.documentElement.classList.add("ff-restoring");
         }
       } catch (e) { /* guest stands */ }
     </script>
@@ -7215,7 +7229,7 @@ ${rdP ? "" : `
             const rank = tgPosRank(rid, g);
             const on = (finderState.want || "") === g;
             const startHere = !!(weakFirst && weakFirst.group === g && !finderState.want);
-            return `<button type="button" class="tg-grade-btn ${gradeClass(grade)}" data-tg-pos="${g}" aria-pressed="${on}"><span class="tg-pos">${g === "FLEX" ? "Flex" : g}</span><span class="tg-letter">${grade}</span><span class="tg-rank">${ordinal(rank)} of ${DATA.teams.length}</span>${startHere ? `<span class="tg-start">Start here</span>` : ""}</button>`;
+            return `<button type="button" class="tg-grade-btn ${gradeClass(grade)}" data-tg-pos="${g}" aria-pressed="${on}"><span class="tg-pos">${g === "FLEX" ? "Flex" : g}</span><span class="tg-letter">${grade}</span><span class="tg-rank">${ordinal(rank)}/${DATA.teams.length}</span>${startHere ? `<span class="tg-start">Start here</span>` : ""}</button>`;
           }).join("");
           let html = `<div class="tg-grades"><div class="tg-grades-h">Your team grades — tap a spot to shop it</div><div class="tg-grade-row">${btns}</div></div>`;
           const pos = finderState.want || "";
@@ -12772,6 +12786,14 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             var rest = cleanList(read()).filter(function (x) { return normKey(x) !== normKey(e); });
             rest.unshift(e);
             persist(rest, false);
+            /* Last-selected marker (Eric, 2026-11-09): record() runs
+               on every successful load, manual or automatic, so it
+               is the one place that always knows which league this
+               device last had selected. The auto-reconnect picker
+               restores THIS league on the next visit when it is
+               still saved and connectable — not merely whichever
+               entry a sync merge happened to sort first. */
+            try { localStorage.setItem("ff_last_league", normKey(e)); } catch (err) { /* marker is best-effort */ }
           },
           remove: function (platform, leagueId) {
             var k = normPlatform(platform) + ":" + normId(leagueId);
@@ -13083,10 +13105,18 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         } catch (e) { /* the dialog still re-renders on every persist */ }
         render();
 
-        /* Quiet auto-reconnect: most recent saved league, Sleeper
-           only (an ESPN reconnect lands on a pick-your-team step, so
-           auto-opening it on every visit would nag; the entry waits
-           one click away in the connect dialog and the profile menu).
+        /* Quiet auto-reconnect: the last-selected saved league (see
+           pickAutoEntry below), Sleeper only (an ESPN reconnect
+           lands on a pick-your-team step, so auto-opening it on
+           every visit would nag; the entry waits one click away in
+           the connect dialog and the profile menu). Entries that
+           cannot auto-land — ESPN, or Sleeper entries saved without
+           a username — are SKIPPED by the picker, never a veto over
+           the connectable leagues below them (Eric, 2026-11-09:
+           the old code bet the whole restore on entries[0], so one
+           such entry at the top silently stranded every reload on
+           the "connect your league" state while the profile menu
+           still listed his leagues).
            Single-flight per league while an attempt is IN FLIGHT:
            the session latch records the league an attempt STARTED
            for, so the page-load timer, a Firebase session restore,
@@ -13118,14 +13148,61 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         function clearRestoring() {
           try { document.documentElement.classList.remove("ff-restoring"); } catch (err) {}
         }
+        /* Leagues this page load has already tried and seen fail:
+           the picker walks PAST them to the next connectable saved
+           league instead of giving up after the first failure. The
+           30s retry clears the set, so a transient miss still gets
+           its second chance from the top of the list. */
+        var autoTriedKeys = {};
+        /* Auto-connectable = the quiet path can land it with zero
+           clicks: a Sleeper entry carrying its username. ESPN
+           entries end at a pick-your-team step and entries saved
+           without a username cannot resolve — both stay one click
+           away in the menu, they just no longer veto the restore. */
+        function autoConnectable(e) {
+          return !!e && e.platform === "sleeper" && !!e.username;
+        }
+        /* The restore candidate: the league this device last had
+           selected (ff_last_league, written by record() on every
+           successful load) when it is still saved and connectable;
+           otherwise the most recently used connectable entry;
+           entries already failed this page load are skipped. With
+           no marker yet (first visit after this picker shipped),
+           the fallback IS the most recent connectable league, and
+           its successful load writes the marker for next time. */
+        function pickAutoEntry(entries) {
+          var lastKey = null;
+          try { lastKey = localStorage.getItem("ff_last_league"); } catch (err) { /* marker is best-effort */ }
+          var firstViable = null;
+          for (var i = 0; i < entries.length; i++) {
+            var e = entries[i];
+            if (!autoConnectable(e)) continue;
+            if (autoTriedKeys[normKey(e)]) continue;
+            if (lastKey && normKey(e) === lastKey) return e;
+            if (!firstViable) firstViable = e;
+          }
+          return firstViable;
+        }
+        /* Share payloads (#trade=…, #sheet=…) are the only hashes
+           that veto the restore: a shared thing must render in the
+           guest context it was shared from. The routes the site
+           itself writes during normal use (#/insights, #/draft/…)
+           are just where the user left off — the league restores
+           underneath them exactly as a manual connect would leave
+           them. (The blanket any-hash veto was the other half of
+           the Nov 9 report: reload on a routed URL and nothing ever
+           reconnected, while the menu still listed his leagues.) */
+        function shareHashBlocksRestore() {
+          return /^#[A-Za-z0-9_]+=/.test(location.hash || "");
+        }
         function maybeAutoReconnect() {
           try {
             var entries = list();
             if (!entries.length) { clearRestoring(); return; }
             if (window.CURRENT_LEAGUE === "conn") { clearRestoring(); return; }
-            if (location.hash && location.hash.length > 1) { clearRestoring(); return; } /* share links win */
-            var e = entries[0];
-            if (e.platform !== "sleeper") { clearRestoring(); return; }
+            if (shareHashBlocksRestore()) { clearRestoring(); return; } /* share links win */
+            var e = pickAutoEntry(entries);
+            if (!e) { clearRestoring(); return; }
             if (autoAttemptedKey === normKey(e)) return;
             autoAttemptedKey = normKey(e);
             setRestoring(e);
@@ -13153,6 +13230,13 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
                  in-flight attempts is unchanged — the latch only
                  clears once the attempt has resolved as failed. */
               if (autoAttemptedKey === normKey(e)) autoAttemptedKey = null;
+              autoTriedKeys[normKey(e)] = true;
+              /* Another connectable league sits below the one that
+                 just failed: walk down to it in this same page load
+                 rather than stranding the visit on the guest board.
+                 The restoring flag stays up — an attempt is starting
+                 again right away. */
+              if (pickAutoEntry(list())) { try { maybeAutoReconnect(); } catch (err) { clearRestoring(); } return; }
               /* Nothing in flight now: the username box returns until
                  the retry below (if any) starts its own attempt. */
               clearRestoring();
@@ -13160,6 +13244,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
               autoRetryDone = true;
               autoRetryTimer = setTimeout(function () {
                 autoRetryTimer = null;
+                autoTriedKeys = {};
                 try { maybeAutoReconnect(); } catch (err) { /* guest stands */ }
               }, 30000);
             });
