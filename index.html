@@ -2243,8 +2243,11 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 #sheetPrintDoc .pd-ch-rk{width:17pt; flex:none; text-align:right; padding-right:4.5pt}
 #sheetPrintDoc .pd-ch-nm{flex:1}
 #sheetPrintDoc .pd-ch-vl{flex:none; padding-left:5pt}
-#sheetPrintDoc .pd-cols{column-count:3; column-gap:15pt}
-#sheetPrintDoc .pd-pr{display:flex; align-items:baseline; line-height:1.09; white-space:nowrap; break-inside:avoid; page-break-inside:avoid}
+#sheetPrintDoc .pd-cols{display:block}
+#sheetPrintDoc .pd-cols::after{content:""; display:block; clear:both}
+#sheetPrintDoc .pd-col{float:left; width:32.6%; margin-right:1.1%}
+#sheetPrintDoc .pd-col:last-child{margin-right:0}
+#sheetPrintDoc .pd-pr{display:flex; align-items:baseline; line-height:1.04; white-space:nowrap; break-inside:avoid; page-break-inside:avoid}
 #sheetPrintDoc .pd-rk{width:17pt; flex:none; font-size:7.5pt; color:#666; text-align:right; padding-right:4.5pt}
 #sheetPrintDoc .pd-nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; font-size:7.5pt; font-weight:600}
 #sheetPrintDoc .pd-mt{flex:none; font-size:6.4pt; color:#555; padding:0 4pt}
@@ -2252,11 +2255,13 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 #sheetPrintDoc .pd-tr{display:flex; align-items:center; gap:5pt; margin:1.6pt 0 .8pt; break-inside:avoid; page-break-inside:avoid}
 #sheetPrintDoc .pd-tchip{font-size:5.9pt; font-weight:800; letter-spacing:.9pt; border:.8pt solid #111; padding:.7pt 3pt .4pt; border-radius:2pt; line-height:1.2}
 #sheetPrintDoc .pd-trule{flex:1; border-top:.8pt solid #111}
-#sheetPrintDoc .pd-posgrid{display:flex; gap:13pt}
-#sheetPrintDoc .pd-poscol{flex:1; min-width:0}
+#sheetPrintDoc .pd-posgrid{display:block}
+#sheetPrintDoc .pd-posgrid::after{content:""; display:block; clear:both}
+#sheetPrintDoc .pd-poscol{float:left; width:23.8%; margin-right:1.6%; min-width:0}
+#sheetPrintDoc .pd-poscol:last-child{margin-right:0}
 #sheetPrintDoc .pd-poshead{font-size:8pt; font-weight:800; letter-spacing:.8pt; border-bottom:.9pt solid #111; padding-bottom:1.6pt; margin-bottom:2.2pt}
 #sheetPrintDoc .pd-posgrid .pd-tr{margin:1.2pt 0 .6pt}
-#sheetPrintDoc .pd-ft{margin-top:9pt; border-top:.6pt solid #999; padding-top:3pt; display:flex; justify-content:space-between; font-size:6.6pt; color:#666}
+#sheetPrintDoc .pd-ft{margin-top:4pt; border-top:.6pt solid #999; padding-top:3pt; display:flex; justify-content:space-between; font-size:6.6pt; color:#666; break-before:avoid; page-break-before:avoid}
 }
     </style>
     <style>
@@ -16980,15 +16985,35 @@ function sheetPrintPool(){
 function pdTiered(rows){
   return sheetTier(rows.map(p => ({ name: p.name, pos: p.pos, team: p.team, value: p.value })));
 }
-function pdListHtml(rows, meta){
-  let h = "", lastTier = 0;
+function pdListItems(rows, meta){
+  const items = [];
+  let lastTier = 0;
   rows.forEach((r, i) => {
-    if (r.tier !== lastTier) { lastTier = r.tier; h += "<div class='pd-tr'><span class='pd-tchip'>TIER " + lastTier + "</span><span class='pd-trule'></span></div>"; }
-    h += "<div class='pd-pr'><span class='pd-rk'>" + (i + 1) + "</span><span class='pd-nm'>" + esc(r.name) + "</span>"
+    if (r.tier !== lastTier) { lastTier = r.tier; items.push("<div class='pd-tr'><span class='pd-tchip'>TIER " + lastTier + "</span><span class='pd-trule'></span></div>"); }
+    items.push("<div class='pd-pr'><span class='pd-rk'>" + (i + 1) + "</span><span class='pd-nm'>" + esc(r.name) + "</span>"
       + "<span class='pd-mt'>" + (meta === "pos" ? r.pos + " · " : "") + esc(r.team || "FA") + "</span>"
-      + "<span class='pd-vl'>" + fmt(r.value) + "</span></div>";
+      + "<span class='pd-vl'>" + fmt(r.value) + "</span></div>");
   });
-  return h;
+  return items;
+}
+function pdListHtml(rows, meta){
+  return pdListItems(rows, meta).join("");
+}
+/* Three explicit floated columns instead of CSS multicol: WebKit's print
+   engine (every iOS browser) collapses column-count into one long column,
+   which is exactly the "still long format" Eric hit on 2026-11-08. Chunks
+   are contiguous so reading order runs down col 1, then col 2, then col 3;
+   tier chips travel with their rows. Each column carries its own header. */
+function pdColsHtml(rows, meta){
+  const items = pdListItems(rows, meta);
+  const per = Math.max(1, Math.ceil(items.length / 3));
+  let h = "<div class='pd-cols'>";
+  for (let c = 0; c < 3; c++) {
+    const chunk = items.slice(c * per, (c + 1) * per);
+    if (!chunk.length) continue;
+    h += "<div class='pd-col'>" + pdColHeadHtml(meta) + chunk.join("") + "</div>";
+  }
+  return h + "</div>";
 }
 function pdSecHtml(label, note){
   return "<div class='pd-sec'><span>" + label + "</span>" + (note ? "<span class='pd-note'>Tier breaks: a new tier starts when value drops below 85% of the tier's top value</span>" : "") + "</div>";
@@ -17011,8 +17036,7 @@ function buildSheetPrintDoc(){
   const foot = SHEET_PRINT_LABELS[kind] || "Full sheet";
   if (kind === "full") {
     const overall = pdTiered(pool.filter(p => p.value > 1000));
-    h += pdSecHtml("Overall — 1,000+ value", true) + pdColHeadHtml("pos")
-      + "<div class='pd-cols'>" + pdListHtml(overall, "pos") + "</div>";
+    h += pdSecHtml("Overall — 1,000+ value", true) + pdColsHtml(overall, "pos");
     h += "<div class='pd-sec pd-sec2'><span>By position — top 25</span></div><div class='pd-posgrid'>"
       + ["QB", "RB", "WR", "TE"].map(pos => "<div class='pd-poscol'><div class='pd-poshead'>" + pos + "</div>"
         + pdListHtml(pdTiered(pool.filter(p => p.pos === pos)).slice(0, 25), "team") + "</div>").join("") + "</div>";
@@ -17020,8 +17044,7 @@ function buildSheetPrintDoc(){
     const label = { QB: "Quarterbacks", RB: "Running backs", WR: "Wide receivers", TE: "Tight ends", FLEX: "Flex — RB · WR · TE" }[kind];
     const meta = kind === "FLEX" ? "pos" : "team";
     const rows = pdTiered(pool.filter(p => p.value > 1000 && (kind === "FLEX" ? (p.pos === "RB" || p.pos === "WR" || p.pos === "TE") : p.pos === kind)));
-    h += pdSecHtml(label + " — 1,000+ value", true) + pdColHeadHtml(meta)
-      + "<div class='pd-cols'>" + pdListHtml(rows, meta) + "</div>";
+    h += pdSecHtml(label + " — 1,000+ value", true) + pdColsHtml(rows, meta);
   }
   h += "<div class='pd-ft'><span>thefantasyforensics.com</span><span>" + foot + "</span></div>";
   el.innerHTML = h;
