@@ -4730,7 +4730,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         if (typeof window.rederiveGuestPickValues === "function") window.rederiveGuestPickValues();
         DATA.teams.forEach(t => {
           if (!Array.isArray(t.picks)) return;
-          t.picks.forEach(pk => { if (pk.baseValue != null && typeof pickPrice === "function") { pk.value = pk.baseValue; pk.value = pickPrice(pk); } });
+          t.picks.forEach(pk => { if (pk.baseValue != null && typeof pickPrice === "function") { pk.value = pickPrice(pk); } });
           t.picksVal = t.picks.reduce((s2, pk) => s2 + (pk.value || 0), 0);
         });
         const depth = { QB: 2, RB: 4, WR: 5, TE: 2 };
@@ -5470,8 +5470,15 @@ ${rdP ? "" : `
         const m = /projects (early|mid|late)/i.exec(pk.slotNote || "");
         return m ? m[1][0].toUpperCase() + m[1].slice(1).toLowerCase() : "Mid";
       }
-      /* A team pick's live price under the current format settings. */
-      function pickPrice(pk) { return Math.round(pk.value * pickScalar(SETTINGS, pk.season, pk.round, tierOfPick(pk))); }
+      /* A team pick's live price under the current format settings.
+         FF-05 (audit 2026-11-08): price from the IMMUTABLE ladder base
+         (pk.baseValue) so the format scalar applies exactly once —
+         recomputeValues stores the scaled price in pk.value, and the
+         old pk.value-based version applied the scalar a second time
+         on every read (2027 mid 1st in 1QB showed 5,046, not 5,131).
+         Picks minted without a base fall back to pk.value, which for
+         them is already the unscaled ladder price. */
+      function pickPrice(pk) { const base = pk.baseValue != null ? pk.baseValue : pk.value; return Math.round(base * pickScalar(SETTINGS, pk.season, pk.round, tierOfPick(pk))); }
       /* A guest pick slot's live price under the current format settings. */
       function guestPickValue(gp) {
         const [yr, rd, tc] = gp.key.split("-");
@@ -5577,10 +5584,15 @@ ${rdP ? "" : `
         else if (st.team === "FA") list = DATA.players.filter(p => !p.owner);
         else list = TBY[st.team].playerIds.map(id => PBY[id]).filter(Boolean);
         const chosen = new Set(st.assets.filter(a => a.kind === "player").map(a => a.id));
+        /* FF-03 (audit 2026-11-08): a player already on the OPPOSITE
+           side can't be offered here either — the same player on both
+           sides of a trade is an invalid trade, not a fair one. */
+        const otherSt = calc[side === "A" ? "B" : "A"];
+        const chosenOther = new Set((otherSt ? otherSt.assets : []).filter(a => a.kind === "player").map(a => String(a.id)));
         /* Never-graded players (kickers, defenses, unpriced stubs) can't
            be added to a trade here: the site has no price for them, and
            grading one at 0 would present "not graded" as "worth nothing". */
-        return list.filter(p => !chosen.has(p.id) && !p.unpriced).sort((a, b) => dispVal(b) - dispVal(a));
+        return list.filter(p => !chosen.has(p.id) && !chosenOther.has(String(p.id)) && !p.unpriced).sort((a, b) => dispVal(b) - dispVal(a));
       }
 
       /* Pick search (Eric, 2026-10-23): with the chip grid gone, the
@@ -5647,6 +5659,11 @@ ${rdP ? "" : `
         box.innerHTML = (pickHtml + playerHtml) || `<div class="empty">No players match.</div>`;
         box.querySelectorAll("[data-add]").forEach(btn => {
           btn.addEventListener("click", () => {
+            /* FF-03: the other side may have claimed this player after
+               this list rendered — never let one player sit on both
+               sides; drop the stale row instead. */
+            const otherSt2 = calc[side === "A" ? "B" : "A"];
+            if (otherSt2 && otherSt2.assets.some(a => a.kind === "player" && String(a.id) === String(btn.dataset.add))) { renderResults(side); return; }
             calc[side].assets.push({ kind: "player", id: btn.dataset.add });
             renderSide(side); renderVerdict();
           });
@@ -5749,8 +5766,14 @@ ${rdP ? "" : `
         const ea = sideAdjTotal("A"), eb = sideAdjTotal("B");
         const guest = !!window.GUEST_MODE;
         const nameA = calcSideName("A"), nameB = calcSideName("B");
-        if (!a && !b) {
-          el.innerHTML = `<h3>No assets yet</h3><p style="color:var(--ink-2)">Add players${VALMODE === "redraft" ? "" : " or picks"} on either side to see the verdict.</p>`;
+        if (!calc.A.assets.length || !calc.B.assets.length) {
+          /* FF-03 (audit 2026-11-08): a one-sided trade is an
+             incomplete proposal, not a verdict — no numbers until
+             both sides hold at least one asset. */
+          const bothEmpty = !calc.A.assets.length && !calc.B.assets.length;
+          el.innerHTML = bothEmpty
+            ? `<h3>No assets yet</h3><p style="color:var(--ink-2)">Add players${VALMODE === "redraft" ? "" : " or picks"} on either side to see the verdict.</p>`
+            : `<h3>Add assets to both sides</h3><p style="color:var(--ink-2)">One side of this trade is still empty — add players${VALMODE === "redraft" ? "" : " or picks"} to it to see the verdict.</p>`;
           return;
         }
         const diff = Math.abs(ea - eb);
@@ -5949,6 +5972,10 @@ ${rdP ? "" : `
           else if (pb.team !== null) { calc.B.team = pb.team; calc.B.src = "team"; }
         }
         calc.A.assets = pa.assets; calc.B.assets = pb.assets;
+        /* FF-03: a shared link naming the same player on both sides
+           is invalid — side A keeps him, side B's copy is dropped. */
+        { const aIds = new Set(calc.A.assets.filter(a => a.kind === "player").map(a => String(a.id)));
+          calc.B.assets = calc.B.assets.filter(a => a.kind !== "player" || !aIds.has(String(a.id))); }
         renderSide("A"); renderSide("B"); renderVerdict();
         const flag = document.getElementById("shared-flag");
         if (flag) flag.classList.add("show");
@@ -6863,6 +6890,10 @@ ${rdP ? "" : `
         calc.A.team = String(payload.a); calc.B.team = String(payload.b);
         calc.A.src = "team"; calc.B.src = "team";
         calc.A.assets = payload.give; calc.B.assets = payload.get;
+        /* FF-03: never load an offer with the same player on both
+           sides — side A keeps him, side B's copy is dropped. */
+        { const aIds = new Set(calc.A.assets.filter(a => a.kind === "player").map(a => String(a.id)));
+          calc.B.assets = calc.B.assets.filter(a => a.kind !== "player" || !aIds.has(String(a.id))); }
         renderSide("A"); renderSide("B"); renderVerdict();
         activateNav("trades"); window.scrollTo({ top: 0 });
       });
@@ -7903,7 +7934,7 @@ ${rdP ? "" : `
             if (r.champ >= 0.2) s += " A championship favorite — one of the teams the title runs through.";
             else if (r.clinched) s += " The only question left is seeding — and the first-round bye that comes with it.";
             else if (r.playoff >= 0.9) s += " A near-lock for the postseason; the title race is where the variance lives.";
-            else if (r.playoff >= 0.5) s += " In the mix — a move or two changes this number fast, which is what ${rdS ? 'the trade calculator\'s season impact' : 'Player Targets’ season impact'} is for.";
+            else if (r.playoff >= 0.5) s += ` In the mix — a move or two changes this number fast, which is what ${rdS ? "the trade calculator's season impact" : "Player Targets’ season impact"} is for.`;
             else if (r.playoff >= 0.15) s += " Needs help: the path runs through a trade or a breakout, not the current lineup.";
             else if (r.elim) s += rdS ? " Mathematically eliminated — the title path is closed; what's left is pride and playing spoiler." : " Mathematically eliminated — every decision from here is a dynasty decision.";
             else s += rdS ? " Still mathematically alive — the path needs a win-out run and help elsewhere, so every point still matters." : " Still mathematically alive — the path needs a win-out run and help elsewhere, so every other decision is a dynasty decision.";
@@ -8462,7 +8493,7 @@ ${rdP ? "" : `
         if (fq) fq.textContent = `${s.sf ? "Superflex" : "1QB"} · ${s.ppr === 1 ? "PPR" : s.ppr === 0.5 ? "Half PPR" : s.ppr === 0 ? "Standard" : fd(s.ppr) + " PPR"} · TE +${fd(s.tep)} · ${s.ptd}-pt TD`;
         const f = pos => posFactor(pos, SETTINGS).toFixed(2);
         document.getElementById("fp-factors").innerHTML =
-          `Every value on the page is priced for the format set above — draft-pick prices re-price with the format too, and in 1QB they drop to that market's levels; the team tags stay as the snapshot had them; starters value re-derives each team's best-ball lineup from the re-priced values.`;
+          `Every value on the page is priced for the format set above — draft-pick prices re-price with the format too, moving to 1QB market levels in a 1QB format (most fall, but some later-round picks rise); the team tags stay as the snapshot had them; starters value re-derives each team's best-ball lineup from the re-priced values.`;
         document.querySelectorAll("#fp-presets button").forEach(btn => {
           const pr = PRESETS[btn.dataset.preset];
           const match = pr && pr.sf === s.sf && pr.ppr === s.ppr && pr.tep === s.tep && pr.ptd === s.ptd;
@@ -10480,11 +10511,17 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         });
         const lineupStr = lineupParts.join(" · ");
         const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+        /* FF-08 (audit 2026-11-08): the valuation date is the player
+           board's own snapshot date — importing a league must not
+           relabel the board's values as today's. The import date
+           rides along separately as `imported`. */
+        const boardSnap = (typeof DATA_D74 !== "undefined" && DATA_D74.league && DATA_D74.league.snapshot) || today;
         const meta = {
           name: league.name,
           season: String(league.season),
           week,
-          snapshot: today,
+          snapshot: boardSnap,
+          imported: today,
           teams: n,
           faab: (league.settings && league.settings.waiver_budget) || 0,
           /* League waiver system: Sleeper waiver_type 0 = rolling
@@ -10952,8 +10989,8 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         document.getElementById("league-sub").textContent = slpLeagueSub(C, (C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "Redraft" : "Dynasty");
         document.title = "Fantasy Forensics — " + C.league.name;
         document.getElementById("page-footer").textContent = isEspn
-          ? `Fantasy Forensics · Values are computed by our proprietary ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "Redraft Value Engine" : "Dynasty Value Algorithm"} (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, scoring and matchups are live from ESPN (league ${C.leagueId}), pulled ${C.today}. ESPN doesn't publish full transaction history or traded future picks, so the waiver wire runs on rosters + projections and pick capital assumes each team holds its own picks.`
-          : `Fantasy Forensics · Values are computed by our proprietary ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "Redraft Value Engine" : "Dynasty Value Algorithm"} (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "" : "picks and "}matchups are live from Sleeper for @${C.username}, pulled ${C.today}.`;
+          ? `Fantasy Forensics · Values are computed by our proprietary ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "Redraft Value Engine" : "Dynasty Value Algorithm"} (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, scoring and matchups are live from ESPN (league ${C.leagueId}), pulled ${C.today}. ESPN doesn't publish full transaction history or traded future picks, so the waiver wire runs on rosters + projections and pick capital assumes each team holds its own picks. Player values: ${DATA.league.snapshot} · Rosters imported: ${C.today}.`
+          : `Fantasy Forensics · Values are computed by our proprietary ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "Redraft Value Engine" : "Dynasty Value Algorithm"} (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "" : "picks and "}matchups are live from Sleeper for @${C.username}, pulled ${C.today}. Player values: ${DATA.league.snapshot} · Rosters imported: ${C.today}.`;
         document.getElementById("mode-badge").textContent = isEspn ? "Your ESPN league" : "Your league";
         renderLeagueSwitcher();
         const disc = document.getElementById("slp-disconnect");
@@ -11634,11 +11671,16 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           } else lineupParts.push(lbl);
         });
         const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+        /* FF-08 (audit 2026-11-08): valuation date = the player
+           board's own snapshot date, never the import date; the
+           import date rides along separately as `imported`. */
+        const boardSnap = (typeof DATA_D74 !== "undefined" && DATA_D74.league && DATA_D74.league.snapshot) || today;
         const meta = {
           name: settings.name || "ESPN League " + leagueId,
           season: String(season),
           week,
-          snapshot: today,
+          snapshot: boardSnap,
+          imported: today,
           teams: n,
           faab: (settings.acquisitionSettings && settings.acquisitionSettings.acquisitionBudget) || 0,
           /* ESPN waiver system: acquisitionType "FAAB" = budget bidding;
@@ -18955,13 +18997,26 @@ window.drDraft = {
          and this site collects no ESPN credentials), so a connected
          ESPN league gets one honest line — never fabricated data. */
       function ff4TBState() {
-        if (!ff4.tb) ff4.tb = { loading: false, loaded: false, sig: "", incoming: [], sent: [], espnNote: false, failed: 0, checkedAt: null };
+        if (!ff4.tb) ff4.tb = { loading: false, loaded: false, sig: "", incoming: [], sent: [], espnNote: false, failed: 0, checkedAt: null, wkChecked: 0, wkTotal: 0 };
         return ff4.tb;
       }
       function ff4TBWhen(ts) {
         if (!ts) return "this week";
         const d = Math.floor((Date.now() - ts) / 86400000);
         return d <= 0 ? "today" : d === 1 ? "1d ago" : d + "d ago";
+      }
+      /* FF-11 (audit 2026-11-08): honest coverage wording for the
+         weekly transaction scan — empty only ever means "checked and
+         found none"; partial or failed checks say so, and nothing
+         here claims the private trade inbox itself was read. */
+      function ff4TBCovText(tb) {
+        if (!tb || !tb.wkTotal || tb.wkChecked >= tb.wkTotal) return "";
+        if (tb.wkChecked === 0) return "The transaction check didn't go through for any league this time, so an offer could be missing from this list.";
+        return `Checked ${tb.wkChecked} of ${tb.wkTotal} league-weeks of transactions — some weeks couldn't be pulled, so an offer could be missing from this list.`;
+      }
+      function ff4TBCovNote(tb) {
+        const t = ff4TBCovText(tb);
+        return t ? `<p class="tb-espn">${esc(t)}</p>` : "";
       }
       function ff4TBEnsure(force) {
         const tb = ff4TBState();
@@ -18979,10 +19034,11 @@ window.drDraft = {
         ff4RenderTB(); ff4RenderCCTB();
         (async () => {
           const incoming = [], sent = [];
-          let failed = 0;
+          let failed = 0, wkChecked = 0, wkTotal = 0;
           for (let i = 0; i < leagues.length; i++) {
             try {
               const offers = await ff4TBLeague(leagues[i], user);
+              if (offers.coverage) { wkChecked += offers.coverage.checked; wkTotal += offers.coverage.total; }
               offers.forEach(o => (o.sent ? sent : incoming).push(o));
             } catch (e) { failed++; }
           }
@@ -18995,6 +19051,7 @@ window.drDraft = {
           const cur = ff4TBState();
           if (cur.sig !== sig) return; /* a newer pass owns the state */
           cur.incoming = incoming; cur.sent = sent; cur.failed = failed; cur.checkedAt = Date.now();
+          cur.wkChecked = wkChecked; cur.wkTotal = wkTotal;
           cur.espnNote = !!ff4CCEspnEntry();
           cur.loading = false; cur.loaded = true;
           ff4RenderTB(); ff4RenderCCTB();
@@ -19012,7 +19069,16 @@ window.drDraft = {
         const myRid = myRoster.roster_id;
         const wks = [];
         for (let w = week; w >= Math.max(1, week - 7); w--) wks.push(w);
-        const arrs = await Promise.all(wks.map(w => slpGet(`/league/${lg.league_id}/transactions/${w}`).catch(() => [])));
+        /* FF-11 (audit 2026-11-08): per-week success is tracked —
+           a failed week used to be indistinguishable from an empty
+           one, so a total fetch failure rendered as "no offers".
+           The graded array carries its coverage for the renderers. */
+        const wkRes = await Promise.all(wks.map(w => slpGet(`/league/${lg.league_id}/transactions/${w}`)
+          .then(a => ({ ok: Array.isArray(a), txs: Array.isArray(a) ? a : [] }))
+          .catch(() => ({ ok: false, txs: [] }))));
+        const wkChecked = wkRes.filter(r => r.ok).length;
+        const withCoverage = arr => { arr.coverage = { checked: wkChecked, total: wks.length }; return arr; };
+        const arrs = wkRes.map(r => r.txs);
         const seen = new Set();
         const pending = [];
         arrs.flat().filter(Boolean).forEach(tx => {
@@ -19021,7 +19087,7 @@ window.drDraft = {
           if (!(tx.roster_ids || []).includes(myRid)) return;
           pending.push(tx);
         });
-        if (!pending.length) return [];
+        if (!pending.length) return withCoverage([]);
         /* Real pick ownership for the build, same two-leg merge as
            the full connect: the pending offer's picks still sit with
            their current holders, and the calculator deep-link needs
@@ -19039,7 +19105,7 @@ window.drDraft = {
           try {
             ff4CCSwap(built);
             const me = DATA.teams.find(t => t.isUser) || DATA.teams.find(t => t.rid === myRid);
-            if (!me) return [];
+            if (!me) return withCoverage([]);
             let ranks = null;
             if (DATA.teams.length === 12) {
               try { const sim = window.buildSeasonSim({ sims: 1500, seed: 7300 + (parseInt(lg.league_id, 10) % 997) }); ranks = projFinishRanks(sim); } catch (e) { ranks = null; }
@@ -19052,7 +19118,7 @@ window.drDraft = {
            re-render the calculator once here, under the restored
            active league, to leave its UI exactly as it was. */
         try { renderSide("A"); renderSide("B"); renderVerdict(); } catch (e) { /* calculator not mounted yet */ }
-        return graded;
+        return withCoverage(graded);
       }
 
       /* Grade one pending trade inside the swapped league context.
@@ -19268,7 +19334,9 @@ window.drDraft = {
         parts.push(`<div class="tb-head"><span class="tb-count">${tb.incoming.length} offer${tb.incoming.length === 1 ? "" : "s"} waiting on you</span><button type="button" class="tb-refresh" id="tb-refresh">Re-check offers</button></div>`);
         if (tb.espnNote) parts.push(`<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>`);
         if (tb.failed) parts.push(`<p class="tb-espn">${tb.failed} league${tb.failed === 1 ? "" : "s"} couldn't be checked just now — hit Re-check to try again.</p>`);
+        { const covNote = ff4TBCovNote(tb); if (covNote) parts.push(covNote); }
         if (tb.incoming.length) parts.push(`<div class="tb-grid">${tb.incoming.map(o => ff4TBCardHtml(o, false)).join("")}</div>`);
+        else if (tb.wkTotal && tb.wkChecked === 0) parts.push(`<div class="tb-empty"><p>Couldn't check your leagues' transactions just now — hit Re-check offers to try again.</p></div>`);
         else parts.push(`<div class="tb-empty"><p>No trades waiting on you — nothing found in the last 8 weeks of transactions.</p></div>`);
         if (tb.sent.length) {
           parts.push(`<h3 class="tb-subh">Waiting on them — offers you sent</h3><div class="tb-grid">${tb.sent.map(o => ff4TBCardHtml(o, false)).join("")}</div>`);
@@ -19298,6 +19366,7 @@ window.drDraft = {
           const when = tb.checkedAt ? new Date(tb.checkedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
           el.innerHTML = `<div class="cc-queue-h">Trade Board</div><p class="cc-queue-note">No incoming trades across all your leagues.${when ? ` Last checked ${when}.` : ""}</p>`
             + (tb.failed ? `<p class="cc-queue-note">Couldn't check ${tb.failed} league${tb.failed === 1 ? "" : "s"} — reopen Command Center to retry.</p>` : "")
+            + (ff4TBCovText(tb) ? `<p class="cc-queue-note">${esc(ff4TBCovText(tb))}</p>` : "")
             + (tb.espnNote ? `<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>` : "")
             + `<button type="button" class="tb-open-board" id="cc-tb-open">Open the Trade Board →</button>`;
           const ob0 = document.getElementById("cc-tb-open");
