@@ -1022,6 +1022,90 @@
         box-shadow: 0 0 20px rgba(198, 255, 0, .45);
       }
       .want-btns .want-sub { font-size: 11.5px; font-weight: 600; opacity: .65; letter-spacing: .04em; }
+      /* ---------- Player Targets rework (Nov 9, 2026): team grades,
+         weakest-spot shopping, the per-position price ladder + slider,
+         and the why-they'd-sell note. Values are points, never dollars:
+         no currency formatting anywhere in this layer. ---------- */
+      .tg-grades { margin: 0 0 16px; }
+      .tg-grades-h { font-family: "Space Grotesk", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+      .tg-grade-row { display: flex; flex-wrap: wrap; gap: 8px; }
+      .tg-grade-btn {
+        flex: 1 1 100px; display: flex; flex-direction: column; align-items: center; gap: 1px;
+        padding: 10px 8px 9px; border-radius: 12px; cursor: pointer;
+        border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+        font-family: "Inter", sans-serif;
+      }
+      .tg-grade-btn .tg-pos { font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
+      .tg-grade-btn .tg-letter { font-family: "Space Grotesk", sans-serif; font-size: 26px; font-weight: 700; line-height: 1.05; }
+      .tg-grade-btn .tg-rank { font-size: 11.5px; color: var(--ink-3); }
+      .tg-grade-btn.good .tg-letter { color: var(--accent); }
+      .tg-grade-btn.bad .tg-letter { color: var(--red); }
+      .tg-grade-btn:hover { border-color: rgba(198, 255, 0, .6); }
+      .tg-grade-btn[aria-pressed="true"] { border-color: var(--accent); background: rgba(198, 255, 0, .08); box-shadow: 0 0 0 1px rgba(198, 255, 0, .35), 0 0 18px rgba(198, 255, 0, .12); }
+      .tg-grade-btn .tg-start { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+      .tg-ladder { margin: 0 0 18px; }
+      .tg-weak { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 6px; }
+      .tg-weak-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px 15px; text-align: left; color: var(--ink); cursor: pointer; font-family: "Inter", sans-serif; width: 100%; }
+      .tg-weak-card:hover { border-color: rgba(198, 255, 0, .6); }
+      .tg-weak-card .tg-w-pos { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: .03em; }
+      .tg-weak-card .tg-w-grade { color: var(--red); }
+      .tg-weak-card p { margin: 5px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+      .tg-weak-card p strong { color: var(--ink); }
+      .tg-shop { margin-top: 9px; font-weight: 700; font-size: 13.5px; color: var(--accent); }
+      .tg-slider-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px 14px; margin-bottom: 14px; }
+      .tg-slider-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 4px; }
+      .tg-slider-top .tg-budget { font-family: "Space Grotesk", sans-serif; font-size: 30px; font-weight: 700; color: var(--accent); line-height: 1; }
+      .tg-slider-top .tg-budget-lbl { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+      input.tg-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; border-radius: 5px; margin: 14px 0 6px; outline: none; cursor: pointer; background: transparent; }
+      input.tg-slider::-webkit-slider-runnable-track { height: 10px; border-radius: 5px;
+        background: linear-gradient(90deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.14) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-be, 65%), rgba(255,255,255,.14) var(--tg-be, 65%), rgba(255,255,255,.14) 100%); }
+      input.tg-slider::-moz-range-track { height: 10px; border-radius: 5px;
+        background: linear-gradient(90deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.14) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-be, 65%), rgba(255,255,255,.14) var(--tg-be, 65%), rgba(255,255,255,.14) 100%); }
+      input.tg-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); border: 3px solid #0b0b14; box-shadow: 0 0 0 2px var(--accent), 0 4px 14px rgba(0,0,0,.55); cursor: pointer; }
+      input.tg-slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); border: 3px solid #0b0b14; box-shadow: 0 0 0 2px var(--accent); cursor: pointer; }
+
+      .tg-slider-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-3); font-weight: 600; }
+      .tg-band-note { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; }
+      .tg-band-note strong { color: var(--accent); }
+      .tg-lm { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: rgba(198,255,0,.06); border: 1px solid rgba(198,255,0,.30); transition: opacity .18s ease; }
+      .tg-lm.out { opacity: .25; }
+      .tg-lm { animation: tgLmIn .25s ease; }
+      @keyframes tgLmIn { from { opacity: .2; } to { opacity: 1; } }
+      .tg-lm img.phs { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none; background: rgba(255,255,255,.06); }
+      .tg-lm .tg-lm-name { font-family: "Space Grotesk", sans-serif; font-size: 21px; font-weight: 700; line-height: 1.15; }
+      .tg-lm .tg-lm-sub { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
+      .tg-lm .tg-lm-val { margin-left: auto; text-align: right; font-family: "Space Grotesk", sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+      .tg-lm .tg-lm-val small { display: block; font-family: "Inter", sans-serif; font-size: 11px; font-weight: 600; color: var(--ink-3); letter-spacing: .05em; text-transform: uppercase; }
+      .tg-close { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+      .tg-rung { margin-top: 16px; }
+      .tg-rung-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 9px; }
+      .tg-rung-h .tg-rung-t { font-family: "Space Grotesk", sans-serif; font-size: 16.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+      .tg-rung-h .tg-rung-s { font-size: 12.5px; color: var(--ink-3); }
+      .tg-rung.band .tg-rung-t { color: var(--accent); }
+      .tg-rung.band { border: 1px solid rgba(198,255,0,.35); border-radius: var(--radius); padding: 13px 14px 4px; background: rgba(198,255,0,.03); }
+      .tg-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
+      .tg-cand { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px 15px; margin-bottom: 10px; }
+      .tg-rung .tg-cand { background: var(--surface-2); }
+      .tg-cand-h { display: flex; align-items: center; gap: 10px; }
+      .tg-cand-h img.phs { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex: none; background: rgba(255,255,255,.06); }
+      .tg-cand-name { font-family: "Space Grotesk", sans-serif; font-size: 17.5px; font-weight: 700; line-height: 1.2; }
+      .tg-cand-sub { font-size: 12.5px; color: var(--ink-2); }
+      .tg-cand-val { margin-left: auto; text-align: right; font-family: "Space Grotesk", sans-serif; font-size: 19px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+      .tg-cand-val small { display: block; font-family: "Inter", sans-serif; font-size: 10.5px; font-weight: 600; color: var(--ink-3); letter-spacing: .05em; text-transform: uppercase; }
+      .tg-owner { font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+      .sell-note { margin-top: 10px; padding: 10px 13px; border-radius: 10px; font-size: 14px; line-height: 1.55; background: rgba(64,200,255,.07); border: 1px solid rgba(64,200,255,.32); color: var(--ink); }
+      .sell-note .dir-tag { background: var(--cyan); color: #04121A; }
+      .tg-chip { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; background: rgba(255,255,255,.10); color: var(--ink-2); }
+      .tg-chip.warn { background: rgba(255,84,112,.18); color: #ff8fa3; border: 1px solid rgba(255,84,112,.45); }
+      .tg-chip.good { background: rgba(198,255,0,.14); color: var(--accent); border: 1px solid rgba(198,255,0,.4); }
+      .tg-offer { margin-top: 10px; font-size: 13.5px; color: var(--ink-2); line-height: 1.55; }
+      .tg-offer strong { color: var(--ink); }
+      @media (max-width: 560px) {
+        .tg-grade-btn { flex: 1 1 30%; }
+        .tg-lm .tg-lm-name { font-size: 18px; }
+        .tg-lm img.phs { width: 52px; height: 52px; }
+        .tg-slider-top .tg-budget { font-size: 26px; }
+      }
       @media (max-width: 560px) {
         .want-panel { padding: 12px 13px; gap: 8px 12px; }
         .want-label { font-size: 19px; }
@@ -6744,6 +6828,372 @@ ${rdP ? "" : `
         return { myNeeds, suggestions: picked, mine, posNote, nearMisses: nearGraded.slice(0, 3) };
       }
 
+      /* ================= Player Targets rework (Eric, Nov 9, 2026) ====
+         Grades up top, slot-first shopping underneath. The page opens
+         on the user's positional grades — the same letter grades the
+         League tab prints (positional strength vs the league) — and
+         the weakest grades are the shopping list: tapping one aims
+         the "I want" filter at that hole. Under the grades sits a
+         per-position price ladder: every gettable upgrade at the
+         position, grouped by price, driven by a budget slider whose
+         shaded band marks the prices that actually move in real
+         leagues (4,000–6,000). The name shown at the slider's number
+         — the landmark — is read off the live board at render time:
+         the most recognizable starter near that price (positional
+         rank is the recognition proxy), never a player pinned to a
+         value in code, so it moves as the board moves. Candidates
+         pass the buy engine's own gates — the player must raise the
+         user's optimal lineup over its weakest starter at his
+         position, the package is built from the user's picks and
+         bench depth, the counterparty sanity applies, and the
+         finished offer must grade Fair or Close — then rank by
+         seller context: the owner's window, standing and depth at
+         the position. Every card carries a plain team-context note
+         on why that owner would sell. Values are points, never
+         dollars: nothing in this layer formats currency. */
+      const tgState = { pos: null, budget: null };
+      let tgCache = null;
+      const TG_BAND_LO = 4000, TG_BAND_HI = 6000;
+      const TG_PEAK_AGE = { QB: 31, RB: 26, WR: 28, TE: 28 };
+      const TG_FLEX_KEYS = { FLEX: 1, WRRB_FLEX: 1, REC_FLEX: 1 };
+
+      function tgSlotMap(rid) {
+        /* The optimal lineup WITH its slot assignment — the same
+           greedy construction optimalLineup runs (pool by projected
+           pts/week, slots in the league's own starterSlots() order),
+           recording which player filled which slot. */
+        const pool = teamPlayers(rid).slice().sort((a, b) => rosProj(b) - rosProj(a));
+        const used = new Set(); const out = [];
+        starterSlots().forEach(s => {
+          const p = pool.find(x => !used.has(x.id) && s.cands.includes(x.pos));
+          if (p) { used.add(p.id); out.push({ key: s.key, label: s.label, player: p, ppg: rosProj(p) }); }
+          else out.push({ key: s.key, label: s.label, player: null, ppg: 0 });
+        });
+        return out;
+      }
+      let tgMapsCache = null;
+      function tgAllMaps() {
+        const key = (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + DATA.players.length + "|" + starterSlots().length;
+        if (tgMapsCache && tgMapsCache.key === key) return tgMapsCache.maps;
+        const maps = {};
+        DATA.teams.forEach(t => { maps[t.rid] = tgSlotMap(t.rid); });
+        tgMapsCache = { key, maps };
+        return maps;
+      }
+      function tgWeakGroups(rid) {
+        /* Weakest starting slots, grouped: dedicated and superflex
+           slots group by the position of the player filling them,
+           flex slots group as FLEX. A group's weakness is its worst
+           starter's standing against the same slot league-wide. */
+        const maps = tgAllMaps();
+        const mine = maps[rid] || [];
+        const groups = {};
+        mine.forEach((s, i) => {
+          if (!s.player) return;
+          const g = TG_FLEX_KEYS[s.key] ? "FLEX" : s.player.pos;
+          const vals = DATA.teams.map(t => { const m = maps[t.rid][i]; return m ? m.ppg : 0; });
+          const below = vals.filter(v => v < s.ppg).length, ties = vals.filter(v => v === s.ppg).length;
+          const pct = vals.length ? 100 * (below + 0.5 * (ties - 1)) / vals.length : 100;
+          if (!groups[g] || pct < groups[g].pct) groups[g] = { group: g, pct, starter: s.player, ppg: s.ppg };
+        });
+        return Object.values(groups).sort((a, b) => a.pct - b.pct);
+      }
+      function tgPosRank(rid, pos) {
+        if (pos === "FLEX") {
+          const maps = tgAllMaps();
+          const fs = t => (maps[t.rid] || []).filter(s => TG_FLEX_KEYS[s.key] && s.player).reduce((x, s) => x + dispVal(s.player), 0);
+          return [...DATA.teams].sort((a, b) => fs(b) - fs(a)).findIndex(t => t.rid === rid) + 1;
+        }
+        return [...DATA.teams].sort((a, b) => (b.strengths[pos] || 0) - (a.strengths[pos] || 0)).findIndex(t => t.rid === rid) + 1;
+      }
+      function tgGradeOf(mine, pos) {
+        if (pos === "FLEX") return GRADE_LADDER[tgPosRank(mine.rid, "FLEX") - 1] || "F";
+        return (mine.grades && mine.grades[pos]) || "—";
+      }
+      function tgSellInfo(owner, cand, ctx) {
+        /* Seller context, from computed facts only: the owner's
+           window (archetype), standing (power rank), whether the
+           player starts for them, who is ahead of him, and how the
+           owner's whole group at the position ranks. The score only
+           ORDERS cards; the note is plain team context. */
+        const n = DATA.teams.length;
+        const rd = VALMODE === "redraft";
+        let starts = false, aheadName = null, posRankOwner = 99;
+        try {
+          if (!ctx.lineups.has(owner.rid)) ctx.lineups.set(owner.rid, lineupSet(owner.rid));
+          starts = ctx.lineups.get(owner.rid).has(cand.id);
+          const mates = teamPlayers(owner.rid).filter(p => p.pos === cand.pos && p.id !== cand.id && dispVal(p) > dispVal(cand))
+            .sort((a, b) => dispVal(b) - dispVal(a));
+          aheadName = mates.length ? mates[0].name : null;
+          posRankOwner = tgPosRank(owner.rid, cand.pos);
+        } catch (e) { /* facts unavailable — the neutral note below still holds */ }
+        const peak = TG_PEAK_AGE[cand.pos] || 28;
+        const old = (cand.age ?? 0) >= peak;
+        const bottomThird = owner.powerRank > (2 * n) / 3;
+        const topThird = owner.powerRank <= Math.ceil(n / 3);
+        let score = 30;
+        if (!rd) {
+          if (owner.arch === "rebuilder") score += 34; else if (owner.arch === "crossroads") score += 18;
+          else if (owner.arch === "win-now") score += 2;
+          if (bottomThird) score += 14; if (topThird) score -= 8;
+          if (old && owner.arch === "rebuilder") score += 12; else if (old && owner.arch === "crossroads") score += 6;
+        }
+        if (!starts) score += 16;
+        if (posRankOwner <= 3) score += 8;
+        const longShot = !rd && starts && topThird && (owner.arch === "win-now" || owner.arch === "dynasty") && dispVal(cand) >= 6000;
+        const T = esc(owner.name);
+        let note;
+        if (!rd && owner.arch === "rebuilder" && old) note = `${T} is rebuilding — power #${owner.powerRank} of ${n} — and a ${cand.age}-year-old ${cand.pos} is on the wrong side of their window: his points help you long after they'd help them. Picks and young players are the currency that talks here.`;
+        else if (!rd && owner.arch === "rebuilder") note = `${T} sits at power #${owner.powerRank} of ${n} with a Rebuilder 🔨 tag — this season's production isn't their currency. Picks and youth are, and that's what the offer below is built from.`;
+        else if (!starts && aheadName) note = `He's depth on ${T}'s roster, behind ${esc(aheadName)} — quality they can cash in without opening a hole in their own lineup.`;
+        else if (!starts) note = `He doesn't crack ${T}'s starting lineup — bench production is exactly what a smart owner sells.`;
+        else if (posRankOwner <= 3) note = `${T} is loaded at ${cand.pos} — ${ordinal(posRankOwner)} in the league there — so even a starter is movable when the return backfills the position.`;
+        else if (!rd && owner.arch === "crossroads") note = `${T} is Crossroads 🔀 at power #${owner.powerRank} of ${n} — one good offer can tip them into a rebuild, and a starter is the kind of piece that goes first.`;
+        else if (longShot) note = `He starts for a contender — ${T} is power #${owner.powerRank} of ${n} and playing for now — so this only happens if a starter comes back their way. A long shot, and priced like one.`;
+        else if (!rd && (owner.arch === "win-now" || owner.arch === "dynasty")) note = `${T} is tagged ${archTag(owner.arch)} at power #${owner.powerRank} of ${n} — not a natural seller, so the package has to genuinely help their lineup, not just balance on value.`;
+        else note = `${T} sits at power #${owner.powerRank} of ${n} — whether they'd move him comes down to the offer, and the one below is built to tempt them.`;
+        return { score, note, longShot, starts, surplus: !starts };
+      }
+      function tgBuyNote(partner, vet) {
+        const n = DATA.teams.length;
+        const T = esc(partner.name);
+        let note;
+        try {
+          if (needScore(partner.rid, vet.pos) > 400)
+            note = `${T} is thin at ${vet.pos} and playing for now — a producing veteran is exactly what their window buys, and he starts for them the week he arrives.`;
+          else if (partner.arch === "crossroads")
+            note = `${T} is Crossroads 🔀 at power #${partner.powerRank} of ${n} — a veteran who starts for them this season is the win-now half of their choice.`;
+          else
+            note = `${T} is tagged ${archTag(partner.arch)} at power #${partner.powerRank} of ${n} — their window is open now, and ${esc(vet.name)} produces today, not in two seasons.`;
+        } catch (e) { note = `${T} is buying for this season — ${esc(vet.name)} produces right now.`; }
+        return `<div class="sell-note"><span class="dir-tag">Why they'd buy</span>${note}</div>`;
+      }
+      function tgCardSellNote(s) {
+        try {
+          if (s.dir === "buy" && s.target && s.partner) {
+            const info = tgSellInfo(s.partner, s.target, { lineups: new Map() });
+            return `<div class="sell-note"><span class="dir-tag">Why they'd sell</span>${info.longShot ? `<span class="tg-chip warn">Long shot</span>` : ""}${info.note}</div>`;
+          }
+          if (s.dir === "sell" && s.vet && s.partner) return tgBuyNote(s.partner, s.vet);
+        } catch (e) { /* a failed note is suppressed, never asserted — the FF-09 direction */ }
+        return "";
+      }
+      function tgCandidates(rid, group) {
+        const key = rid + "|" + group + "|" + (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + partnerPickSig() + "|" + DATA.players.length;
+        if (tgCache && tgCache.key === key) return tgCache;
+        const mine = TBY[rid];
+        const positions = group === "FLEX" ? ["RB", "WR", "TE"] : [group];
+        const base = optimalLineup(mine.playerIds).total;
+        const myLineup = lineupSet(rid);
+        const maps = tgAllMaps();
+        const weakestAt = pos => {
+          let w = null;
+          (maps[rid] || []).forEach(s => { if (s.player && s.player.pos === pos && (!w || s.ppg < w.ppg)) w = s; });
+          return w;
+        };
+        const FL = tradeFloors();
+        const payPool = [
+          ...pickAssets(mine),
+          ...tradableAssets(rid).filter(p => !myLineup.has(p.id) && dispVal(p) >= FL.card).map(playerAsset),
+        ];
+        const ctx = { lineups: new Map() };
+        const out = [];
+        if (payPool.length) {
+          DATA.players.forEach(cand => {
+            if (!positions.includes(cand.pos) || !cand.owner || Number(cand.owner) === rid) return;
+            const owner = TBY[cand.owner];
+            if (!owner || !partnerAllowed(owner.rid)) return;
+            const val = dispVal(cand);
+            if (val < FL.target || (cand.ros || 0) <= 0) return;
+            const weak = weakestAt(cand.pos);
+            if (!weak || !weak.player) return;
+            const newIds = mine.playerIds.filter(id => id !== weak.player.id).concat([cand.id]);
+            const dPpg = optimalLineup(newIds).total - base;
+            if (dPpg < 0.15) return; // the buy guardrail: he must raise the lineup
+            let pkg = buildPackage(payPool, val, 0.90, 1.12, null, val);
+            if (pkg && VALMODE !== "redraft" && !genuineRebuildPartner(owner) && !pkgStartsForPartner(owner, cand, pkg)) {
+              pkg = rebuildWithStarter(owner, cand, payPool);
+            }
+            let grade = null;
+            if (pkg) {
+              const g = offerGrade(pkg, [playerAsset(cand)]);
+              if (g.zone === "lopsided") pkg = null; else grade = g;
+            }
+            const info = tgSellInfo(owner, cand, ctx);
+            out.push({ cand, owner, val, dPpg, pkg, grade, score: info.score, note: info.note, longShot: info.longShot, surplus: info.surplus });
+          });
+        }
+        const maxVal = out.reduce((m, c) => Math.max(m, c.val), 0);
+        tgCache = { key, rid, group, cands: out, maxVal };
+        return tgCache;
+      }
+      const TG_RUNGS = [
+        { id: "depth", lo: 0, hi: 2500, t: "Depth prices", s: "Under 2,500 — cheap fixes and flyers" },
+        { id: "starter", lo: 2500, hi: 4000, t: "Starter prices", s: "2,500–4,000 — real starters, movable owners" },
+        { id: "band", lo: 4000, hi: 6001, t: "The achievable band", s: "4,000–6,000 — the sweet spot: starters whose owners actually trade them" },
+        { id: "prem", lo: 6001, hi: 8500, t: "Premium prices", s: "6,000–8,500 — stars, at star prices" },
+        { id: "top", lo: 8500, hi: Infinity, t: "The top rung", s: "Over 8,500 — the elite names. Gettable only when the owner's window says so" },
+      ];
+      function tgCandHtml(c, rid) {
+        const p = c.cand, o = c.owner;
+        const chips = (c.longShot ? `<span class="tg-chip warn">Long shot</span>` : "")
+          + (!c.longShot && c.score >= 70 ? `<span class="tg-chip good">Realistic</span>` : "")
+          + (c.surplus ? `<span class="tg-chip">Surplus</span>` : "");
+        let offer;
+        if (c.pkg) {
+          const give = c.pkg.map(a => esc(a.label)).join(" + ");
+          const tot2 = c.pkg.reduce((x, a) => x + a.value, 0);
+          const payload = { a: rid, b: o.rid, give: c.pkg.map(a => a.kind === "pick" ? (a.key ? { kind: "pick", key: a.key, fromTeam: a.fromTeam } : null) : { kind: "player", id: a.p.id }), get: [{ kind: "player", id: p.id }] };
+          const btn = payload.give.every(Boolean) ? `<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Grade it in the calculator →</button>` : "";
+          offer = `<div class="tg-offer">The offer: you send <strong>${give}</strong> (${fmt(Math.round(tot2))}) — graded <strong>${c.grade ? (c.grade.zone === "fair" ? "Fair" : "Close") : "Fair"}</strong>. He adds <strong>+${c.dPpg.toFixed(1)} projected pts/week</strong> to your optimal lineup.</div>${btn}`;
+        } else {
+          const payload = { a: rid, b: o.rid, give: [], get: [{ kind: "player", id: p.id }] };
+          offer = `<div class="tg-offer">No fair package prices out of your picks and bench depth today — he adds <strong>+${c.dPpg.toFixed(1)} projected pts/week</strong> if you build the deal by hand.</div><button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Build it in the calculator →</button>`;
+        }
+        return `<div class="tg-cand">
+          <div class="tg-cand-h">${hsImg(p, "phs-sm")}<div><div class="tg-cand-name">${esc(p.name)}${chips}</div><div class="tg-cand-sub">${p.pos}${p.posRank} · ${esc(p.team || "")} · age ${p.age ?? "—"} · ${rosProj(p).toFixed(1)} proj pts/wk</div></div><div class="tg-cand-val">${fmt(Math.round(c.val))}<small>value</small></div></div>
+          <div class="tg-owner">On <strong>${esc(o.name)}</strong> · ${VALMODE === "redraft" ? "" : archTag(o.arch) + " · "}power #${o.powerRank} of ${DATA.teams.length}</div>
+          <div class="sell-note"><span class="dir-tag">Why they'd sell</span>${c.note}</div>
+          ${offer}
+        </div>`;
+      }
+      function tgHeadlineHtml(cache, budget) {
+        const cands = cache.cands;
+        if (!cands.length) return { lm: "", close: "" };
+        const near = cands.filter(c => Math.abs(c.val - budget) <= budget * 0.15);
+        const lmPool = near.length ? near : cands.slice().sort((a, b) => Math.abs(a.val - budget) - Math.abs(b.val - budget)).slice(0, 4);
+        /* Landmark: the most recognizable name near the number —
+           best (lowest) positional rank, distance breaks ties. */
+        const lm = lmPool.slice().sort((a, b) => ((a.cand.posRank ?? 999) - (b.cand.posRank ?? 999)) || (Math.abs(a.val - budget) - Math.abs(b.val - budget)))[0];
+        const close = cands.filter(c => Math.abs(c.val - budget) <= budget * 0.12)
+          .sort((a, b) => (b.score - a.score) || (Math.abs(a.val - budget) - Math.abs(b.val - budget))).slice(0, 3);
+        const lmP = lm.cand;
+        const lmHtml = `<div class="tg-lm" id="tg-lm">${hsImg(lmP)}<div><div class="tg-lm-name">${esc(lmP.name)}</div><div class="tg-lm-sub">${lmP.pos}${lmP.posRank} · ${esc(lmP.team || "")} — the name that lives at this price, on ${esc(lm.owner.name)}</div></div><div class="tg-lm-val">${fmt(Math.round(lm.val))}<small>value</small></div></div>`;
+        const closeHtml = close.length
+          ? `<p class="tg-band-note" style="margin-top:14px">Closest to your number, most realistic first:</p><div class="tg-close">${close.map(c => tgCandHtml(c, cache.rid)).join("")}</div>`
+          : `<p class="tg-band-note" style="margin-top:14px">Nothing gettable sits right at that number — the closest prices are in the ladder below.</p>`;
+        return { lm: lmHtml, close: closeHtml };
+      }
+      function tgLadderHtml(rid, group, cache) {
+        const maxV = Math.max(9000, Math.ceil((cache.maxVal || 9000) / 500) * 500);
+        const minV = 800;
+        const budget = Math.min(maxV, Math.max(minV, tgState.budget || 5000));
+        const bs = ((TG_BAND_LO - minV) / (maxV - minV) * 100).toFixed(1), be = ((TG_BAND_HI - minV) / (maxV - minV) * 100).toFixed(1);
+        const head = tgHeadlineHtml(cache, budget);
+        const rungs = TG_RUNGS.map(r => {
+          const inRung = cache.cands.filter(c => c.val >= r.lo && c.val < r.hi)
+            .sort((a, b) => (b.score - a.score) || (b.val - a.val)).slice(0, 4);
+          if (!inRung.length) return "";
+          return `<div class="tg-rung ${r.id === "band" ? "band" : ""}"><div class="tg-rung-h"><span class="tg-rung-t">${r.t}</span><span class="tg-rung-s">${r.s}</span></div><div class="tg-cards">${inRung.map(c => tgCandHtml(c, rid)).join("")}</div></div>`;
+        }).join("");
+        const posName = group === "FLEX" ? "flex (RB/WR/TE)" : group;
+        return `<div class="tg-ladder">
+          <div class="tg-slider-box">
+            <div class="tg-slider-top"><span class="tg-budget" id="tg-budget-num">${fmt(budget)}</span><span class="tg-budget-lbl">your price at ${esc(posName)} — in value points</span></div>
+            <input type="range" class="tg-slider" id="tg-slider" min="${minV}" max="${maxV}" step="25" value="${budget}" style="--tg-bs:${bs}%;--tg-be:${be}%" aria-label="Your price at ${esc(posName)}, in value points">
+            <div class="tg-slider-ends"><span>${fmt(minV)}</span><span>${fmt(maxV)}+</span></div>
+            <p class="tg-band-note">The shaded stretch is the <strong>achievable band — 4,000 to 6,000</strong>: real starters whose owners actually move them. Slide to a number and the name at that price appears — prices are live, so the name changes as the board moves.</p>
+            <div id="tg-lm-wrap">${head.lm}</div>
+          </div>
+          <div id="tg-headline">${head.close}</div>
+          ${rungs || `<div class="diag"><p>No gettable upgrade at ${esc(posName)} prices fairly out of your picks and bench depth right now — every producer who raises this lineup either costs a starter to balance, or his owner has no reason to sell. The graded offers below are the other windows into this roster.</p></div>`}
+        </div>`;
+      }
+      function tgWeakStripHtml(rid, mine) {
+        let weak = [];
+        /* The strip ranks by the same grades the header prints —
+           Eric's model is "the bad grades are the shopping list" —
+           and only bottom-half grades count as holes at all (an A+
+           flex is not a weak spot, whatever the projections say
+           about its last starter). The weakest starter inside the
+           group, by projected points, is the player the card names. */
+        try {
+          const byGroup = {};
+          tgWeakGroups(rid).forEach(w => { byGroup[w.group] = w; });
+          weak = ["QB", "RB", "WR", "TE", "FLEX"]
+            .map(g => ({ group: g, rank: tgPosRank(rid, g), w: byGroup[g] || null }))
+            .filter(x => x.w && x.rank > DATA.teams.length / 2)
+            .sort((a, b) => b.rank - a.rank).slice(0, 3)
+            .map(x => ({ group: x.group, starter: x.w.starter, ppg: x.w.ppg }));
+        } catch (e) { weak = []; }
+        if (!weak.length) return "";
+        const cards = weak.map(w => {
+          const g = tgGradeOf(mine, w.group);
+          let fix = "";
+          try {
+            const cache = tgCandidates(rid, w.group);
+            const band = cache.cands.filter(c => c.val >= TG_BAND_LO && c.val <= TG_BAND_HI).sort((a, b) => b.score - a.score)[0]
+              || cache.cands.slice().sort((a, b) => (b.score - a.score) || (Math.abs(a.val - 5000) - Math.abs(b.val - 5000)))[0];
+            fix = band
+              ? `<p>Your starter there is <strong>${esc(w.starter.name)}</strong> (${w.ppg.toFixed(1)} proj pts/wk). The most gettable fix: <strong>${esc(band.cand.name)}</strong> at ${fmt(Math.round(band.val))} from ${esc(band.owner.name)}.</p>`
+              : `<p>Your starter there is <strong>${esc(w.starter.name)}</strong> (${w.ppg.toFixed(1)} proj pts/wk). No fairly-priced upgrade today — see the graded offers below.</p>`;
+          } catch (e) { fix = `<p>Your starter there is <strong>${esc(w.starter.name)}</strong>.</p>`; }
+          return `<button type="button" class="tg-weak-card" data-tg-pos="${w.group}"><span class="tg-w-pos">${w.group === "FLEX" ? "Flex" : w.group} · <span class="tg-w-grade">${g}</span></span>${fix}<div class="tg-shop">Shop ${w.group === "FLEX" ? "flex" : w.group} →</div></button>`;
+        }).join("");
+        return `<div class="tg-ladder"><h3 class="path-head">Start with your weakest spots</h3><p class="path-desc">Your thinnest starting spots, worst first — each one already has a fix priced in the achievable band.</p><div class="tg-weak">${cards}</div></div>`;
+      }
+      function tgTopHtml(rid, mine) {
+        try {
+          const groups = ["QB", "RB", "WR", "TE", "FLEX"];
+          let weakFirst = null;
+          try {
+            const worst = ["QB", "RB", "WR", "TE", "FLEX"].map(g => ({ group: g, rank: tgPosRank(rid, g) }))
+              .sort((a, b) => b.rank - a.rank)[0];
+            weakFirst = (worst && worst.rank > DATA.teams.length / 2) ? worst : null;
+          } catch (e) { weakFirst = null; }
+          const btns = groups.map(g => {
+            const grade = tgGradeOf(mine, g);
+            const rank = tgPosRank(rid, g);
+            const on = (finderState.want || "") === g;
+            const startHere = !!(weakFirst && weakFirst.group === g && !finderState.want);
+            return `<button type="button" class="tg-grade-btn ${gradeClass(grade)}" data-tg-pos="${g}" aria-pressed="${on}"><span class="tg-pos">${g === "FLEX" ? "Flex" : g}</span><span class="tg-letter">${grade}</span><span class="tg-rank">${ordinal(rank)} of ${DATA.teams.length}</span>${startHere ? `<span class="tg-start">Start here</span>` : ""}</button>`;
+          }).join("");
+          let html = `<div class="tg-grades"><div class="tg-grades-h">Your team grades — tap a spot to shop it</div><div class="tg-grade-row">${btns}</div></div>`;
+          const pos = finderState.want || "";
+          if (pos && ["QB", "RB", "WR", "TE", "FLEX"].includes(pos)) html += tgLadderHtml(rid, pos, tgCandidates(rid, pos));
+          else html += tgWeakStripHtml(rid, mine);
+          return html;
+        } catch (e) { return ""; }
+      }
+      function tgBindTop() {
+        const out = document.getElementById("finder-out");
+        if (!out) return;
+        out.querySelectorAll("[data-tg-pos]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const g = btn.dataset.tgPos;
+            const next = finderState.want === g ? "" : g;
+            finderState.want = next;
+            tgState.budget = null;
+            const fw = document.getElementById("finder-want");
+            if (fw) fw.querySelectorAll("button[data-want]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.want === next)));
+            renderFinder();
+          });
+        });
+        const slider = document.getElementById("tg-slider");
+        if (slider) {
+          slider.addEventListener("input", () => {
+            tgState.budget = Number(slider.value);
+            const num = document.getElementById("tg-budget-num");
+            if (num) num.textContent = fmt(tgState.budget);
+            const lm = document.getElementById("tg-lm");
+            if (lm) lm.classList.add("out");
+            const pos = finderState.want || "";
+            if (tgCache && tgCache.group === pos) {
+              /* Debounced swap: the old landmark fades out while the
+                 thumb moves; the new name fades in once it settles. */
+              clearTimeout(tgState._lmT);
+              tgState._lmT = setTimeout(() => {
+                const head = tgHeadlineHtml(tgCache, tgState.budget);
+                const wrap = document.getElementById("tg-lm-wrap");
+                if (wrap) wrap.innerHTML = head.lm;
+                const hl = document.getElementById("tg-headline");
+                if (hl) hl.innerHTML = head.close;
+              }, 130);
+            }
+          });
+        }
+      }
+
       function renderFinder() {
         const rid = Number(document.getElementById("finder-team").value);
         if (window.GUEST_MODE || !TBY[rid]) { const el = document.getElementById("finder-out"); if (el) el.innerHTML = ""; return; }
@@ -6774,7 +7224,7 @@ ${rdP ? "" : `
           }
           return `<p>${bits.join(" · ")}.</p>`;
         })();
-        let html = `<div class="diag"><h3>${esc(mine.name)} — diagnosis</h3>
+        let html = tgTopHtml(rid, mine) + `<div class="diag"><h3>${esc(mine.name)} — diagnosis</h3>
           <p>${VALMODE === "redraft" ? "" : `Tagged <strong>${archTag(mine.arch)}</strong>. `}${strat}${want ? ` Targeting: <strong>${esc(wantName)}</strong>.` : ""}</p>${standing}${posNote ? `<p>${posNote}</p>` : ""}${ppNote}</div>`;
         if (!suggestions.length) {
           const why = VALMODE === "redraft"
@@ -6920,6 +7370,7 @@ ${rdP ? "" : `
               <div class="col"><div class="lbl">You get · ${fmt(tot(getAssets))}</div>${assetHtml(getAssets)}</div>
             </div>
             ${s.needLine ? `<div class="need-line"><span class="dir-tag fix">Positional fix</span>${s.needLine}</div>` : ""}
+            ${tgCardSellNote(s)}
             <div class="window-line${isBuy ? "" : " sell"}">${windowLine}</div>
             ${wkDelta === null ? "" : `<div class="wk-line">This week: ${wkDelta >= 0 ? "+" : "−"}${Math.abs(wkDelta).toFixed(1)} pts</div>`}
             <ul class="why-list">${why.map(w => `<li>${w}</li>`).join("")}</ul>
@@ -6948,6 +7399,7 @@ ${rdP ? "" : `
           html += `<div class="near-miss-strip"><h3 class="path-head">Near misses</h3><p class="path-desc">Deals that work on price and fit but add less than the +3.0 projected pts/week your Dynasty 👑 bar demands — here for transparency, not as recommendations. Projections aren't precise to a tenth of a point: a deal at +2.8 is essentially tied with the bar, not a different class of deal.</p>${nearMisses.map(cardFor).join("")}</div>`;
         }
         el.innerHTML = html;
+        tgBindTop();
       }
       /* "Grade it →" on a Player Targets card AND on an Upgrade Finder
          row: load that exact offer into the Trade Calculator (same
