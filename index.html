@@ -1022,89 +1022,86 @@
         box-shadow: 0 0 20px rgba(198, 255, 0, .45);
       }
       .want-btns .want-sub { font-size: 11.5px; font-weight: 600; opacity: .65; letter-spacing: .04em; }
-      /* ---------- Player Targets rework (Nov 9, 2026): team grades,
-         weakest-spot shopping, the per-position price ladder + slider,
-         and the why-they'd-sell note. Values are points, never dollars:
+      /* ---------- Player Targets (Nov 9, 2026): compact grades header,
+         weakest-spot cards, and the price slider that drives a live
+         2–4 card near list. Three-line cards: who + stats, the owner's
+         context line, the offer. Values are points, never dollars:
          no currency formatting anywhere in this layer. ---------- */
-      .tg-grades { margin: 0 0 16px; }
-      .tg-grades-h { font-family: "Space Grotesk", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
-      .tg-grade-row { display: flex; flex-wrap: wrap; gap: 8px; }
+      .tg-grades { margin: 0 0 10px; }
+      .tg-grades-h { font-family: "Space Grotesk", sans-serif; font-size: 11.5px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 5px; }
+      .tg-grade-row { display: flex; flex-wrap: nowrap; gap: 6px; }
       .tg-grade-btn {
-        flex: 1 1 100px; display: flex; flex-direction: column; align-items: center; gap: 1px;
-        padding: 10px 8px 9px; border-radius: 12px; cursor: pointer;
+        flex: 1 1 0; min-width: 0; position: relative; display: flex; align-items: baseline; justify-content: center; gap: 5px;
+        padding: 7px 6px; border-radius: 10px; cursor: pointer;
         border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
         font-family: "Inter", sans-serif;
       }
-      .tg-grade-btn .tg-pos { font-size: 12px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); }
-      .tg-grade-btn .tg-letter { font-family: "Space Grotesk", sans-serif; font-size: 26px; font-weight: 700; line-height: 1.05; }
-      .tg-grade-btn .tg-rank { font-size: 11.5px; color: var(--ink-3); }
+      .tg-grade-btn .tg-pos { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+      .tg-grade-btn .tg-letter { font-family: "Space Grotesk", sans-serif; font-size: 20px; font-weight: 700; line-height: 1; }
+      .tg-grade-btn .tg-rank { font-size: 10.5px; color: var(--ink-3); white-space: nowrap; }
       .tg-grade-btn.good .tg-letter { color: var(--accent); }
       .tg-grade-btn.bad .tg-letter { color: var(--red); }
       .tg-grade-btn:hover { border-color: rgba(198, 255, 0, .6); }
       .tg-grade-btn[aria-pressed="true"] { border-color: var(--accent); background: rgba(198, 255, 0, .08); box-shadow: 0 0 0 1px rgba(198, 255, 0, .35), 0 0 18px rgba(198, 255, 0, .12); }
-      .tg-grade-btn .tg-start { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
-      .tg-ladder { margin: 0 0 18px; }
-      .tg-weak { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 6px; }
-      .tg-weak-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px 15px; text-align: left; color: var(--ink); cursor: pointer; font-family: "Inter", sans-serif; width: 100%; }
+      .tg-grade-btn .tg-start { position: absolute; top: -8px; right: 6px; background: var(--bg, #0b0b14); padding: 0 4px; font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+      .tg-ladder { margin: 0 0 12px; }
+      .tg-weak { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px; }
+      .tg-weak-card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; text-align: left; color: var(--ink); cursor: pointer; font-family: "Inter", sans-serif; width: 100%; }
       .tg-weak-card:hover { border-color: rgba(198, 255, 0, .6); }
-      .tg-weak-card .tg-w-pos { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: .03em; }
+      .tg-weak-card .tg-w-pos { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: .03em; }
       .tg-weak-card .tg-w-grade { color: var(--red); }
-      .tg-weak-card p { margin: 5px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+      .tg-weak-card p { margin: 3px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
       .tg-weak-card p strong { color: var(--ink); }
-      .tg-shop { margin-top: 9px; font-weight: 700; font-size: 13.5px; color: var(--accent); }
-      .tg-slider-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px 14px; margin-bottom: 14px; }
-      .tg-slider-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 4px; }
-      .tg-slider-top .tg-budget { font-family: "Space Grotesk", sans-serif; font-size: 30px; font-weight: 700; color: var(--accent); line-height: 1; }
-      .tg-slider-top .tg-budget-lbl { font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
-      input.tg-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 10px; border-radius: 5px; margin: 14px 0 6px; outline: none; cursor: pointer; background: transparent; }
-      input.tg-slider::-webkit-slider-runnable-track { height: 10px; border-radius: 5px;
+      .tg-shop { margin-top: 5px; font-weight: 700; font-size: 12.5px; color: var(--accent); }
+      .tg-slider-box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 9px; margin-bottom: 10px; }
+      .tg-slider-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+      .tg-slider-top .tg-budget { font-family: "Space Grotesk", sans-serif; font-size: 23px; font-weight: 700; color: var(--accent); line-height: 1; }
+      .tg-slider-top .tg-budget-lbl { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+      input.tg-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 5px; margin: 9px 0 4px; outline: none; cursor: pointer; background: transparent; }
+      input.tg-slider::-webkit-slider-runnable-track { height: 8px; border-radius: 5px;
         background: linear-gradient(90deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.14) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-be, 65%), rgba(255,255,255,.14) var(--tg-be, 65%), rgba(255,255,255,.14) 100%); }
-      input.tg-slider::-moz-range-track { height: 10px; border-radius: 5px;
+      input.tg-slider::-moz-range-track { height: 8px; border-radius: 5px;
         background: linear-gradient(90deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.14) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-be, 65%), rgba(255,255,255,.14) var(--tg-be, 65%), rgba(255,255,255,.14) 100%); }
-      input.tg-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); border: 3px solid #0b0b14; box-shadow: 0 0 0 2px var(--accent), 0 4px 14px rgba(0,0,0,.55); cursor: pointer; }
-      input.tg-slider::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--accent); border: 3px solid #0b0b14; box-shadow: 0 0 0 2px var(--accent); cursor: pointer; }
-
-      .tg-slider-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-3); font-weight: 600; }
-      .tg-band-note { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; }
-      .tg-band-note strong { color: var(--accent); }
-      .tg-lm { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: rgba(198,255,0,.06); border: 1px solid rgba(198,255,0,.30); transition: opacity .18s ease; }
-      .tg-lm.out { opacity: .25; }
-      .tg-lm { animation: tgLmIn .25s ease; }
-      @keyframes tgLmIn { from { opacity: .2; } to { opacity: 1; } }
-      .tg-lm img.phs { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: none; background: rgba(255,255,255,.06); }
-      .tg-lm .tg-lm-name { font-family: "Space Grotesk", sans-serif; font-size: 21px; font-weight: 700; line-height: 1.15; }
-      .tg-lm .tg-lm-sub { font-size: 13px; color: var(--ink-2); margin-top: 2px; }
-      .tg-lm .tg-lm-val { margin-left: auto; text-align: right; font-family: "Space Grotesk", sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); white-space: nowrap; }
-      .tg-lm .tg-lm-val small { display: block; font-family: "Inter", sans-serif; font-size: 11px; font-weight: 600; color: var(--ink-3); letter-spacing: .05em; text-transform: uppercase; }
-      .tg-close { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
-      .tg-rung { margin-top: 16px; }
-      .tg-rung-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 9px; }
-      .tg-rung-h .tg-rung-t { font-family: "Space Grotesk", sans-serif; font-size: 16.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
-      .tg-rung-h .tg-rung-s { font-size: 12.5px; color: var(--ink-3); }
-      .tg-rung.band .tg-rung-t { color: var(--accent); }
-      .tg-rung.band { border: 1px solid rgba(198,255,0,.35); border-radius: var(--radius); padding: 13px 14px 4px; background: rgba(198,255,0,.03); }
-      .tg-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; }
-      .tg-cand { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px 15px; margin-bottom: 10px; }
-      .tg-rung .tg-cand { background: var(--surface-2); }
-      .tg-cand-h { display: flex; align-items: center; gap: 10px; }
-      .tg-cand-h img.phs { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex: none; background: rgba(255,255,255,.06); }
-      .tg-cand-name { font-family: "Space Grotesk", sans-serif; font-size: 17.5px; font-weight: 700; line-height: 1.2; }
-      .tg-cand-sub { font-size: 12.5px; color: var(--ink-2); }
-      .tg-cand-val { margin-left: auto; text-align: right; font-family: "Space Grotesk", sans-serif; font-size: 19px; font-weight: 700; color: var(--accent); white-space: nowrap; }
-      .tg-cand-val small { display: block; font-family: "Inter", sans-serif; font-size: 10.5px; font-weight: 600; color: var(--ink-3); letter-spacing: .05em; text-transform: uppercase; }
-      .tg-owner { font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+      input.tg-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #0b0b14; box-shadow: 0 0 0 2px var(--accent), 0 4px 14px rgba(0,0,0,.55); cursor: pointer; }
+      input.tg-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); border: 3px solid #0b0b14; box-shadow: 0 0 0 2px var(--accent); cursor: pointer; }
+      .tg-slider-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); font-weight: 600; }
+      .tg-near-h { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin: 1px 0 7px; }
+      .tg-near-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 8px; }
+      .tg-near-grid.swap .tg-cand { animation: tgSwapIn .22s ease; }
+      @keyframes tgSwapIn { from { opacity: .3; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+      .tg-cand { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+      .tg-cand-h { display: flex; align-items: center; gap: 9px; }
+      .tg-cand-h img.phs { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; background: rgba(255,255,255,.06); }
+      .tg-cand-name { font-family: "Space Grotesk", sans-serif; font-size: 16.5px; font-weight: 700; line-height: 1.2; }
+      .tg-cand-sub { font-size: 12px; color: var(--ink-2); }
+      .tg-cand-val { margin-left: auto; text-align: right; font-family: "Space Grotesk", sans-serif; font-size: 17px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+      .tg-cand-val small { display: block; font-family: "Inter", sans-serif; font-size: 10px; font-weight: 600; color: var(--ink-3); letter-spacing: .05em; text-transform: uppercase; }
+      .tg-owner { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; }
       .sell-note { margin-top: 10px; padding: 10px 13px; border-radius: 10px; font-size: 14px; line-height: 1.55; background: rgba(64,200,255,.07); border: 1px solid rgba(64,200,255,.32); color: var(--ink); }
       .sell-note .dir-tag { background: var(--cyan); color: #04121A; }
       .tg-chip { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; background: rgba(255,255,255,.10); color: var(--ink-2); }
       .tg-chip.warn { background: rgba(255,84,112,.18); color: #ff8fa3; border: 1px solid rgba(255,84,112,.45); }
       .tg-chip.good { background: rgba(198,255,0,.14); color: var(--accent); border: 1px solid rgba(198,255,0,.4); }
-      .tg-offer { margin-top: 10px; font-size: 13.5px; color: var(--ink-2); line-height: 1.55; }
+      .tg-offer { margin-top: 6px; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
       .tg-offer strong { color: var(--ink); }
+      .tg-offer .grade-btn { padding: 3px 10px; font-size: 12px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
+      /* Targets section chrome stays tight so the first offer card is
+         one short scroll from the section top, phone included. */
+      #tab-targets .tab-intro { margin-top: 0; margin-bottom: 10px; }
+      #tab-targets .finder-controls { margin-bottom: 10px; }
+      #tab-targets .want-panel { margin-bottom: 10px; }
+      #finder-out .diag { padding: 11px 13px; margin-bottom: 10px; }
+      #finder-out .diag h3 { font-size: 17px; margin-bottom: 3px; }
+      #finder-out .diag p { margin: 2px 0; }
+      #finder-out .suggestion { padding: 13px 14px; margin-bottom: 10px; }
+      #finder-out .suggestion h3 { font-size: 17px; }
+      #finder-out .tg-ladder .path-head { font-size: 15px; margin: 0 0 6px; }
       @media (max-width: 560px) {
-        .tg-grade-btn { flex: 1 1 30%; }
-        .tg-lm .tg-lm-name { font-size: 18px; }
-        .tg-lm img.phs { width: 52px; height: 52px; }
-        .tg-slider-top .tg-budget { font-size: 26px; }
+        .tg-grade-btn { gap: 3px; padding: 6px 2px; }
+        .tg-grade-btn .tg-letter { font-size: 17px; }
+        .tg-grade-btn .tg-rank { font-size: 9.5px; }
+        .tg-slider-top .tg-budget { font-size: 21px; }
+        #tab-targets .want-btns button { min-height: 40px; }
       }
       @media (max-width: 560px) {
         .want-panel { padding: 12px 13px; gap: 8px 12px; }
@@ -3334,7 +3331,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
       <section class="tab" id="tab-targets" role="tabpanel">
         <h2 class="block-title">Personalized Player Targets<span class="launch-badge">Free during launch</span></h2>
-        <p class="tab-intro">Deals built for your team, not generic advice: your roster, your window, and your picks — matched against every other roster in your league. Rebuilders sell their aging veterans to the contenders who need them; contenders buy the veterans who raise their lineup. Every offer is graded Fair or Close before it is shown.</p>
+        <p class="tab-intro">Deals built for your team — your roster, your window, your picks, matched against every other roster in your league. Every offer is graded Fair or Close before it shows.</p>
         <div class="finder-controls finder-part">
           <label for="finder-team"><strong>Find trades for:</strong></label>
           <select id="finder-team"></select>
@@ -6828,32 +6825,34 @@ ${rdP ? "" : `
         return { myNeeds, suggestions: picked, mine, posNote, nearMisses: nearGraded.slice(0, 3) };
       }
 
-      /* ================= Player Targets rework (Eric, Nov 9, 2026) ====
+      /* ================= Player Targets (Eric, Nov 9, 2026) ====
          Grades up top, slot-first shopping underneath. The page opens
          on the user's positional grades — the same letter grades the
          League tab prints (positional strength vs the league) — and
          the weakest grades are the shopping list: tapping one aims
-         the "I want" filter at that hole. Under the grades sits a
-         per-position price ladder: every gettable upgrade at the
-         position, grouped by price, driven by a budget slider whose
-         shaded band marks the prices that actually move in real
-         leagues (4,000–6,000). The name shown at the slider's number
-         — the landmark — is read off the live board at render time:
-         the most recognizable starter near that price (positional
-         rank is the recognition proxy), never a player pinned to a
-         value in code, so it moves as the board moves. Candidates
-         pass the buy engine's own gates — the player must raise the
-         user's optimal lineup over its weakest starter at his
-         position, the package is built from the user's picks and
-         bench depth, the counterparty sanity applies, and the
-         finished offer must grade Fair or Close — then rank by
-         seller context: the owner's window, standing and depth at
-         the position. Every card carries a plain team-context note
-         on why that owner would sell. Values are points, never
-         dollars: nothing in this layer formats currency. */
+         the "I want" filter at that hole. Under the grades sits one
+         control: a per-position price slider. Wherever it stops, the
+         2–4 gettable players nearest that value appear — live, while
+         the thumb moves — each on a three-line card: name and stats,
+         the owner's context (team · window · power rank), and the
+         offer itself. Behind the scenes, a per-position sweet spot
+         is derived from the live board on every render (tgBandFor):
+         the values of the league's starters at the position outside
+         the elite tier. It seeds the slider's start point and its
+         shading, and picks the weakest-spot fixes — it is never a
+         hand-picked range and never renders as labeled boxes.
+         Candidates pass the buy engine's own gates — the player must
+         raise the user's optimal lineup over its weakest starter at
+         his position (at FLEX, over the weakest flex-slot holder
+         too), the package is built from the user's picks and bench
+         depth, the counterparty sanity applies, and the finished
+         offer must grade Fair or Close — then rank by seller context:
+         the owner's window, standing and depth at the position.
+         Values are points, never dollars: nothing in this layer
+         formats currency. */
       const tgState = { pos: null, budget: null };
       let tgCache = null;
-      const TG_BAND_LO = 4000, TG_BAND_HI = 6000;
+      let tgBandCache = null;
       const TG_PEAK_AGE = { QB: 31, RB: 26, WR: 28, TE: 28 };
       const TG_FLEX_KEYS = { FLEX: 1, WRRB_FLEX: 1, REC_FLEX: 1 };
 
@@ -6879,6 +6878,51 @@ ${rdP ? "" : `
         DATA.teams.forEach(t => { maps[t.rid] = tgSlotMap(t.rid); });
         tgMapsCache = { key, maps };
         return maps;
+      }
+      function tgBandFor(group) {
+        /* The sweet spot at a position, computed from the live board
+           on every render — never a constant. Take every player who
+           fills a starting slot at the position in the league's own
+           optimal lineups (tgAllMaps: dedicated slots, plus flex and
+           superflex slots, count the player who actually fills them),
+           price them with dispVal, sort high to low. The elite tier
+           is the top ~30% of those starters; the band runs from the
+           best non-elite starter's value down to the last starter's
+           value — starter-caliber names outside the elite, the
+           prices that actually move. FLEX reads the players holding
+           flex slots (any of RB/WR/TE); a league with no flex slots
+           falls back to every flex-eligible starter. Edges round to
+           the nearest 50 for display. */
+        const key = (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + DATA.players.length + "|" + starterSlots().length
+          + "|" + (typeof SETTINGS !== "undefined" ? JSON.stringify(SETTINGS) : "");
+        if (tgBandCache && tgBandCache.key === key && tgBandCache.bands[group]) return tgBandCache.bands[group];
+        const maps = tgAllMaps();
+        let vals = [];
+        if (group === "FLEX") {
+          DATA.teams.forEach(t => (maps[t.rid] || []).forEach(s => { if (s.player && TG_FLEX_KEYS[s.key]) vals.push(dispVal(s.player)); }));
+          if (vals.length < 6) {
+            vals = [];
+            DATA.teams.forEach(t => (maps[t.rid] || []).forEach(s => { if (s.player && ["RB", "WR", "TE"].includes(s.player.pos)) vals.push(dispVal(s.player)); }));
+          }
+        } else {
+          DATA.teams.forEach(t => (maps[t.rid] || []).forEach(s => { if (s.player && s.player.pos === group) vals.push(dispVal(s.player)); }));
+        }
+        vals = vals.filter(v => v > 0).sort((a, b) => b - a);
+        let band;
+        if (vals.length >= 6) {
+          const cut = Math.min(vals.length - 1, Math.max(2, Math.round(vals.length * 0.30)));
+          band = { lo: vals[vals.length - 1], hi: vals[cut], n: vals.length, cut };
+        } else if (vals.length) {
+          band = { lo: vals[vals.length - 1], hi: vals[0], n: vals.length, cut: 0 };
+        } else {
+          band = { lo: 1000, hi: 3000, n: 0, cut: 0 };
+        }
+        const r50 = v => Math.max(50, Math.round(v / 50) * 50);
+        band = { lo: r50(band.lo), hi: r50(band.hi), n: band.n, cut: band.cut };
+        if (band.hi < band.lo) band.hi = band.lo;
+        if (!tgBandCache || tgBandCache.key !== key) tgBandCache = { key, bands: {} };
+        tgBandCache.bands[group] = band;
+        return band;
       }
       function tgWeakGroups(rid) {
         /* Weakest starting slots, grouped: dedicated and superflex
@@ -6954,29 +6998,20 @@ ${rdP ? "" : `
         else note = `${T} sits at power #${owner.powerRank} of ${n} — whether they'd move him comes down to the offer, and the one below is built to tempt them.`;
         return { score, note, longShot, starts, surplus: !starts };
       }
-      function tgBuyNote(partner, vet) {
-        const n = DATA.teams.length;
-        const T = esc(partner.name);
-        let note;
-        try {
-          if (needScore(partner.rid, vet.pos) > 400)
-            note = `${T} is thin at ${vet.pos} and playing for now — a producing veteran is exactly what their window buys, and he starts for them the week he arrives.`;
-          else if (partner.arch === "crossroads")
-            note = `${T} is Crossroads 🔀 at power #${partner.powerRank} of ${n} — a veteran who starts for them this season is the win-now half of their choice.`;
-          else
-            note = `${T} is tagged ${archTag(partner.arch)} at power #${partner.powerRank} of ${n} — their window is open now, and ${esc(vet.name)} produces today, not in two seasons.`;
-        } catch (e) { note = `${T} is buying for this season — ${esc(vet.name)} produces right now.`; }
-        return `<div class="sell-note"><span class="dir-tag">Why they'd buy</span>${note}</div>`;
-      }
       function tgCardSellNote(s) {
+        /* One context line, the format Eric kept: the counterparty's
+           team, window and power rank. The seller reasoning still
+           orders the cards behind the scenes — it just isn't printed
+           as paragraphs anymore. A failed lookup suppresses the line,
+           never asserts it (the FF-09 direction). */
         try {
-          if (s.dir === "buy" && s.target && s.partner) {
-            const info = tgSellInfo(s.partner, s.target, { lineups: new Map() });
-            return `<div class="sell-note"><span class="dir-tag">Why they'd sell</span>${info.longShot ? `<span class="tg-chip warn">Long shot</span>` : ""}${info.note}</div>`;
-          }
-          if (s.dir === "sell" && s.vet && s.partner) return tgBuyNote(s.partner, s.vet);
-        } catch (e) { /* a failed note is suppressed, never asserted — the FF-09 direction */ }
-        return "";
+          const o = s.partner;
+          if (!o) return "";
+          const ctx = VALMODE === "redraft"
+            ? `${esc(o.name)} • Power ${o.powerRank} of ${DATA.teams.length}`
+            : `${esc(o.name)} — ${archTag(o.arch)} • Power ${o.powerRank} of ${DATA.teams.length}`;
+          return `<div class="tg-owner">${ctx}</div>`;
+        } catch (e) { return ""; }
       }
       function tgCandidates(rid, group) {
         const key = rid + "|" + group + "|" + (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + partnerPickSig() + "|" + DATA.players.length;
@@ -7005,11 +7040,28 @@ ${rdP ? "" : `
             if (!owner || !partnerAllowed(owner.rid)) return;
             const val = dispVal(cand);
             if (val < FL.target || (cand.ros || 0) <= 0) return;
-            const weak = weakestAt(cand.pos);
-            if (!weak || !weak.player) return;
-            const newIds = mine.playerIds.filter(id => id !== weak.player.id).concat([cand.id]);
-            const dPpg = optimalLineup(newIds).total - base;
-            if (dPpg < 0.15) return; // the buy guardrail: he must raise the lineup
+            /* The bump test: the candidate must take a starting slot.
+               At a dedicated position he displaces the weakest starter
+               at his own position. At FLEX he can displace that
+               starter OR the player holding a flex slot — whichever
+               he genuinely beats — so flex shopping tests RB, WR and
+               TE targets against the same bar, instead of only the
+               tight ends who clear a same-position swap. */
+            const bumps = [weakestAt(cand.pos)];
+            if (group === "FLEX") {
+              let flexWeak = null;
+              (maps[rid] || []).forEach(s => { if (s.player && TG_FLEX_KEYS[s.key] && (!flexWeak || s.ppg < flexWeak.ppg)) flexWeak = s; });
+              if (flexWeak) bumps.push(flexWeak);
+            }
+            let dPpg = -Infinity;
+            const seenBump = new Set();
+            bumps.forEach(w => {
+              if (!w || !w.player || seenBump.has(w.player.id)) return;
+              seenBump.add(w.player.id);
+              const ids = mine.playerIds.filter(id => id !== w.player.id).concat([cand.id]);
+              dPpg = Math.max(dPpg, optimalLineup(ids).total - base);
+            });
+            if (!(dPpg >= 0.15)) return; // the buy guardrail: he must raise the lineup
             let pkg = buildPackage(payPool, val, 0.90, 1.12, null, val);
             if (pkg && VALMODE !== "redraft" && !genuineRebuildPartner(owner) && !pkgStartsForPartner(owner, cand, pkg)) {
               pkg = rebuildWithStarter(owner, cand, payPool);
@@ -7027,76 +7079,92 @@ ${rdP ? "" : `
         tgCache = { key, rid, group, cands: out, maxVal };
         return tgCache;
       }
-      const TG_RUNGS = [
-        { id: "depth", lo: 0, hi: 2500, t: "Depth prices", s: "Under 2,500 — cheap fixes and flyers" },
-        { id: "starter", lo: 2500, hi: 4000, t: "Starter prices", s: "2,500–4,000 — real starters, movable owners" },
-        { id: "band", lo: 4000, hi: 6001, t: "The achievable band", s: "4,000–6,000 — the sweet spot: starters whose owners actually trade them" },
-        { id: "prem", lo: 6001, hi: 8500, t: "Premium prices", s: "6,000–8,500 — stars, at star prices" },
-        { id: "top", lo: 8500, hi: Infinity, t: "The top rung", s: "Over 8,500 — the elite names. Gettable only when the owner's window says so" },
-      ];
       function tgCandHtml(c, rid) {
+        /* Three lines, nothing else: name + tag and the stat strip;
+           the owner's context line; the offer. The seller logic that
+           ordered this card stays behind the scenes (c.score, the
+           Realistic / Long shot tag) — the prose is gone. */
         const p = c.cand, o = c.owner;
-        const chips = (c.longShot ? `<span class="tg-chip warn">Long shot</span>` : "")
-          + (!c.longShot && c.score >= 70 ? `<span class="tg-chip good">Realistic</span>` : "")
-          + (c.surplus ? `<span class="tg-chip">Surplus</span>` : "");
+        const tag = c.longShot ? `<span class="tg-chip warn">Long shot</span>`
+          : (c.score >= 70 ? `<span class="tg-chip good">Realistic</span>` : "");
+        const ctx = VALMODE === "redraft"
+          ? `${esc(o.name)} • Power ${o.powerRank} of ${DATA.teams.length}`
+          : `${esc(o.name)} — ${archTag(o.arch)} • Power ${o.powerRank} of ${DATA.teams.length}`;
         let offer;
         if (c.pkg) {
           const give = c.pkg.map(a => esc(a.label)).join(" + ");
-          const tot2 = c.pkg.reduce((x, a) => x + a.value, 0);
           const payload = { a: rid, b: o.rid, give: c.pkg.map(a => a.kind === "pick" ? (a.key ? { kind: "pick", key: a.key, fromTeam: a.fromTeam } : null) : { kind: "player", id: a.p.id }), get: [{ kind: "player", id: p.id }] };
-          const btn = payload.give.every(Boolean) ? `<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Grade it in the calculator →</button>` : "";
-          offer = `<div class="tg-offer">The offer: you send <strong>${give}</strong> (${fmt(Math.round(tot2))}) — graded <strong>${c.grade ? (c.grade.zone === "fair" ? "Fair" : "Close") : "Fair"}</strong>. He adds <strong>+${c.dPpg.toFixed(1)} projected pts/week</strong> to your optimal lineup.</div>${btn}`;
+          const btn = payload.give.every(Boolean) ? `<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Grade it →</button>` : "";
+          offer = `<div class="tg-offer">You send <strong>${give}</strong> · <strong>${c.grade ? (c.grade.zone === "fair" ? "Fair" : "Close") : "Fair"}</strong> · adds <strong>+${c.dPpg.toFixed(1)} pts/wk</strong> to your projected lineup${btn}</div>`;
         } else {
           const payload = { a: rid, b: o.rid, give: [], get: [{ kind: "player", id: p.id }] };
-          offer = `<div class="tg-offer">No fair package prices out of your picks and bench depth today — he adds <strong>+${c.dPpg.toFixed(1)} projected pts/week</strong> if you build the deal by hand.</div><button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Build it in the calculator →</button>`;
+          offer = `<div class="tg-offer">No fair package from your picks &amp; bench — adds <strong>+${c.dPpg.toFixed(1)} pts/wk</strong> if you build it<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Build it →</button></div>`;
         }
         return `<div class="tg-cand">
-          <div class="tg-cand-h">${hsImg(p, "phs-sm")}<div><div class="tg-cand-name">${esc(p.name)}${chips}</div><div class="tg-cand-sub">${p.pos}${p.posRank} · ${esc(p.team || "")} · age ${p.age ?? "—"} · ${rosProj(p).toFixed(1)} proj pts/wk</div></div><div class="tg-cand-val">${fmt(Math.round(c.val))}<small>value</small></div></div>
-          <div class="tg-owner">On <strong>${esc(o.name)}</strong> · ${VALMODE === "redraft" ? "" : archTag(o.arch) + " · "}power #${o.powerRank} of ${DATA.teams.length}</div>
-          <div class="sell-note"><span class="dir-tag">Why they'd sell</span>${c.note}</div>
+          <div class="tg-cand-h">${hsImg(p, "phs-sm")}<div><div class="tg-cand-name">${esc(p.name)}${tag}</div><div class="tg-cand-sub">${p.pos}${p.posRank} · ${esc(p.team || "")} · age ${p.age ?? "—"} · ${rosProj(p).toFixed(1)} proj/wk</div></div><div class="tg-cand-val">${fmt(Math.round(c.val))}<small>value</small></div></div>
+          <div class="tg-owner">${ctx}</div>
           ${offer}
         </div>`;
       }
-      function tgHeadlineHtml(cache, budget) {
+      function tgNearData(cache, budget) {
+        /* The slider's whole job: the pursue-able players nearest
+           the set value. Window = 20% either side of the number (at least 500);
+           inside it, seller realism orders the cards. If fewer than
+           two players sit inside the window, the nearest two overall
+           show instead — each card prints its own value, so the gap
+           from the number is always honest. A ~10,500 star can never
+           headline a 4,650 setting: distance picks the pool, not
+           positional rank. */
         const cands = cache.cands;
-        if (!cands.length) return { lm: "", close: "" };
-        const near = cands.filter(c => Math.abs(c.val - budget) <= budget * 0.15);
-        const lmPool = near.length ? near : cands.slice().sort((a, b) => Math.abs(a.val - budget) - Math.abs(b.val - budget)).slice(0, 4);
-        /* Landmark: the most recognizable name near the number —
-           best (lowest) positional rank, distance breaks ties. */
-        const lm = lmPool.slice().sort((a, b) => ((a.cand.posRank ?? 999) - (b.cand.posRank ?? 999)) || (Math.abs(a.val - budget) - Math.abs(b.val - budget)))[0];
-        const close = cands.filter(c => Math.abs(c.val - budget) <= budget * 0.12)
-          .sort((a, b) => (b.score - a.score) || (Math.abs(a.val - budget) - Math.abs(b.val - budget))).slice(0, 3);
-        const lmP = lm.cand;
-        const lmHtml = `<div class="tg-lm" id="tg-lm">${hsImg(lmP)}<div><div class="tg-lm-name">${esc(lmP.name)}</div><div class="tg-lm-sub">${lmP.pos}${lmP.posRank} · ${esc(lmP.team || "")} — the name that lives at this price, on ${esc(lm.owner.name)}</div></div><div class="tg-lm-val">${fmt(Math.round(lm.val))}<small>value</small></div></div>`;
-        const closeHtml = close.length
-          ? `<p class="tg-band-note" style="margin-top:14px">Closest to your number, most realistic first:</p><div class="tg-close">${close.map(c => tgCandHtml(c, cache.rid)).join("")}</div>`
-          : `<p class="tg-band-note" style="margin-top:14px">Nothing gettable sits right at that number — the closest prices are in the ladder below.</p>`;
-        return { lm: lmHtml, close: closeHtml };
+        if (!cands.length) return { near: [], inWindow: 0 };
+        const byDist = cands.slice().sort((a, b) => (Math.abs(a.val - budget) - Math.abs(b.val - budget)) || ((a.cand.posRank ?? 999) - (b.cand.posRank ?? 999)) || (b.score - a.score));
+        const win = Math.max(budget * 0.20, 500);
+        const inside = cands.filter(c => Math.abs(c.val - budget) <= win)
+          .sort((a, b) => (b.score - a.score) || (Math.abs(a.val - budget) - Math.abs(b.val - budget)));
+        if (inside.length < 2) return { near: byDist.slice(0, 2), inWindow: inside.length };
+        return { near: inside.slice(0, 4), inWindow: inside.length };
+      }
+      function tgNearHtml(cache, budget, d) {
+        d = d || tgNearData(cache, budget);
+        if (!d.near.length) return `<p class="tg-near-h">No gettable names at this position</p>`;
+        const head = d.inWindow >= 2 ? "Closest to your number" : "Nothing prices right at that number — the closest gettable names";
+        return `<p class="tg-near-h">${head}</p><div class="tg-near-grid">${d.near.map(c => tgCandHtml(c, cache.rid)).join("")}</div>`;
+      }
+      function tgPatchNear(nearEl, cache, budget) {
+        /* Live during the drag: swap the near list only when the set
+           of names actually changes, with a short cross-fade — the
+           visible players track the thumb, never just the release. */
+        const d = tgNearData(cache, budget);
+        const key = d.near.map(c => c.cand.id).join(",");
+        if (nearEl.dataset.tgKey === key) return;
+        nearEl.dataset.tgKey = key;
+        nearEl.innerHTML = tgNearHtml(cache, budget, d);
+        const grid = nearEl.querySelector(".tg-near-grid");
+        if (grid) grid.classList.add("swap");
       }
       function tgLadderHtml(rid, group, cache) {
+        const band = tgBandFor(group);
         const maxV = Math.max(9000, Math.ceil((cache.maxVal || 9000) / 500) * 500);
         const minV = 800;
-        const budget = Math.min(maxV, Math.max(minV, tgState.budget || 5000));
-        const bs = ((TG_BAND_LO - minV) / (maxV - minV) * 100).toFixed(1), be = ((TG_BAND_HI - minV) / (maxV - minV) * 100).toFixed(1);
-        const head = tgHeadlineHtml(cache, budget);
-        const rungs = TG_RUNGS.map(r => {
-          const inRung = cache.cands.filter(c => c.val >= r.lo && c.val < r.hi)
-            .sort((a, b) => (b.score - a.score) || (b.val - a.val)).slice(0, 4);
-          if (!inRung.length) return "";
-          return `<div class="tg-rung ${r.id === "band" ? "band" : ""}"><div class="tg-rung-h"><span class="tg-rung-t">${r.t}</span><span class="tg-rung-s">${r.s}</span></div><div class="tg-cards">${inRung.map(c => tgCandHtml(c, rid)).join("")}</div></div>`;
-        }).join("");
+        const budget = Math.min(maxV, Math.max(minV, tgState.budget || Math.round((band.lo + band.hi) / 2)));
+        tgState.budget = budget;
+        const clampPct = v => Math.min(100, Math.max(0, v)).toFixed(1);
+        const bs = clampPct((band.lo - minV) / (maxV - minV) * 100), be = clampPct((band.hi - minV) / (maxV - minV) * 100);
         const posName = group === "FLEX" ? "flex (RB/WR/TE)" : group;
+        let near;
+        if (cache.cands.length) {
+          const d0 = tgNearData(cache, budget);
+          near = `<div id="tg-near" data-tg-key="${d0.near.map(c => c.cand.id).join(",")}">${tgNearHtml(cache, budget, d0)}</div>`;
+        } else {
+          near = `<div class="diag"><p>No gettable upgrade at ${esc(posName)} prices fairly out of your picks and bench depth right now — every producer who raises this lineup either costs a starter to balance, or his owner has no reason to sell. The graded offers below are the other windows into this roster.</p></div>`;
+        }
         return `<div class="tg-ladder">
           <div class="tg-slider-box">
             <div class="tg-slider-top"><span class="tg-budget" id="tg-budget-num">${fmt(budget)}</span><span class="tg-budget-lbl">your price at ${esc(posName)} — in value points</span></div>
             <input type="range" class="tg-slider" id="tg-slider" min="${minV}" max="${maxV}" step="25" value="${budget}" style="--tg-bs:${bs}%;--tg-be:${be}%" aria-label="Your price at ${esc(posName)}, in value points">
             <div class="tg-slider-ends"><span>${fmt(minV)}</span><span>${fmt(maxV)}+</span></div>
-            <p class="tg-band-note">The shaded stretch is the <strong>achievable band — 4,000 to 6,000</strong>: real starters whose owners actually move them. Slide to a number and the name at that price appears — prices are live, so the name changes as the board moves.</p>
-            <div id="tg-lm-wrap">${head.lm}</div>
           </div>
-          <div id="tg-headline">${head.close}</div>
-          ${rungs || `<div class="diag"><p>No gettable upgrade at ${esc(posName)} prices fairly out of your picks and bench depth right now — every producer who raises this lineup either costs a starter to balance, or his owner has no reason to sell. The graded offers below are the other windows into this roster.</p></div>`}
+          ${near}
         </div>`;
       }
       function tgWeakStripHtml(rid, mine) {
@@ -7122,15 +7190,16 @@ ${rdP ? "" : `
           let fix = "";
           try {
             const cache = tgCandidates(rid, w.group);
-            const band = cache.cands.filter(c => c.val >= TG_BAND_LO && c.val <= TG_BAND_HI).sort((a, b) => b.score - a.score)[0]
-              || cache.cands.slice().sort((a, b) => (b.score - a.score) || (Math.abs(a.val - 5000) - Math.abs(b.val - 5000)))[0];
+            const bd = tgBandFor(w.group);
+            const band = cache.cands.filter(c => c.val >= bd.lo && c.val <= bd.hi).sort((a, b) => b.score - a.score)[0]
+              || cache.cands.slice().sort((a, b) => (b.score - a.score) || (Math.abs(a.val - (bd.lo + bd.hi) / 2) - Math.abs(b.val - (bd.lo + bd.hi) / 2)))[0];
             fix = band
-              ? `<p>Your starter there is <strong>${esc(w.starter.name)}</strong> (${w.ppg.toFixed(1)} proj pts/wk). The most gettable fix: <strong>${esc(band.cand.name)}</strong> at ${fmt(Math.round(band.val))} from ${esc(band.owner.name)}.</p>`
+              ? `<p>Your starter there is <strong>${esc(w.starter.name)}</strong> (${w.ppg.toFixed(1)} proj pts/wk). Most gettable fix: <strong>${esc(band.cand.name)}</strong> at ${fmt(Math.round(band.val))} from ${esc(band.owner.name)}.</p>`
               : `<p>Your starter there is <strong>${esc(w.starter.name)}</strong> (${w.ppg.toFixed(1)} proj pts/wk). No fairly-priced upgrade today — see the graded offers below.</p>`;
           } catch (e) { fix = `<p>Your starter there is <strong>${esc(w.starter.name)}</strong>.</p>`; }
           return `<button type="button" class="tg-weak-card" data-tg-pos="${w.group}"><span class="tg-w-pos">${w.group === "FLEX" ? "Flex" : w.group} · <span class="tg-w-grade">${g}</span></span>${fix}<div class="tg-shop">Shop ${w.group === "FLEX" ? "flex" : w.group} →</div></button>`;
         }).join("");
-        return `<div class="tg-ladder"><h3 class="path-head">Start with your weakest spots</h3><p class="path-desc">Your thinnest starting spots, worst first — each one already has a fix priced in the achievable band.</p><div class="tg-weak">${cards}</div></div>`;
+        return `<div class="tg-ladder"><h3 class="path-head">Start with your weakest spots</h3><div class="tg-weak">${cards}</div></div>`;
       }
       function tgTopHtml(rid, mine) {
         try {
@@ -7171,25 +7240,30 @@ ${rdP ? "" : `
         });
         const slider = document.getElementById("tg-slider");
         if (slider) {
+          /* Live while dragging: every input event schedules one
+             animation-frame patch, and the patch swaps the near list
+             the moment the nearest names change — the players track
+             the thumb mid-drag, never only on release. A final patch
+             on change settles the exact release value. */
+          let tgRaf = 0;
+          const applyBudget = () => {
+            tgRaf = 0;
+            const pos = finderState.want || "";
+            if (tgCache && tgCache.group === pos && tgState.budget != null) {
+              const near = document.getElementById("tg-near");
+              if (near) tgPatchNear(near, tgCache, tgState.budget);
+            }
+          };
           slider.addEventListener("input", () => {
             tgState.budget = Number(slider.value);
             const num = document.getElementById("tg-budget-num");
             if (num) num.textContent = fmt(tgState.budget);
-            const lm = document.getElementById("tg-lm");
-            if (lm) lm.classList.add("out");
-            const pos = finderState.want || "";
-            if (tgCache && tgCache.group === pos) {
-              /* Debounced swap: the old landmark fades out while the
-                 thumb moves; the new name fades in once it settles. */
-              clearTimeout(tgState._lmT);
-              tgState._lmT = setTimeout(() => {
-                const head = tgHeadlineHtml(tgCache, tgState.budget);
-                const wrap = document.getElementById("tg-lm-wrap");
-                if (wrap) wrap.innerHTML = head.lm;
-                const hl = document.getElementById("tg-headline");
-                if (hl) hl.innerHTML = head.close;
-              }, 130);
-            }
+            if (!tgRaf) tgRaf = requestAnimationFrame(applyBudget);
+          });
+          slider.addEventListener("change", () => {
+            if (tgRaf) cancelAnimationFrame(tgRaf);
+            tgState.budget = Number(slider.value);
+            applyBudget();
           });
         }
       }
@@ -7206,26 +7280,19 @@ ${rdP ? "" : `
         const basePpg = optimalLineup(mine.playerIds).total;
         const want = finderState.want;
         const wantName = want === "FLEX" ? "flex (RB/WR/TE)" : want;
-        let strat = mine.arch === "win-now"
-          ? `Window strategy: <strong>buy production</strong>. Every idea below sends picks, prospects or bench depth out and brings a player in — and each was checked against the rest-of-season projections: from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown. You never take a pick back, and you never send out a starter.`
-          : mine.arch === "dynasty"
-            ? `Window strategy: <strong>buy only clear upgrades</strong>. Your core is young and already contending, so the bar sits higher than a win-now team's: a deal must add at least <strong>+3.0 projected pts/week</strong> to your optimal lineup — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline — and the price stays pick-led, so the young starters who make this a dynasty never get stripped for a marginal gain. If nothing clears that bar, nothing shows.`
-          : mine.arch === "rebuilder"
-            ? `Window strategy: <strong>sell veterans</strong>. Every idea below converts a veteran starter into picks and players 24 or younger at full value or better, with contenders shopped first. The cost in this season's projected pts/week — from a <strong>${Math.round(basePpg)}</strong> baseline — is printed on each deal, because that's the trade being made on purpose.`
-            : `Window strategy: <strong>your call</strong>. Your roster sits between windows at a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline — close enough to contend, old enough to reset. So you get a <strong>choice, not a blend</strong>: two labeled paths below, <em>Go Win-Now ⏳</em> and <em>Go Rebuilder 🔨</em>. Pick a direction, and every deal on that path is held to that window's rules.`;
-        if (VALMODE === "redraft") strat = `Window strategy: <strong>win now</strong>. Every idea below is a buy: bench depth goes out, a producer comes in, and each was checked against the rest-of-season projections — from a <strong>${Math.round(basePpg)} projected pts/week</strong> baseline, if a deal doesn't raise your optimal lineup, it isn't shown.`;
-        const standing = (() => {
-          if (VALMODE === "redraft") return "";
-          const bits = [`Power rank <strong>#${mine.powerRank} of ${DATA.teams.length}</strong>`];
-          const sim = window.SeasonSim && window.SeasonSim.results;
-          if (sim && DATA.teams.every(t => sim[t.rid] && isFinite(sim[t.rid].expWins))) {
-            const order = [...DATA.teams].sort((a, b) => sim[b.rid].expWins - sim[a.rid].expWins);
-            bits.push(`projected finish <strong>#${order.findIndex(t => t.rid === rid) + 1}</strong>`);
-          }
-          return `<p>${bits.join(" · ")}.</p>`;
-        })();
-        let html = tgTopHtml(rid, mine) + `<div class="diag"><h3>${esc(mine.name)} — diagnosis</h3>
-          <p>${VALMODE === "redraft" ? "" : `Tagged <strong>${archTag(mine.arch)}</strong>. `}${strat}${want ? ` Targeting: <strong>${esc(wantName)}</strong>.` : ""}</p>${standing}${posNote ? `<p>${posNote}</p>` : ""}${ppNote}</div>`;
+        /* Compact diagnosis line: the facts, no strategy essay —
+           the window rules live in the "How it works" box below. */
+        const diagBits = [];
+        if (VALMODE !== "redraft") diagBits.push(archTag(mine.arch));
+        diagBits.push(`Power <strong>#${mine.powerRank} of ${DATA.teams.length}</strong>`);
+        const diagSim = window.SeasonSim && window.SeasonSim.results;
+        if (VALMODE !== "redraft" && diagSim && DATA.teams.every(t => diagSim[t.rid] && isFinite(diagSim[t.rid].expWins))) {
+          const order = [...DATA.teams].sort((a, b) => diagSim[b.rid].expWins - diagSim[a.rid].expWins);
+          diagBits.push(`projected finish <strong>#${order.findIndex(t => t.rid === rid) + 1}</strong>`);
+        }
+        diagBits.push(`<strong>${Math.round(basePpg)} projected pts/week</strong>`);
+        if (want) diagBits.push(`Targeting <strong>${esc(wantName)}</strong>`);
+        let html = tgTopHtml(rid, mine) + `<div class="diag"><h3>${esc(mine.name)}</h3><p>${diagBits.join(" · ")}</p>${posNote ? `<p>${posNote}</p>` : ""}${ppNote}</div>`;
         if (!suggestions.length) {
           const why = VALMODE === "redraft"
             ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every producer who would raise this lineup either can't be priced fairly with your bench depth, or the deal would cost a starter to make the values balance. Try another position, or build the deal by hand in the calculator.`
@@ -7280,30 +7347,6 @@ ${rdP ? "" : `
             getPlayers: getAssets.filter(a => a.kind === "player").map(a => a.p),
           }, s.grade ? s.grade.giveAdj : tot(giveAssets), s.grade ? s.grade.getAdj : tot(getAssets)) : "";
           const dTxt = `${s.dPpg >= 0 ? "+" : "−"}${Math.abs(s.dPpg).toFixed(1)}`;
-          /* Narrative gates (audit FF-09): the two storyline
-             claims below are computed, never asserted blind.
-             "Your young starters stay home" renders only when no
-             outgoing player sits in the user's current optimal
-             lineup; "both lineups come out ahead" renders only
-             when the partner's optimal total actually rises with
-             a package player starting for them AND the user's own
-             lineup gains (s.dPpg > 0). Any computation failure
-             suppresses the claim — the safe direction. */
-          const stayHome = (() => {
-            try { const ls = lineupSet(rid); return !giveAssets.some(a => a.kind === "player" && a.p && ls.has(a.p.id)); }
-            catch (e) { return false; }
-          })();
-          const partnerAhead = (() => {
-            try {
-              if (!isBuy || !(s.dPpg > 0) || !s.target) return false;
-              const giveIds = giveAssets.filter(a => a.kind === "player").map(a => a.p.id);
-              if (!giveIds.length) return false;
-              const before = optimalLineup(s.partner.playerIds).total;
-              const afterIds = s.partner.playerIds.filter(id => id !== s.target.id).concat(giveIds);
-              const afterRes = optimalLineup(afterIds);
-              return afterRes.total > before && afterRes.lineup.some(p => giveIds.includes(p.id));
-            } catch (e) { return false; }
-          })();
           /* Trade-value line (both sides, value adjustment included),
              the fairness chip, and the "Grade it" deep link that
              re-opens this exact offer in the Trade Calculator. Picks
@@ -7318,50 +7361,17 @@ ${rdP ? "" : `
           const gradeBtn = (VALMODE !== "redraft" && calcGive.every(Boolean) && calcGet.every(Boolean))
             ? `<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(gradePayload))}">Grade it in the calculator →</button>` : "";
           const gradeHtml = VALMODE === "redraft" ? "" : `<div class="sugg-values"><span>Your trade value <strong>${fmt(s.grade ? s.grade.giveAdj : tot(giveAssets))}</strong></span><span>Their trade value <strong>${fmt(s.grade ? s.grade.getAdj : tot(getAssets))}</strong></span>${s.grade ? `<span class="fair-chip ${s.grade.zone}">${s.grade.zone === "fair" ? "Fair" : "Close"}</span>` : ""}</div>${gradeBtn}`;
-          let windowLine; const why = [];
-          if (isBuy) {
-            const t = s.target;
-            const payDesc = s.pkg.every(a => a.kind === "pick") ? "draft capital" : s.pkg.some(a => a.kind === "pick") ? "picks and bench depth" : "bench depth";
-            windowLine = VALMODE === "redraft"
-              ? s.needLine
-                ? `<span class="dir-tag">Positional swap</span>One-for-one, value-matched: your ${s.swapFrom} depth covers the outgoing piece, your ${s.swapTo} hole gets a starter-caliber fix, and your optimal lineup moves <strong>${dTxt} projected pts/week</strong>.`
-                : `<span class="dir-tag">Win-now buy</span>Redraft rules: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, never a starter.`
-              : mine.arch === "win-now"
-              ? `<span class="dir-tag">Win-now buy</span>You're win-now: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, not a starter.`
-              : mine.arch === "dynasty" && s.nearMiss
-              ? `<span class="dir-tag">Near miss</span><strong>${dTxt} projected pts/week</strong> — just under your Dynasty bar (+${DYNASTY_MIN_GAIN.toFixed(1)}). A real, fairly-priced deal, shown for transparency rather than as a recommendation: the only kind a Dynasty 👑 core acts on clears the bar outright. Paid for with ${payDesc}${stayHome ? "; your young starters stay home" : ""}.`
-              : mine.arch === "dynasty"
-              ? `<span class="dir-tag">Dynasty buy</span>A clear upgrade — the only kind a Dynasty 👑 core makes: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc}.${stayHome ? " Your young starters stay home." : ""}`
-              : `<span class="dir-tag">Win-now path</span>One direction for a Crossroads team — buys production now: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc} — future capital spent on this season.`;
-            why.push(VALMODE === "redraft"
-              ? `${esc(t.name)} ${lineupSet(s.partner.rid).has(t.id) ? "starts for" : "is depth on"} ${esc(s.partner.name)} — in redraft, a pure lineup fit.`
-              : (s.partner.arch === "win-now" || s.partner.arch === "dynasty")
-                ? (partnerAhead
-                  ? `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — a contender, not a seller: this deal only works because the package hands them a starter back, so both lineups come out ahead.`
-                  : `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — a contender, not a seller, so the package has to genuinely help their lineup, not just balance on value.`)
-                : `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be trading production for future capital.`);
-            if (s.fitPos) why.push(`${esc(s.fitName)} fills a hole for them: ${esc(s.partner.name)} is thin at ${s.fitPos}, and he starts for them there — the kind of deal a partner actually says yes to.`);
-            why.push(`${esc(t.name)} projects <strong>${rosProj(t).toFixed(1)} pts/wk</strong> the rest of the way and lifts your optimal lineup ${s.basePpg.toFixed(1)} → ${(s.basePpg + s.dPpg).toFixed(1)} projected pts/week.`);
-            if (VALMODE === "redraft") why.push(`Priced on rest-of-season production alone: the ${rosProj(t).toFixed(1)} projected pts/wk is the whole price.`);
-            else if ((t.age ?? 99) <= 24) why.push(`Premium price: at ${t.age}, ${esc(t.name)} is young <em>and</em> producing — the most expensive profile in dynasty, so the offer stacks ${s.pkg.length} asset${s.pkg.length > 1 ? "s" : ""} to reach his price.`);
-            else if ((t.age ?? 0) >= 29) why.push(`Discount aisle: ${t.age}-year-old production — the same weekly points a young player costs a fortune for, at a fraction of the price. Exactly the arbitrage a win-now window should hunt.`);
-            else why.push(`At ${t.age ?? "—"}, ${esc(t.name)} is priced between the young-stud premium and the veteran discount — proven production without the youth markup — so the offer is built to match that price.`);
-            why.push(`${VALMODE === "redraft" ? "Redraft math" : "Dynasty math"}: you send ${fmt(s.grade ? s.grade.giveAdj : tot(giveAssets))} for ${fmt(s.grade ? s.grade.getAdj : tot(getAssets))}.`);
-            if (s.grade) { const aG = s.grade.giveAdj - tot(giveAssets), aT = s.grade.getAdj - tot(getAssets); const adj = Math.abs(aG) >= 1 ? aG : aT; if (Math.abs(adj) >= 1) why.push(`Trade values include a value adjustment (${Math.abs(aG) >= 1 ? "your side " : "their side "}${adj > 0 ? "+" : ""}${fmt(Math.round(adj))}): production packed into fewer roster spots is worth more than the same production spread thin. Methodology has the full math.`); }
-          } else {
-            const v = s.vet;
-            windowLine = mine.arch === "rebuilder"
-              ? `<span class="dir-tag sell">Rebuilder sell</span>Rebuilder move: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season — production your roster isn't contending with, converted into picks and youth.`
-              : `<span class="dir-tag sell">Rebuild path</span>The other direction for a Crossroads team: sells a veteran for the future: <strong>+${fmt(s.futureGain)} future value</strong> for <strong>${dTxt} pts/week</strong> this season.`;
-            why.push(`${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be paying future capital for production now.`);
-            if (s.fitPos) why.push(`${esc(v.name)} fills a hole for them: ${esc(s.partner.name)} is thin at ${s.fitPos}, and he starts for them there — the kind of deal a partner actually says yes to.`);
-            why.push(`${esc(v.name)} (age ${v.age ?? "—"}) still produces — ${rosProj(v).toFixed(1)} projected pts/wk — but his value peaks before your roster's window opens. The return is all picks and players 24 or younger.`);
-            why.push(s.dPpg >= -0.05
-              ? `It barely touches this season: your optimal lineup holds at ~${(s.basePpg + s.dPpg).toFixed(1)} projected pts/week without him.`
-              : `The honest cost: your optimal lineup drops ${s.basePpg.toFixed(1)} → ${(s.basePpg + s.dPpg).toFixed(1)} projected pts/week this season. That's the rebuild trade — future value up, this year down.`);
-            why.push(`Dynasty math: you send ${fmt(s.grade ? s.grade.giveAdj : tot(giveAssets))} for ${fmt(s.grade ? s.grade.getAdj : tot(getAssets))} — full value or better, all of it future assets.`);
-            if (s.grade) { const aG = s.grade.giveAdj - tot(giveAssets), aT = s.grade.getAdj - tot(getAssets); const adj = Math.abs(aG) >= 1 ? aG : aT; if (Math.abs(adj) >= 1) why.push(`Trade values include a value adjustment (${Math.abs(aG) >= 1 ? "your side " : "their side "}${adj > 0 ? "+" : ""}${fmt(Math.round(adj))}): production packed into fewer roster spots is worth more than the same production spread thin. Methodology has the full math.`); }
-          }
+          /* One line of facts per card: the kind of move and what
+             it does to the lineup. (The long window/why prose was
+             cut Nov 9 — Eric: "no one really cares.") */
+          const dirTag = VALMODE === "redraft"
+            ? (s.needLine ? "Positional swap" : (isBuy ? "Win-now buy" : "Sell"))
+            : isBuy
+              ? (mine.arch === "dynasty" && s.nearMiss ? "Near miss" : mine.arch === "dynasty" ? "Dynasty buy" : mine.arch === "crossroads" ? "Win-now path" : "Win-now buy")
+              : (mine.arch === "rebuilder" ? "Rebuilder sell" : "Rebuild path");
+          const windowLine = isBuy
+            ? `<span class="dir-tag">${dirTag}</span><strong>${dTxt} projected pts/week</strong> to your optimal lineup`
+            : `<span class="dir-tag sell">${dirTag}</span><strong>+${fmt(s.futureGain)} future value</strong> · <strong>${dTxt} pts/week</strong> this season`;
           return `<article class="suggestion">
             <h3>With ${esc(s.partner.name)}${VALMODE === "redraft" ? "" : ` <span class="p-sub">(${archTag(s.partner.arch)})</span>`} · <span class="fit-score">match index ${fitIdx}/100</span></h3>
             <div class="swap">
@@ -7373,7 +7383,6 @@ ${rdP ? "" : `
             ${tgCardSellNote(s)}
             <div class="window-line${isBuy ? "" : " sell"}">${windowLine}</div>
             ${wkDelta === null ? "" : `<div class="wk-line">This week: ${wkDelta >= 0 ? "+" : "−"}${Math.abs(wkDelta).toFixed(1)} pts</div>`}
-            <ul class="why-list">${why.map(w => `<li>${w}</li>`).join("")}</ul>
             ${impact}
             ${gradeHtml}
           </article>`;
@@ -7384,9 +7393,9 @@ ${rdP ? "" : `
         if (VALMODE !== "redraft" && mine.arch === "crossroads" && suggestions.length) {
           const buys = suggestions.filter(s => s.dir === "buy");
           const sells = suggestions.filter(s => s.dir === "sell");
-          html += `<h3 class="path-head">Go Win-Now ⏳</h3><p class="path-desc">Chase this season: production comes in, picks and youth go out — every deal below raises your projected points per week.</p>`;
+          html += `<h3 class="path-head">Go Win-Now ⏳</h3><p class="path-desc">Production in, picks and youth out.</p>`;
           html += buys.length ? buys.map(cardFor).join("") : `<div class="diag"><p>No win-now buy cleared the bar right now — every producer who would raise this lineup either can't be priced fairly with your picks and depth, or the deal couldn't give his team a starter back.</p></div>`;
-          html += `<h3 class="path-head">Go Rebuilder 🔨</h3><p class="path-desc">Play for next year: your aging veterans go to contenders, and picks and young players come back — this season gets worse on purpose.</p>`;
+          html += `<h3 class="path-head">Go Rebuilder 🔨</h3><p class="path-desc">Veterans out, picks and youth back.</p>`;
           html += sells.length ? sells.map(cardFor).join("") : `<div class="diag"><p>No rebuild sell cleared the bar right now — no contender can pay full value for your veterans in picks and youth today.</p></div>`;
         } else {
           html += suggestions.map(cardFor).join("");
@@ -7396,7 +7405,7 @@ ${rdP ? "" : `
            rendered below the recommendations, visually subordinate,
            each labeled with its actual gain. */
         if (VALMODE === "dynasty" && nearMisses && nearMisses.length) {
-          html += `<div class="near-miss-strip"><h3 class="path-head">Near misses</h3><p class="path-desc">Deals that work on price and fit but add less than the +3.0 projected pts/week your Dynasty 👑 bar demands — here for transparency, not as recommendations. Projections aren't precise to a tenth of a point: a deal at +2.8 is essentially tied with the bar, not a different class of deal.</p>${nearMisses.map(cardFor).join("")}</div>`;
+          html += `<div class="near-miss-strip"><h3 class="path-head">Near misses</h3><p class="path-desc">Fair, well-fitting deals under the +3.0 projected pts/week Dynasty bar — shown for transparency, not as recommendations.</p>${nearMisses.map(cardFor).join("")}</div>`;
         }
         el.innerHTML = html;
         tgBindTop();
