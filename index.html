@@ -4705,6 +4705,20 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         starterSlots().forEach(s => take(s.cands, 1, s.label));
         return { total, lineup };
       }
+      /* Redraft availability (audit FF-04): an IR/PUP designation
+         alone no longer zeroes a redraft value. The projection
+         model already knows who is coming back — a player with
+         projected remaining weeks (a ROS row, g >= 1) keeps his
+         projection-based value; only a player with NO projected
+         remaining weeks is treated as done for the season. One
+         helper, used by every redraft pricing path and the Why
+         text, so they can never disagree. Dynasty values never
+         consult this. */
+      window.rdOutForSeason = function (p) {
+        if (!p || (p.inj !== "IR" && p.inj !== "PUP")) return false;
+        const rs = (typeof ROS_STATS !== "undefined" && ROS_STATS) ? ROS_STATS[p.id] : null;
+        return !(rs && Number(rs.g) > 0);
+      };
       function recomputeValues() {
         /* Per-game rates follow the format: p.ros / p.ppg are
            re-converted from the baked stat means under the SETTINGS
@@ -4720,7 +4734,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
              / Doubtful / week-to-week Out designations keep the baked
              availability haircuts inside the ROS projection instead.)
              Dynasty prices are untouched: p.value never reads this. */
-          if (p.inj === "IR" || p.inj === "PUP") p.rdValue = 0;
+          if (window.rdOutForSeason(p)) p.rdValue = 0;
         });
         /* Pick prices follow the same format (see the pick-format block
            by factorRatio): re-derive every priced pick from its ladder
@@ -5200,7 +5214,7 @@ ${rdP ? "" : `
               <div><span>Playoff odds</span><b>${playoffLabel(ss)}</b></div>
               <div><span>Title odds · if in playoffs</span><b>${titlePct(ss)}</b><div class="p-sub">${oddsPct(ss.champ)} overall</div></div>
               <div><span>Proj. pts/wk ROS</span><b>${Math.round(window.SeasonSim.means[t.rid])}</b></div>
-              ${window.SeasonSim.meansWk ? `<div><span>Proj. this week</span><b>${Math.round(window.SeasonSim.meansWk[t.rid])}</b></div>` : ""}
+              ${window.SeasonSim.meansWk ? `<div><span>Proj. this week (optimal lineup)</span><b>${Math.round(window.SeasonSim.meansWk[t.rid])}</b></div>` : ""}
             </div>` : ""}
             <div class="grades">${["QB", "RB", "WR", "TE"].map(pos =>
               `<span class="grade ${gradeClass(t.grades[pos])}">${pos} <b>${t.grades[pos]}</b></span>`).join("")}
@@ -5355,7 +5369,7 @@ ${rdP ? "" : `
          way KTC builds them (Eric, Oct 21): the φ-leading side's
          adjusted total is the larger of its raw sum and the other
          side's raw sum plus x, and the trailing side's adjusted
-         total sits exactly x below it — so the displayed gap IS
+         total sits exactly x below it — so the un-phased gap IS
          the equalizer in every regime. The per-side adjustment
          lands wherever the regime puts it: the familiar credit to
          the φ-leader when it raw-trails, or a prop under the
@@ -5363,7 +5377,16 @@ ${rdP ? "" : `
          follows the curve-lead smoothly as assets are added or
          removed — it never snaps to zero over a count or a lead
          change; the only zeros are a genuine curve balance and
-         the 1-for-1 carve-out. One exception, at KTC parity
+         the 1-for-1 carve-out. The adjustment a side receives is
+         then PHASED IN by the opposing package's extra share —
+         the fraction of the other side's raw total sitting beyond
+         its top asset (Eric, Nov 8): against a one-asset side the
+         share is 0, so a true 1-for-1 stays exactly raw, and a
+         throw-in worth a sliver of its package phases in only a
+         sliver of the premium instead of switching the full
+         equalizer on; a real multi-asset package phases in most
+         or all of it. The premium stays — it scales with the
+         actual value added across the table. One exception, at KTC parity
          (Eric, Oct 21): a true 1-for-1 — one asset against one
          asset — carries NO adjustment; the raw difference is the
          gap. Adjusted total = raw sum + value adjustment, and
@@ -5379,9 +5402,11 @@ ${rdP ? "" : `
       /* The pair solve behind every value adjustment: returns
          [adjA, adjB], the per-side adjustments (adjusted total =
          raw sum + adjustment) for two sides' raw value vectors.
-         At most one entry is nonzero and both are >= 0; the gap
-         between the adjusted totals is exactly the equalizer x in
-         every regime (see the engine note above). Both φ-sums and
+         At most one entry is nonzero and both are >= 0; before the
+         phase-in, the gap between the adjusted totals is exactly
+         the equalizer x in every regime (see the engine note
+         above), and each entry is then scaled by the opposing
+         side's extra share. Both φ-sums and
          the single bisection are computed once here, so paired
          consumers (band pricing, offer grades, per-side totals)
          all price off the same solve instead of re-deriving it
@@ -5421,7 +5446,21 @@ ${rdP ? "" : `
         const adjLead = Math.max(leadSum, trailSum + x);
         const dLead = adjLead - leadSum;
         const dTrail = (adjLead - x) - trailSum;
-        return gap > 0 ? [dLead, dTrail] : [dTrail, dLead];
+        const solved = gap > 0 ? [dLead, dTrail] : [dTrail, dLead];
+        /* Phase-in (Eric, Nov 8): scale the adjustment a side
+           RECEIVES by the opposing side's extra share — the share
+           of the opposing raw total beyond its top asset. A
+           one-asset opposing side has share 0 (a true 1-for-1 is
+           exactly raw, and a 6-value throw-in phases in ~0.1% of
+           the premium instead of tripling the displayed gap),
+           while a genuine package phases in proportionally. */
+        const extraShare = vals => {
+          const priced = vals.filter(v => v > 0);
+          if (priced.length < 2) return 0;
+          const tot = priced.reduce((s, v) => s + v, 0);
+          return tot > 0 ? (tot - Math.max(...priced)) / tot : 0;
+        };
+        return [solved[0] * extraShare(bValues), solved[1] * extraShare(aValues)];
       }
       function valueAdjustmentFor(myValues, otherValues) {
         return vaPair(myValues, otherValues)[0];
@@ -5797,16 +5836,27 @@ ${rdP ? "" : `
           const otherSide = lighter === "A" ? "B" : "A";
           const lt = calc[lighter].team;
           if (lt !== "FA" && calc[lighter].src !== "any") {
-            const gapWith = pk => {
+            const totalsWith = pk => {
               const mine = assetsOf(lighter).map(assetValue).concat([pickPrice(pk)]);
               const theirs = assetsOf(otherSide).map(assetValue);
               const adjMine = mine.reduce((s, v) => s + v, 0) + valueAdjustmentFor(mine, theirs);
               const adjTheirs = theirs.reduce((s, v) => s + v, 0) + valueAdjustmentFor(theirs, mine);
-              return Math.abs(adjMine - adjTheirs);
+              return [adjMine, adjTheirs];
             };
+            const gapWith = pk => { const [m2, t2] = totalsWith(pk); return Math.abs(m2 - t2); };
             const cands = TBY[lt].picks.filter(pk => pk.value >= 150)
               .sort((x, y) => gapWith(x) - gapWith(y));
-            if (cands.length) balance = `<div class="balance-note"><strong>Balance it:</strong> ${esc(teamName(lt))} adding the <strong>${esc(cands[0].label)}</strong> (${fmt(pickPrice(cands[0]))}) brings the adjusted gap to ${fmt(Math.round(gapWith(cands[0])))}.</div>`;
+            /* The note may only promise balance when the add
+               actually lands inside the fair band (audit FF-02);
+               otherwise it is labeled "Gets closer" and states the
+               gap that would remain. */
+            if (cands.length) {
+              const [m2, t2] = totalsWith(cands[0]);
+              const g2 = Math.abs(m2 - t2), p2 = g2 / Math.max(m2, t2, 1);
+              balance = p2 <= 0.05
+                ? `<div class="balance-note"><strong>Balance it:</strong> ${esc(teamName(lt))} adding the <strong>${esc(cands[0].label)}</strong> (${fmt(pickPrice(cands[0]))}) brings the adjusted gap to ${fmt(Math.round(g2))} — inside the fair range.</div>`
+                : `<div class="balance-note"><strong>Gets closer:</strong> ${esc(teamName(lt))} adding the <strong>${esc(cands[0].label)}</strong> (${fmt(pickPrice(cands[0]))}) brings the adjusted gap to ${fmt(Math.round(g2))} (${(p2 * 100).toFixed(1)}%) — still short of fair on its own.</div>`;
+            }
           }
         }
         const notesA = fitNotes("A"), notesB = fitNotes("B");
@@ -6780,6 +6830,30 @@ ${rdP ? "" : `
             getPlayers: getAssets.filter(a => a.kind === "player").map(a => a.p),
           }, s.grade ? s.grade.giveAdj : tot(giveAssets), s.grade ? s.grade.getAdj : tot(getAssets)) : "";
           const dTxt = `${s.dPpg >= 0 ? "+" : "−"}${Math.abs(s.dPpg).toFixed(1)}`;
+          /* Narrative gates (audit FF-09): the two storyline
+             claims below are computed, never asserted blind.
+             "Your young starters stay home" renders only when no
+             outgoing player sits in the user's current optimal
+             lineup; "both lineups come out ahead" renders only
+             when the partner's optimal total actually rises with
+             a package player starting for them AND the user's own
+             lineup gains (s.dPpg > 0). Any computation failure
+             suppresses the claim — the safe direction. */
+          const stayHome = (() => {
+            try { const ls = lineupSet(rid); return !giveAssets.some(a => a.kind === "player" && a.p && ls.has(a.p.id)); }
+            catch (e) { return false; }
+          })();
+          const partnerAhead = (() => {
+            try {
+              if (!isBuy || !(s.dPpg > 0) || !s.target) return false;
+              const giveIds = giveAssets.filter(a => a.kind === "player").map(a => a.p.id);
+              if (!giveIds.length) return false;
+              const before = optimalLineup(s.partner.playerIds).total;
+              const afterIds = s.partner.playerIds.filter(id => id !== s.target.id).concat(giveIds);
+              const afterRes = optimalLineup(afterIds);
+              return afterRes.total > before && afterRes.lineup.some(p => giveIds.includes(p.id));
+            } catch (e) { return false; }
+          })();
           /* Trade-value line (both sides, value adjustment included),
              the fairness chip, and the "Grade it" deep link that
              re-opens this exact offer in the Trade Calculator. Picks
@@ -6805,14 +6879,16 @@ ${rdP ? "" : `
               : mine.arch === "win-now"
               ? `<span class="dir-tag">Win-now buy</span>You're win-now: this adds <strong>${dTxt} projected pts/week</strong> to your optimal lineup — and you pay with ${payDesc}, not a starter.`
               : mine.arch === "dynasty" && s.nearMiss
-              ? `<span class="dir-tag">Near miss</span><strong>${dTxt} projected pts/week</strong> — just under your Dynasty bar (+${DYNASTY_MIN_GAIN.toFixed(1)}). A real, fairly-priced deal, shown for transparency rather than as a recommendation: the only kind a Dynasty 👑 core acts on clears the bar outright. Paid for with ${payDesc}; your young starters stay home.`
+              ? `<span class="dir-tag">Near miss</span><strong>${dTxt} projected pts/week</strong> — just under your Dynasty bar (+${DYNASTY_MIN_GAIN.toFixed(1)}). A real, fairly-priced deal, shown for transparency rather than as a recommendation: the only kind a Dynasty 👑 core acts on clears the bar outright. Paid for with ${payDesc}${stayHome ? "; your young starters stay home" : ""}.`
               : mine.arch === "dynasty"
-              ? `<span class="dir-tag">Dynasty buy</span>A clear upgrade — the only kind a Dynasty 👑 core makes: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc}. Your young starters stay home.`
+              ? `<span class="dir-tag">Dynasty buy</span>A clear upgrade — the only kind a Dynasty 👑 core makes: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc}.${stayHome ? " Your young starters stay home." : ""}`
               : `<span class="dir-tag">Win-now path</span>One direction for a Crossroads team — buys production now: <strong>${dTxt} projected pts/week</strong> for your optimal lineup, paid for with ${payDesc} — future capital spent on this season.`;
             why.push(VALMODE === "redraft"
               ? `${esc(t.name)} ${lineupSet(s.partner.rid).has(t.id) ? "starts for" : "is depth on"} ${esc(s.partner.name)} — in redraft, a pure lineup fit.`
               : (s.partner.arch === "win-now" || s.partner.arch === "dynasty")
-                ? `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — a contender, not a seller: this deal only works because the package hands them a starter back, so both lineups come out ahead.`
+                ? (partnerAhead
+                  ? `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — a contender, not a seller: this deal only works because the package hands them a starter back, so both lineups come out ahead.`
+                  : `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — a contender, not a seller, so the package has to genuinely help their lineup, not just balance on value.`)
                 : `${esc(s.partner.name)} is tagged ${archTag(s.partner.arch)} — the mirror window: the team that should be trading production for future capital.`);
             if (s.fitPos) why.push(`${esc(s.fitName)} fills a hole for them: ${esc(s.partner.name)} is thin at ${s.fitPos}, and he starts for them there — the kind of deal a partner actually says yes to.`);
             why.push(`${esc(t.name)} projects <strong>${rosProj(t).toFixed(1)} pts/wk</strong> the rest of the way and lifts your optimal lineup ${s.basePpg.toFixed(1)} → ${(s.basePpg + s.dPpg).toFixed(1)} projected pts/week.`);
@@ -7003,7 +7079,17 @@ ${rdP ? "" : `
       }
       function redraftWhy(p) {
         const base = `Redraft value — this year's remaining production, priced in the scoring format set in the League Format tool — ${(p.ros || 0).toFixed(1)} projected pts/wk from Week ${DATA.league.week} on.`;
-        if (p.inj === "IR" || p.inj === "PUP") return base + ` He is on ${p.inj === "IR" ? "injured reserve" : "the PUP list"} with no return date the data can stand behind, so his redraft price is 0 — he isn't playing this season.`;
+        if (p.inj === "IR" || p.inj === "PUP") {
+          /* Wording gated on the same availability test that
+             prices him (audit FF-04): "out for the season" is
+             asserted only when the projection model gives him no
+             remaining weeks; a projected return keeps his value
+             and the text says so. */
+          if (typeof window.rdOutForSeason === "function" && window.rdOutForSeason(p)) return base + ` He is on ${p.inj === "IR" ? "injured reserve" : "the PUP list"} and the projections give him no remaining weeks — not expected back this season — so his redraft price is 0. His per-week rate above is what he produces when active; the dynasty value, which prices his career, is untouched.`;
+          const rsW = (typeof ROS_STATS !== "undefined" && ROS_STATS) ? ROS_STATS[p.id] : null;
+          const wkTxt = rsW && Number(rsW.g) > 0 ? ` — ${Number(rsW.g)} remaining week${Number(rsW.g) === 1 ? "" : "s"} still projected` : "";
+          return base + ` He is on ${p.inj === "IR" ? "injured reserve" : "the PUP list"}, but a return is projected${wkTxt}, so his redraft price counts the production from the weeks he is projected to play rather than zeroing him out.`;
+        }
         return base;
       }
       function renderTeamStrip() {
@@ -7055,7 +7141,7 @@ ${rdP ? "" : `
             <td><span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${rd && rdPosMapB[p.id] != null ? rdPosMapB[p.id] : p.posRank}</span></td>
             <td class="num hide-sm">${p.age ?? "—"}</td>
             <td class="hide-sm">${logoImg(p.team)}${esc(p.team)}</td>
-            <td class="num"><span class="val-big">${fmt(v)}</span></td>
+            <td class="num"><span class="val-big">${fmt(v)}</span>${rd && typeof window.rdOutForSeason === "function" && window.rdOutForSeason(p) ? `<div class="p-sub">ROS: per-week when active</div>` : ""}</td>
             <td class="num trend-col">${trendCell}</td>
             <td><button class="why-btn" data-why="${p.id}">Why?</button></td>
           </tr>
@@ -7959,7 +8045,7 @@ ${rdP ? "" : `
                 <div><span>Expected final wins</span><b>${r.expWins.toFixed(1)}</b></div>
                 <div><span>Title odds · overall</span><b>${oddsPct(r.champ)}</b></div>
                 <div><span>Proj. pts/wk (ROS)</span><b>${Math.round(means[t.rid])}</b></div>
-                <div><span>Proj. this week</span><b>${Math.round(meansWk[t.rid])}</b></div>
+                <div><span>Proj. this week (optimal lineup)</span><b>${Math.round(meansWk[t.rid])}</b></div>
                 <div><span>Actual pts/wk so far</span><b>${(t.pf / Math.max(1, (typeof DATA.league.week === "number" ? DATA.league.week : 6) - 1)).toFixed(1)}</b></div>
               </div>
               <p class="expl">${esc(oneLiner(t))}</p>
@@ -7978,7 +8064,7 @@ ${rdP ? "" : `
                 <div><div class="bs-num">${playoffLabel(ms)}</div><div class="bs-lbl">Make playoffs</div></div>
                 <div><div class="bs-num">${titlePct(ms)}</div><div class="bs-lbl">Title odds if in playoffs · ${oddsPct(ms.champ)} overall</div></div>
                 <div><div class="bs-num">${Math.round(means[me.rid])}</div><div class="bs-lbl">Proj. pts/wk ROS</div></div>
-                <div><div class="bs-num">${Math.round(meansWk[me.rid])}</div><div class="bs-lbl">Proj. this week</div></div>
+                <div><div class="bs-num">${Math.round(meansWk[me.rid])}</div><div class="bs-lbl">Proj. this week (optimal lineup)</div></div>
               </div>
               <p class="expl">${esc(oneLiner(me))} Odds come from 3,000 simulated finishes of the season — the full method and its assumptions are in How Values Work.</p>
             </div>
@@ -8071,7 +8157,7 @@ ${rdP ? "" : `
           },
         };
 
-        return { results, means, meansWk, baseOpt, finderImpact, calcImpactHtml, impact, renderSeason, oddsWithMeans, path: pathAPI, format: FMT, playoffHtml: playoffSection, schedKey, recFp: (function () { try { return (DATA.league && DATA.league.week) + "|" + (DATA.teams || []).map(t => t.rid + ":" + t.record).join(";"); } catch (e) { return ""; } })() };
+        return { results, means, meansWk, baseOpt, finderImpact, calcImpactHtml, impact, renderSeason, oddsWithMeans, path: pathAPI, format: FMT, playoffHtml: playoffSection, schedKey, recFp: (function () { try { return (DATA.league && DATA.league.week) + "|" + (DATA.teams || []).map(t => t.rid + ":" + t.record).join(";"); } catch (e) { return ""; } })(), ffp: (function () { try { return (DATA.league.week || "") + "|" + (DATA.teams || []).map(t => [t.rid, t.record, t.pf, (t.playerIds || []).slice().sort().join(",")].join(":")).join(";"); } catch (e) { return ""; } })() };
       };
       window.SeasonSim = DATA.teams.length ? window.buildSeasonSim() : null;
       window.SIM_BY_LEAGUE = {};
@@ -10871,7 +10957,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
              rebuild the sim and discard it, instead of returning early. */
           const effWk = (typeof ffEffWeek === "function") ? ffEffWeek() : Number(DATA.league.week);
           const want = "sleeper:" + leagueId + "@" + effWk + "-" + fetchEnd;
-          if (window.SeasonSim.schedKey === want) return;
+          /* A sim on the right schedule but stale inputs (roster
+             or points moved since it was built) still rebuilds —
+             the unified fingerprint gates the early return too
+             (audit FF-06). */
+          if (window.SeasonSim.schedKey === want && !(window.SeasonSim.ffp && typeof ff4SimFp === "function" && window.SeasonSim.ffp !== ff4SimFp())) return;
           const rebuilt = window.buildSeasonSim();
           if (!rebuilt || rebuilt.schedKey !== want) return;
           window.SIM_BY_LEAGUE.conn = rebuilt;
@@ -10926,8 +11016,13 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            path off the new standings — reloading a league can
            never again replay last week's sim. */
         try {
-          const fpNow = (DATA.league && DATA.league.week) + "|" + (DATA.teams || []).map(t => t.rid + ":" + t.record).join(";");
-          if (window.SIM_BY_LEAGUE.conn && window.SIM_BY_LEAGUE.conn.recFp !== fpNow) delete window.SIM_BY_LEAGUE.conn;
+          const recNow = (DATA.league && DATA.league.week) + "|" + (DATA.teams || []).map(t => t.rid + ":" + t.record).join(";");
+          const fpNow = (typeof ff4SimFp === "function") ? ff4SimFp() : recNow;
+          const cs = window.SIM_BY_LEAGUE.conn;
+          /* Unified fingerprint (audit FF-06): roster or points
+             changes invalidate the cached sim too, not just posted
+             records — every surface reads the one sim. */
+          if (cs && (cs.ffp ? cs.ffp !== fpNow : cs.recFp !== recNow)) delete window.SIM_BY_LEAGUE.conn;
         } catch (e) {}
         if (window.SIM_BY_LEAGUE.conn) {
           window.SeasonSim = window.SIM_BY_LEAGUE.conn;
@@ -13162,9 +13257,14 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         setTimeout(() => {
           const cap = mtCapture();
           try {
-            if (!window.SIM_BY_LEAGUE[id] && typeof window.buildSeasonSim === "function") {
+            if (typeof window.buildSeasonSim === "function") {
               mtSwapTo(id);
-              window.SIM_BY_LEAGUE[id] = window.buildSeasonSim();
+              const cur = window.SIM_BY_LEAGUE[id];
+              /* Rebuild when the stored sim's inputs no longer
+                 match this league's current week / records /
+                 points / rosters (audit FF-06) — a cached sim from
+                 older inputs is not served as current. */
+              if (!cur || (typeof ff4SimFp === "function" && cur.ffp !== ff4SimFp())) window.SIM_BY_LEAGUE[id] = window.buildSeasonSim();
             }
             if (!window.SIM_BY_LEAGUE[id]) mtSimFailed.add(id);
           } catch (e) {
@@ -14011,7 +14111,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           }
           return { label, slots };
         }
-        function translateOffer(rid, headPid, headV, arch, offerSide, headName, med) {
+        function translateOffer(rid, headPid, headV, arch, offerSide, headName, med, lo, hi) {
           const team = (typeof TBY !== "undefined") ? TBY[rid] : null;
           if (!team || typeof valueAdjustmentFor !== "function") return null;
           const roster = (team.playerIds || []).map(id => PBY[id]).filter(Boolean).filter(p => p.id !== headPid);
@@ -14100,7 +14200,19 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             if (bestC && bestNp < pct) {
               closer = ` Adding <strong>${esc(bestC.label)}</strong> (${fmt(bestC.v)}) brings it to within ${pctTxt(bestNp)}% of his price — the realistic closing shape from this roster.`;
             }
-            verdict = `<strong>Light by ${pctTxt(pct)}%</strong> — the typical ${esc(headName)} deal lands higher than this.${closer}`;
+            /* Model and market, labeled separately (audit FF-10):
+               the percentage is OUR grade — adjusted package vs
+               adjusted headliner price. The observed-deals sentence
+               reports the raw-package distribution as it is, and
+               never claims real deals run higher than a package
+               whose raw total already sits at/above the observed
+               median. */
+            const mkt = (med != null && lo != null && hi != null)
+              ? (raw >= med
+                ? ` <strong>Observed deals:</strong> median package ${fmt(Math.round(med))}, most between ${fmt(Math.round(lo))}–${fmt(Math.round(hi))} — this package's raw total is already at or above that median.`
+                : ` <strong>Observed deals:</strong> median package ${fmt(Math.round(med))}, most between ${fmt(Math.round(lo))}–${fmt(Math.round(hi))}.`)
+              : "";
+            verdict = `<strong>Our grade:</strong> this package is ${pctTxt(pct)}% under what our values say a ${esc(headName)} deal takes.${mkt}${closer}`;
           } else {
             vkind = "over";
             verdict = (med != null && raw <= med) ? `<strong>Above his model value by ${pctTxt(pct)}%</strong> — but right around what his real deals actually cost (median ${fmt(Math.round(med))}), so this is a market-priced offer, not an overpay.` : `<strong>An overpay by ${pctTxt(pct)}%</strong> vs his price — his real deals don't usually cost this much.`;
@@ -14151,7 +14263,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             const rid = guest || calc[offerSide].src === "any" ? null : calc[offerSide].team;
             let pkgHtml = "", suggestion = null;
             if (rid != null && rid !== "FA") {
-              const tr = translateOffer(rid, head, headV, arch, offerSide, name, med);
+              const tr = translateOffer(rid, head, headV, arch, offerSide, name, med, lo, hi);
               if (tr) { pkgHtml = tr.html; suggestion = { side: offerSide, assets: tr.assets }; }
             }
             if (!pkgHtml) {
@@ -15202,7 +15314,9 @@ Object.keys(PBY).forEach(id => {
   const p = PBY[id];
   if (!p || p.rdSnap == null) return;
   let v = (p.rdValue != null) ? p.rdValue : Math.round(p.rdSnap * (typeof factorRatio === "function" ? factorRatio(p.pos) : 1));
-  if (p.inj === "IR" || p.inj === "PUP") v = 0;
+  /* Same availability rule as the board (audit FF-04): zero only
+     when the projection model gives him no remaining weeks. */
+  if (typeof window.rdOutForSeason === "function" ? window.rdOutForSeason(p) : (p.inj === "IR" || p.inj === "PUP")) v = 0;
   RDRAFT[p.id] = v;
 });
 
@@ -17241,7 +17355,7 @@ window.drDraft = {
         if (!mount) return;
         const aA = sideAdjTotal("A"), aB = sideAdjTotal("B");
         const rawA = sideTotal("A"), rawB = sideTotal("B");
-        if (!rawA && !rawB) { mount.innerHTML = window.__counterMode ? `<div class="bal-box"><div class="bal-head">Counteroffers — balance this trade</div><p class="bal-note">Got an offer you don't love? Build it in the calculator above — their side and yours — and this box shows what balances it: the adds that bring the light side level. That's your counter.</p></div>` : ""; return; }
+        if (!rawA && !rawB) { mount.innerHTML = window.__counterMode ? `<div class="bal-box"><div class="bal-head">Counteroffers — balance this trade</div><p class="bal-note">Got an offer you don't love? Build it in the calculator above — their side and yours — and this box shows the adds that make it fair, or the ones that get it closer when no single add gets there. That's your counter.</p></div>` : ""; return; }
         const gap = Math.abs(aA - aB);
         const pct = gap / Math.max(aA, aB, 1);
         const trail = aA <= aB ? "A" : "B";
@@ -17309,19 +17423,30 @@ window.drDraft = {
           })
           .filter(c => c.newGap < gap)
           .sort((x, y) => ((x.newPct <= 0.05 ? 0 : 1) - (y.newPct <= 0.05 ? 0 : 1)) || (x.pref - y.pref) || ((x.surplus || 0) - (y.surplus || 0)) || (x.newGap - y.newGap));
-        let picks3 = sized.filter(c => c.newPct <= 0.05).slice(0, 3);
-        if (picks3.length < 3) picks3 = sized.slice(0, 3);
-        if (!picks3.length) {
+        /* Honest grouping (audit FF-02): a suggestion may only be
+           presented as balancing the trade when the simulated add
+           actually lands inside the fair band under the final
+           evaluator. Everything else is labeled "Gets closer" and
+           carries the gap that would remain after the add, before
+           the click — never a balancing promise it can't keep. */
+        const fairAdds = sized.filter(c => c.newPct <= 0.05).slice(0, 3);
+        const closerAdds = sized.filter(c => c.newPct > 0.05).slice(0, 3);
+        const shown = fairAdds.concat(closerAdds);
+        if (!shown.length) {
           mount.innerHTML = `<div class="bal-box"><div class="bal-head">${window.__counterMode ? "Counteroffers — balance this trade" : "Balance this trade"}</div><p class="bal-note">${esc(tName(trail))} trails by ${fmt(Math.round(gap))} in trade value — no single pick or player closes that gap once the value adjustment re-prices the bigger package.</p></div>`;
           return;
         }
+        const chip = (c, i, tail) => `<button type="button" class="bal-add" data-bal="${i}"><span class="bal-add-name">${esc(c.label)}</span><span class="bal-add-val">${fmt(c.value)}${tail}</span></button>`;
         mount.innerHTML = `<div class="bal-box">
           <div class="bal-head">${window.__counterMode ? "Counteroffers — balance this trade" : "Balance this trade"}</div>
-          <p class="bal-note">${esc(tName(lead))} is giving <strong>${fmt(Math.round(gap))}</strong> more value. Add one of these to <strong>${esc(tName(trail))}</strong>'s package to balance the trade:</p>
-          <div class="bal-chips">${picks3.map((c, i) => `<button type="button" class="bal-add" data-bal="${i}"><span class="bal-add-name">${esc(c.label)}</span><span class="bal-add-val">${fmt(c.value)}</span></button>`).join("")}</div>
+          <p class="bal-note">${esc(tName(lead))} is giving <strong>${fmt(Math.round(gap))}</strong> more value than ${esc(tName(trail))}.</p>
+          ${fairAdds.length ? `<p class="bal-note"><strong>Makes this fair:</strong> add one of these to <strong>${esc(tName(trail))}</strong>'s package:</p>
+          <div class="bal-chips">${fairAdds.map((c, i) => chip(c, i, "")).join("")}</div>` : ""}
+          ${closerAdds.length ? `<p class="bal-note"><strong>Gets closer</strong> — these shrink the gap but don't close it:</p>
+          <div class="bal-chips">${closerAdds.map((c, j) => chip(c, fairAdds.length + j, ` → ${fmt(Math.round(c.newGap))} left (${(c.newPct * 100).toFixed(1)}%)`)).join("")}</div>` : ""}
         </div>`;
         mount.querySelectorAll("[data-bal]").forEach(btn => btn.addEventListener("click", () => {
-          const c = picks3[Number(btn.dataset.bal)];
+          const c = shown[Number(btn.dataset.bal)];
           if (!c) return;
           if (c.kind === "pick") calc[trail].assets.push({ kind: "pick", key: c.key, fromTeam: c.fromTeam });
           else calc[trail].assets.push({ kind: "player", id: c.id });
@@ -17473,11 +17598,25 @@ window.drDraft = {
       function ff4CCRecFp() {
         try { return (DATA.league && DATA.league.week) + "|" + (DATA.teams || []).map(t => t.rid + ":" + t.record).join(";"); } catch (e) { return ""; }
       }
+      /* The one sim-input fingerprint (audit FF-06): week +
+         every team's record, points-for and roster. buildSeasonSim
+         stamps it on its result as `ffp`; every freshness decision
+         about a sim compares against the fingerprint of the league
+         context currently in DATA, so a sim built on older inputs
+         can never be served as current by ANY surface. */
+      function ff4SimFp() {
+        try { return (DATA.league.week || "") + "|" + DATA.teams.map(t => [t.rid, t.record, t.pf, (t.playerIds || []).slice().sort().join(",")].join(":")).join(";"); } catch (e) { return ""; }
+      }
       /* The active league's sim, only if it was built on the
-         records the page currently carries — otherwise null, so
+         inputs the page currently carries — otherwise null, so
          the caller builds a fresh one instead of showing stale odds. */
       function ff4CCFreshSim() {
-        try { const s = window.SeasonSim; return (s && s.recFp === ff4CCRecFp()) ? s : null; } catch (e) { return null; }
+        try {
+          const s = window.SeasonSim;
+          if (!s) return null;
+          if (s.ffp) return s.ffp === ff4SimFp() ? s : null;
+          return window.SeasonSim.recFp === ff4CCRecFp() ? s : null;
+        } catch (e) { return null; }
       }
       function ff4CCWeek(lg) {
         const seasonNum = Number(lg.season);
@@ -17553,12 +17692,30 @@ window.drDraft = {
          + user team. */
       ff4.ccSimCache = {};
       function ff4CCSimCached(cacheKey, idx, me) {
-        const fp = (DATA.league.week || "") + "|" + DATA.teams.map(t => [t.rid, t.record, t.pf, (t.playerIds || []).slice().sort().join(",")].join(":")).join(";");
+        const fp = ff4SimFp();
         const ck = cacheKey + "|" + idx + "|" + me.rid;
         const hit = ff4.ccSimCache[ck];
         if (hit && hit.fp === fp) return hit;
-        const sim = window.buildSeasonSim({ sims: 3000, seed: 20261017 });
+        /* One shared sim (audit FF-06): when the page's detailed
+           sim is input-fresh for the league context in DATA, the
+           light pass reads THAT result instead of running its own
+           — Command Center, Season Outlook, Playoff Odds/Path and
+           Player Targets then show the same numbers by
+           construction. The fingerprint equality is what makes
+           this safe: it can only match when DATA is the detailed
+           sim's own league with unchanged inputs. */
+        const shared = ff4CCFreshSim();
+        const sim = shared || window.buildSeasonSim({ sims: 3000, seed: 20261017 });
         if (!sim || !sim.results[me.rid]) return null;
+        if (!shared) {
+          /* A sim built for the connected league itself becomes
+             the page's detailed sim, so the detail surfaces that
+             render next read this same result. */
+          try {
+            const m = /^Sleeper:(.+)$/.exec(cacheKey);
+            if (m && window.CONN_LEAGUE && window.CONN_LEAGUE.league && String(window.CONN_LEAGUE.league.id) === m[1]) window.SeasonSim = sim;
+          } catch (e) {}
+        }
         /* oddsPct: the user's playoff odds percentiled across every
            team in the same sim (Manager Score's Playoff Equity input;
            average rank on ties, same convention the score uses). */
@@ -17570,7 +17727,7 @@ window.drDraft = {
           allO.forEach(v => { if (v > mineO) gr++; else if (v === mineO) eq++; });
           oddsPct = allO.length > 1 ? Math.round((allO.length - (gr + (eq + 1) / 2)) / (allO.length - 1) * 1000) / 10 : 50;
         } catch (e) { oddsPct = null; }
-        const out = { fp, odds: sim.results[me.rid].playoff, clinched: !!sim.results[me.rid].clinched, oddsPct };
+        const out = { fp, odds: sim.results[me.rid].playoff, clinched: !!sim.results[me.rid].clinched, oddsPct, sim };
         ff4.ccSimCache[ck] = out;
         return out;
       }
@@ -17600,7 +17757,7 @@ window.drDraft = {
             snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
               try { const ccSim = ff4CCSimCached("Sleeper:" + lg.league_id, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
-            try { if (typeof ff4CCIsActive === "function" && ff4CCIsActive(lg) && window.SeasonSim && window.SeasonSim.recFp && window.SeasonSim.recFp === ff4CCRecFp() && window.SeasonSim.results && window.SeasonSim.results[me.rid]) { snap.odds = window.SeasonSim.results[me.rid].playoff; snap.clinched = !!window.SeasonSim.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
+            try { const fs = (typeof ff4CCIsActive === "function" && ff4CCIsActive(lg) && typeof ff4CCFreshSim === "function") ? ff4CCFreshSim() : null; if (fs && fs.results && fs.results[me.rid]) { snap.odds = fs.results[me.rid].playoff; snap.clinched = !!fs.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
             try { if (ff4.ccDetail[idx] && snap.odds != null && ff4.ccDetail[idx].odds !== snap.odds) { delete ff4.ccDetail[idx]; if (ff4.ccFocus === idx) ff4CCDetail(idx); } } catch (e) {}
             }
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
@@ -17704,7 +17861,7 @@ window.drDraft = {
             snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
               try { const ccSim = ff4CCSimCached("ESPN:" + entry.leagueId, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
-            try { if (typeof ff4CCIsActive === "function" && ff4CCIsActive(entry) && window.SeasonSim && window.SeasonSim.recFp && window.SeasonSim.recFp === ff4CCRecFp() && window.SeasonSim.results && window.SeasonSim.results[me.rid]) { snap.odds = window.SeasonSim.results[me.rid].playoff; snap.clinched = !!window.SeasonSim.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
+            try { const fs = (typeof ff4CCIsActive === "function" && ff4CCIsActive(entry) && typeof ff4CCFreshSim === "function") ? ff4CCFreshSim() : null; if (fs && fs.results && fs.results[me.rid]) { snap.odds = fs.results[me.rid].playoff; snap.clinched = !!fs.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
             try { if (ff4.ccDetail[idx] && snap.odds != null && ff4.ccDetail[idx].odds !== snap.odds) { delete ff4.ccDetail[idx]; if (ff4.ccFocus === idx) ff4CCDetail(idx); } } catch (e) {}
             }
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
@@ -19108,7 +19265,12 @@ window.drDraft = {
             if (!me) return withCoverage([]);
             let ranks = null;
             if (DATA.teams.length === 12) {
-              try { const sim = window.buildSeasonSim({ sims: 1500, seed: 7300 + (parseInt(lg.league_id, 10) % 997) }); ranks = projFinishRanks(sim); } catch (e) { ranks = null; }
+              /* The shared cached sim (audit FF-06): the same
+                 3,000-sim / seed-20261017 result the Command Center
+                 caches for this league — no separate 1,500-sim run
+                 on a different seed, so projected finishes agree
+                 with every other odds surface. */
+              try { const ent = (typeof ff4CCSimCached === "function") ? ff4CCSimCached("Sleeper:" + lg.league_id, 0, me) : null; const sim = (ent && ent.sim) ? ent.sim : window.buildSeasonSim({ sims: 3000, seed: 20261017 }); ranks = projFinishRanks(sim); } catch (e) { ranks = null; }
             }
             graded = pending.map(tx => ff4TBGrade(tx, { lg, me, myRid, user, ranks })).filter(Boolean);
           } finally { ff4CCRestore(cap); }
