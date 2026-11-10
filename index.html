@@ -32,10 +32,14 @@
       } catch (e) { /* guest stands */ }
     </script>
     <script>
-      /* Sidebar state (Nov 9, 2026 redesign): expanded is the default;
-         a device that collapsed the rail gets the slim rail back on
-         every load, before first paint, from this one key. */
-      try { if (localStorage.getItem("ff_sb") === "slim") document.documentElement.classList.add("sb-slim"); } catch (e) { /* storage unavailable — expanded default stands */ }
+      /* Sidebar state (Nov 10, 2026 — slim lock): the slim rail is
+         the ONLY sidebar mode now. Eric lived with both and chose
+         slim, and the expand toggle is gone, so the class is applied
+         unconditionally before first paint — and any stored "ff_sb"
+         preference from the toggle era is removed, so an old "wide"
+         value can never resurrect the expanded rail. */
+      document.documentElement.classList.add("sb-slim");
+      try { localStorage.removeItem("ff_sb"); } catch (e) { /* storage unavailable — the class above still locks slim */ }
     </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-0LN6ZHJN6C"></script>
@@ -3118,7 +3122,6 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       <aside class="ff-sidebar" id="ff-sidebar" aria-label="Site sidebar">
         <div class="sb-brand">
           <span class="sb-word">Fantasy Forensics</span>
-          <button type="button" class="sb-toggle" id="sb-toggle" aria-expanded="true" aria-label="Collapse sidebar"><span class="sb-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></span></button>
         </div>
         <div class="sb-navzone">
       <nav class="mainnav" id="site-main" role="tablist" aria-label="Fantasy Forensics sections">
@@ -3180,26 +3183,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div class="subnav" id="site-sub" role="tablist" aria-label="Fantasy Forensics subsections" hidden></div>
       </aside>
       <script>
-      /* Sidebar collapse toggle (Nov 9, 2026): flips the html.sb-slim
-         class the shell CSS keys off, and persists the choice on this
-         device. Expanded is the default; the head script re-applies a
-         stored "slim" before first paint. */
-      (function () {
-        var btn = document.getElementById("sb-toggle");
-        if (!btn) return;
-        var root = document.documentElement;
-        function sync() {
-          var slim = root.classList.contains("sb-slim");
-          btn.setAttribute("aria-expanded", slim ? "false" : "true");
-          btn.setAttribute("aria-label", slim ? "Expand sidebar" : "Collapse sidebar");
-        }
-        btn.addEventListener("click", function () {
-          var slim = root.classList.toggle("sb-slim");
-          try { localStorage.setItem("ff_sb", slim ? "slim" : "wide"); } catch (e) { /* persistence is best-effort */ }
-          sync();
-        });
-        sync();
-      })();
+      /* Sidebar is slim-only (Nov 10, 2026 slim lock): the collapse
+         toggle and its persistence script were removed along with
+         the expanded mode — the head script applies html.sb-slim
+         unconditionally on every load, so there is nothing to flip. */
       /* Tool-at-top demotion arming: the first activateNav after load
          (the connect landing, or the user's first nav click) sets
          body.ff-demoted AFTER the switch runs, so the Values hero and
@@ -3224,9 +3211,11 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          styling are untouched. The top tab bar becomes a left rail
          (myfantasyfootball.co pattern): brand + account + league
          switcher + section nav + the active section's sub-tools.
-         Expanded (236px, icon + label) is the default at >=641px;
-         html.sb-slim (persisted per device) retracts it to an 84px
-         icon rail. Phones keep the fixed bottom bar they already had.
+         Slim-locked (Nov 10, 2026): html.sb-slim is applied on
+         every load — the 108px icon-over-label rail is the only
+         sidebar mode at >=641px and the expanded rules below are
+         inert history. Phones keep the fixed bottom bar they
+         already had.
          Tool-at-top: the content header is one slim row (league name
          + format controls); the brand kicker and the league meta line
          live in the rail, and connected users land straight on the
@@ -3385,7 +3374,15 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           text-transform: uppercase; text-align: center; line-height: 1.25; white-space: normal;
         }
         html.sb-slim .ff-sidebar .nav-lock { display: none !important; }
-        html.sb-slim .ff-menu { left: 0; right: auto; top: calc(100% + 6px); bottom: auto; }
+        /* Slim-lock popup fix (Nov 10, 2026): the account row is
+           pinned at the rail's bottom, so the menu must open UPWARD
+           from the emblem — the previous slim rule flipped it
+           downward (top: 100% + 6px) and the whole popup rendered
+           below the viewport, invisible (Eric's report). Anchored
+           to the slot's left edge with a width cap: anchored
+           right:0 instead, the content-wide menu (389px with
+           league rows) spilled off the screen's left edge. */
+        html.sb-slim .ff-menu { left: 0; right: auto; top: auto; bottom: calc(100% + 6px); max-width: min(280px, calc(100vw - 24px)); }
         /* the signed-out account pill is wider than the slim rail —
            let it wrap to two short lines inside the rail instead of
            spilling over the content column */
@@ -3422,6 +3419,13 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         html.sb-slim .nav-ico { display: inline-flex; order: -1; flex: none; align-items: center; }
         html.sb-slim .nav-ico svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
         html.sb-slim .nav-lock { display: none !important; }
+        /* Slim-lock popup fix (Nov 10, 2026): at this width the
+           account row sits in the content flow near the top of the
+           page (the rail is display:contents), so the menu opens
+           DOWNWARD from the emblem — the >=641 upward rule pushed
+           it off the top of the screen — anchored to the slot's
+           left edge with the same width cap as the wide rail. */
+        html.sb-slim .ff-sidebar .ff-menu { left: 0; right: auto; top: calc(100% + 6px); bottom: auto; max-width: min(280px, calc(100vw - 24px)); }
         /* hybrid: the sub-tools bar is back in the content flow, so it
            must shed the rail's column styling and be the pill row it
            is everywhere else (the aside is display:contents here, but
