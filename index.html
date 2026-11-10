@@ -1083,20 +1083,35 @@
       .tg-near-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 8px; }
       .tg-near-grid.swap .tg-cand { animation: tgSwapIn .22s ease; }
       @keyframes tgSwapIn { from { opacity: .3; transform: translateY(3px); } to { opacity: 1; transform: none; } }
-      .tg-cand { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+      /* v2: every Targets result card is ONE fixed size, whatever its
+         content — the grid never breathes as the slider moves. Long
+         lines clamp inside the box instead of stretching it. */
+      .tg-cand { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; height: 158px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
+      .tg-cand-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tg-cand-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tg-room { font-size: 12.5px; color: var(--ink-2); margin: 0 0 8px; line-height: 1.45; }
+      .tg-room strong { color: var(--ink); }
+      .tg-setbox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 13px; margin-bottom: 10px; }
+      .tg-setbox p { margin: 0 0 9px; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+      .tg-setbox p strong { color: var(--ink); }
+      .tg-branch-row { display: flex; flex-wrap: wrap; gap: 8px; }
+      .tg-branch-btn { background: rgba(198,255,0,.07); border: 1px solid rgba(198,255,0,.35); color: var(--ink); border-radius: 999px; padding: 7px 14px; font-family: "Inter", sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
+      .tg-branch-btn:hover { border-color: var(--accent); }
+      .tg-branch-btn[aria-pressed="true"] { background: rgba(198,255,0,.16); border-color: var(--accent); color: var(--accent); }
+      .tg-chip.tier { background: rgba(64,200,255,.14); color: #7dd7ff; border: 1px solid rgba(64,200,255,.4); }
       .tg-cand-h { display: flex; align-items: center; gap: 9px; }
       .tg-cand-h img.phs { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex: none; background: rgba(255,255,255,.06); }
       .tg-cand-name { font-family: "Space Grotesk", sans-serif; font-size: 16.5px; font-weight: 700; line-height: 1.2; }
       .tg-cand-sub { font-size: 12px; color: var(--ink-2); }
       .tg-cand-val { margin-left: auto; text-align: right; font-family: "Space Grotesk", sans-serif; font-size: 17px; font-weight: 700; color: var(--accent); white-space: nowrap; }
       .tg-cand-val small { display: block; font-family: "Inter", sans-serif; font-size: 10px; font-weight: 600; color: var(--ink-3); letter-spacing: .05em; text-transform: uppercase; }
-      .tg-owner { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; }
+      .tg-owner { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .sell-note { margin-top: 10px; padding: 10px 13px; border-radius: 10px; font-size: 14px; line-height: 1.55; background: rgba(64,200,255,.07); border: 1px solid rgba(64,200,255,.32); color: var(--ink); }
       .sell-note .dir-tag { background: var(--cyan); color: #04121A; }
       .tg-chip { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; background: rgba(255,255,255,.10); color: var(--ink-2); }
       .tg-chip.warn { background: rgba(255,84,112,.18); color: #ff8fa3; border: 1px solid rgba(255,84,112,.45); }
       .tg-chip.good { background: rgba(198,255,0,.14); color: var(--accent); border: 1px solid rgba(198,255,0,.4); }
-      .tg-offer { margin-top: 6px; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
+      .tg-offer { margin-top: 6px; font-size: 13px; color: var(--ink-2); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
       .tg-offer strong { color: var(--ink); }
       .tg-offer .grade-btn { padding: 3px 10px; font-size: 12px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
       /* Targets section chrome stays tight so the first offer card is
@@ -6839,32 +6854,39 @@ ${rdP ? "" : `
         return { myNeeds, suggestions: picked, mine, posNote, nearMisses: nearGraded.slice(0, 3) };
       }
 
-      /* ================= Player Targets (Eric, Nov 9, 2026) ====
-         Grades up top, slot-first shopping underneath. The page opens
-         on the user's positional grades — the same letter grades the
-         League tab prints (positional strength vs the league) — and
-         the weakest grades are the shopping list: tapping one aims
-         the "I want" filter at that hole. Under the grades sits one
-         control: a per-position price slider. Wherever it stops, the
-         2–4 gettable players nearest that value appear — live, while
-         the thumb moves — each on a three-line card: name and stats,
-         the owner's context (team · window · power rank), and the
-         offer itself. Behind the scenes, a per-position sweet spot
-         is derived from the live board on every render (tgBandFor):
-         the values of the league's starters at the position outside
-         the elite tier. It seeds the slider's start point and its
-         shading, and picks the weakest-spot fixes — it is never a
-         hand-picked range and never renders as labeled boxes.
-         Candidates pass the buy engine's own gates — the player must
-         raise the user's optimal lineup over its weakest starter at
-         his position (at FLEX, over the weakest flex-slot holder
-         too), the package is built from the user's picks and bench
-         depth, the counterparty sanity applies, and the finished
-         offer must grade Fair or Close — then rank by seller context:
-         the owner's window, standing and depth at the position.
-         Values are points, never dollars: nothing in this layer
-         formats currency. */
-      const tgState = { pos: null, budget: null };
+      /* ================= Player Targets v2 (Eric, Nov 9, 2026) ====
+         Grades up top, slot-first shopping underneath — rebuilt the
+         same night on Eric's corrections. The page opens on the
+         user's positional grades (the League tab's letter grades);
+         tapping one shops that position, tapping it again deselects
+         back to All. There is no weakest-spots strip: the "Start
+         here" flag on the worst grade is the only pointer.
+         STARTER IDENTITY (tgRoom): the starter a view names is the
+         roster's real top asset at the position — when a bench
+         player's rest-of-season projection edges the starter's by
+         noise (under 1.25 pts/wk) but the starter is worth at least
+         half again as much, the starter keeps the label. (v1 named
+         starters by raw projection order alone, which called Tyler
+         Higbee the starter over Kyle Pitts.) A candidate is a
+         STARTER UPGRADE only if he beats that named starter on both
+         projection and value while raising the optimal lineup; a
+         candidate who merely beats the next man up is a DEPTH ADD
+         and is labeled as one — never pitched as the starter's fix.
+         THE POOL IS CURATED FIRST: a player enters only if he fits
+         the need honestly (above) AND his owner would realistically
+         deal (seller context gates entry — a star starting for a
+         contender never enters). The slider then travels the pool's
+         own populated price CLUSTERS, cluster to cluster: each stop
+         shows that cluster's 2–4 players on identical fixed-size
+         three-line cards, and nothing outside the cluster can leak
+         in (no global range, no nearest-player fallback). A position
+         whose starters AND depth both grade top-half is SET: the
+         view says so and offers two searches — depth options (from
+         owners with surplus at the position) and tier-up deals
+         (your starter + picks for a higher tier, only from owners
+         bad enough to plausibly sell). Values are points, never
+         dollars: nothing in this layer formats currency. */
+      const tgState = { cluster: null, clusterPos: null, branch: null, view: null };
       let tgCache = null;
       let tgBandCache = null;
       const TG_PEAK_AGE = { QB: 31, RB: 26, WR: 28, TE: 28 };
@@ -6885,8 +6907,15 @@ ${rdP ? "" : `
         return out;
       }
       let tgMapsCache = null;
+      function tgLeagueKey() {
+        /* Every Targets cache keys on the connected league as well
+           as the mode and board: roster ids repeat across leagues
+           (every league has a roster 4 and a roster 11), so a cache
+           built in one league must never answer for another. */
+        return (DATA.league && (DATA.league.league_id || DATA.league.name)) || "";
+      }
       function tgAllMaps() {
-        const key = (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + DATA.players.length + "|" + starterSlots().length;
+        const key = tgLeagueKey() + "|" + (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + DATA.players.length + "|" + starterSlots().length;
         if (tgMapsCache && tgMapsCache.key === key) return tgMapsCache.maps;
         const maps = {};
         DATA.teams.forEach(t => { maps[t.rid] = tgSlotMap(t.rid); });
@@ -6907,7 +6936,7 @@ ${rdP ? "" : `
            flex slots (any of RB/WR/TE); a league with no flex slots
            falls back to every flex-eligible starter. Edges round to
            the nearest 50 for display. */
-        const key = (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + DATA.players.length + "|" + starterSlots().length
+        const key = tgLeagueKey() + "|" + (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + DATA.players.length + "|" + starterSlots().length
           + "|" + (typeof SETTINGS !== "undefined" ? JSON.stringify(SETTINGS) : "");
         if (tgBandCache && tgBandCache.key === key && tgBandCache.bands[group]) return tgBandCache.bands[group];
         const maps = tgAllMaps();
@@ -6967,6 +6996,71 @@ ${rdP ? "" : `
       function tgGradeOf(mine, pos) {
         if (pos === "FLEX") return GRADE_LADDER[tgPosRank(mine.rid, "FLEX") - 1] || "F";
         return (mine.grades && mine.grades[pos]) || "—";
+      }
+      let tgRoomCache = null;
+      function tgRoom(rid, group) {
+        /* The room assessment every Targets v2 view stands on: who
+           the starter IS, who the next man up is, and whether the
+           hole sits in the starters, in the depth, or nowhere.
+           Named starter: the best projection at the position —
+           unless a teammate within projection noise (1.25 pts/wk,
+           a gap the projection model cannot honestly call) is worth
+           at least half again as much, in which case the asset is
+           the starter and the projection leader is his backup.
+           (Raw projection order alone named Tyler Higbee — worth
+           1,875, TE41 — the starter over Kyle Pitts, 3,754, TE12.)
+           Next man up: the best projection at the position who does
+           not hold a starting slot. Starter standing reuses
+           tgPosRank (the grades' own ranking); depth standing ranks
+           every team's next man up the same way. A position is SET
+           only when both standings are top-half: Allen + Caleb is
+           an A+ starting pair whose depth can still be a hole. */
+        const key = tgLeagueKey() + "|" + rid + "|" + group + "|" + (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + DATA.players.length;
+        if (tgRoomCache && tgRoomCache.key === key) return tgRoomCache.room;
+        const positions = group === "FLEX" ? ["RB", "WR", "TE"] : [group];
+        const maps = tgAllMaps();
+        const startersOf = t => {
+          const slots = maps[t.rid] || [];
+          if (group === "FLEX") {
+            let st = slots.filter(s => s.player && TG_FLEX_KEYS[s.key]);
+            if (!st.length) st = slots.filter(s => s.player && positions.includes(s.player.pos));
+            return st.map(s => s.player);
+          }
+          return slots.filter(s => s.player && s.player.pos === group).map(s => s.player);
+        };
+        const assess = t => {
+          const roster = teamPlayers(t.rid).filter(p => positions.includes(p.pos));
+          const byProj = roster.slice().sort((a, b) => rosProj(b) - rosProj(a));
+          const starters = startersOf(t);
+          const stIds = new Set(starters.map(p => p.id));
+          let named = null;
+          if (group === "FLEX") {
+            named = starters.slice().sort((a, b) => rosProj(a) - rosProj(b))[0] || null;
+          } else {
+            const top = byProj[0] || null;
+            named = top;
+            if (top) for (const p of byProj) {
+              if (p.id === top.id) continue;
+              if (rosProj(top) - rosProj(p) <= 1.25 && dispVal(p) >= dispVal(top) * 1.5 && dispVal(p) > dispVal(named)) named = p;
+            }
+          }
+          const nextMan = byProj.find(p => !stIds.has(p.id)) || null;
+          return { named, nextMan, namedProj: named ? rosProj(named) : 0, nextProj: nextMan ? rosProj(nextMan) : 0 };
+        };
+        const mineA = assess(TBY[rid]);
+        const n = DATA.teams.length;
+        const depthRank = 1 + DATA.teams.filter(t => t.rid !== rid && assess(t).nextProj > mineA.nextProj).length;
+        const starterRank = tgPosRank(rid, group);
+        const room = {
+          named: mineA.named, nextMan: mineA.nextMan,
+          namedProj: mineA.namedProj, depthProj: mineA.nextProj,
+          namedVal: mineA.named ? dispVal(mineA.named) : 0,
+          starterRank, depthRank,
+          starterHole: starterRank > n / 2, depthHole: depthRank > n / 2,
+        };
+        room.set = !room.starterHole && !room.depthHole;
+        tgRoomCache = { key, room };
+        return room;
       }
       function tgSellInfo(owner, cand, ctx) {
         /* Seller context, from computed facts only: the owner's
@@ -7028,9 +7122,10 @@ ${rdP ? "" : `
         } catch (e) { return ""; }
       }
       function tgCandidates(rid, group) {
-        const key = rid + "|" + group + "|" + (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + partnerPickSig() + "|" + DATA.players.length;
+        const key = tgLeagueKey() + "|" + rid + "|" + group + "|" + (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + partnerPickSig() + "|" + DATA.players.length;
         if (tgCache && tgCache.key === key) return tgCache;
         const mine = TBY[rid];
+        const room = tgRoom(rid, group);
         const positions = group === "FLEX" ? ["RB", "WR", "TE"] : [group];
         const base = optimalLineup(mine.playerIds).total;
         const myLineup = lineupSet(rid);
@@ -7075,7 +7170,29 @@ ${rdP ? "" : `
               const ids = mine.playerIds.filter(id => id !== w.player.id).concat([cand.id]);
               dPpg = Math.max(dPpg, optimalLineup(ids).total - base);
             });
-            if (!(dPpg >= 0.15)) return; // the buy guardrail: he must raise the lineup
+            const info = tgSellInfo(owner, cand, ctx);
+            /* v2 POOL GATE: seller context decides ENTRY, not just
+               order — a star starting for a contender (the old
+               "long shot" card) never enters the pool. His only
+               route onto this page is the tier-up search, and only
+               when his owner is bad enough to plausibly sell. */
+            if (info.longShot) return;
+            /* Starter upgrade vs depth add, judged against the
+               NAMED starter and the next man up (tgRoom) — never
+               against raw projection order, and never a downgrade
+               dressed as an upgrade: a starter upgrade must beat
+               the named starter on projection AND value while
+               raising the optimal lineup. Anything that only beats
+               the next man up (by a real margin, 0.3 pts/wk) is a
+               depth add and is labeled as one. */
+            const raises = dPpg >= 0.15;
+            let kind = null, delta = 0, deltaKind = "lineup";
+            if (raises && rosProj(cand) > room.namedProj && (group === "FLEX" || val >= room.namedVal)) { kind = "starter"; delta = dPpg; }
+            else if (rosProj(cand) > room.depthProj + 0.3) {
+              kind = "depth";
+              if (raises) { delta = dPpg; } else { delta = rosProj(cand) - room.depthProj; deltaKind = "depth"; }
+            }
+            if (!kind) return;
             let pkg = buildPackage(payPool, val, 0.90, 1.12, null, val);
             if (pkg && VALMODE !== "redraft" && !genuineRebuildPartner(owner) && !pkgStartsForPartner(owner, cand, pkg)) {
               pkg = rebuildWithStarter(owner, cand, payPool);
@@ -7085,8 +7202,7 @@ ${rdP ? "" : `
               const g = offerGrade(pkg, [playerAsset(cand)]);
               if (g.zone === "lopsided") pkg = null; else grade = g;
             }
-            const info = tgSellInfo(owner, cand, ctx);
-            out.push({ cand, owner, val, dPpg, pkg, grade, score: info.score, note: info.note, longShot: info.longShot, surplus: info.surplus });
+            out.push({ cand, owner, val, dPpg, pkg, grade, score: info.score, note: info.note, longShot: false, surplus: info.surplus, kind, delta, deltaKind });
           });
         }
         const maxVal = out.reduce((m, c) => Math.max(m, c.val), 0);
@@ -7099,8 +7215,13 @@ ${rdP ? "" : `
            ordered this card stays behind the scenes (c.score, the
            Realistic / Long shot tag) — the prose is gone. */
         const p = c.cand, o = c.owner;
-        const tag = c.longShot ? `<span class="tg-chip warn">Long shot</span>`
-          : (c.score >= 70 ? `<span class="tg-chip good">Realistic</span>` : "");
+        const tag = c.kind === "starter" ? `<span class="tg-chip good">Starter upgrade</span>`
+          : c.kind === "depth" ? `<span class="tg-chip">Depth add</span>`
+          : c.kind === "tier" ? `<span class="tg-chip tier">Tier-up</span>` : "";
+        const dVal = c.delta != null ? c.delta : c.dPpg;
+        const dTxt = c.deltaKind === "depth"
+          ? `adds <strong>+${dVal.toFixed(1)} pts/wk</strong> over your next man up`
+          : `adds <strong>+${dVal.toFixed(1)} pts/wk</strong> to your projected lineup`;
         const ctx = VALMODE === "redraft"
           ? `${esc(o.name)} • Power ${o.powerRank} of ${DATA.teams.length}`
           : `${esc(o.name)} — ${archTag(o.arch)} • Power ${o.powerRank} of ${DATA.teams.length}`;
@@ -7109,10 +7230,10 @@ ${rdP ? "" : `
           const give = c.pkg.map(a => esc(a.label)).join(" + ");
           const payload = { a: rid, b: o.rid, give: c.pkg.map(a => a.kind === "pick" ? (a.key ? { kind: "pick", key: a.key, fromTeam: a.fromTeam } : null) : { kind: "player", id: a.p.id }), get: [{ kind: "player", id: p.id }] };
           const btn = payload.give.every(Boolean) ? `<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Grade it →</button>` : "";
-          offer = `<div class="tg-offer">You send <strong>${give}</strong> · <strong>${c.grade ? (c.grade.zone === "fair" ? "Fair" : "Close") : "Fair"}</strong> · adds <strong>+${c.dPpg.toFixed(1)} pts/wk</strong> to your projected lineup${btn}</div>`;
+          offer = `<div class="tg-offer">You send <strong>${give}</strong> · <strong>${c.grade ? (c.grade.zone === "fair" ? "Fair" : "Close") : "Fair"}</strong> · ${dTxt}${btn}</div>`;
         } else {
           const payload = { a: rid, b: o.rid, give: [], get: [{ kind: "player", id: p.id }] };
-          offer = `<div class="tg-offer">No fair package from your picks &amp; bench — adds <strong>+${c.dPpg.toFixed(1)} pts/wk</strong> if you build it<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Build it →</button></div>`;
+          offer = `<div class="tg-offer">No fair package from your picks &amp; bench — ${dTxt} if you build it<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Build it →</button></div>`;
         }
         return `<div class="tg-cand">
           <div class="tg-cand-h">${hsImg(p, "phs-sm")}<div><div class="tg-cand-name">${esc(p.name)}${tag}</div><div class="tg-cand-sub">${p.pos}${p.posRank} · ${esc(p.team || "")} · age ${p.age ?? "—"} · ${rosProj(p).toFixed(1)} proj/wk</div></div><div class="tg-cand-val">${fmt(Math.round(c.val))}<small>value</small></div></div>
@@ -7120,100 +7241,212 @@ ${rdP ? "" : `
           ${offer}
         </div>`;
       }
-      function tgNearData(cache, budget) {
-        /* The slider's whole job: the pursue-able players nearest
-           the set value. Window = 20% either side of the number (at least 500);
-           inside it, seller realism orders the cards. If fewer than
-           two players sit inside the window, the nearest two overall
-           show instead — each card prints its own value, so the gap
-           from the number is always honest. A ~10,500 star can never
-           headline a 4,650 setting: distance picks the pool, not
-           positional rank. */
-        const cands = cache.cands;
-        if (!cands.length) return { near: [], inWindow: 0 };
-        const byDist = cands.slice().sort((a, b) => (Math.abs(a.val - budget) - Math.abs(b.val - budget)) || ((a.cand.posRank ?? 999) - (b.cand.posRank ?? 999)) || (b.score - a.score));
-        const win = Math.max(budget * 0.20, 500);
-        const inside = cands.filter(c => Math.abs(c.val - budget) <= win)
-          .sort((a, b) => (b.score - a.score) || (Math.abs(a.val - budget) - Math.abs(b.val - budget)));
-        if (inside.length < 2) return { near: byDist.slice(0, 2), inWindow: inside.length };
-        return { near: inside.slice(0, 4), inWindow: inside.length };
+      function tgClusters(cands) {
+        /* v2: the pool, grouped into its own populated price
+           clusters. Sorted by value, a new cluster starts when the
+           gap from the cluster's floor grows past the wider of 600
+           points or 18% of that floor, or when the cluster already
+           holds four. A leftover singleton folds back into the
+           previous cluster when the merged span stays within the
+           wider of 900 points or 28% — clusters are shelves that
+           actually hold players, never empty travel. */
+        const cs = cands.slice().sort((a, b) => a.val - b.val);
+        const clusters = [];
+        let cur = [];
+        for (const c of cs) {
+          if (cur.length && (cur.length >= 4 || c.val - cur[0].val > Math.max(600, cur[0].val * 0.18))) { clusters.push(cur); cur = []; }
+          cur.push(c);
+        }
+        if (cur.length) clusters.push(cur);
+        for (let i = clusters.length - 1; i > 0; i--) {
+          if (clusters[i].length === 1 && clusters[i - 1].length < 4 && clusters[i][0].val - clusters[i - 1][0].val <= Math.max(900, clusters[i - 1][0].val * 0.28)) {
+            clusters[i - 1].push(clusters[i][0]);
+            clusters.splice(i, 1);
+          }
+        }
+        clusters.forEach(cl => cl.sort((a, b) => (b.score - a.score) || (b.val - a.val)));
+        return clusters;
       }
-      function tgNearHtml(cache, budget, d) {
-        d = d || tgNearData(cache, budget);
-        if (!d.near.length) return `<p class="tg-near-h">No gettable names at this position</p>`;
-        const head = d.inWindow >= 2 ? "Closest to your number" : "Nothing prices right at that number — the closest gettable names";
-        return `<p class="tg-near-h">${head}</p><div class="tg-near-grid">${d.near.map(c => tgCandHtml(c, cache.rid)).join("")}</div>`;
+      function tgClusterHtml(cache, clusters, idx) {
+        const cl = clusters[idx] || [];
+        if (!cl.length) return `<p class="tg-near-h">No gettable names at this position</p>`;
+        const sorted = cl.slice().sort((a, b) => a.val - b.val);
+        const loV = Math.round(sorted[0].val), hiV = Math.round(sorted[sorted.length - 1].val);
+        const headTxt = loV === hiV ? `Priced at ${fmt(loV)} points` : `Priced ${fmt(loV)}–${fmt(hiV)} points`;
+        return `<p class="tg-near-h">${headTxt}</p><div class="tg-near-grid">${cl.map(c => tgCandHtml(c, cache.rid)).join("")}</div>`;
       }
-      function tgPatchNear(nearEl, cache, budget) {
-        /* Live during the drag: swap the near list only when the set
-           of names actually changes, with a short cross-fade — the
-           visible players track the thumb, never just the release. */
-        const d = tgNearData(cache, budget);
-        const key = d.near.map(c => c.cand.id).join(",");
+      function tgPatchNear(nearEl, cache, clusters, idx) {
+        /* The slider stops at clusters, so a patch is needed only
+           when the thumb crosses into a new cluster — then the
+           whole set cross-fades together. Inside a cluster the
+           drag changes nothing, by construction. */
+        const cl = clusters[idx] || [];
+        const key = idx + ":" + cl.map(c => c.cand.id).join(",");
         if (nearEl.dataset.tgKey === key) return;
         nearEl.dataset.tgKey = key;
-        nearEl.innerHTML = tgNearHtml(cache, budget, d);
+        nearEl.innerHTML = tgClusterHtml(cache, clusters, idx);
         const grid = nearEl.querySelector(".tg-near-grid");
         if (grid) grid.classList.add("swap");
       }
+      function tgRoomLine(rid, group, room) {
+        const nm = room.named ? esc(room.named.name) : "—";
+        const nx = room.nextMan ? esc(room.nextMan.name) : "nobody";
+        if (group === "FLEX") return `<p class="tg-room">Your weakest flex holder: <strong>${nm}</strong> (${room.namedProj.toFixed(1)} proj/wk) · Next up: <strong>${nx}</strong>${room.nextMan ? ` (${room.depthProj.toFixed(1)} proj/wk)` : ""}</p>`;
+        return `<p class="tg-room">Your ${group} starter: <strong>${nm}</strong> (${room.namedProj.toFixed(1)} proj/wk) · Next up: <strong>${nx}</strong>${room.nextMan ? ` (${room.depthProj.toFixed(1)} proj/wk)` : ""}</p>`;
+      }
       function tgLadderHtml(rid, group, cache) {
-        const band = tgBandFor(group);
-        const maxV = Math.max(9000, Math.ceil((cache.maxVal || 9000) / 500) * 500);
-        const minV = 800;
-        const budget = Math.min(maxV, Math.max(minV, tgState.budget || Math.round((band.lo + band.hi) / 2)));
-        tgState.budget = budget;
-        const clampPct = v => Math.min(100, Math.max(0, v)).toFixed(1);
-        const bs = clampPct((band.lo - minV) / (maxV - minV) * 100), be = clampPct((band.hi - minV) / (maxV - minV) * 100);
+        const room = tgRoom(rid, group);
         const posName = group === "FLEX" ? "flex (RB/WR/TE)" : group;
-        let near;
-        if (cache.cands.length) {
-          const d0 = tgNearData(cache, budget);
-          near = `<div id="tg-near" data-tg-key="${d0.near.map(c => c.cand.id).join(",")}">${tgNearHtml(cache, budget, d0)}</div>`;
-        } else {
-          near = `<div class="diag"><p>No gettable upgrade at ${esc(posName)} prices fairly out of your picks and bench depth right now — every producer who raises this lineup either costs a starter to balance, or his owner has no reason to sell. The graded offers below are the other windows into this roster.</p></div>`;
+        /* When the starters are fine and only the depth is thin,
+           the slider browses depth adds alone — the honest pool
+           for the hole that actually exists. */
+        const depthOnly = !room.starterHole && room.depthHole;
+        const pool = depthOnly ? cache.cands.filter(c => c.kind === "depth") : cache.cands;
+        const clusters = tgClusters(pool);
+        let idx = (tgState.cluster != null && tgState.clusterPos === group) ? tgState.cluster : null;
+        if (idx == null || idx >= clusters.length) {
+          const band = tgBandFor(group);
+          const mid = (band.lo + band.hi) / 2;
+          idx = clusters.findIndex(cl => { const vs = cl.map(c => c.val); return Math.min(...vs) <= mid && mid <= Math.max(...vs); });
+          if (idx < 0) idx = Math.floor(clusters.length / 2);
         }
-        return `<div class="tg-ladder">
-          <div class="tg-slider-box">
-            <div class="tg-slider-top"><span class="tg-budget" id="tg-budget-num">${fmt(budget)}</span><span class="tg-budget-lbl">your price at ${esc(posName)} — in value points</span></div>
-            <input type="range" class="tg-slider" id="tg-slider" min="${minV}" max="${maxV}" step="25" value="${budget}" style="--tg-bs:${bs}%;--tg-be:${be}%" aria-label="Your price at ${esc(posName)}, in value points">
-            <div class="tg-slider-ends"><span>${fmt(minV)}</span><span>${fmt(maxV)}+</span></div>
-          </div>
-          ${near}
+        tgState.view = { group, clusters, cache };
+        tgState.cluster = idx; tgState.clusterPos = group;
+        let html = tgRoomLine(rid, group, room);
+        if (depthOnly) html += `<p class="tg-room">Your ${esc(posName)} starters are set — the hole here is depth, so everything below is a depth add.</p>`;
+        if (!pool.length) {
+          html += `<div class="diag"><p>No gettable ${depthOnly ? "depth piece" : "name"} at ${esc(posName)} prices fairly out of your picks and bench depth right now — every producer who fits either costs a starter to balance, or his owner has no reason to sell. The graded offers below are the other windows into this roster.</p></div>`;
+          return `<div class="tg-ladder">${html}</div>`;
+        }
+        const midOf = cl => Math.round(cl.reduce((s, c) => s + c.val, 0) / cl.length);
+        if (clusters.length > 1) {
+          html += `<div class="tg-slider-box">
+            <div class="tg-slider-top"><span class="tg-budget" id="tg-budget-num">≈ ${fmt(midOf(clusters[idx]))}</span><span class="tg-budget-lbl">your price at ${esc(posName)} — in value points</span></div>
+            <input type="range" class="tg-slider" id="tg-slider" min="0" max="${clusters.length - 1}" step="1" value="${idx}" aria-label="Your price at ${esc(posName)}, in value points">
+            <div class="tg-slider-ends"><span>≈ ${fmt(midOf(clusters[0]))}</span><span>≈ ${fmt(midOf(clusters[clusters.length - 1]))}</span></div>
+          </div>`;
+        }
+        html += `<div id="tg-near" data-tg-key="${idx}:${clusters[idx].map(c => c.cand.id).join(",")}">${tgClusterHtml(cache, clusters, idx)}</div>`;
+        return `<div class="tg-ladder">${html}</div>`;
+      }
+      let tgTierCache = null;
+      function tgTierUps(rid, group) {
+        /* TIER-UP search (v2): consolidation deals for a position
+           that needs nothing — package your own starter at the
+           position plus picks and jump a tier. Gated hard: the
+           target must be a genuine tier jump over the starter he'd
+           replace (better value, better projection, better
+           positional rank), the package must grade Fair or Close,
+           and the star's owner must be bad or rebuilding enough to
+           plausibly sell — a star on a contender produces NO card.
+           Two variants per target when both build: (A) your starter
+           + picks; (B) spare the starter, pay picks-heavy instead.
+           Anchors are tried weakest starter first (the Caleb
+           Williams slot before the QB1 slot). */
+        const key = tgLeagueKey() + "|tier|" + rid + "|" + group + "|" + (typeof VALMODE !== "undefined" ? VALMODE : "dynasty") + "|" + partnerPickSig() + "|" + DATA.players.length;
+        if (tgTierCache && tgTierCache.key === key) return tgTierCache.list;
+        const mine = TBY[rid];
+        const room = tgRoom(rid, group);
+        const positions = group === "FLEX" ? ["RB", "WR", "TE"] : [group];
+        const maps = tgAllMaps();
+        let starters = [];
+        if (group === "FLEX") starters = (maps[rid] || []).filter(s => s.player && TG_FLEX_KEYS[s.key]).map(s => s.player);
+        else starters = (maps[rid] || []).filter(s => s.player && s.player.pos === group).map(s => s.player);
+        starters = [...new Map(starters.map(p => [p.id, p])).values()].sort((a, b) => rosProj(a) - rosProj(b));
+        if (room.named && !starters.some(p => p.id === room.named.id)) starters.push(room.named);
+        const n = DATA.teams.length;
+        const FL = tradeFloors();
+        const picks = pickAssets(mine);
+        const myLineup = lineupSet(rid);
+        const benchPool = [...picks, ...tradableAssets(rid).filter(p => !myLineup.has(p.id) && dispVal(p) >= FL.card).map(playerAsset)];
+        const out = [];
+        const seen = new Set();
+        for (const anchor of starters) {
+          const aVal = dispVal(anchor), aProj = rosProj(anchor);
+          DATA.players.forEach(cand => {
+            if (!positions.includes(cand.pos) || !cand.owner || Number(cand.owner) === rid || seen.has(cand.id)) return;
+            const owner = TBY[cand.owner];
+            if (!owner || !partnerAllowed(owner.rid)) return;
+            const val = dispVal(cand);
+            if (!(val > aVal && rosProj(cand) > aProj && (cand.posRank ?? 999) < (anchor.posRank ?? 999))) return;
+            const badTeam = owner.arch === "rebuilder" || owner.powerRank > (2 * n) / 3 || (owner.arch === "crossroads" && owner.powerRank > n / 2);
+            if (!badTeam || owner.powerRank <= Math.ceil(n / 3)) return;
+            let varA = null, gA = null, varB = null, gB = null;
+            const pkgA = buildPackage(picks, val, 0.90, 1.12, playerAsset(anchor), val);
+            if (pkgA) { const g = offerGrade(pkgA, [playerAsset(cand)]); if (g.zone !== "lopsided") { varA = pkgA; gA = g; } }
+            const poolB = benchPool.filter(a => a.kind === "pick" || a.p.id !== anchor.id);
+            let pkgB = buildPackage(poolB, val, 0.90, 1.12, null, val);
+            if (pkgB && VALMODE !== "redraft" && !genuineRebuildPartner(owner) && !pkgStartsForPartner(owner, cand, pkgB)) pkgB = rebuildWithStarter(owner, cand, poolB);
+            if (pkgB) { const g = offerGrade(pkgB, [playerAsset(cand)]); if (g.zone !== "lopsided") { varB = pkgB; gB = g; } }
+            if (!varA && !varB) return;
+            seen.add(cand.id);
+            /* Post-trade depth check for variant A: if sending the
+               anchor leaves the room's next man up materially worse
+               than today's, the card says so — never a silent hole. */
+            let thin = false;
+            if (varA) {
+              const k = Math.max(1, starters.length);
+              const pool2 = teamPlayers(rid).filter(p => positions.includes(p.pos) && p.id !== anchor.id).concat([cand])
+                .sort((a, b) => rosProj(b) - rosProj(a));
+              const postDepth = pool2.length > k ? rosProj(pool2[k]) : 0;
+              thin = postDepth < room.depthProj - 0.5;
+            }
+            out.push({ cand, owner, val, anchor, varA, gA, varB, gB, thin });
+          });
+        }
+        out.sort((a, b) => b.val - a.val);
+        tgTierCache = { key, list: out.slice(0, 4) };
+        return tgTierCache.list;
+      }
+      function tgTierCardHtml(t, rid) {
+        const p = t.cand, o = t.owner;
+        const ctx = VALMODE === "redraft"
+          ? `${esc(o.name)} • Power ${o.powerRank} of ${DATA.teams.length}`
+          : `${esc(o.name)} — ${archTag(o.arch)} • Power ${o.powerRank} of ${DATA.teams.length}`;
+        const ser = pkg => pkg.map(a => a.kind === "pick" ? (a.key ? { kind: "pick", key: a.key, fromTeam: a.fromTeam } : null) : { kind: "player", id: a.p.id });
+        const btn = pkg => {
+          const payload = { a: rid, b: o.rid, give: ser(pkg), get: [{ kind: "player", id: p.id }] };
+          return payload.give.every(Boolean) ? `<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Grade it →</button>` : "";
+        };
+        const zone = g => g ? (g.zone === "fair" ? "Fair" : "Close") : "Fair";
+        const lines = [];
+        if (t.varA) lines.push(`Send <strong>${t.varA.map(a => esc(a.label)).join(" + ")}</strong> · <strong>${zone(t.gA)}</strong>${btn(t.varA)}`);
+        if (t.varB) lines.push(`${t.varA ? "Or spare " + esc(t.anchor.name) + ": " : "Send "}<strong>${t.varB.map(a => esc(a.label)).join(" + ")}</strong> · <strong>${zone(t.gB)}</strong>${btn(t.varB)}`);
+        if (t.thin) lines.push(`Heads up: the first deal leaves you thin at ${esc(p.pos)} behind him.`);
+        return `<div class="tg-cand">
+          <div class="tg-cand-h">${hsImg(p, "phs-sm")}<div><div class="tg-cand-name">${esc(p.name)}<span class="tg-chip tier">Tier-up</span></div><div class="tg-cand-sub">${p.pos}${p.posRank} · ${esc(p.team || "")} · age ${p.age ?? "—"} · ${rosProj(p).toFixed(1)} proj/wk</div></div><div class="tg-cand-val">${fmt(Math.round(t.val))}<small>value</small></div></div>
+          <div class="tg-owner">${ctx}</div>
+          <div class="tg-offer">${lines.join("<br>")}</div>
         </div>`;
       }
-      function tgWeakStripHtml(rid, mine) {
-        let weak = [];
-        /* The strip ranks by the same grades the header prints —
-           Eric's model is "the bad grades are the shopping list" —
-           and only bottom-half grades count as holes at all (an A+
-           flex is not a weak spot, whatever the projections say
-           about its last starter). The weakest starter inside the
-           group, by projected points, is the player the card names. */
-        try {
-          const byGroup = {};
-          tgWeakGroups(rid).forEach(w => { byGroup[w.group] = w; });
-          weak = ["QB", "RB", "WR", "TE", "FLEX"]
-            .map(g => ({ group: g, rank: tgPosRank(rid, g), w: byGroup[g] || null }))
-            .filter(x => x.w && x.rank > DATA.teams.length / 2)
-            .sort((a, b) => b.rank - a.rank).slice(0, 3)
-            .map(x => ({ group: x.group, starter: x.w.starter, ppg: x.w.ppg }));
-        } catch (e) { weak = []; }
-        if (!weak.length) return "";
-        const cards = weak.map(w => {
-          const g = tgGradeOf(mine, w.group);
-          let fix = "";
-          try {
-            const cache = tgCandidates(rid, w.group);
-            const bd = tgBandFor(w.group);
-            const band = cache.cands.filter(c => c.val >= bd.lo && c.val <= bd.hi).sort((a, b) => b.score - a.score)[0]
-              || cache.cands.slice().sort((a, b) => (b.score - a.score) || (Math.abs(a.val - (bd.lo + bd.hi) / 2) - Math.abs(b.val - (bd.lo + bd.hi) / 2)))[0];
-            fix = band
-              ? `<p>Your starter there is <strong>${esc(w.starter.name)}</strong> (${w.ppg.toFixed(1)} proj pts/wk). Most gettable fix: <strong>${esc(band.cand.name)}</strong> at ${fmt(Math.round(band.val))} from ${esc(band.owner.name)}.</p>`
-              : `<p>Your starter there is <strong>${esc(w.starter.name)}</strong> (${w.ppg.toFixed(1)} proj pts/wk). No fairly-priced upgrade today — see the graded offers below.</p>`;
-          } catch (e) { fix = `<p>Your starter there is <strong>${esc(w.starter.name)}</strong>.</p>`; }
-          return `<button type="button" class="tg-weak-card" data-tg-pos="${w.group}"><span class="tg-w-pos">${w.group === "FLEX" ? "Flex" : w.group} · <span class="tg-w-grade">${g}</span></span>${fix}<div class="tg-shop">Shop ${w.group === "FLEX" ? "flex" : w.group} →</div></button>`;
-        }).join("");
-        return `<div class="tg-ladder"><h3 class="path-head">Start with your weakest spots</h3><div class="tg-weak">${cards}</div></div>`;
+      function tgSetHtml(rid, group, cache) {
+        /* The SET branch: starters and depth both grade top-half,
+           so there are no need-based trades at this position. The
+           view says so — naming the actual starter and the next man
+           up — and offers the two opt-in searches instead of
+           inventing a need. */
+        const room = tgRoom(rid, group);
+        const posName = group === "FLEX" ? "flex" : group;
+        const nm = room.named ? esc(room.named.name) : "your starter";
+        const nx = room.nextMan ? esc(room.nextMan.name) : null;
+        let html = `<div class="tg-setbox"><p>Your ${esc(posName)} room is <strong>set</strong> — <strong>${nm}</strong> starts (${room.namedProj.toFixed(1)} proj/wk)${nx ? `, <strong>${nx}</strong> is next up (${room.depthProj.toFixed(1)} proj/wk)` : ""}, and both grade top-half in this league. No need-based trades here. If you want to shop anyway:</p>
+          <div class="tg-branch-row">
+            <button type="button" class="tg-branch-btn" data-tg-branch="up" aria-pressed="${tgState.branch === "up"}">Search for an upgrade</button>
+            <button type="button" class="tg-branch-btn" data-tg-branch="depth" aria-pressed="${tgState.branch === "depth"}">Search for depth</button>
+          </div></div>`;
+        if (tgState.branch === "depth") {
+          const list = cache.cands.filter(c => c.kind === "depth" && c.pkg && (c.surplus || tgPosRank(c.owner.rid, c.cand.pos) <= 3))
+            .sort((a, b) => b.score - a.score).slice(0, 4);
+          html += list.length
+            ? `<p class="tg-near-h">Depth options — owners with surplus at ${esc(posName)}</p><div class="tg-near-grid">${list.map(c => tgCandHtml(c, rid)).join("")}</div>`
+            : `<p class="tg-near-h">No depth piece at ${esc(posName)} is both gettable and better than your next man up right now</p>`;
+        } else if (tgState.branch === "up") {
+          const list = tgTierUps(rid, group);
+          html += list.length
+            ? `<p class="tg-near-h">Tier-up deals — your starter plus picks, from owners who should be selling</p><div class="tg-near-grid">${list.map(t => tgTierCardHtml(t, rid)).join("")}</div>`
+            : `<p class="tg-near-h">No tier-up at ${esc(posName)} grades fair from a team that would plausibly sell right now</p>`;
+        }
+        return html;
       }
       function tgTopHtml(rid, mine) {
         try {
@@ -7233,8 +7466,15 @@ ${rdP ? "" : `
           }).join("");
           let html = `<div class="tg-grades"><div class="tg-grades-h">Your team grades — tap a spot to shop it</div><div class="tg-grade-row">${btns}</div></div>`;
           const pos = finderState.want || "";
-          if (pos && ["QB", "RB", "WR", "TE", "FLEX"].includes(pos)) html += tgLadderHtml(rid, pos, tgCandidates(rid, pos));
-          else html += tgWeakStripHtml(rid, mine);
+          if (pos && ["QB", "RB", "WR", "TE", "FLEX"].includes(pos)) {
+            const cache = tgCandidates(rid, pos);
+            const room = tgRoom(rid, pos);
+            /* A set position (starters AND depth top-half) gets the
+               set view with its two searches; anything else gets the
+               cluster slider. The v1 weakest-spots strip is gone —
+               the Start here flag above is the only pointer. */
+            html += (room.set && pos !== "FLEX") ? tgSetHtml(rid, pos, cache) : tgLadderHtml(rid, pos, cache);
+          }
           return html;
         } catch (e) { return ""; }
       }
@@ -7246,39 +7486,36 @@ ${rdP ? "" : `
             const g = btn.dataset.tgPos;
             const next = finderState.want === g ? "" : g;
             finderState.want = next;
-            tgState.budget = null;
+            tgState.cluster = null; tgState.clusterPos = null; tgState.branch = null;
             const fw = document.getElementById("finder-want");
             if (fw) fw.querySelectorAll("button[data-want]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.want === next)));
             renderFinder();
           });
         });
+        out.querySelectorAll("[data-tg-branch]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            tgState.branch = tgState.branch === btn.dataset.tgBranch ? null : btn.dataset.tgBranch;
+            renderFinder();
+          });
+        });
         const slider = document.getElementById("tg-slider");
         if (slider) {
-          /* Live while dragging: every input event schedules one
-             animation-frame patch, and the patch swaps the near list
-             the moment the nearest names change — the players track
-             the thumb mid-drag, never only on release. A final patch
-             on change settles the exact release value. */
-          let tgRaf = 0;
-          const applyBudget = () => {
-            tgRaf = 0;
-            const pos = finderState.want || "";
-            if (tgCache && tgCache.group === pos && tgState.budget != null) {
-              const near = document.getElementById("tg-near");
-              if (near) tgPatchNear(near, tgCache, tgState.budget);
-            }
-          };
-          slider.addEventListener("input", () => {
-            tgState.budget = Number(slider.value);
+          /* The slider stops at price clusters. Crossing into a new
+             cluster cross-fades the whole card set; dragging inside
+             a cluster changes nothing — there is nothing between
+             clusters to show. */
+          const applyCluster = () => {
+            const idx = Number(slider.value);
+            tgState.cluster = idx; tgState.clusterPos = finderState.want || "";
+            const view = tgState.view;
+            if (!view || !view.clusters || !view.clusters[idx]) return;
             const num = document.getElementById("tg-budget-num");
-            if (num) num.textContent = fmt(tgState.budget);
-            if (!tgRaf) tgRaf = requestAnimationFrame(applyBudget);
-          });
-          slider.addEventListener("change", () => {
-            if (tgRaf) cancelAnimationFrame(tgRaf);
-            tgState.budget = Number(slider.value);
-            applyBudget();
-          });
+            if (num) num.textContent = "≈ " + fmt(Math.round(view.clusters[idx].reduce((s, c) => s + c.val, 0) / view.clusters[idx].length));
+            const near = document.getElementById("tg-near");
+            if (near) tgPatchNear(near, view.cache, view.clusters, idx);
+          };
+          slider.addEventListener("input", applyCluster);
+          slider.addEventListener("change", applyCluster);
         }
       }
 
@@ -7455,8 +7692,14 @@ ${rdP ? "" : `
       const finderWantEl = document.getElementById("finder-want");
       if (finderWantEl) finderWantEl.querySelectorAll("button[data-want]").forEach(btn => {
         btn.addEventListener("click", () => {
-          finderState.want = btn.dataset.want;
-          finderWantEl.querySelectorAll("button[data-want]").forEach(b => b.setAttribute("aria-pressed", String(b === btn)));
+          /* Chips toggle (v2): tapping the active position chip
+             again deselects it — back to All, highlight cleared.
+             (v1 set the value unconditionally, so a second tap on
+             Flex or TE did nothing at all.) */
+          const v = btn.dataset.want;
+          finderState.want = (v && finderState.want === v) ? "" : v;
+          tgState.cluster = null; tgState.clusterPos = null; tgState.branch = null;
+          finderWantEl.querySelectorAll("button[data-want]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.want === finderState.want)));
           renderFinder();
         });
       });
