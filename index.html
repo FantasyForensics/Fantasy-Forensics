@@ -2841,6 +2841,15 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .cc-radar-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
       .cc-tile img.cc-radar-face, .cc-tile img.cc-wv-face { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
       .cc-wv-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+      /* Most Added rows (fix, Nov 10, 2026): modeled on the Radar
+         tile's .cc-radar-row — face inline at a fixed size, the name
+         flexes and ellipsizes inside its own cell, the adds count is
+         pinned right and can never slide under the avatar. The old
+         .cc-tile-row + space-between layout let the nowrap count
+         overflow a shrunken name cell and paint over the headshot. */
+      .cc-wv-row .t-name { font-weight: 700; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .cc-wv-row .t-meta { color: var(--ink-3); font-size: 12.5px; font-weight: 500; }
+      .cc-wv-row .t-val { font-weight: 700; white-space: nowrap; flex: none; }
       .cc-power-grades { display: flex; justify-content: space-between; font-size: 17px; margin-top: 14px; }
       .cc-power-grades span { white-space: nowrap; }
       .cc-power-grades b { font-weight: 700; }
@@ -3559,8 +3568,12 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         #cc-out .cc-grid-move { padding: 5px 2px; }
         #cc-out .cc-grid > .cc-tile:nth-child(5) .cc-tile-rows { grid-template-columns: 1fr 1fr; gap: 5px 16px; }
         #cc-out .cc-grid > .cc-tile:nth-child(5) .cc-tile-body { padding-bottom: 3px; }
-        #cc-out .cc-grid > .cc-tile:nth-child(7) .cc-tile-rows { grid-template-columns: 1fr 1fr; gap: 5px 16px; }
-        #cc-out .cc-tile img.cc-radar-face { width: 30px; height: 30px; }
+        /* Most Added rows stay ONE column (Nov 10, 2026 fix): the old
+           1fr 1fr split squeezed each row to ~105px inside this
+           3-column-wide tile — the name ellipsized to 0 and the adds
+           count overflowed on top of the avatar. */
+        #cc-out .cc-grid > .cc-tile:nth-child(7) .cc-tile-rows { gap: 5px; }
+        #cc-out .cc-tile img.cc-radar-face, #cc-out .cc-tile img.cc-wv-face { width: 30px; height: 30px; }
         #cc-out .cc-radar-row .t-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         #cc-out .cc-grid > .cc-tile:nth-child(8) .cc-tile-rows { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
         #cc-out .cc-tool-link { font-size: 12.5px; padding: 6px 10px; text-align: center; }
@@ -3576,7 +3589,8 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         #cc-out .cc-tile { padding: 8px 12px; }
         #cc-out .cc-grid > .cc-tile:nth-child(3) svg { max-height: 38px; }
         #cc-out .cc-tile img.cc-radar-face, #cc-out .cc-tile img.cc-wv-face { width: 28px; height: 28px; }
-        #cc-out .cc-grid > .cc-tile:nth-child(5) .cc-tile-rows, #cc-out .cc-grid > .cc-tile:nth-child(7) .cc-tile-rows { gap: 4px 14px; }
+        #cc-out .cc-grid > .cc-tile:nth-child(5) .cc-tile-rows { gap: 4px 14px; }
+        #cc-out .cc-grid > .cc-tile:nth-child(7) .cc-tile-rows { gap: 4px; }
         #cc-out .cc-queue-it { padding: 3px 2px; }
         #cc-out .cc-tool-link { padding: 3px 8px; }
         #cc-out .cc-ms-bar { padding: 3px 14px; }
@@ -19896,7 +19910,7 @@ window.drDraft = {
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="targets" style="--tile-accent:#69F0AE"><div class="cc-tile-h">Trade Ideas</div><div class="cc-tile-body">${tradeBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="targets">Player Targets →</button></div></div>`);
         let wvBody = "";
         if (Array.isArray(d.waiverTops) && d.waiverTops.length) {
-          wvBody = `<div class="cc-tile-rows">` + d.waiverTops.map(w => { const face = (typeof window.hsImg === "function") ? window.hsImg({ id: w.id }, "cc-wv-face") : ""; return `<div class="cc-tile-row"><span class="cc-wv-left">${face}<span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span></span><span class="t-val">+${fmt(w.adds)} adds</span></div>`; }).join("") + `</div>`;
+          wvBody = `<div class="cc-tile-rows">` + d.waiverTops.map(w => { const face = (typeof window.hsImg === "function") ? window.hsImg({ id: w.id }, "cc-wv-face") : ""; return `<div class="cc-radar-row cc-wv-row">${face}<span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span><span class="t-val">+${fmt(w.adds)} adds</span></div>`; }).join("") + `</div>`;
         } else {
           wvBody = d.waiverAllRostered ? `<p class="cc-tile-sub">This week's most-added players are all rostered in this league.</p>` : `<p class="cc-tile-sub">No trending adds this week.</p>`;
         }
@@ -20932,14 +20946,12 @@ window.drDraft = {
             return r;
           };
         }
-        /* A way back to the Command Center rides the league switcher. */
-        const wrap = document.getElementById("league-switcher");
-        if (wrap && !document.getElementById("ls-cc-btn")) {
-          const b = document.createElement("button");
-          b.type = "button"; b.id = "ls-cc-btn"; b.className = "ls-pill"; b.textContent = "Command Center";
-          b.addEventListener("click", () => { window.activateNav("command"); window.scrollTo({ top: 0 }); });
-          wrap.appendChild(b);
-        }
+        /* (Removed Nov 10, 2026: a legacy "Command Center" pill was
+           appended into the league switcher as a way back when the
+           switcher lived in the top header. The switcher now lives in
+           the sidebar's leagues zone, so the pill rendered as a second
+           Command Center entry down by the leagues in expanded mode.
+           The sidebar nav's own Command Center item is the one entry.) */
       })();
     </script>
     <script>
@@ -21609,12 +21621,16 @@ window.__lifeline = (function () {
           const mine = me ? live.filter(f => (me.playerIds || []).map(String).includes(String(f.player_id))) : [];
           const fas = live.filter(f => { const p = PBY[f.player_id]; return p && !p.owner; });
           if (mine.length || fas.length) {
-            strip = (mine.length ? `<h3 class="rd-strip-h">On your roster<span class="rd-sub">flagged players on ${esc(me.name)}</span></h3><div class="rd-grid">${mine.map(rdCard).join("")}</div>` : "")
-              + (fas.length ? `<h3 class="rd-strip-h">Available in your league<span class="rd-sub">flagged and on the waiver wire</span></h3><div class="rd-grid">${fas.map(rdCard).join("")}</div>` : "")
+            strip = (mine.length ? `<h3 class="rd-strip-h">On your roster<span class="rd-sub">flagged players on ${esc(me.name)}</span></h3><div class="rd-grid">${mine.slice(0, 8).map(rdCard).join("")}</div>` : "")
+              + (fas.length ? `<h3 class="rd-strip-h">Available in your league<span class="rd-sub">flagged and on the waiver wire</span></h3><div class="rd-grid">${fas.slice(0, 8).map(rdCard).join("")}</div>` : "")
               + `<h3 class="rd-strip-h">The full board</h3>`;
           }
         }
-        const shown = rdState.pos === "ALL" ? live : live.filter(f => f.position === rdState.pos);
+        /* Render cap (Eric, Nov 10, 2026): the page glitches when
+           more than 8 flags render — stop at 8, first by the board's
+           existing order; the ranking itself is untouched. The two
+           connected strips above are capped the same way. */
+        const shown = (rdState.pos === "ALL" ? live : live.filter(f => f.position === rdState.pos)).slice(0, 8);
         const posBtn = (k, lbl) => `<button data-rdpos="${k}" aria-pressed="${rdState.pos === k}">${lbl}</button>`;
         out.innerHTML = `
           <p class="radar-meta">Flags through NFL Week ${meta.through_week != null ? meta.through_week : "—"} · each flag reads his last 3 games played</p>
