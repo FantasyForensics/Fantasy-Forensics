@@ -10216,13 +10216,28 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            same conversion, same disagreement-averaging, just next
            week's stat lines. */
         const es = (((isNext ? window.ESPN_WK_STATS_NEXT : window.ESPN_WK_STATS) || {})[p.id]) || null;
-        const rs = (((isNext ? window.SLEEPER_STATS_NEXT : window.SLEEPER_STATS) || {})[p.id]) || null;
+        const rsBaked = (((isNext ? window.SLEEPER_STATS_NEXT : window.SLEEPER_STATS) || {})[p.id]) || null;
+        /* Live Sleeper projections (2026-11-10): the fresh pull merged
+           into window.SLEEPER_STATS_LIVE outranks the baked Rotowire
+           stats for the CURRENT week only — the same source, days
+           fresher. A player the live feed lists with NO projection
+           (window.SLEEPER_PROJ_EMPTY) has his stale baked Rotowire
+           line suppressed rather than zeroed: ESPN still counts, and
+           with no ESPN line the base falls through to the usual
+           no-data path (Out designations land on 0 there; healthy
+           players land on the ROS estimate — never a fake zero).
+           The plan-ahead view never reads the live maps. */
+        const rsLiveObj = !isNext && window.SLEEPER_STATS_LIVE ? window.SLEEPER_STATS_LIVE[p.id] : null;
+        const rsSupp = !isNext && !rsLiveObj && !!(window.SLEEPER_PROJ_EMPTY && window.SLEEPER_PROJ_EMPTY[p.id]);
+        const rs = rsLiveObj || (rsSupp ? null : rsBaked);
         const eMap = isNext ? window.ESPN_WK_PROJ_NEXT : window.ESPN_WK_PROJ;
         const rMap = isNext ? window.SLEEPER_PROJ_NEXT : window.SLEEPER_PROJ;
         const ew = (eMap && Object.prototype.hasOwnProperty.call(eMap, p.id))
           ? eMap[p.id] : undefined;
-        const rw = (rMap && Object.prototype.hasOwnProperty.call(rMap, p.id))
+        const rwBaked = (rMap && Object.prototype.hasOwnProperty.call(rMap, p.id))
           ? rMap[p.id] : undefined;
+        const rw = (!isNext && window.SLEEPER_PROJ_LIVE && Object.prototype.hasOwnProperty.call(window.SLEEPER_PROJ_LIVE, p.id))
+          ? window.SLEEPER_PROJ_LIVE[p.id] : (rsSupp ? undefined : rwBaked);
         let base = null, dis = false;
         if (es || rs) {
           if (es && rs) {
@@ -10304,6 +10319,115 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         const pr = wkProj(p, wkView);
         return pr.conflict ? { ...pr, pts: 0 } : pr;
       }
+      /* ============ Live weekly projections (2026-11-10) ============
+         Eric's rule: play/no-play calls should use the freshest
+         weekly projections, not a Tuesday bake. When a Sleeper
+         connect completes or a saved session restores (both funnel
+         through slpLoadLeague, which calls ffLiveProjEnsure), and
+         again on Command Center Refresh (forced), pull the current
+         week's projections from Sleeper's projections API — the same
+         Rotowire feed the SLEEPER_STATS bake comes from, days
+         fresher — and merge them into window.SLEEPER_STATS_LIVE /
+         window.SLEEPER_PROJ_LIVE (plus window.SLEEPER_PROJ_EMPTY
+         for listed-but-unprojected players), which wkProj reads
+         ahead of the baked maps for the current week (the week comes from the
+         site's existing wkActiveWeek resolution). At most one
+         automatic pull per week per session (in-memory flag +
+         sessionStorage stamp); Refresh is the one deliberate
+         re-pull. A failed pull keeps the baked projections silently
+         — no error UI, no blanking, no console errors. Projections
+         NEVER touch dynasty values: these maps feed only wkProj and
+         the surfaces built on it. */
+      const ffLiveProj = { week: null, busy: false };
+      function ffLiveProjSeason() {
+        try { if (typeof slpState !== "undefined" && slpState && slpState.season) return Number(slpState.season); } catch (e) {}
+        const s = DATA && DATA.league && Number(DATA.league.season);
+        return s || 2026;
+      }
+      function ffLiveProjStamped(wk) {
+        if (ffLiveProj.week === wk) return true;
+        try {
+          const raw = sessionStorage.getItem("ff_liveproj");
+          if (!raw) return false;
+          const j = JSON.parse(raw);
+          return !!(j && Number(j.week) === wk && Number(j.season) === ffLiveProjSeason());
+        } catch (e) { return false; }
+      }
+      function ffLiveProjEnsure(force) {
+        let wk = 0;
+        try { wk = wkActiveWeek(); } catch (e) { return; }
+        if (!wk || wk < 1 || ffLiveProj.busy) return;
+        if (!force && ffLiveProjStamped(wk)) return;
+        ffLiveProj.busy = true;
+        const season = ffLiveProjSeason();
+        const url = "https://api.sleeper.app/projections/nfl/" + season + "/" + wk
+          + "?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE&order_by=pts_ppr";
+        try {
+          fetch(url).then(r => { if (!r.ok) throw new Error("proj"); return r.json(); }).then(rows => {
+            if (!Array.isArray(rows) || !rows.length) throw new Error("proj");
+            const stats = {}, pts = {}, empty = {};
+            rows.forEach(row => {
+              const id = row && row.player_id != null ? String(row.player_id) : null;
+              const st = row && row.stats;
+              if (!id || !st) return;
+              const n = {
+                pass_yds: st.pass_yd || 0, pass_td: st.pass_td || 0, int: st.pass_int || 0,
+                rush_att: st.rush_att || 0, rush_yds: st.rush_yd || 0, rush_td: st.rush_td || 0,
+                targets: st.rec_tgt || 0, rec: st.rec || 0, rec_yds: st.rec_yd || 0, rec_td: st.rec_td || 0,
+                fum_lost: st.fum_lost || 0
+              };
+              /* The feed returns a row for nearly every NFL player;
+                 only ~1 in 9 carries an actual projection. A row
+                 with no stat signal and no points line is NOT a zero
+                 projection — it is the source saying "not projected
+                 this week", recorded in the empty map so wkProj can
+                 retire the player's stale baked Rotowire line
+                 without inventing a zero (see the rsSupp handling
+                 there). An explicit pts_ppr of 0, if one ever
+                 appears, is kept as a real zero. */
+              const signal = n.pass_yds + n.pass_td + n.rush_att + n.rush_yds + n.rush_td
+                + n.targets + n.rec + n.rec_yds + n.rec_td;
+              if (signal > 0 || typeof st.pts_ppr === "number") {
+                stats[id] = n;
+                if (typeof st.pts_ppr === "number") pts[id] = st.pts_ppr;
+              } else empty[id] = 1;
+            });
+            if (!Object.keys(stats).length) throw new Error("proj");
+            window.SLEEPER_STATS_LIVE = stats;
+            window.SLEEPER_PROJ_LIVE = pts;
+            window.SLEEPER_PROJ_EMPTY = empty;
+            ffLiveProj.week = wk;
+            try { sessionStorage.setItem("ff_liveproj", JSON.stringify({ week: wk, season, at: Date.now() })); } catch (e) {}
+            /* If the Command Center already built on baked numbers,
+               rebuild it in place so Needs You First and the other
+               projection-driven surfaces re-judge on the fresh pull.
+               If a build is still in flight, wait for it to settle
+               first — its early leagues may have been judged on the
+               bake. Every other surface picks the live maps up on
+               its next render. */
+            try {
+              if (typeof ff4 !== "undefined" && ff4 && typeof ff4RenderCC === "function") {
+                const landCC = () => { ff4.ccSessionKey = null; ff4RenderCC(false); };
+                if (ff4.ccSessionDone) landCC();
+                else if (ff4.ccSessionBusy) {
+                  let n = 0;
+                  const iv = setInterval(() => {
+                    n++;
+                    try {
+                      if (ff4.ccSessionDone || !ff4.ccSessionBusy || n > 80) {
+                        clearInterval(iv);
+                        if (ff4.ccSessionDone) landCC();
+                      }
+                    } catch (e) { clearInterval(iv); }
+                  }, 1500);
+                }
+              }
+            } catch (e) {}
+          }).catch(() => { /* silent: the baked projections stand */ })
+            .then(() => { ffLiveProj.busy = false; });
+        } catch (e) { ffLiveProj.busy = false; }
+      }
+      window.ffLiveProjEnsure = ffLiveProjEnsure;
       function wkOptimal(ids, wkView) {
         const pool = ids.map(id => PBY[id]).filter(Boolean)
           .map(p => ({ p, proj: wkProjLineup(p, wkView) }))
@@ -12834,6 +12958,10 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           setConnectedLeague();
           slpClose();
           ffTrackConnect("sleeper");
+          /* Fresh weekly projections on every completed connect and
+             every quiet session restore (both funnel through here);
+             cached to one pull per week per session inside. */
+          try { ffLiveProjEnsure(false); } catch (e) { /* projections are best-effort */ }
           /* Landing rules (Eric, 2026-10-27, top-down): a fresh
              connect from the dialog (landCommand) lands on Command
              Center — the rundown grid is the payoff for connecting.
@@ -19239,6 +19367,12 @@ window.drDraft = {
             return bestOf((DATA.players || []).filter(p => p && p.owner == null && !p.unpriced && !isUnsigned(p) && cs.includes(p.pos) && !wkIsBye(p, wk)));
           };
           const problemIds = new Set();
+          /* Starters whose Out-ish designation is outvoted by a real
+             weekly projection (wkProj conflict): under the projection-
+             precedence rule they are NOT problems — the swap pass
+             below scores them at the raw projected points recorded
+             here, not at wkProjLineup's zeroed value. */
+          const conflictPts = new Map();
 
           /* Categories 4 first only in computation order — the
              severity sort at the end decides what Eric sees first. */
@@ -19271,11 +19405,17 @@ window.drDraft = {
               return;
             }
             let pr = null; try { pr = wkProj(p, wk); } catch (e) {}
-            if (pr && pr.conflict) {
-              push(1, "dbt", p.name, "Listed " + p.inj + " — but projected to play; verify before lock" + projTxt(p), 1);
-              problemIds.add(String(p.id));
-              return;
-            }
+            /* Projection precedence (Eric, 2026-11-10): a starter
+               counts as not-playing ONLY when an Out/IR/PUP/Suspended
+               designation comes with a weekly projection of 0 (or no
+               projection at all), or the projection itself is 0 —
+               the hardOut / isZero test below. An Out-ish designation
+               outvoted by a real projection > 0 (pr.conflict) creates
+               NO critical entry: "if they have projected points they
+               usually play" — the same precedence the risk panel's
+               proj.conflict already uses. His real points are kept
+               for the swap pass, and he is not a problem starter. */
+            if (pr && pr.conflict) { conflictPts.set(String(p.id), pr.pts); return; }
             const hardOut = p.inj === "Out" || p.inj === "IR" || p.inj === "PUP" || p.inj === "Suspended";
             const isZero = !!pr && !pr.unpriced && pr.pts === 0;
             if (hardOut || isZero) {
@@ -19329,7 +19469,7 @@ window.drDraft = {
               const opt = wkOptimal(me.playerIds || [], wk);
               const optIds = new Set((opt.lineup || []).map(l => String(l.p.id)));
               const curProj = starters.filter(s => !problemIds.has(String(s.p.id)))
-                .map(s => { const pr = projL(s.p); return { p: s.p, pts: pr.pts, unpriced: !!pr.unpriced }; });
+                .map(s => { const pr = projL(s.p); const cp = conflictPts.get(String(s.p.id)); return { p: s.p, pts: cp != null ? cp : pr.pts, unpriced: !!pr.unpriced }; });
               const cands = [];
               (opt.lineup || []).forEach(l => {
                 if (starterIds.has(String(l.p.id)) || l.proj.unpriced) return;
@@ -20639,6 +20779,10 @@ window.drDraft = {
       function ff4CCRefresh() {
         if (ff4.ccRefreshing) return;
         ff4.ccRefreshing = true;
+        /* Refresh is the one deliberate projections re-pull: fresh
+           Sleeper weekly projections land alongside the league
+           re-pull, and Needs You First re-renders when they arrive. */
+        try { ffLiveProjEnsure(true); } catch (e) { /* best-effort */ }
         ff4CCRenderTabs();
         ff4RenderCC(true);
         try { ff4TBEnsure(true); } catch (e) { /* board re-check is best-effort */ }
