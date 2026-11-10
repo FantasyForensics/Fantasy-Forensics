@@ -2856,13 +2856,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .cc-tile-foot button:hover { text-decoration: underline; }
         .cc-tile[data-cc-tile-nav] { cursor: pointer; }
         .cc-tile[data-cc-tile-nav]:hover { border-color: var(--tile-accent, rgba(255,255,255,.12)); }
-        /* CC utility row (Eric, Nov 10, 2026): the Storylines and
-           Refresh buttons shrunk to one slim right-aligned row —
-           the tall header stack that used to sit above this is gone. */
-        .cc-refresh { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-bottom: 8px; }
-        .cc-refresh button { background: none; border: 1px solid rgba(255,255,255,.16); border-radius: 99px; padding: 4px 11px; color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 600; line-height: 1.35; cursor: pointer; }
-        .cc-refresh button:hover { color: var(--ink); border-color: rgba(255,255,255,.32); }
-        .cc-refresh #cc-refresh { color: #00E5FF; }
+        /* The CC utility row (Storylines + Refresh buttons) was
+           removed from the Command Center entirely (Eric, Nov 10,
+           2026): the composition starts at Needs You First, directly
+           under the Wire. Storylines still lives under League. */
         #moves-view .mv-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
         #moves-view .mv-row b { display: block; }
         #moves-view .mv-row span { color: var(--ink-2); font-size: 13.5px; }
@@ -3158,6 +3155,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <button role="tab" type="button" data-nav="draft" aria-selected="false">Draft Room<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5.5" y="4.5" width="13" height="16" rx="2"/><path d="M9.5 4.8a2.5 2.5 0 0 1 5 0"/><path d="M9 11h6M9 14.8h4"/></svg></span></button>
       </nav>
         </div>
+        <div class="sb-flyout" id="sb-flyout" hidden role="menu" aria-label="Section tools">
+          <div class="sb-flyout-h" id="sb-flyout-h"></div>
+          <div class="sb-flyout-items" id="sb-flyout-items"></div>
+        </div>
         <div class="sb-leaguezone">
           <div class="league-switcher" id="league-switcher" hidden>
             <span class="ls-label">Your leagues</span>
@@ -3324,6 +3325,33 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         }
         .ff-sidebar .sb-subgroup button:hover { background: rgba(255, 255, 255, .06); color: var(--ink); }
         .ff-sidebar .sb-subgroup button[aria-selected="true"] { background: rgba(0, 229, 255, .13); color: #00E5FF; font-weight: 700; }
+        /* Slim-rail flyout (Nov 10, 2026): in the collapsed rail the
+           in-place dropdowns are display:none, which left a section's
+           sub-tools unreachable. Tapping a slim section icon opens
+           this panel off the rail's right edge instead — same
+           sub-item styling as the expanded dropdowns (Inter, smaller,
+           cyan selection), one panel at a time. */
+        .sb-flyout {
+          position: fixed; z-index: 90; width: 220px; box-sizing: border-box;
+          max-height: min(72vh, 520px); overflow-y: auto; scrollbar-width: thin;
+          background: #14122B; border: 1px solid var(--line); border-radius: 14px;
+          padding: 8px; box-shadow: 0 18px 50px rgba(0, 0, 0, .55);
+        }
+        .sb-flyout[hidden] { display: none; }
+        .sb-flyout-h {
+          font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 11px;
+          letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3);
+          padding: 4px 10px 7px;
+        }
+        .sb-flyout-items { display: flex; flex-direction: column; gap: 1px; border-left: 2px solid rgba(0, 229, 255, .28); margin-left: 4px; padding-left: 6px; }
+        .sb-flyout-items button {
+          text-align: left; border: none; background: transparent; border-radius: 9px;
+          padding: 7px 10px; font-family: Inter, sans-serif; font-size: 13px; font-weight: 500;
+          letter-spacing: 0; color: var(--ink-2); white-space: normal; width: 100%; cursor: pointer;
+        }
+        .sb-flyout-items button:hover { background: rgba(255, 255, 255, .06); color: var(--ink); }
+        .sb-flyout-items button[aria-selected="true"] { background: rgba(0, 229, 255, .13); color: #00E5FF; font-weight: 700; }
+        .sb-flyout-items .launch-badge { margin-left: 6px; }
         #lg-power, #power-list, #lg-outlook, #odds-panel, #season-out,
         #risk-panel, #movers-out, #format-block { scroll-margin-top: 18px; }
       }
@@ -3449,14 +3477,25 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         .sb-subgroup { display: none !important; }
       }
 
-      /* --- Command Center one-screen (Batch 2) ---
-         At desktop / iPad-landscape widths the whole CC works from
-         the first screen: Needs You First and the Trade Board ride
-         side by side as capped panels (headers pinned, items scroll
-         inside), and the nine tiles compress into the remaining
-         height with their bodies scrolling internally, exactly the
-         overflow contract the tiles already had. Shorter landscape
-         windows compress further. */
+      /* --- Command Center composition (Nov 10, 2026 redesign) ---
+         Eric rejected both fixed-height tiles with internally
+         scrolling bodies (content clipped, not fitted) and any
+         headline-only summary layer: every box keeps ALL of its
+         content, fully visible. The twelve pieces — Needs You
+         First, the Trade Board, the league header strip, the eight
+         tiles (the Week Matchup tile was cut by Eric) and the
+         Manager Score bar — are composed as one free-form layout
+         on a 12-column grid at desktop / iPad-landscape widths,
+         sized from the measured content: the queue takes the wide
+         share and is NEVER height-capped (every entry shows), the
+         radar's flags run two abreast in a half-width tile, the
+         Fantasy Tools links run three abreast in a full-width
+         strip, and the ticker chart is height-capped so the stat
+         tiles share one band. Tile heights are natural (no fixed
+         height, no internal scroll) — the composition is what
+         makes it fit, not compression. Shorter landscape windows
+         tighten one notch further. Below 1024px the tiles keep
+         their long-standing tall format. */
       /* CC header removal (Eric, Nov 10, 2026): on the Command Center
          the persistent page header (view title + league-type toggle +
          Disconnect row) is hidden — the sidebar already names the
@@ -3467,32 +3506,81 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       body.ff-on-command header.league { display: none; }
       @media (min-width: 1024px) {
         #cc-out { display: flex; flex-wrap: wrap; gap: 10px 12px; }
-        #cc-out > .cc-refresh { flex: 1 1 100%; margin-bottom: 0; }
-        #cc-out > .cc-queue { flex: 1 1 0; min-width: 0; margin-bottom: 0; max-height: 160px; overflow-y: auto; scrollbar-width: thin; }
-        #cc-out > .cc-tb { flex: 1 1 0; min-width: 0; margin-bottom: 0; max-height: 160px; overflow-y: auto; scrollbar-width: thin; }
-        #cc-out > .cc-queue .cc-queue-h, #cc-out > .cc-tb .cc-queue-h {
-          position: sticky; top: -14px; z-index: 1; padding: 4px 0 6px;
-          background: linear-gradient(180deg, rgba(16, 13, 34, .97), rgba(16, 13, 34, .94));
-        }
+        #cc-out > .cc-queue { flex: 5 1 0; min-width: 0; margin-bottom: 0; padding: 10px 14px; }
+        #cc-out > .cc-tb { flex: 2 1 0; min-width: 0; margin-bottom: 0; padding: 10px 14px; }
+        #cc-out .cc-queue-h { font-size: 13.5px; }
+        #cc-out .cc-queue-it { padding: 5px 2px; }
+        #cc-out .cc-q-player { font-size: 14.5px; }
+        #cc-out .cc-q-issue { font-size: 13.5px; }
+        #cc-out .cc-queue-note { font-size: 13.5px; margin: 4px 0 1px; }
         #cc-out > .cc-layout { flex: 1 1 100%; margin-top: 0; gap: 10px; }
         #cc-out > .cc-spot, #cc-out > .cc-empty { flex: 1 1 100%; }
         #cc-out .cc-spot { padding: 10px 14px; }
-        #cc-out .cc-spot-team { font-size: 19px; }
-        #cc-out .cc-chips { margin-top: 5px; }
-        #cc-out .cc-grid { gap: 10px; margin-top: 8px; }
-        #cc-out .cc-tile { height: 154px; padding: 10px 13px; }
+        /* league header as one slim strip: team, league, chips and
+           actions share a single row instead of three stacked lines */
+        #cc-out .cc-spot-top { align-items: center; gap: 8px 14px; }
+        #cc-out .cc-spot-top > div:first-child { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
+        #cc-out .cc-spot-team { font-size: 18px; }
+        #cc-out .cc-chips { display: inline-flex; margin-top: 0; }
+        #cc-out .cc-chips .chip { font-size: 11px; padding: 2px 7px; }
+        #cc-out .cc-spot-record { font-size: 13.5px; padding: 1px 8px; }
+        #cc-out .cc-spot-league { font-size: 12.5px; }
+        #cc-out .cc-spot-actions .cc-enter, #cc-out .cc-spot-actions .cc-hide { padding: 5px 12px; font-size: 12.5px; margin-top: 0; }
+        /* the composition grid */
+        #cc-out .cc-grid {
+          grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px; margin-top: 10px;
+          grid-template-areas:
+            "odds odds odds power power power ticker ticker ticker moves moves moves"
+            "radar radar radar radar radar radar trades trades trades waivers waivers waivers"
+            "tools tools tools tools tools tools tools tools tools tools tools tools";
+        }
+        #cc-out .cc-tile { height: auto; padding: 10px 13px; }
+        #cc-out .cc-tile-body { flex: none; overflow: visible; }
         #cc-out .cc-tile-h { margin-bottom: 6px; font-size: 13px; }
         #cc-out .cc-tile-big { font-size: 23px; }
-        #cc-out .cc-tile-sub { font-size: 12.5px; margin-top: 2px; }
+        #cc-out .cc-tile-sub { font-size: 12.5px; margin-top: 2px; line-height: 1.3; }
+        /* tile order is ff4CCGridHtml's push order: 1 Odds,
+           2 Power, 3 Ticker, 4 Moves, 5 Radar, 6 Trade Ideas,
+           7 Most Added, 8 Fantasy Tools */
+        #cc-out .cc-grid > .cc-tile:nth-child(1) { grid-area: odds; }
+        #cc-out .cc-grid > .cc-tile:nth-child(2) { grid-area: power; }
+        #cc-out .cc-grid > .cc-tile:nth-child(3) { grid-area: ticker; }
+        #cc-out .cc-grid > .cc-tile:nth-child(4) { grid-area: moves; }
+        #cc-out .cc-grid > .cc-tile:nth-child(5) { grid-area: radar; }
+        #cc-out .cc-grid > .cc-tile:nth-child(6) { grid-area: trades; }
+        #cc-out .cc-grid > .cc-tile:nth-child(7) { grid-area: waivers; }
+        #cc-out .cc-grid > .cc-tile:nth-child(8) { grid-area: tools; }
+        /* per-tile layout compaction — spacing and type only,
+           every row and figure stays on the tile */
+        #cc-out .cc-tile-bar { margin-top: 6px; }
+        #cc-out .cc-power-grades { margin-top: 7px; font-size: 15px; }
+        #cc-out .cc-power-meta { margin-top: 7px; font-size: 13px; }
+        #cc-out .cc-grid > .cc-tile:nth-child(3) svg { max-height: 74px; }
+        #cc-out .cc-grid-move { padding: 5px 2px; }
+        #cc-out .cc-grid > .cc-tile:nth-child(5) .cc-tile-rows { grid-template-columns: 1fr 1fr; gap: 5px 16px; }
+        #cc-out .cc-grid > .cc-tile:nth-child(5) .cc-tile-body { padding-bottom: 3px; }
+        #cc-out .cc-grid > .cc-tile:nth-child(7) .cc-tile-rows { grid-template-columns: 1fr 1fr; gap: 5px 16px; }
+        #cc-out .cc-tile img.cc-radar-face { width: 30px; height: 30px; }
+        #cc-out .cc-radar-row .t-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #cc-out .cc-grid > .cc-tile:nth-child(8) .cc-tile-rows { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+        #cc-out .cc-tool-link { font-size: 12.5px; padding: 6px 10px; text-align: center; }
+        #cc-out .cc-tile-foot { padding-top: 6px; }
         #cc-out .cc-ms-bar { margin-top: 8px; padding: 6px 14px; }
         #cc-out .cc-rail { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 4px; scrollbar-width: thin; }
         #cc-out .cc-rail-h { flex: 0 0 auto; align-self: center; }
         #cc-out .cc-rail-it { flex: 0 0 248px; width: 248px; }
       }
       @media (min-width: 1024px) and (max-height: 980px) {
-        #cc-out > .cc-queue, #cc-out > .cc-tb { max-height: 138px; }
-        #cc-out .cc-tile { height: 122px; }
-        #cc-out .cc-spot { padding: 9px 14px; }
+        #cc-out .cc-spot { padding: 8px 14px; }
+        #cc-out .cc-grid { gap: 8px; margin-top: 6px; }
+        #cc-out .cc-tile { padding: 8px 12px; }
+        #cc-out .cc-grid > .cc-tile:nth-child(3) svg { max-height: 38px; }
+        #cc-out .cc-tile img.cc-radar-face, #cc-out .cc-tile img.cc-wv-face { width: 28px; height: 28px; }
+        #cc-out .cc-grid > .cc-tile:nth-child(5) .cc-tile-rows, #cc-out .cc-grid > .cc-tile:nth-child(7) .cc-tile-rows { gap: 4px 14px; }
+        #cc-out .cc-queue-it { padding: 3px 2px; }
+        #cc-out .cc-tool-link { padding: 3px 8px; }
+        #cc-out .cc-ms-bar { padding: 3px 14px; }
+        #cc-out .cc-power-grades, #cc-out .cc-power-meta { margin-top: 5px; }
       }
       </style>
     <div class="subnav-mount subnav-head" data-subnav-mount="league"></div>
@@ -19784,22 +19872,11 @@ window.drDraft = {
           movesBody = `<p class="cc-tile-sub">No standout moves right now.</p>`;
         }
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="moves" style="--tile-accent:#FF6B35"><div class="cc-tile-h">Your Next Moves</div><div class="cc-tile-body">${movesBody}</div></div>`);
-        let matchBody = "";
-        if (d.matchup) {
-          const m = d.matchup;
-          const mx = Math.max(m.myProj, m.oppProj, 1);
-          matchBody = `${m.advanced ? `<div class="cc-tile-sub" style="margin-bottom:8px">Next-week preview — both teams at their best lineup.</div>` : ""}<div class="cc-tile-sub" style="margin-bottom:8px">vs ${esc(m.oppName)} (${esc(m.oppRecord || "")})</div>
-            <div class="cc-tile-rows">
-              <div class="cc-tile-row"><span class="t-name">Your optimal</span><span class="t-val">${m.myProj.toFixed(1)} pts</span></div>
-              <div class="cc-tile-bar" style="margin-top:2px"><div style="width:${Math.round(m.myProj / mx * 100)}%;background:#C6FF00"></div></div>
-              <div class="cc-tile-row"><span class="t-name">${esc(m.oppName)} optimal</span><span class="t-val">${m.oppProj.toFixed(1)} pts</span></div>
-              <div class="cc-tile-bar" style="margin-top:2px"><div style="width:${Math.round(m.oppProj / mx * 100)}%;background:#00E5FF"></div></div>
-              <div class="cc-tile-row"><span class="t-name">Win probability</span><span class="t-val">${Math.round(m.winP * 100)}%</span></div>
-            </div>`;
-        } else {
-          matchBody = `<p class="cc-tile-sub">No opponent pairing published this week.</p>`;
-        }
-        tiles.push(`<div class="cc-tile" data-cc-tile-nav="lineup" style="--tile-accent:#B388FF"><div class="cc-tile-h">${(d.matchup && d.matchup.advanced) ? "Week " + d.matchup.week + " Matchup" : "This Week's Matchup"}</div><div class="cc-tile-body">${matchBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="lineup">Lineup Analyzer →</button></div></div>`);
+        /* Week Matchup tile REMOVED (Eric, Nov 10, 2026, CC redesign):
+           the weekly matchup preview wasn't pulling its weight on the
+           Command Center. The matchup computation (d.matchup) stays —
+           the Lineup Analyzer still uses it — only the tile is gone,
+           leaving eight tiles in the grid. */
         let watchBody = "";
         if (Array.isArray(d.radarWatch) && d.radarWatch.length) {
           watchBody = `<div class="cc-tile-rows">` + d.radarWatch.map(w => {
@@ -20226,9 +20303,7 @@ window.drDraft = {
             /* A league is loaded but there's no Sleeper league list
                (e.g. an ESPN league): spotlight the loaded league alone. */
             ff4.ccLeagues = []; ff4.ccUser = null; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = 0; ff4.ccDone = 0;
-            out.innerHTML = `<div class="cc-refresh"><button type="button" id="cc-story-btn">📖 League Storylines</button><button type="button" id="cc-refresh">↻ Refresh records & odds</button></div><div class="cc-queue" id="cc-queue"></div><div class="cc-spot" id="cc-spot"></div>`;
-            { const rb = document.getElementById("cc-refresh"); if (rb) rb.addEventListener("click", () => ff4RenderCC(true)); }
-            { const sb = document.getElementById("cc-story-btn"); if (sb) sb.addEventListener("click", () => { if (typeof window.openStoryPopup === "function") window.openStoryPopup(); }); }
+            out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-spot" id="cc-spot"></div>`;
             const me = DATA.teams.find(t => t.isUser) || null;
             const items = me ? ff4CCQueueFor(me, me.lineupWeek || Number(DATA.league.week) || 1) : [];
             const q = document.getElementById("cc-queue");
@@ -20275,9 +20350,7 @@ window.drDraft = {
         if (espnEntry) entries.push(espnEntry);
         ff4.ccMixed = entries.length > leagues.length;
         ff4.ccLeagues = entries; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
-        out.innerHTML = `<div class="cc-refresh"><button type="button" id="cc-story-btn">📖 League Storylines</button><button type="button" id="cc-refresh">↻ Refresh records & odds</button></div><div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div id="cc-tabs"></div><div class="cc-rail" id="cc-rail"></div></div>`;
-        { const rb = document.getElementById("cc-refresh"); if (rb) rb.addEventListener("click", () => ff4RenderCC(true)); }
-        { const sb = document.getElementById("cc-story-btn"); if (sb) sb.addEventListener("click", () => { if (typeof window.openStoryPopup === "function") window.openStoryPopup(); }); }
+        out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div id="cc-tabs"></div><div class="cc-rail" id="cc-rail"></div></div>`;
         ff4CCRenderTabs(); ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
         ff4.ccSessionBusy = true;
         (async () => {
@@ -21962,6 +22035,77 @@ window.__lifeline = (function () {
       }
       if (typeof mqPhone.addEventListener === "function") mqPhone.addEventListener("change", placeSubs);
       placeSubs();
+      /* Slim-rail flyout (Nov 10, 2026): in the collapsed rail the
+         shell CSS hides the section dropdowns, so a grouped section's
+         sub-tools were unreachable — tapping the icon only ever
+         landed on the section's default tool. In slim mode a grouped
+         section's icon instead opens a flyout off the rail's right
+         edge listing that section's tools, built from the same
+         sub-buttons (a tap forwards to the real button, so there is
+         exactly one navigation path). Sections without sub-tools
+         (Command Center, Tools, Draft Room) navigate directly, as
+         before. One flyout at a time; Esc, an outside tap, a tool
+         tap, or any other navigation closes it. */
+      var flyout = document.getElementById("sb-flyout");
+      var flyoutH = document.getElementById("sb-flyout-h");
+      var flyoutItems = document.getElementById("sb-flyout-items");
+      var flyGroup = null, flyAnchor = null;
+      function flyLabel(btn) {
+        for (var i = 0; i < btn.childNodes.length; i++) {
+          if (btn.childNodes[i].nodeType === 3) { var t = btn.childNodes[i].textContent.trim(); if (t) return t; }
+        }
+        return btn.textContent.trim();
+      }
+      function closeFlyout() {
+        if (!flyout) return;
+        flyout.hidden = true; flyGroup = null;
+        if (flyAnchor) { flyAnchor.setAttribute("aria-expanded", "false"); flyAnchor = null; }
+      }
+      function openFlyout(group, anchor) {
+        if (!flyout) return;
+        flyGroup = group; flyAnchor = anchor;
+        anchor.setAttribute("aria-expanded", "true");
+        flyoutH.textContent = flyLabel(anchor);
+        flyoutItems.innerHTML = "";
+        subBtns.forEach(function (b) {
+          if (b.dataset.group !== group) return;
+          var it = document.createElement("button");
+          it.type = "button"; it.className = "sb-flyout-it"; it.setAttribute("role", "menuitem");
+          it.textContent = flyLabel(b);
+          var badge = b.querySelector(".launch-badge");
+          if (badge) it.appendChild(badge.cloneNode(true));
+          if (b.getAttribute("aria-selected") === "true") it.setAttribute("aria-selected", "true");
+          it.addEventListener("click", function () { closeFlyout(); b.click(); });
+          flyoutItems.appendChild(it);
+        });
+        flyout.hidden = false;
+        var nav = document.getElementById("site-main");
+        var nr = nav ? nav.getBoundingClientRect() : { right: 0, top: 0 };
+        var ar = anchor.getBoundingClientRect();
+        if (window.innerWidth <= 640) {
+          flyout.style.left = "8px"; flyout.style.right = "8px"; flyout.style.width = "auto";
+          flyout.style.top = "auto";
+          flyout.style.bottom = Math.round(window.innerHeight - nr.top + 8) + "px";
+        } else {
+          flyout.style.right = "auto"; flyout.style.bottom = "auto"; flyout.style.width = "";
+          flyout.style.left = Math.round(Math.max(nr.right, ar.right) + 6) + "px";
+          var fh = flyout.offsetHeight;
+          var top = Math.min(Math.max(8, Math.round(ar.top)), Math.max(8, window.innerHeight - fh - 8));
+          flyout.style.top = top + "px";
+        }
+      }
+      function toggleFlyout(group, anchor) {
+        if (flyGroup === group && flyout && !flyout.hidden) { closeFlyout(); return; }
+        openFlyout(group, anchor);
+      }
+      document.addEventListener("pointerdown", function (e) {
+        if (!flyout || flyout.hidden) return;
+        if (flyout.contains(e.target)) return;
+        if (flyAnchor && flyAnchor.contains(e.target)) return;
+        closeFlyout();
+      });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeFlyout(); });
+      window.addEventListener("resize", closeFlyout);
       function syncNav(key, arg) {
         if (key === "draft" || key === "format" || key === "how") { setMainSel(""); showGroup(null); return; }
         if (key === "tools") { setMainSel("tools"); showGroup(null); return; }
@@ -22042,6 +22186,12 @@ window.__lifeline = (function () {
       mainBtns.forEach(function (btn) {
         btn.addEventListener("click", function () {
           var key = btn.dataset.pnav;
+          if (document.documentElement.classList.contains("sb-slim") && DEFAULTS[key]) {
+            btn.setAttribute("aria-haspopup", "true");
+            toggleFlyout(key, btn);
+            return;
+          }
+          closeFlyout();
           if (key === "command") { window.activateNav("command"); window.scrollTo({ top: 0 }); return; }
           if (key === "tools") { window.activateNav("tools"); window.scrollTo({ top: 0 }); return; }
           showGroup(key);
@@ -22059,7 +22209,7 @@ window.__lifeline = (function () {
         });
       });
       document.querySelectorAll('#site-main [data-nav]').forEach(function (btn) {
-        btn.addEventListener("click", function () { setMainSel(""); showGroup(null); });
+        btn.addEventListener("click", function () { closeFlyout(); setMainSel(""); showGroup(null); });
       });
       /* Keep the tab highlight honest no matter which path switches sections
          (nav clicks, connect flow, team strip, tool links): wrap activateNav. */
