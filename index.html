@@ -2856,9 +2856,13 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .cc-tile-foot button:hover { text-decoration: underline; }
         .cc-tile[data-cc-tile-nav] { cursor: pointer; }
         .cc-tile[data-cc-tile-nav]:hover { border-color: var(--tile-accent, rgba(255,255,255,.12)); }
-        .cc-refresh { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin-bottom: 10px; }
-        .cc-refresh button { background: none; border: 1px solid rgba(255,255,255,.2); border-radius: 99px; padding: 6px 12px; color: #00E5FF; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
-        .cc-refresh-note { color: var(--ink-3); font-size: 12.5px; }
+        /* CC utility row (Eric, Nov 10, 2026): the Storylines and
+           Refresh buttons shrunk to one slim right-aligned row —
+           the tall header stack that used to sit above this is gone. */
+        .cc-refresh { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-bottom: 8px; }
+        .cc-refresh button { background: none; border: 1px solid rgba(255,255,255,.16); border-radius: 99px; padding: 4px 11px; color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 600; line-height: 1.35; cursor: pointer; }
+        .cc-refresh button:hover { color: var(--ink); border-color: rgba(255,255,255,.32); }
+        .cc-refresh #cc-refresh { color: #00E5FF; }
         #moves-view .mv-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; }
         #moves-view .mv-row b { display: block; }
         #moves-view .mv-row span { color: var(--ink-2); font-size: 13.5px; }
@@ -3451,16 +3455,19 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          side by side as capped panels (headers pinned, items scroll
          inside), and the nine tiles compress into the remaining
          height with their bodies scrolling internally, exactly the
-         overflow contract the tiles already had. The title row and
-         story button share one slim line now that the page header
-         names the view. Shorter landscape windows compress further. */
+         overflow contract the tiles already had. Shorter landscape
+         windows compress further. */
+      /* CC header removal (Eric, Nov 10, 2026): on the Command Center
+         the persistent page header (view title + league-type toggle +
+         Disconnect row) is hidden — the sidebar already names the
+         view, and the reclaimed height is what lets the whole CC sit
+         on one screen. The header itself is untouched and shows on
+         every other view exactly as before; activateNav flips the
+         body class. */
+      body.ff-on-command header.league { display: none; }
       @media (min-width: 1024px) {
-        #tab-command .block-title { font-size: 18px; margin: 8px 0 4px; }
-        #tab-command .cc-story-row { position: absolute; top: 6px; right: 0; margin: 0; }
-        #tab-command { position: relative; }
         #cc-out { display: flex; flex-wrap: wrap; gap: 10px 12px; }
         #cc-out > .cc-refresh { flex: 1 1 100%; margin-bottom: 0; }
-        #cc-out > .cc-refresh .cc-refresh-note { display: none; }
         #cc-out > .cc-queue { flex: 1 1 0; min-width: 0; margin-bottom: 0; max-height: 160px; overflow-y: auto; scrollbar-width: thin; }
         #cc-out > .cc-tb { flex: 1 1 0; min-width: 0; margin-bottom: 0; max-height: 160px; overflow-y: auto; scrollbar-width: thin; }
         #cc-out > .cc-queue .cc-queue-h, #cc-out > .cc-tb .cc-queue-h {
@@ -3486,7 +3493,6 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         #cc-out > .cc-queue, #cc-out > .cc-tb { max-height: 138px; }
         #cc-out .cc-tile { height: 122px; }
         #cc-out .cc-spot { padding: 9px 14px; }
-        #tab-command .block-title { margin: 4px 0 2px; }
       }
       </style>
     <div class="subnav-mount subnav-head" data-subnav-mount="league"></div>
@@ -3822,8 +3828,6 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       </section>
 
       <section class="tab" id="tab-command" role="tabpanel">
-        <h2 class="block-title">Command Center<span class="launch-badge">Free during launch</span></h2>
-        <p class="cc-story-row"><button type="button" class="share-btn" id="cc-story-btn">📖 League Storylines</button></p>
         <div id="cc-out"></div>
       </section>
 
@@ -5500,6 +5504,12 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           else ffViewTitle = FF_LEAGUE_TITLES[(window.__subnavState && window.__subnavState.league) || "power"] || "Power Rankings";
         }
         if (ffViewTitle) { const hn = document.getElementById("league-name"); if (hn) hn.textContent = ffViewTitle; }
+        /* Command Center drops the persistent page header (Eric,
+           Nov 10, 2026): the header stack is hidden on this view only
+           (see the body.ff-on-command CSS) — the sidebar names the
+           view, and the reclaimed height lets the whole CC fit one
+           screen. Every other view keeps the header as-is. */
+        document.body.classList.toggle("ff-on-command", key === "command");
         const anchorEl = key === "risk" ? document.getElementById("risk-panel") : (arg ? document.querySelector(arg) : null);
         if (anchorEl) setTimeout(() => anchorEl.scrollIntoView({ block: "start" }), 30);
         /* Where the nav itself scrolls sideways (phone bottom bar,
@@ -20216,8 +20226,9 @@ window.drDraft = {
             /* A league is loaded but there's no Sleeper league list
                (e.g. an ESPN league): spotlight the loaded league alone. */
             ff4.ccLeagues = []; ff4.ccUser = null; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = 0; ff4.ccDone = 0;
-            out.innerHTML = `<div class="cc-refresh"><button type="button" id="cc-refresh">↻ Refresh records & odds</button><span class="cc-refresh-note">Re-pulls every league from Sleeper.</span></div><div class="cc-queue" id="cc-queue"></div><div class="cc-spot" id="cc-spot"></div>`;
+            out.innerHTML = `<div class="cc-refresh"><button type="button" id="cc-story-btn">📖 League Storylines</button><button type="button" id="cc-refresh">↻ Refresh records & odds</button></div><div class="cc-queue" id="cc-queue"></div><div class="cc-spot" id="cc-spot"></div>`;
             { const rb = document.getElementById("cc-refresh"); if (rb) rb.addEventListener("click", () => ff4RenderCC(true)); }
+            { const sb = document.getElementById("cc-story-btn"); if (sb) sb.addEventListener("click", () => { if (typeof window.openStoryPopup === "function") window.openStoryPopup(); }); }
             const me = DATA.teams.find(t => t.isUser) || null;
             const items = me ? ff4CCQueueFor(me, me.lineupWeek || Number(DATA.league.week) || 1) : [];
             const q = document.getElementById("cc-queue");
@@ -20264,8 +20275,9 @@ window.drDraft = {
         if (espnEntry) entries.push(espnEntry);
         ff4.ccMixed = entries.length > leagues.length;
         ff4.ccLeagues = entries; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
-        out.innerHTML = `<div class="cc-refresh"><button type="button" id="cc-refresh">↻ Refresh records & odds</button><span class="cc-refresh-note">Re-pulls every league from Sleeper.</span></div><div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div id="cc-tabs"></div><div class="cc-rail" id="cc-rail"></div></div>`;
+        out.innerHTML = `<div class="cc-refresh"><button type="button" id="cc-story-btn">📖 League Storylines</button><button type="button" id="cc-refresh">↻ Refresh records & odds</button></div><div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div id="cc-tabs"></div><div class="cc-rail" id="cc-rail"></div></div>`;
         { const rb = document.getElementById("cc-refresh"); if (rb) rb.addEventListener("click", () => ff4RenderCC(true)); }
+        { const sb = document.getElementById("cc-story-btn"); if (sb) sb.addEventListener("click", () => { if (typeof window.openStoryPopup === "function") window.openStoryPopup(); }); }
         ff4CCRenderTabs(); ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
         ff4.ccSessionBusy = true;
         (async () => {
