@@ -1067,26 +1067,38 @@
       .tg-weak-card p { margin: 3px 0 0; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
       .tg-weak-card p strong { color: var(--ink); }
       .tg-shop { margin-top: 5px; font-weight: 700; font-size: 12.5px; color: var(--accent); }
-      .tg-slider-box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 9px; margin-bottom: 10px; }
+      .tg-tier-box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 11px; margin-bottom: 10px; }
       .tg-slider-top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
       .tg-slider-top .tg-budget { font-family: "Space Grotesk", sans-serif; font-size: 23px; font-weight: 700; color: var(--accent); line-height: 1; }
       .tg-slider-top .tg-budget-lbl { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
-      input.tg-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 5px; margin: 9px 0 4px; outline: none; cursor: pointer; background: transparent; }
-      input.tg-slider::-webkit-slider-runnable-track { height: 8px; border-radius: 5px;
-        background: linear-gradient(90deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.14) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-be, 65%), rgba(255,255,255,.14) var(--tg-be, 65%), rgba(255,255,255,.14) 100%); }
-      input.tg-slider::-moz-range-track { height: 8px; border-radius: 5px;
-        background: linear-gradient(90deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.14) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-bs, 40%), rgba(198,255,0,.55) var(--tg-be, 65%), rgba(255,255,255,.14) var(--tg-be, 65%), rgba(255,255,255,.14) 100%); }
-      input.tg-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #0b0b14; box-shadow: 0 0 0 2px var(--accent), 0 4px 14px rgba(0,0,0,.55); cursor: pointer; }
-      input.tg-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); border: 3px solid #0b0b14; box-shadow: 0 0 0 2px var(--accent); cursor: pointer; }
-      .tg-slider-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-3); font-weight: 600; }
+      /* v2.1: the price tiers are tappable chips, one per populated
+         price cluster of the pool — no slider travel, no dead zones:
+         tap a tier and the shelf below shows that tier's cards. */
+      .tg-tier-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .tg-tier-chip { display: inline-flex; align-items: baseline; gap: 7px; background: rgba(255,255,255,.04); border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 13px; color: var(--ink); font-family: "Inter", sans-serif; cursor: pointer; text-align: left; }
+      .tg-tier-chip:hover { border-color: rgba(198, 255, 0, .6); }
+      .tg-tier-chip .tg-tier-range { font-family: "Space Grotesk", sans-serif; font-size: 14px; font-weight: 700; white-space: nowrap; }
+      .tg-tier-chip .tg-tier-name { font-size: 12px; font-weight: 600; color: var(--ink-2); white-space: nowrap; }
+      .tg-tier-chip[aria-pressed="true"] { border-color: var(--accent); background: rgba(198, 255, 0, .10); box-shadow: 0 0 0 1px rgba(198, 255, 0, .35), 0 0 16px rgba(198, 255, 0, .10); }
+      .tg-tier-chip[aria-pressed="true"] .tg-tier-range { color: var(--accent); }
+      .tg-tier-chip[aria-pressed="true"] .tg-tier-name { color: var(--ink); }
       .tg-near-h { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); margin: 1px 0 7px; }
-      .tg-near-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 8px; }
-      .tg-near-grid.swap .tg-cand { animation: tgSwapIn .22s ease; }
-      @keyframes tgSwapIn { from { opacity: .3; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+      /* v2.1: shelf tracks are FIXED 320px columns — never 1fr, never
+         content-sized. (The old auto-fit/minmax(250px,1fr) tracks let
+         one card's min-content blow its track out to 700px+ on wide
+         screens while sibling tracks squeezed below the 250px floor.)
+         Wider screens simply fit more identical columns. */
+      .tg-near-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 320px)); justify-content: center; gap: 8px; }
+      /* NOTE: no entrance animation on shelf cards — animating grid
+         items (transform) makes the engine fold the items' min-content
+         into track sizing and the fixed tracks blow out (one card
+         stretched ~690px at iPad width, Nov 9). Tier changes swap the
+         shelf instantly in tgPatchNear instead. */
       /* v2: every Targets result card is ONE fixed size, whatever its
-         content — the grid never breathes as the slider moves. Long
-         lines clamp inside the box instead of stretching it. */
-      .tg-cand { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; height: 158px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
+         content — the grid never breathes as the tier changes. Long
+         lines wrap or clamp inside the box instead of stretching it. */
+      .tg-cand { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; height: 210px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+      .tg-cand-h > div { flex: 1 1 auto; min-width: 0; }
       .tg-cand-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .tg-cand-sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .tg-room { font-size: 12.5px; color: var(--ink-2); margin: 0 0 8px; line-height: 1.45; }
@@ -1105,13 +1117,19 @@
       .tg-cand-sub { font-size: 12px; color: var(--ink-2); }
       .tg-cand-val { margin-left: auto; text-align: right; font-family: "Space Grotesk", sans-serif; font-size: 17px; font-weight: 700; color: var(--accent); white-space: nowrap; }
       .tg-cand-val small { display: block; font-family: "Inter", sans-serif; font-size: 10px; font-weight: 600; color: var(--ink-3); letter-spacing: .05em; text-transform: uppercase; }
-      .tg-owner { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tg-owner { font-size: 12.5px; color: var(--ink-2); margin-top: 6px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-width: 0; }
       .sell-note { margin-top: 10px; padding: 10px 13px; border-radius: 10px; font-size: 14px; line-height: 1.55; background: rgba(64,200,255,.07); border: 1px solid rgba(64,200,255,.32); color: var(--ink); }
       .sell-note .dir-tag { background: var(--cyan); color: #04121A; }
       .tg-chip { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; margin-left: 8px; vertical-align: 2px; background: rgba(255,255,255,.10); color: var(--ink-2); }
       .tg-chip.warn { background: rgba(255,84,112,.18); color: #ff8fa3; border: 1px solid rgba(255,84,112,.45); }
       .tg-chip.good { background: rgba(198,255,0,.14); color: var(--accent); border: 1px solid rgba(198,255,0,.4); }
-      .tg-offer { margin-top: 6px; font-size: 13px; color: var(--ink-2); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+      .tg-offer { margin-top: 6px; font-size: 13px; color: var(--ink-2); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; min-width: 0; }
+      /* Grade buttons live in their own bottom-pinned row — inline
+         in the offer text they dropped to their own line (83px wide
+         + an 11px top margin from .rt-offer-load) and added ~72px
+         of dead height to two-variant tier-up cards. */
+      .tg-cand-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 6px; }
+      .tg-cand-btns .grade-btn { margin-top: 0; margin-left: 0; padding: 3px 10px; font-size: 12px; white-space: nowrap; }
       .tg-offer strong { color: var(--ink); }
       .tg-offer .grade-btn { padding: 3px 10px; font-size: 12px; margin-left: 6px; vertical-align: 1px; white-space: nowrap; }
       /* Targets section chrome stays tight so the first offer card is
@@ -6875,11 +6893,12 @@ ${rdP ? "" : `
          THE POOL IS CURATED FIRST: a player enters only if he fits
          the need honestly (above) AND his owner would realistically
          deal (seller context gates entry — a star starting for a
-         contender never enters). The slider then travels the pool's
-         own populated price CLUSTERS, cluster to cluster: each stop
-         shows that cluster's 2–4 players on identical fixed-size
-         three-line cards, and nothing outside the cluster can leak
-         in (no global range, no nearest-player fallback). A position
+         contender never enters). A tier selector then steps through
+         the pool's own populated price CLUSTERS, one chip per
+         cluster: each tier shows that cluster's 2–4 players on
+         identical fixed-size three-line cards, and nothing outside
+         the cluster can leak in (no global range, no nearest-player
+         fallback). A position
          whose starters AND depth both grade top-half is SET: the
          view says so and offers two searches — depth options (from
          owners with surplus at the position) and tier-up deals
@@ -7209,6 +7228,15 @@ ${rdP ? "" : `
         tgCache = { key, rid, group, cands: out, maxVal };
         return tgCache;
       }
+      function tgShortLabel(a) {
+        /* Compact asset label for card offer lines only — the full
+           label (rank/age, pick provenance) lives in the graded
+           offers below; inside a fixed-size card it just wraps. */
+        if (a.kind === "pick") {
+          return a.label.replace(/\s*\(via [^)]*\)/, "").replace(/Round\s+(\d)/, (m, d) => ({ 1: "1st", 2: "2nd", 3: "3rd", 4: "4th", 5: "5th", 6: "6th", 7: "7th" }[d] || m));
+        }
+        return a.p ? a.p.name : a.label;
+      }
       function tgCandHtml(c, rid) {
         /* Three lines, nothing else: name + tag and the stat strip;
            the owner's context line; the offer. The seller logic that
@@ -7225,20 +7253,23 @@ ${rdP ? "" : `
         const ctx = VALMODE === "redraft"
           ? `${esc(o.name)} • Power ${o.powerRank} of ${DATA.teams.length}`
           : `${esc(o.name)} — ${archTag(o.arch)} • Power ${o.powerRank} of ${DATA.teams.length}`;
-        let offer;
+        let offer, btnRow = "";
         if (c.pkg) {
-          const give = c.pkg.map(a => esc(a.label)).join(" + ");
+          const give = c.pkg.map(a => esc(tgShortLabel(a))).join(" + ");
           const payload = { a: rid, b: o.rid, give: c.pkg.map(a => a.kind === "pick" ? (a.key ? { kind: "pick", key: a.key, fromTeam: a.fromTeam } : null) : { kind: "player", id: a.p.id }), get: [{ kind: "player", id: p.id }] };
           const btn = payload.give.every(Boolean) ? `<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Grade it →</button>` : "";
-          offer = `<div class="tg-offer">You send <strong>${give}</strong> · <strong>${c.grade ? (c.grade.zone === "fair" ? "Fair" : "Close") : "Fair"}</strong> · ${dTxt}${btn}</div>`;
+          offer = `<div class="tg-offer">You send <strong>${give}</strong> · <strong>${c.grade ? (c.grade.zone === "fair" ? "Fair" : "Close") : "Fair"}</strong> · ${dTxt}</div>`;
+          if (btn) btnRow = `<div class="tg-cand-btns">${btn}</div>`;
         } else {
           const payload = { a: rid, b: o.rid, give: [], get: [{ kind: "player", id: p.id }] };
-          offer = `<div class="tg-offer">No fair package from your picks &amp; bench — ${dTxt} if you build it<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Build it →</button></div>`;
+          offer = `<div class="tg-offer">No fair package from your picks &amp; bench — ${dTxt} if you build it</div>`;
+          btnRow = `<div class="tg-cand-btns"><button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Build it →</button></div>`;
         }
         return `<div class="tg-cand">
           <div class="tg-cand-h">${hsImg(p, "phs-sm")}<div><div class="tg-cand-name">${esc(p.name)}${tag}</div><div class="tg-cand-sub">${p.pos}${p.posRank} · ${esc(p.team || "")} · age ${p.age ?? "—"} · ${rosProj(p).toFixed(1)} proj/wk</div></div><div class="tg-cand-val">${fmt(Math.round(c.val))}<small>value</small></div></div>
           <div class="tg-owner">${ctx}</div>
           ${offer}
+          ${btnRow}
         </div>`;
       }
       function tgClusters(cands) {
@@ -7276,17 +7307,14 @@ ${rdP ? "" : `
         return `<p class="tg-near-h">${headTxt}</p><div class="tg-near-grid">${cl.map(c => tgCandHtml(c, cache.rid)).join("")}</div>`;
       }
       function tgPatchNear(nearEl, cache, clusters, idx) {
-        /* The slider stops at clusters, so a patch is needed only
-           when the thumb crosses into a new cluster — then the
-           whole set cross-fades together. Inside a cluster the
-           drag changes nothing, by construction. */
+        /* The shelf shows exactly one cluster at a time, so a patch
+           is needed only when the selected tier changes — then the
+           whole set cross-fades together. */
         const cl = clusters[idx] || [];
         const key = idx + ":" + cl.map(c => c.cand.id).join(",");
         if (nearEl.dataset.tgKey === key) return;
         nearEl.dataset.tgKey = key;
         nearEl.innerHTML = tgClusterHtml(cache, clusters, idx);
-        const grid = nearEl.querySelector(".tg-near-grid");
-        if (grid) grid.classList.add("swap");
       }
       function tgRoomLine(rid, group, room) {
         const nm = room.named ? esc(room.named.name) : "—";
@@ -7298,7 +7326,7 @@ ${rdP ? "" : `
         const room = tgRoom(rid, group);
         const posName = group === "FLEX" ? "flex (RB/WR/TE)" : group;
         /* When the starters are fine and only the depth is thin,
-           the slider browses depth adds alone — the honest pool
+           the tiers browse depth adds alone — the honest pool
            for the hole that actually exists. */
         const depthOnly = !room.starterHole && room.depthHole;
         const pool = depthOnly ? cache.cands.filter(c => c.kind === "depth") : cache.cands;
@@ -7318,12 +7346,21 @@ ${rdP ? "" : `
           html += `<div class="diag"><p>No gettable ${depthOnly ? "depth piece" : "name"} at ${esc(posName)} prices fairly out of your picks and bench depth right now — every producer who fits either costs a starter to balance, or his owner has no reason to sell. The graded offers below are the other windows into this roster.</p></div>`;
           return `<div class="tg-ladder">${html}</div>`;
         }
-        const midOf = cl => Math.round(cl.reduce((s, c) => s + c.val, 0) / cl.length);
+        const rangeOf = cl => { const vs = cl.map(c => Math.round(c.val)); const lo = Math.min(...vs), hi = Math.max(...vs); return lo === hi ? fmt(lo) : `${fmt(lo)}–${fmt(hi)}`; };
         if (clusters.length > 1) {
-          html += `<div class="tg-slider-box">
-            <div class="tg-slider-top"><span class="tg-budget" id="tg-budget-num">≈ ${fmt(midOf(clusters[idx]))}</span><span class="tg-budget-lbl">your price at ${esc(posName)} — in value points</span></div>
-            <input type="range" class="tg-slider" id="tg-slider" min="0" max="${clusters.length - 1}" step="1" value="${idx}" aria-label="Your price at ${esc(posName)}, in value points">
-            <div class="tg-slider-ends"><span>≈ ${fmt(midOf(clusters[0]))}</span><span>≈ ${fmt(midOf(clusters[clusters.length - 1]))}</span></div>
+          /* Tier chips (v2.1, replacing the slider): one chip per
+             cluster, labeled with the cluster's price range and the
+             name the pool itself ranks first in it — the landmark a
+             reader prices the tier by, read live off the board,
+             never hardcoded. Tapping a chip swaps the shelf to that
+             cluster's cards. */
+          const chips = clusters.map((cl, i) => {
+            const lm = cl[0] && cl[0].cand ? cl[0].cand.name : "";
+            return `<button type="button" class="tg-tier-chip" data-tg-cluster="${i}" aria-pressed="${i === idx}"><span class="tg-tier-range">${rangeOf(cl)}</span>${lm ? `<span class="tg-tier-name">${esc(lm)}</span>` : ""}</button>`;
+          }).join("");
+          html += `<div class="tg-tier-box">
+            <div class="tg-slider-top"><span class="tg-budget" id="tg-budget-num">≈ ${rangeOf(clusters[idx])}</span><span class="tg-budget-lbl">your price at ${esc(posName)} — in value points</span></div>
+            <div class="tg-tier-row" role="group" aria-label="Price tiers at ${esc(posName)}">${chips}</div>
           </div>`;
         }
         html += `<div id="tg-near" data-tg-key="${idx}:${clusters[idx].map(c => c.cand.id).join(",")}">${tgClusterHtml(cache, clusters, idx)}</div>`;
@@ -7409,14 +7446,15 @@ ${rdP ? "" : `
           return payload.give.every(Boolean) ? `<button type="button" class="rt-offer-load grade-btn" data-grade="${encodeURIComponent(JSON.stringify(payload))}">Grade it →</button>` : "";
         };
         const zone = g => g ? (g.zone === "fair" ? "Fair" : "Close") : "Fair";
-        const lines = [];
-        if (t.varA) lines.push(`Send <strong>${t.varA.map(a => esc(a.label)).join(" + ")}</strong> · <strong>${zone(t.gA)}</strong>${btn(t.varA)}`);
-        if (t.varB) lines.push(`${t.varA ? "Or spare " + esc(t.anchor.name) + ": " : "Send "}<strong>${t.varB.map(a => esc(a.label)).join(" + ")}</strong> · <strong>${zone(t.gB)}</strong>${btn(t.varB)}`);
-        if (t.thin) lines.push(`Heads up: the first deal leaves you thin at ${esc(p.pos)} behind him.`);
+        const lines = [], btns = [];
+        if (t.varA) { lines.push(`Send <strong>${t.varA.map(a => esc(tgShortLabel(a))).join(" + ")}</strong> · <strong>${zone(t.gA)}</strong>`); const b = btn(t.varA); if (b) btns.push(b); }
+        if (t.varB) { lines.push(`${t.varA ? "Or spare him: " : "Send "}<strong>${t.varB.map(a => esc(tgShortLabel(a))).join(" + ")}</strong> · <strong>${zone(t.gB)}</strong>`); const b = btn(t.varB); if (b) btns.push(b); }
+        if (t.thin) lines.push(`Heads up: leaves you thin at ${esc(p.pos)} behind him.`);
         return `<div class="tg-cand">
           <div class="tg-cand-h">${hsImg(p, "phs-sm")}<div><div class="tg-cand-name">${esc(p.name)}<span class="tg-chip tier">Tier-up</span></div><div class="tg-cand-sub">${p.pos}${p.posRank} · ${esc(p.team || "")} · age ${p.age ?? "—"} · ${rosProj(p).toFixed(1)} proj/wk</div></div><div class="tg-cand-val">${fmt(Math.round(t.val))}<small>value</small></div></div>
           <div class="tg-owner">${ctx}</div>
           <div class="tg-offer">${lines.join("<br>")}</div>
+          ${btns.length ? `<div class="tg-cand-btns">${btns.join("")}</div>` : ""}
         </div>`;
       }
       function tgSetHtml(rid, group, cache) {
@@ -7471,7 +7509,7 @@ ${rdP ? "" : `
             const room = tgRoom(rid, pos);
             /* A set position (starters AND depth top-half) gets the
                set view with its two searches; anything else gets the
-               cluster slider. The v1 weakest-spots strip is gone —
+               cluster tier selector. The v1 weakest-spots strip is gone —
                the Start here flag above is the only pointer. */
             html += (room.set && pos !== "FLEX") ? tgSetHtml(rid, pos, cache) : tgLadderHtml(rid, pos, cache);
           }
@@ -7498,25 +7536,22 @@ ${rdP ? "" : `
             renderFinder();
           });
         });
-        const slider = document.getElementById("tg-slider");
-        if (slider) {
-          /* The slider stops at price clusters. Crossing into a new
-             cluster cross-fades the whole card set; dragging inside
-             a cluster changes nothing — there is nothing between
-             clusters to show. */
-          const applyCluster = () => {
-            const idx = Number(slider.value);
+        /* Tier chips: tapping one selects that price cluster — the
+           readout follows the tier's range and the whole card set
+           cross-fades to the cluster's cards. */
+        out.querySelectorAll("[data-tg-cluster]").forEach(chip => {
+          chip.addEventListener("click", () => {
+            const idx = Number(chip.dataset.tgCluster);
             tgState.cluster = idx; tgState.clusterPos = finderState.want || "";
             const view = tgState.view;
             if (!view || !view.clusters || !view.clusters[idx]) return;
+            out.querySelectorAll("[data-tg-cluster]").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.tgCluster) === idx)));
             const num = document.getElementById("tg-budget-num");
-            if (num) num.textContent = "≈ " + fmt(Math.round(view.clusters[idx].reduce((s, c) => s + c.val, 0) / view.clusters[idx].length));
+            if (num) { const vs = view.clusters[idx].map(c => Math.round(c.val)); const lo = Math.min(...vs), hi = Math.max(...vs); num.textContent = "≈ " + (lo === hi ? fmt(lo) : `${fmt(lo)}–${fmt(hi)}`); }
             const near = document.getElementById("tg-near");
             if (near) tgPatchNear(near, view.cache, view.clusters, idx);
-          };
-          slider.addEventListener("input", applyCluster);
-          slider.addEventListener("change", applyCluster);
-        }
+          });
+        });
       }
 
       function renderFinder() {
