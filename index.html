@@ -2847,9 +2847,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          pinned right and can never slide under the avatar. The old
          .cc-tile-row + space-between layout let the nowrap count
          overflow a shrunken name cell and paint over the headshot. */
-      .cc-wv-row .t-name { font-weight: 700; flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .cc-wv-main { display: flex; flex-direction: column; gap: 1px; flex: 1 1 auto; min-width: 0; }
+      .cc-wv-row .t-name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .cc-wv-row .t-meta { color: var(--ink-3); font-size: 12.5px; font-weight: 500; }
-      .cc-wv-row .t-val { font-weight: 700; white-space: nowrap; flex: none; }
+      .cc-wv-row .t-val { font-weight: 600; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
       .cc-power-grades { display: flex; justify-content: space-between; font-size: 17px; margin-top: 14px; }
       .cc-power-grades span { white-space: nowrap; }
       .cc-power-grades b { font-weight: 700; }
@@ -19910,7 +19911,14 @@ window.drDraft = {
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="targets" style="--tile-accent:#69F0AE"><div class="cc-tile-h">Trade Ideas</div><div class="cc-tile-body">${tradeBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="targets">Player Targets →</button></div></div>`);
         let wvBody = "";
         if (Array.isArray(d.waiverTops) && d.waiverTops.length) {
-          wvBody = `<div class="cc-tile-rows">` + d.waiverTops.map(w => { const face = (typeof window.hsImg === "function") ? window.hsImg({ id: w.id }, "cc-wv-face") : ""; return `<div class="cc-radar-row cc-wv-row">${face}<span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span><span class="t-val">+${fmt(w.adds)} adds</span></div>`; }).join("") + `</div>`;
+          /* Stacked text block (Nov 10, 2026): face left, then the
+             name on its own line with the adds count under it. This
+             tile is ~255px wide — name and the full "+299,568 adds"
+             count side by side left the name ~55px, so it clipped to
+             a few letters even in one column. Stacked, both render in
+             full; position/team for these players lives in Waiver
+             Targets. */
+          wvBody = `<div class="cc-tile-rows">` + d.waiverTops.map(w => { const face = (typeof window.hsImg === "function") ? window.hsImg({ id: w.id }, "cc-wv-face") : ""; return `<div class="cc-radar-row cc-wv-row">${face}<span class="cc-wv-main"><span class="t-name">${esc(w.name)}</span><span class="t-val">+${fmt(w.adds)} adds</span></span></div>`; }).join("") + `</div>`;
         } else {
           wvBody = d.waiverAllRostered ? `<p class="cc-tile-sub">This week's most-added players are all rostered in this league.</p>` : `<p class="cc-tile-sub">No trending adds this week.</p>`;
         }
