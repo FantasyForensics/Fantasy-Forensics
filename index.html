@@ -31,6 +31,12 @@
         }
       } catch (e) { /* guest stands */ }
     </script>
+    <script>
+      /* Sidebar state (Nov 9, 2026 redesign): expanded is the default;
+         a device that collapsed the rail gets the slim rail back on
+         every load, before first paint, from this one key. */
+      try { if (localStorage.getItem("ff_sb") === "slim") document.documentElement.classList.add("sb-slim"); } catch (e) { /* storage unavailable — expanded default stands */ }
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-0LN6ZHJN6C"></script>
     <script>
@@ -3080,14 +3086,8 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div class="ticker-view"><div class="ticker-track" id="ticker-track"></div></div>
       </div>
       <header class="league">
-        <div class="ff-acct-row"><span class="ff-acct-slot" id="ff-acct-slot"></span></div>
         <div class="league-kicker">Fantasy Forensics</div>
         <h1 id="league-name">Fantasy Player Values</h1>
-        <p class="league-sub" id="league-sub"></p>
-        <div class="league-switcher" id="league-switcher" hidden>
-          <span class="ls-label">Your leagues</span>
-          <div class="ls-pills" id="ls-pills" role="group" aria-label="Switch connected league"></div>
-        </div>
         <div class="mode-row">
           <span class="mode-badge" id="mode-badge">Guest — no league</span>
           <span class="mode-ctl">
@@ -3104,14 +3104,26 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
       
 
+      <aside class="ff-sidebar" id="ff-sidebar" aria-label="Site sidebar">
+        <div class="sb-brand">
+          <span class="sb-word">Fantasy Forensics</span>
+          <button type="button" class="sb-toggle" id="sb-toggle" aria-expanded="true" aria-label="Collapse sidebar"><span class="sb-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></span></button>
+        </div>
+        <div class="ff-acct-row"><span class="ff-acct-slot" id="ff-acct-slot"></span></div>
+        <div class="league-switcher" id="league-switcher" hidden>
+          <span class="ls-label">Your leagues</span>
+          <div class="ls-pills" id="ls-pills" role="group" aria-label="Switch connected league"></div>
+        </div>
+        <p class="league-sub" id="league-sub"></p>
+        <div class="sb-scroll">
       <nav class="mainnav" id="site-main" role="tablist" aria-label="Fantasy Forensics sections">
-        <button role="tab" type="button" data-pnav="command" aria-selected="false">Command Center</button>
-        <button role="tab" type="button" data-pnav="myteam" aria-selected="false">My Team</button>
-        <button role="tab" type="button" data-pnav="trades" aria-selected="false">Trades</button>
-        <button role="tab" type="button" data-pnav="players" aria-selected="true">Players</button>
-        <button role="tab" type="button" data-pnav="league" aria-selected="false">League</button>
-        <button role="tab" type="button" data-pnav="tools" aria-selected="false">Tools</button>
-        <button role="tab" type="button" data-nav="draft" aria-selected="false">Draft Room</button>
+        <button role="tab" type="button" data-pnav="command" aria-selected="false">Command Center<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></span></button>
+        <button role="tab" type="button" data-pnav="myteam" aria-selected="false">My Team<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.2 3.6-5 7-5s6.2 1.8 7 5"/></svg></span></button>
+        <button role="tab" type="button" data-pnav="trades" aria-selected="false">Trades<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7.5h12.5"/><path d="M13.8 4.5l3 3-3 3"/><path d="M20 16.5H7.5"/><path d="M10.2 13.5l-3 3 3 3"/></svg></span></button>
+        <button role="tab" type="button" data-pnav="players" aria-selected="true">Players<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6h10M9 12h10M9 18h10"/><circle cx="4.8" cy="6" r="1.15"/><circle cx="4.8" cy="12" r="1.15"/><circle cx="4.8" cy="18" r="1.15"/></svg></span></button>
+        <button role="tab" type="button" data-pnav="league" aria-selected="false">League<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4.5h8V9a4 4 0 0 1-8 0z"/><path d="M8 5.5H5a3 3 0 0 0 3.2 3M16 5.5h3a3 3 0 0 1-3.2 3"/><path d="M12 13v3"/><path d="M9.5 19.5l.7-3.5h3.6l.7 3.5"/><path d="M8.5 19.5h7"/></svg></span></button>
+        <button role="tab" type="button" data-pnav="tools" aria-selected="false">Tools<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="15.5" cy="6.5" r="2.3"/><circle cx="8.5" cy="12" r="2.3"/><circle cx="15.5" cy="17.5" r="2.3"/><path d="M3.5 6.5h9.7M17.8 6.5h2.7M3.5 12h3.7M10.8 12h9.7M3.5 17.5h9.7M17.8 17.5h2.7"/></svg></span></button>
+        <button role="tab" type="button" data-nav="draft" aria-selected="false">Draft Room<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5.5" y="4.5" width="13" height="16" rx="2"/><path d="M9.5 4.8a2.5 2.5 0 0 1 5 0"/><path d="M9 11h6M9 14.8h4"/></svg></span></button>
       </nav>
       <div class="subnav" id="site-sub" role="tablist" aria-label="Fantasy Forensics subsections">
         <button type="button" role="tab" data-pnav-sub="roster" data-group="myteam" aria-selected="false" hidden>Roster</button>
@@ -3141,6 +3153,208 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <button type="button" role="tab" data-pnav-sub="results" data-group="league" aria-selected="false" hidden>League Results</button>
         <button type="button" role="tab" data-pnav-sub="storylines" data-group="league" aria-selected="false" hidden>Storylines</button>
       </div>
+        </div>
+      </aside>
+      <script>
+      /* Sidebar collapse toggle (Nov 9, 2026): flips the html.sb-slim
+         class the shell CSS keys off, and persists the choice on this
+         device. Expanded is the default; the head script re-applies a
+         stored "slim" before first paint. */
+      (function () {
+        var btn = document.getElementById("sb-toggle");
+        if (!btn) return;
+        var root = document.documentElement;
+        function sync() {
+          var slim = root.classList.contains("sb-slim");
+          btn.setAttribute("aria-expanded", slim ? "false" : "true");
+          btn.setAttribute("aria-label", slim ? "Expand sidebar" : "Collapse sidebar");
+        }
+        btn.addEventListener("click", function () {
+          var slim = root.classList.toggle("sb-slim");
+          try { localStorage.setItem("ff_sb", slim ? "slim" : "wide"); } catch (e) { /* persistence is best-effort */ }
+          sync();
+        });
+        sync();
+      })();
+      /* Tool-at-top demotion arming: the first activateNav after load
+         (the connect landing, or the user's first nav click) sets
+         body.ff-demoted AFTER the switch runs, so the Values hero and
+         its waitlist band retire while some other view is on screen —
+         never as a layout shrink under the user's scroll position. */
+      document.addEventListener("DOMContentLoaded", function () {
+        if (window.CURRENT_LEAGUE === "conn") document.body.classList.add("ff-demoted");
+        var orig = window.activateNav;
+        if (typeof orig !== "function" || orig.__ffDemoteWrapped) return;
+        var wrapped = function (key, arg) {
+          var r = orig(key, arg);
+          document.body.classList.add("ff-demoted");
+          return r;
+        };
+        wrapped.__ffDemoteWrapped = true;
+        window.activateNav = wrapped;
+      });
+      </script>
+      <style>
+      /* ============ Sidebar shell (Nov 9, 2026 redesign) ============
+         Layout only: the site's own fonts, palette and component
+         styling are untouched. The top tab bar becomes a left rail
+         (myfantasyfootball.co pattern): brand + account + league
+         switcher + section nav + the active section's sub-tools.
+         Expanded (236px, icon + label) is the default at >=641px;
+         html.sb-slim (persisted per device) retracts it to an 84px
+         icon rail. Phones keep the fixed bottom bar they already had.
+         Tool-at-top: the content header is one slim row (league name
+         + format controls); the brand kicker and the league meta line
+         live in the rail, and connected users land straight on the
+         Values board (the hero is the guest connect entry only). */
+
+      /* --- all widths: slimmer chrome above every tool --- */
+      .league-kicker { display: none; }
+      header.league { padding: 8px 0; }
+      .block-title { font-size: 21px; margin: 16px 0 8px; }
+      /* Demotion arms on the first view switch after load (see the
+         sidebar script): hiding the hero the instant connect drops
+         body.guest would shrink the page under a reading scroll
+         position — the gate's perf probe guards exactly that. Once
+         ff-demoted is set, a connected user never sees the hero or
+         the in-tab waitlist band above the board again. */
+      body.ff-demoted:not(.guest) #tab-values .hero { display: none; }
+      body.ff-demoted:not(.guest) #tab-values > .waitlist-band { display: none; }
+      .nav-ico { display: none; }
+      .sb-brand { display: none; }
+      .ff-sidebar .league-sub { display: none; }
+      html.sb-slim .sb-toggle svg { transform: rotate(180deg); }
+
+      /* --- >=641px: the grid shell + expanded rail --- */
+      @media (min-width: 641px) {
+        body > .wrap {
+          display: grid;
+          grid-template-columns: var(--sbw, 236px) minmax(0, 1fr);
+          column-gap: 26px;
+          max-width: 1440px;
+          padding: 0 22px 64px;
+        }
+        body > .wrap > * { grid-column: 2; min-width: 0; }
+        body > .wrap > .ff-sidebar {
+          grid-column: 1; grid-row: 1 / span 500;
+          align-self: start; position: sticky; top: 0; height: 100dvh;
+          display: flex; flex-direction: column;
+          padding: 14px 12px 12px 4px;
+          border-right: 1px solid var(--line);
+          background: rgba(10, 10, 26, .45);
+        }
+        .sb-brand { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 2px 12px; }
+        .sb-word {
+          font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 16.5px;
+          letter-spacing: .1em; text-transform: uppercase; color: var(--accent);
+          text-shadow: 0 0 14px rgba(198, 255, 0, .30); line-height: 1.2;
+        }
+        .sb-toggle {
+          flex: none; width: 34px; height: 34px; border-radius: 9px; padding: 0;
+          border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+          display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+        }
+        .sb-toggle:hover { color: var(--ink); border-color: rgba(255, 255, 255, .28); }
+        .sb-toggle svg {
+          width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2;
+          stroke-linecap: round; stroke-linejoin: round; transition: transform .18s ease;
+        }
+        .ff-sidebar .ff-acct-row { justify-content: flex-start; padding: 0 2px 10px; }
+        .ff-sidebar .league-switcher { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; margin: 0 0 4px; padding: 0 2px; }
+        .ff-sidebar .ls-pills { flex-direction: column; flex-wrap: nowrap; overflow: visible; padding-bottom: 0; -webkit-mask-image: none; mask-image: none; }
+        .ff-sidebar .ls-pill { text-align: left; white-space: normal; }
+        .ff-sidebar .league-sub { display: block; padding: 0 4px; margin: 4px 0 6px; }
+        .sb-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; padding: 2px; margin: 0 -2px; }
+        .ff-sidebar nav.mainnav {
+          position: static; flex-direction: column; flex-wrap: nowrap; overflow: visible;
+          background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+          border-bottom: none; padding: 4px 0; gap: 2px;
+        }
+        .ff-sidebar nav.mainnav button {
+          display: flex; align-items: center; gap: 11px; width: 100%;
+          text-align: left; padding: 10px 12px; border-radius: 12px; font-size: 14.5px; min-height: 44px;
+        }
+        .ff-sidebar .nav-ico { display: inline-flex; order: -1; flex: none; align-items: center; }
+        .ff-sidebar .nav-ico svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        .ff-sidebar #site-sub {
+          flex-direction: column; flex-wrap: nowrap; overflow: visible;
+          gap: 2px; padding: 10px 0 2px; margin-top: 8px; border-top: 1px solid var(--line);
+        }
+        .ff-sidebar #site-sub button {
+          text-align: left; border: none; background: transparent; border-radius: 10px;
+          padding: 8px 12px 8px 43px; font-size: 13.5px; white-space: normal; width: 100%;
+        }
+        .ff-sidebar #site-sub button:hover { background: rgba(255, 255, 255, .06); color: var(--ink); }
+        .ff-sidebar #site-sub button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #0a0a1a; }
+        #lg-power, #power-list, #lg-outlook, #odds-panel, #season-out,
+        #risk-panel, #movers-out, #format-block { scroll-margin-top: 18px; }
+      }
+
+      /* --- >=1024px: slim rail state --- */
+      @media (min-width: 1024px) {
+        html.sb-slim body > .wrap { --sbw: 84px; }
+        html.sb-slim .sb-word { display: none; }
+        html.sb-slim .sb-brand { justify-content: center; }
+        html.sb-slim .ff-sidebar .league-switcher,
+        html.sb-slim .ff-sidebar .league-sub,
+        html.sb-slim .ff-sidebar #site-sub { display: none; }
+        html.sb-slim .ff-sidebar .ff-acct-row { justify-content: center; }
+        html.sb-slim .ff-sidebar nav.mainnav button { justify-content: center; padding: 11px 0; gap: 0; font-size: 0; }
+        html.sb-slim .ff-sidebar .nav-lock { display: none !important; }
+        html.sb-slim .ff-menu { left: 0; right: auto; }
+        /* the signed-out account pill is wider than the slim rail —
+           let it wrap to two short lines inside the rail instead of
+           spilling over the content column */
+        html.sb-slim .ff-avatar-btn.ff-acct-text {
+          white-space: normal; text-align: center; line-height: 1.3;
+          font-size: 11px; padding: 7px 6px; border-radius: 12px; max-width: 68px;
+        }
+      }
+
+      /* --- 641–1023px: expanded = the same rail; slim = fixed icon rail --- */
+      @media (min-width: 641px) and (max-width: 1023px) {
+        #tab-values .board { overflow-x: auto; }
+        html.sb-slim body > .wrap { display: block; padding-left: 104px; }
+        html.sb-slim .ff-sidebar { display: contents; }
+        html.sb-slim .sb-brand {
+          display: block; position: fixed; left: 0; bottom: 0; width: 84px; z-index: 61;
+          padding: 8px 0 calc(10px + env(safe-area-inset-bottom, 0px));
+          background: rgba(8, 8, 22, .94); border-right: 1px solid var(--line); text-align: center;
+        }
+        html.sb-slim .sb-word { display: none; }
+        html.sb-slim nav.mainnav {
+          position: fixed; top: 0; left: 0; bottom: 0; width: 84px; z-index: 60;
+          flex-direction: column; flex-wrap: nowrap; overflow-y: auto; overflow-x: hidden;
+          background: rgba(8, 8, 22, .94); backdrop-filter: none; -webkit-backdrop-filter: none;
+          border-bottom: none; border-right: 1px solid var(--line);
+          padding: 12px 10px 76px; gap: 4px;
+        }
+        html.sb-slim nav.mainnav button {
+          display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+          width: 100%; min-height: 56px; padding: 8px 2px; border-radius: 12px;
+          font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase;
+          text-align: center; white-space: normal; line-height: 1.25;
+        }
+        html.sb-slim .nav-ico { display: inline-flex; order: -1; flex: none; align-items: center; }
+        html.sb-slim .nav-ico svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+        html.sb-slim .nav-lock { display: none !important; }
+        /* hybrid: the sub-tools bar is back in the content flow, so it
+           must shed the rail's column styling and be the pill row it
+           is everywhere else (the aside is display:contents here, but
+           its descendant selectors still match). */
+        html.sb-slim .sb-scroll { overflow: visible; padding: 0; margin: 0; }
+        html.sb-slim .ff-sidebar #site-sub {
+          flex-direction: row; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
+          gap: 8px; padding: 8px 0; margin-top: 0; border-top: none;
+        }
+        html.sb-slim .ff-sidebar #site-sub button {
+          width: auto; text-align: center; white-space: nowrap;
+          border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
+          padding: 7px 14px; font-size: 13.5px;
+        }
+        html.sb-slim .ff-sidebar #site-sub button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #0a0a1a; }
+      }
+      </style>
       <style>
         .subnav-mount.subnav-head { display: none !important; }
         #site-sub { padding: 8px 2px; }
@@ -3378,7 +3592,6 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
       <section class="tab" id="tab-targets" role="tabpanel">
         <h2 class="block-title">Personalized Player Targets<span class="launch-badge">Free during launch</span></h2>
-        <p class="tab-intro">Deals built for your team — your roster, your window, your picks, matched against every other roster in your league. Every offer is graded Fair or Close before it shows.</p>
         <div class="finder-controls finder-part">
           <label for="finder-team"><strong>Find trades for:</strong></label>
           <select id="finder-team"></select>
@@ -3416,6 +3629,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         </div>
 <details class="how-box finder-part">
           <summary>How Personalized Player Targets work</summary>
+          <p class="tab-intro finder-part">Deals built for your team — your roster, your window, your picks, matched against every other roster in your league. Every offer is graded Fair or Close before it shows.</p>
           <p class="tab-intro finder-part" id="finder-intro">Pick a team and Player Targets works <strong>your window</strong>, not just your needs. A <strong>Win-Now ⏳</strong> team only sees buys: picks, prospects and depth go out, production comes in — and every idea is checked against the rest-of-season projections, so a deal that lowers your optimal lineup’s projected points per week <strong>never appears</strong>, however the values balance. A <strong>Dynasty 👑</strong> team sees buys too, but pickier ones: only clear upgrades, paid for with draft capital, so the young core stays intact. A <strong>Rebuilder 🔨</strong> only sees sells: veteran starters converted into picks and young players, each one graded by the calculator’s fairness meter — value adjustment included — and only <strong>Fair</strong> or <strong>Close</strong> offers are shown. <strong>Crossroads 🔀</strong> teams choose a direction: two labeled paths, <em>Go Win-Now ⏳</em> and <em>Go Rebuilder 🔨</em>, each held to its own window’s rules.</p>
         </details>
       </section>
@@ -3451,14 +3665,20 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
       <section class="tab" id="tab-tradeboard" role="tabpanel">
         <h2 class="block-title">Trade Board</h2>
-        <p class="tab-intro">Every proposed trade still waiting on an answer, from every Sleeper league you play in — each one graded with the same engine as the Trade Calculator, picks priced by where they're projected to land. One screen for all of them: review them here — the accept / reject decision itself stays in Sleeper.</p>
         <div id="tb-out"></div>
+        <details class="how-box">
+          <summary>How this works</summary>
+          <p class="tab-intro">Every proposed trade still waiting on an answer, from every Sleeper league you play in — each one graded with the same engine as the Trade Calculator, picks priced by where they're projected to land. One screen for all of them: review them here — the accept / reject decision itself stays in Sleeper.</p>
+        </details>
       </section>
 
       <section class="tab" id="tab-teamport" role="tabpanel">
         <h2 class="block-title">Team Portfolio</h2>
-        <p class="tab-intro">One roster, priced like a portfolio — every holding in a single total, with this week's move and the trend across the weekly snapshots on file. Any team in the league, not just yours.</p>
         <div id="teamport-out"></div>
+        <details class="how-box">
+          <summary>How this works</summary>
+          <p class="tab-intro">One roster, priced like a portfolio — every holding in a single total, with this week's move and the trend across the weekly snapshots on file. Any team in the league, not just yours.</p>
+        </details>
       </section>
 
       <section class="tab" id="tab-roster" role="tabpanel">
@@ -3567,8 +3787,11 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       <section class="tab" id="tab-radar" role="tabpanel">
         <h2 class="block-title">Opportunity Radar<span class="launch-badge">Free during launch</span></h2>
         <p class="radar-sub">Players whose role is bigger than their scoring — history says the scoring usually catches up.</p>
-        <p class="tab-intro">Each player below is getting starter-level opportunities over his last three games but scoring like a backup. Most flags still don't break out — every card shows how often flags like it actually have, measured on <strong>2024–25</strong>, seasons this screen was never tuned on.</p>
         <div id="radar-out"></div>
+        <details class="how-box">
+          <summary>How this works</summary>
+          <p class="tab-intro">Each player below is getting starter-level opportunities over his last three games but scoring like a backup. Most flags still don't break out — every card shows how often flags like it actually have, measured on <strong>2024–25</strong>, seasons this screen was never tuned on.</p>
+        </details>
       </section>
 
       <section class="tab" id="tab-ineff" role="tabpanel">
