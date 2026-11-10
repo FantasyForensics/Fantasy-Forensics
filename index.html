@@ -18714,6 +18714,59 @@ window.drDraft = {
         return out;
       }
 
+      /* Trade Ideas for the Command Center, from the Player Targets
+         v2 engine (Eric, Nov 9, 2026): the same curated pool the
+         Targets page shops. A candidate counts only if he honestly
+         fits a hole on this roster AND his owner would realistically
+         deal — contender starters never enter that pool — so the
+         tile stops greeting the user with the most expensive names
+         in the league. Holes first: groups ordered by positional
+         rank, worst first; inside a group, seller context, then
+         lineup gain. Only candidates with a buildable package
+         count. Set positions contribute nothing — their tier-ups
+         stay an opt-in on the Targets page — unless every group is
+         set, in which case the best tier-up deals fill the tile.
+         Falls back to the legacy buy list only if the Targets
+         engine itself is unavailable. */
+      function ccTradeIdeas(rid) {
+        try {
+          if (typeof tgCandidates !== "function" || typeof tgRoom !== "function" || typeof tgPosRank !== "function") throw new Error("targets engine unavailable");
+          const groups = ["QB", "RB", "WR", "TE", "FLEX"];
+          const ordered = groups.map(g => ({ g, rank: tgPosRank(rid, g) })).sort((a, b) => b.rank - a.rank);
+          const rows = [];
+          const seen = new Set();
+          for (const { g } of ordered) {
+            if (tgRoom(rid, g).set) continue;
+            const cands = tgCandidates(rid, g).cands.filter(c => c.pkg)
+              .sort((a, b) => (b.score - a.score) || ((b.delta || 0) - (a.delta || 0)));
+            for (const c of cands) {
+              if (seen.has(c.cand.id)) continue;
+              seen.add(c.cand.id);
+              rows.push({ partner: c.owner.name, target: c.cand.name, pos: c.cand.pos, team: c.cand.team || "", dPpg: (c.delta != null ? c.delta : c.dPpg) || 0, kind: c.kind });
+            }
+          }
+          if (!rows.length && typeof tgTierUps === "function") {
+            for (const { g } of ordered) {
+              for (const t of tgTierUps(rid, g)) {
+                if (seen.has(t.cand.id)) continue;
+                seen.add(t.cand.id);
+                rows.push({ partner: t.owner.name, target: t.cand.name, pos: t.cand.pos, team: t.cand.team || "", dPpg: Math.max(0, rosProj(t.cand) - rosProj(t.anchor)), kind: "tier" });
+              }
+              if (rows.length >= 3) break;
+            }
+          }
+          if (rows.length) return rows.slice(0, 3);
+        } catch (e) { /* fall through to the legacy list */ }
+        try {
+          const me = TBY[rid];
+          if (!me || typeof buySuggestions !== "function") return null;
+          const buys = buySuggestions(rid, me, { collectNear: (typeof VALMODE !== "undefined" && VALMODE === "dynasty") }) || [];
+          buys.sort((a, b) => (b.score || 0) - (a.score || 0));
+          const legacy = buys.slice(0, 3).map(s => ({ partner: s.partner ? s.partner.name : "", target: s.target ? s.target.name : "", pos: s.target ? s.target.pos : "", team: s.target ? s.target.team : "", dPpg: s.dPpg || 0, kind: "buy" }));
+          return legacy.length ? legacy : null;
+        } catch (e) { return null; }
+      }
+
       /* Spotlight detail for the user's team in the CURRENT context —
          live (the focused league is the loaded one) or swapped. simIn
          lets the live path reuse window.SeasonSim itself, so the ring
@@ -18880,11 +18933,8 @@ window.drDraft = {
           } else d.matchup = null;
         } catch (e) { d.matchup = null; }
         try {
-          if (typeof buySuggestions === "function") {
-            const buys = buySuggestions(me.rid, me, { collectNear: (typeof VALMODE !== "undefined" && VALMODE === "dynasty") }) || [];
-            buys.sort((a, b) => (b.score || 0) - (a.score || 0));
-            d.tradeIdeas = buys.slice(0, 3).map(s => ({ partner: s.partner ? s.partner.name : "", target: s.target ? s.target.name : "", pos: s.target ? s.target.pos : "", team: s.target ? s.target.team : "", dPpg: s.dPpg || 0 }));
-          } else d.tradeIdeas = null;
+          const ideas = (typeof ccTradeIdeas === "function") ? ccTradeIdeas(me.rid) : null;
+          d.tradeIdeas = (ideas && ideas.length) ? ideas : null;
         } catch (e) { d.tradeIdeas = null; }
         /* Your Next Moves tile (Eric, 2026-10-27): action moves only,
            deliberately separate from the Needs-you-first queue (which
@@ -19138,12 +19188,11 @@ window.drDraft = {
           try {
             const lg58 = (ff4.ccLeagues || [])[idx];
             const d58 = ff4.ccDetail[idx];
-            if (lg58 && d58 && !d58.failed && ff4CCIsActive(lg58) && typeof buySuggestions === "function" && typeof DATA !== "undefined" && DATA.teams) {
+            if (lg58 && d58 && !d58.failed && ff4CCIsActive(lg58) && typeof ccTradeIdeas === "function" && typeof DATA !== "undefined" && DATA.teams) {
               const me58 = DATA.teams.find(t => t.isUser);
               if (me58) {
-                const buys58 = buySuggestions(me58.rid, me58, { collectNear: (typeof VALMODE !== "undefined" && VALMODE === "dynasty") }) || [];
-                buys58.sort((a, b) => (b.score || 0) - (a.score || 0));
-                d58.tradeIdeas = buys58.slice(0, 3).map(s => ({ partner: s.partner ? s.partner.name : "", target: s.target ? s.target.name : "", pos: s.target ? s.target.pos : "", team: s.target ? s.target.team : "", dPpg: s.dPpg || 0 }));
+                const ideas58 = ccTradeIdeas(me58.rid);
+                d58.tradeIdeas = (ideas58 && ideas58.length) ? ideas58 : null;
                 ff4CCRenderSpot();
               }
             }
@@ -19321,7 +19370,7 @@ window.drDraft = {
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="radar" style="--tile-accent:#FF4081"><div class="cc-tile-h">Opportunity Radar</div><div class="cc-tile-body">${watchBody}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="radar">Opportunity Radar →</button></div></div>`);
         let tradeBody = "";
         if (Array.isArray(d.tradeIdeas) && d.tradeIdeas.length) {
-          tradeBody = `<div class="cc-tile-rows">` + d.tradeIdeas.map(s => `<div class="cc-tile-row"><span class="t-name">${esc(s.target)} <span class="t-meta">${esc(s.pos)} · ${esc(s.team || "")}</span></span><span class="t-val">+${s.dPpg.toFixed(1)} pts/wk</span></div><div class="cc-tile-sub" style="margin-top:-4px">from ${esc(s.partner)}</div>`).join("") + `</div>`;
+          tradeBody = `<div class="cc-tile-rows">` + d.tradeIdeas.map(s => `<div class="cc-tile-row"><span class="t-name">${esc(s.target)} <span class="t-meta">${esc(s.pos)} · ${esc(s.team || "")}</span></span><span class="t-val">+${s.dPpg.toFixed(1)} pts/wk</span></div><div class="cc-tile-sub" style="margin-top:-4px">from ${esc(s.partner)}${s.kind === "depth" ? " · depth add" : s.kind === "tier" ? " · tier-up" : ""}</div>`).join("") + `</div>`;
         } else {
           tradeBody = `<p class="cc-tile-sub">No buy ideas clear the bar right now.</p>`;
         }
