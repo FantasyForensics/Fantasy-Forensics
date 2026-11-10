@@ -3109,51 +3109,60 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           <span class="sb-word">Fantasy Forensics</span>
           <button type="button" class="sb-toggle" id="sb-toggle" aria-expanded="true" aria-label="Collapse sidebar"><span class="sb-chev" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></span></button>
         </div>
-        <div class="ff-acct-row"><span class="ff-acct-slot" id="ff-acct-slot"></span></div>
-        <div class="league-switcher" id="league-switcher" hidden>
-          <span class="ls-label">Your leagues</span>
-          <div class="ls-pills" id="ls-pills" role="group" aria-label="Switch connected league"></div>
-        </div>
-        <p class="league-sub" id="league-sub"></p>
-        <div class="sb-scroll">
+        <div class="sb-navzone">
       <nav class="mainnav" id="site-main" role="tablist" aria-label="Fantasy Forensics sections">
         <button role="tab" type="button" data-pnav="command" aria-selected="false">Command Center<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></span></button>
         <button role="tab" type="button" data-pnav="myteam" aria-selected="false">My Team<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.2 3.6-5 7-5s6.2 1.8 7 5"/></svg></span></button>
+        <div class="sb-subgroup" data-subgroup="myteam" hidden>
+          <button type="button" role="tab" data-pnav-sub="roster" data-group="myteam" aria-selected="false">Roster</button>
+          <button type="button" role="tab" data-pnav-sub="lineup" data-group="myteam" aria-selected="false">Lineup Analyzer</button>
+          <button type="button" role="tab" data-pnav-sub="waivers" data-group="myteam" aria-selected="false">Waiver Targets</button>
+          <button type="button" role="tab" data-pnav-sub="bye" data-group="myteam" aria-selected="false">Bye Week Planner</button>
+          <button type="button" role="tab" data-pnav-sub="risk" data-group="myteam" aria-selected="false">Starters at Risk</button>
+          <button type="button" role="tab" data-pnav-sub="teamport" data-group="myteam" aria-selected="false">Team Portfolio</button>
+          <button type="button" role="tab" data-pnav-sub="moves" data-group="myteam" aria-selected="false">Next Moves</button>
+        </div>
         <button role="tab" type="button" data-pnav="trades" aria-selected="false">Trades<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7.5h12.5"/><path d="M13.8 4.5l3 3-3 3"/><path d="M20 16.5H7.5"/><path d="M10.2 13.5l-3 3 3 3"/></svg></span></button>
+        <div class="sb-subgroup" data-subgroup="trades" hidden>
+          <button type="button" role="tab" data-pnav-sub="trades" data-group="trades" aria-selected="false">Trade Calculator</button>
+          <button type="button" role="tab" data-pnav-sub="targets" data-group="trades" aria-selected="false">Player Targets<span class="launch-badge">Free during launch</span></button>
+          <button type="button" role="tab" data-pnav-sub="upgrades" data-group="trades" aria-selected="false">Upgrade Finder</button>
+          <button type="button" role="tab" data-pnav-sub="counter" data-group="trades" aria-selected="false">Counteroffers</button>
+          <button type="button" role="tab" data-pnav-sub="realtrades" data-group="trades" aria-selected="false">Real Trades</button>
+          <button type="button" role="tab" data-pnav-sub="tradeboard" data-group="trades" aria-selected="false">Trade Board</button>
+        </div>
         <button role="tab" type="button" data-pnav="players" aria-selected="true">Players<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6h10M9 12h10M9 18h10"/><circle cx="4.8" cy="6" r="1.15"/><circle cx="4.8" cy="12" r="1.15"/><circle cx="4.8" cy="18" r="1.15"/></svg></span></button>
+        <div class="sb-subgroup" data-subgroup="players">
+          <button type="button" role="tab" data-pnav-sub="values" data-group="players" aria-selected="true">Player Values</button>
+          <button type="button" role="tab" data-pnav-sub="risers" data-group="players" aria-selected="false">Risers &amp; Fallers</button>
+          <button type="button" role="tab" data-pnav-sub="radar" data-group="players" aria-selected="false">Opportunity Radar</button>
+          <button type="button" role="tab" data-pnav-sub="ineff" data-group="players" aria-selected="false">Inefficiency Board</button>
+        </div>
         <button role="tab" type="button" data-pnav="league" aria-selected="false">League<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4.5h8V9a4 4 0 0 1-8 0z"/><path d="M8 5.5H5a3 3 0 0 0 3.2 3M16 5.5h3a3 3 0 0 1-3.2 3"/><path d="M12 13v3"/><path d="M9.5 19.5l.7-3.5h3.6l.7 3.5"/><path d="M8.5 19.5h7"/></svg></span></button>
+        <div class="sb-subgroup" data-subgroup="league" hidden>
+          <button type="button" role="tab" data-pnav-sub="power" data-group="league" aria-selected="false">Power Rankings</button>
+          <button type="button" role="tab" data-pnav-sub="mscore" data-group="league" aria-selected="false">Manager Score</button>
+          <button type="button" role="tab" data-pnav-sub="rosters" data-group="league" aria-selected="false">Rosters</button>
+          <button type="button" role="tab" data-pnav-sub="outlook" data-group="league" aria-selected="false">Season Outlook</button>
+          <button type="button" role="tab" data-pnav-sub="odds" data-group="league" aria-selected="false">Playoff Odds</button>
+          <button type="button" role="tab" data-pnav-sub="ppath" data-group="league" aria-selected="false">Playoff Path</button>
+          <button type="button" role="tab" data-pnav-sub="psched" data-group="league" aria-selected="false">Schedule Difficulty</button>
+          <button type="button" role="tab" data-pnav-sub="results" data-group="league" aria-selected="false">League Results</button>
+          <button type="button" role="tab" data-pnav-sub="storylines" data-group="league" aria-selected="false">Storylines</button>
+        </div>
         <button role="tab" type="button" data-pnav="tools" aria-selected="false">Tools<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="15.5" cy="6.5" r="2.3"/><circle cx="8.5" cy="12" r="2.3"/><circle cx="15.5" cy="17.5" r="2.3"/><path d="M3.5 6.5h9.7M17.8 6.5h2.7M3.5 12h3.7M10.8 12h9.7M3.5 17.5h9.7M17.8 17.5h2.7"/></svg></span></button>
         <button role="tab" type="button" data-nav="draft" aria-selected="false">Draft Room<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5.5" y="4.5" width="13" height="16" rx="2"/><path d="M9.5 4.8a2.5 2.5 0 0 1 5 0"/><path d="M9 11h6M9 14.8h4"/></svg></span></button>
       </nav>
-      <div class="subnav" id="site-sub" role="tablist" aria-label="Fantasy Forensics subsections">
-        <button type="button" role="tab" data-pnav-sub="roster" data-group="myteam" aria-selected="false" hidden>Roster</button>
-        <button type="button" role="tab" data-pnav-sub="lineup" data-group="myteam" aria-selected="false" hidden>Lineup Analyzer</button>
-        <button type="button" role="tab" data-pnav-sub="waivers" data-group="myteam" aria-selected="false" hidden>Waiver Targets</button>
-        <button type="button" role="tab" data-pnav-sub="bye" data-group="myteam" aria-selected="false" hidden>Bye Week Planner</button>
-        <button type="button" role="tab" data-pnav-sub="risk" data-group="myteam" aria-selected="false" hidden>Starters at Risk</button>
-        <button type="button" role="tab" data-pnav-sub="teamport" data-group="myteam" aria-selected="false" hidden>Team Portfolio</button>
-        <button type="button" role="tab" data-pnav-sub="moves" data-group="myteam" aria-selected="false" hidden>Next Moves</button>
-        <button type="button" role="tab" data-pnav-sub="trades" data-group="trades" aria-selected="false" hidden>Trade Calculator</button>
-        <button type="button" role="tab" data-pnav-sub="targets" data-group="trades" aria-selected="false" hidden>Player Targets<span class="launch-badge">Free during launch</span></button>
-        <button type="button" role="tab" data-pnav-sub="upgrades" data-group="trades" aria-selected="false" hidden>Upgrade Finder</button>
-        <button type="button" role="tab" data-pnav-sub="counter" data-group="trades" aria-selected="false" hidden>Counteroffers</button>
-        <button type="button" role="tab" data-pnav-sub="realtrades" data-group="trades" aria-selected="false" hidden>Real Trades</button>
-        <button type="button" role="tab" data-pnav-sub="tradeboard" data-group="trades" aria-selected="false" hidden>Trade Board</button>
-        <button type="button" role="tab" data-pnav-sub="values" data-group="players" aria-selected="true">Player Values</button>
-        <button type="button" role="tab" data-pnav-sub="risers" data-group="players" aria-selected="false">Risers &amp; Fallers</button>
-        <button type="button" role="tab" data-pnav-sub="radar" data-group="players" aria-selected="false">Opportunity Radar</button>
-        <button type="button" role="tab" data-pnav-sub="ineff" data-group="players" aria-selected="false">Inefficiency Board</button>
-        <button type="button" role="tab" data-pnav-sub="power" data-group="league" aria-selected="false" hidden>Power Rankings</button>
-        <button type="button" role="tab" data-pnav-sub="mscore" data-group="league" aria-selected="false" hidden>Manager Score</button>
-        <button type="button" role="tab" data-pnav-sub="rosters" data-group="league" aria-selected="false" hidden>Rosters</button>
-        <button type="button" role="tab" data-pnav-sub="outlook" data-group="league" aria-selected="false" hidden>Season Outlook</button>
-        <button type="button" role="tab" data-pnav-sub="odds" data-group="league" aria-selected="false" hidden>Playoff Odds</button>
-        <button type="button" role="tab" data-pnav-sub="ppath" data-group="league" aria-selected="false" hidden>Playoff Path</button>
-        <button type="button" role="tab" data-pnav-sub="psched" data-group="league" aria-selected="false" hidden>Schedule Difficulty</button>
-        <button type="button" role="tab" data-pnav-sub="results" data-group="league" aria-selected="false" hidden>League Results</button>
-        <button type="button" role="tab" data-pnav-sub="storylines" data-group="league" aria-selected="false" hidden>Storylines</button>
-      </div>
         </div>
+        <div class="sb-leaguezone">
+          <div class="league-switcher" id="league-switcher" hidden>
+            <span class="ls-label">Your leagues</span>
+            <div class="ls-pills" id="ls-pills" role="group" aria-label="Switch connected league"></div>
+          </div>
+          <p class="league-sub" id="league-sub"></p>
+        </div>
+        <div class="ff-acct-row"><span class="ff-acct-slot" id="ff-acct-slot"></span></div>
+        <div class="subnav" id="site-sub" role="tablist" aria-label="Fantasy Forensics subsections" hidden></div>
       </aside>
       <script>
       /* Sidebar collapse toggle (Nov 9, 2026): flips the html.sb-slim
@@ -3218,30 +3227,34 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          position — the gate's perf probe guards exactly that. Once
          ff-demoted is set, a connected user never sees the hero or
          the in-tab waitlist band above the board again. */
-      body.ff-demoted:not(.guest) #tab-values .hero { display: none; }
+      body.ff-demoted:not(.guest) #tab-values .connect-bar { display: none; }
       body.ff-demoted:not(.guest) #tab-values > .waitlist-band { display: none; }
       .nav-ico { display: none; }
       .sb-brand { display: none; }
       .ff-sidebar .league-sub { display: none; }
       html.sb-slim .sb-toggle svg { transform: rotate(180deg); }
 
-      /* --- >=641px: the grid shell + expanded rail --- */
+      /* --- >=641px: the flush rail shell + expanded rail ---
+         Batch 2 (Nov 10, 2026): the rail is FIXED to the viewport's
+         left edge (x=0, full height) in both states — no inset, no
+         floating margin. The wrap offsets its content by the rail
+         width instead of carrying the rail as a grid column. */
       @media (min-width: 641px) {
         body > .wrap {
-          display: grid;
-          grid-template-columns: var(--sbw, 236px) minmax(0, 1fr);
-          column-gap: 26px;
-          max-width: 1440px;
-          padding: 0 22px 64px;
+          --sbw: 236px;
+          max-width: calc(var(--sbw) + 1180px);
+          margin: 0 auto 0 0;
+          padding: 0 22px 64px calc(var(--sbw) + 30px);
+          box-sizing: border-box;
         }
-        body > .wrap > * { grid-column: 2; min-width: 0; }
+        body > .wrap > * { min-width: 0; }
         body > .wrap > .ff-sidebar {
-          grid-column: 1; grid-row: 1 / span 500;
-          align-self: start; position: sticky; top: 0; height: 100dvh;
+          position: fixed; left: 0; top: 0; z-index: 55;
+          width: var(--sbw); height: 100dvh; box-sizing: border-box;
           display: flex; flex-direction: column;
-          padding: 14px 12px 12px 4px;
+          padding: 14px 12px 12px 14px;
           border-right: 1px solid var(--line);
-          background: rgba(10, 10, 26, .45);
+          background: rgba(10, 10, 26, .88);
         }
         .sb-brand { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 2px 12px; }
         .sb-word {
@@ -3259,12 +3272,23 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2;
           stroke-linecap: round; stroke-linejoin: round; transition: transform .18s ease;
         }
-        .ff-sidebar .ff-acct-row { justify-content: flex-start; padding: 0 2px 10px; }
+        .ff-sidebar .ff-acct-row { justify-content: flex-start; padding: 10px 2px 0; margin-top: 10px; border-top: 1px solid var(--line); }
+        /* Batch 2: the account row is pinned at the rail's bottom
+           now, so its menu opens UPWARD into the rail — downward
+           would spill past the viewport's bottom edge. (The
+           641–1023 slim layout restores downward: there the row
+           sits in the content flow near the top.) */
+        .ff-sidebar .ff-menu { top: auto; bottom: calc(100% + 6px); }
         .ff-sidebar .league-switcher { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 6px; margin: 0 0 4px; padding: 0 2px; }
         .ff-sidebar .ls-pills { flex-direction: column; flex-wrap: nowrap; overflow: visible; padding-bottom: 0; -webkit-mask-image: none; mask-image: none; }
         .ff-sidebar .ls-pill { text-align: left; white-space: normal; }
         .ff-sidebar .league-sub { display: block; padding: 0 4px; margin: 4px 0 6px; }
-        .sb-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; padding: 2px; margin: 0 -2px; }
+        /* Batch 2 zones (Nov 10, 2026): nav at the top in its own
+           scroll region; leagues low in a second region that owns
+           the leftover height and scrolls internally no matter how
+           many leagues pile up; the account row is pinned last. */
+        .sb-navzone { flex: 0 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; padding: 2px; margin: 0 -2px; }
+        .sb-leaguezone { flex: 1 1 auto; min-height: 64px; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; margin-top: 12px; border-top: 1px solid var(--line); padding: 12px 2px 2px; }
         .ff-sidebar nav.mainnav {
           position: static; flex-direction: column; flex-wrap: nowrap; overflow: visible;
           background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
@@ -3276,54 +3300,72 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         }
         .ff-sidebar .nav-ico { display: inline-flex; order: -1; flex: none; align-items: center; }
         .ff-sidebar .nav-ico svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-        .ff-sidebar #site-sub {
-          flex-direction: column; flex-wrap: nowrap; overflow: visible;
-          gap: 2px; padding: 10px 0 2px; margin-top: 8px; border-top: 1px solid var(--line);
+        /* Batch 2: the phone strip never shows inside the rail —
+           sub-tools live in the in-place dropdowns below. */
+        .ff-sidebar #site-sub { display: none; }
+        /* In-place section dropdowns (Batch 2): sub-tools open
+           directly under their parent item, set in Inter at a
+           smaller size with a cyan rule so they read as belonging
+           to the section above them, not as top-level items. */
+        .ff-sidebar .sb-subgroup {
+          display: flex; flex-direction: column; gap: 1px;
+          margin: 2px 0 7px 25px; padding: 4px 0 4px 10px;
+          border-left: 2px solid rgba(0, 229, 255, .28);
         }
-        .ff-sidebar #site-sub button {
-          text-align: left; border: none; background: transparent; border-radius: 10px;
-          padding: 8px 12px 8px 43px; font-size: 13.5px; white-space: normal; width: 100%;
+        .ff-sidebar .sb-subgroup[hidden] { display: none; }
+        .ff-sidebar .sb-subgroup button {
+          text-align: left; border: none; background: transparent; border-radius: 9px;
+          padding: 7px 10px; font-family: Inter, sans-serif; font-size: 13px; font-weight: 500;
+          letter-spacing: 0; color: var(--ink-2); white-space: normal; width: 100%; cursor: pointer;
         }
-        .ff-sidebar #site-sub button:hover { background: rgba(255, 255, 255, .06); color: var(--ink); }
-        .ff-sidebar #site-sub button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #0a0a1a; }
+        .ff-sidebar .sb-subgroup button:hover { background: rgba(255, 255, 255, .06); color: var(--ink); }
+        .ff-sidebar .sb-subgroup button[aria-selected="true"] { background: rgba(0, 229, 255, .13); color: #00E5FF; font-weight: 700; }
         #lg-power, #power-list, #lg-outlook, #odds-panel, #season-out,
         #risk-panel, #movers-out, #format-block { scroll-margin-top: 18px; }
       }
 
       /* --- >=1024px: slim rail state --- */
       @media (min-width: 1024px) {
-        html.sb-slim body > .wrap { --sbw: 84px; }
+        html.sb-slim body > .wrap { --sbw: 108px; }
         html.sb-slim .sb-word { display: none; }
         html.sb-slim .sb-brand { justify-content: center; }
         html.sb-slim .ff-sidebar .league-switcher,
         html.sb-slim .ff-sidebar .league-sub,
+        html.sb-slim .ff-sidebar .sb-subgroup,
         html.sb-slim .ff-sidebar #site-sub { display: none; }
         html.sb-slim .ff-sidebar .ff-acct-row { justify-content: center; }
-        html.sb-slim .ff-sidebar nav.mainnav button { justify-content: center; padding: 11px 0; gap: 0; font-size: 0; }
+        /* Batch 2: the collapsed rail keeps a small caps label under
+           each icon (Eric: bare icons weren't self-explanatory), and
+           the rail widens to 108px so icon + label have room. */
+        html.sb-slim .ff-sidebar nav.mainnav button {
+          flex-direction: column; justify-content: center; align-items: center;
+          padding: 9px 2px; gap: 3px; font-size: 9.5px; letter-spacing: .05em;
+          text-transform: uppercase; text-align: center; line-height: 1.25; white-space: normal;
+        }
         html.sb-slim .ff-sidebar .nav-lock { display: none !important; }
-        html.sb-slim .ff-menu { left: 0; right: auto; }
+        html.sb-slim .ff-menu { left: 0; right: auto; top: calc(100% + 6px); bottom: auto; }
         /* the signed-out account pill is wider than the slim rail —
            let it wrap to two short lines inside the rail instead of
            spilling over the content column */
         html.sb-slim .ff-avatar-btn.ff-acct-text {
           white-space: normal; text-align: center; line-height: 1.3;
-          font-size: 11px; padding: 7px 6px; border-radius: 12px; max-width: 68px;
+          font-size: 11px; padding: 7px 6px; border-radius: 12px; max-width: 94px;
         }
       }
 
       /* --- 641–1023px: expanded = the same rail; slim = fixed icon rail --- */
       @media (min-width: 641px) and (max-width: 1023px) {
         #tab-values .board { overflow-x: auto; }
-        html.sb-slim body > .wrap { display: block; padding-left: 104px; }
+        html.sb-slim body > .wrap { display: block; padding-left: 122px; }
         html.sb-slim .ff-sidebar { display: contents; }
         html.sb-slim .sb-brand {
-          display: block; position: fixed; left: 0; bottom: 0; width: 84px; z-index: 61;
+          display: block; position: fixed; left: 0; bottom: 0; width: 102px; z-index: 61;
           padding: 8px 0 calc(10px + env(safe-area-inset-bottom, 0px));
           background: rgba(8, 8, 22, .94); border-right: 1px solid var(--line); text-align: center;
         }
         html.sb-slim .sb-word { display: none; }
         html.sb-slim nav.mainnav {
-          position: fixed; top: 0; left: 0; bottom: 0; width: 84px; z-index: 60;
+          position: fixed; top: 0; left: 0; bottom: 0; width: 102px; z-index: 60;
           flex-direction: column; flex-wrap: nowrap; overflow-y: auto; overflow-x: hidden;
           background: rgba(8, 8, 22, .94); backdrop-filter: none; -webkit-backdrop-filter: none;
           border-bottom: none; border-right: 1px solid var(--line);
@@ -3342,7 +3384,8 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            must shed the rail's column styling and be the pill row it
            is everywhere else (the aside is display:contents here, but
            its descendant selectors still match). */
-        html.sb-slim .sb-scroll { overflow: visible; padding: 0; margin: 0; }
+        html.sb-slim .sb-navzone, html.sb-slim .sb-leaguezone { overflow: visible; padding: 0; margin: 0; border-top: none; min-height: 0; }
+        html.sb-slim .sb-subgroup { display: none; }
         html.sb-slim .ff-sidebar #site-sub {
           flex-direction: row; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden;
           gap: 8px; padding: 8px 0; margin-top: 0; border-top: none;
@@ -3361,23 +3404,105 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         #site-sub[hidden] { display: none !important; }
         #site-sub button[hidden] { display: none !important; }
       </style>
+      <style>
+      /* ============ Batch 2 (Nov 10, 2026): connect bar + CC one-screen ============
+         The guest hero is retired: one slim connect bar (Sleeper
+         username + Analyze, with Sleeper/ESPN pills swapping the same
+         bar) sits directly above the founding band, and the values
+         board starts immediately under it. The bar follows the old
+         hero's visibility contract — guests only, hidden while a
+         saved league restores. */
+      .connect-bar { margin: 0 0 2px; }
+      .cb-form { display: none; }
+      body.guest .cb-form { display: flex; flex-wrap: wrap; gap: 10px; max-width: 660px; }
+      html.ff-restoring body.guest .cb-form { display: none; }
+      html.ff-restoring body.guest .connect-bar .hero-restoring { margin-top: 0; }
+      .cb-field { position: relative; flex: 1 1 260px; min-width: 0; }
+      .cb-field input {
+        width: 100%; box-sizing: border-box; min-height: 52px; padding: 0 148px 0 20px; font-size: 16px; color: var(--ink);
+        background: rgba(255, 255, 255, .05); border: 1px solid rgba(255, 255, 255, .16); border-radius: 999px;
+      }
+      .cb-field input:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+      .cb-pills {
+        position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+        display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px;
+        background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .12);
+      }
+      .cb-pill {
+        border: none; background: transparent; color: var(--ink-2); cursor: pointer;
+        font-family: "Space Grotesk", sans-serif; font-weight: 600; font-size: 12px;
+        padding: 6px 11px; border-radius: 999px; letter-spacing: .02em;
+      }
+      .cb-pill:hover { color: var(--ink); }
+      .cb-pill.on { background: var(--accent); color: #0a0a1a; }
+      .cb-form .cta-lime { justify-content: center; white-space: nowrap; }
+      @media (max-width: 640px) {
+        .cb-field input { padding-right: 132px; font-size: 15px; }
+        .cb-pill { padding: 6px 8px; font-size: 11px; }
+        .cb-form .cta-lime { flex: 1 1 100%; }
+        /* phones keep the pill strip in flow; the in-rail dropdowns
+           never render inside the fixed bottom bar */
+        .sb-subgroup { display: none !important; }
+      }
+
+      /* --- Command Center one-screen (Batch 2) ---
+         At desktop / iPad-landscape widths the whole CC works from
+         the first screen: Needs You First and the Trade Board ride
+         side by side as capped panels (headers pinned, items scroll
+         inside), and the nine tiles compress into the remaining
+         height with their bodies scrolling internally, exactly the
+         overflow contract the tiles already had. The title row and
+         story button share one slim line now that the page header
+         names the view. Shorter landscape windows compress further. */
+      @media (min-width: 1024px) {
+        #tab-command .block-title { font-size: 18px; margin: 8px 0 4px; }
+        #tab-command .cc-story-row { position: absolute; top: 6px; right: 0; margin: 0; }
+        #tab-command { position: relative; }
+        #cc-out { display: flex; flex-wrap: wrap; gap: 10px 12px; }
+        #cc-out > .cc-refresh { flex: 1 1 100%; margin-bottom: 0; }
+        #cc-out > .cc-refresh .cc-refresh-note { display: none; }
+        #cc-out > .cc-queue { flex: 1 1 0; min-width: 0; margin-bottom: 0; max-height: 160px; overflow-y: auto; scrollbar-width: thin; }
+        #cc-out > .cc-tb { flex: 1 1 0; min-width: 0; margin-bottom: 0; max-height: 160px; overflow-y: auto; scrollbar-width: thin; }
+        #cc-out > .cc-queue .cc-queue-h, #cc-out > .cc-tb .cc-queue-h {
+          position: sticky; top: -14px; z-index: 1; padding: 4px 0 6px;
+          background: linear-gradient(180deg, rgba(16, 13, 34, .97), rgba(16, 13, 34, .94));
+        }
+        #cc-out > .cc-layout { flex: 1 1 100%; margin-top: 0; gap: 10px; }
+        #cc-out > .cc-spot, #cc-out > .cc-empty { flex: 1 1 100%; }
+        #cc-out .cc-spot { padding: 10px 14px; }
+        #cc-out .cc-spot-team { font-size: 19px; }
+        #cc-out .cc-chips { margin-top: 5px; }
+        #cc-out .cc-grid { gap: 10px; margin-top: 8px; }
+        #cc-out .cc-tile { height: 154px; padding: 10px 13px; }
+        #cc-out .cc-tile-h { margin-bottom: 6px; font-size: 13px; }
+        #cc-out .cc-tile-big { font-size: 23px; }
+        #cc-out .cc-tile-sub { font-size: 12.5px; margin-top: 2px; }
+        #cc-out .cc-ms-bar { margin-top: 8px; padding: 6px 14px; }
+        #cc-out .cc-rail { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 4px; scrollbar-width: thin; }
+        #cc-out .cc-rail-h { flex: 0 0 auto; align-self: center; }
+        #cc-out .cc-rail-it { flex: 0 0 248px; width: 248px; }
+      }
+      @media (min-width: 1024px) and (max-height: 980px) {
+        #cc-out > .cc-queue, #cc-out > .cc-tb { max-height: 138px; }
+        #cc-out .cc-tile { height: 122px; }
+        #cc-out .cc-spot { padding: 9px 14px; }
+        #tab-command .block-title { margin: 4px 0 2px; }
+      }
+      </style>
     <div class="subnav-mount subnav-head" data-subnav-mount="league"></div>
       <section class="tab active" id="tab-values" role="tabpanel">
         
-        <div class="hero">
-          <div class="orb" aria-hidden="true"></div>
-          <span class="kicker" id="hero-kicker"><span class="dot"></span><span id="hero-kicker-txt">DYNASTY VALUE ALGORITHM</span></span>
-          <h2>Price every player.<br /><span class="lime">Win every</span> <span class="cyan">trade.</span></h2>
-          <div class="hero-connect" id="hero-connect">
-            <p class="hc-label">Enter your Sleeper username — <span class="lime">get your league analyzed</span></p>
-            <form class="hc-form" id="hero-connect-form">
-              <input id="hero-username" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Your Sleeper username" aria-label="Sleeper username" />
-              <button type="submit" class="cta-lime">Analyze my league →</button>
-            </form>
-            <button type="button" class="hc-alt" id="hero-espn">On ESPN instead? Connect with your league URL →</button>
-            <p class="hc-note">No password — Sleeper's public API only ever sees your username.</p>
-            <button type="button" class="hc-browse" id="hero-browse">Browse without a league →</button>
-          </div>
+        <div class="connect-bar" id="connect-bar">
+          <form class="cb-form" id="hero-connect-form">
+            <div class="cb-field">
+              <input id="hero-username" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter your Sleeper username" aria-label="Sleeper username" />
+              <span class="cb-pills" role="group" aria-label="League platform">
+                <button type="button" class="cb-pill on" id="cb-pill-sleeper" aria-pressed="true">Sleeper</button>
+                <button type="button" class="cb-pill" id="cb-pill-espn" aria-pressed="false">ESPN</button>
+              </span>
+            </div>
+            <button type="submit" class="cta-lime" id="cb-go">Analyze my league →</button>
+          </form>
           <div class="hero-restoring" id="hero-restoring" role="status" aria-live="polite">
             <span class="hr-spin" aria-hidden="true"></span>
             <span><span class="hr-name" id="hero-restoring-name">Loading your saved league…</span><span class="hr-sub" id="hero-restoring-sub">Signing you in and pulling your league.</span></span>
@@ -3445,7 +3570,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
              the Risers & Fallers section further down this same page. -->
         <details class="how-box">
           <summary>How this board works</summary>
-          <p class="tab-intro below" id="board-intro">Every price on this board is computed by our <strong>proprietary Dynasty Value Algorithm</strong>, built from deep analytics. It weighs production, role and usage, age, and availability into a single value for every player, priced for <strong>this league’s scoring</strong> — the format is set in the <strong>League Format</strong> tool. Where a player’s recent form runs ahead of his price — or behind it — he is flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>. Tap “Why?” on any player for his season line, his usage, and his value history.</p>
+          <p class="tab-intro below" id="board-intro">Every price on this board is computed by our <strong>proprietary algorithm</strong>, built from deep analytics. It weighs production, role and usage, age, and availability into a single value for every player, priced for <strong>this league’s scoring</strong> — the format is set in the <strong>League Format</strong> tool. Where a player’s recent form runs ahead of his price — or behind it — he is flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>. Tap “Why?” on any player for his season line, his usage, and his value history.</p>
         </details>
 <div id="trending-strip" class="trending-strip" hidden></div>
 <div id="movers-block">
@@ -5331,7 +5456,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       if (document.getElementById("scoring-chips")) document.getElementById("scoring-chips").innerHTML =
         DATA.league.scoring.map(s => `<span class="chip">${esc(s)}</span>`).join("");
       document.getElementById("page-footer").textContent =
-        "Fantasy Forensics · Values are computed by our proprietary " + (VALMODE === "redraft" ? "Redraft Value Engine" : "Dynasty Value Algorithm") + " (" + DATA.league.snapshot + " snapshot), priced for this league’s scoring settings. Rosters, standings, and traded picks from Sleeper. " +
+        "Fantasy Forensics · Values are computed by our proprietary algorithm (" + DATA.league.snapshot + " snapshot), priced for this league’s scoring settings. Rosters, standings, and traded picks from Sleeper. " +
         "Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot. Injury designations refresh daily after it; the values themselves re-price with each new snapshot.";
 
       /* ---------- tabs ---------- */
@@ -5358,6 +5483,23 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            (Guarded: the spotlight script loads after this one.) */
         if (key === "league" && typeof window.renderSpotlight === "function") window.renderSpotlight();
         if (key === "bye" && typeof window.renderByeView === "function") window.renderByeView();
+        /* Header title (Batch 2, Nov 10, 2026): the persistent header
+           names the CURRENT view. It used to sit on the guest landing
+           text ("Fantasy Player Values") or the league name no matter
+           where you were — Eric's stuck-header bug. League subviews
+           resolve through the subnav state (already updated above for
+           this switch); in-view subnav switches re-title through the
+           showSubNav wrapper in the nav script. */
+        const FF_VIEW_TITLES = { command: "Command Center", values: "Fantasy Player Values", trades: "Trade Calculator", targets: "Player Targets", upgrades: "Upgrade Finder", realtrades: "Real Trades", tradeboard: "Trade Board", roster: "Roster", lineup: "Lineup Analyzer", waivers: "Waiver Targets", bye: "Bye Week Planner", teamport: "Team Portfolio", moves: "Next Moves", radar: "Opportunity Radar", ineff: "Inefficiency Board", tools: "Tools", draft: "Draft Room", format: "League Format", how: "How It Works" };
+        const FF_LEAGUE_TITLES = { power: "Power Rankings", mscore: "Manager Score", rosters: "Rosters", outlook: "Season Outlook", odds: "Playoff Odds", ppath: "Playoff Path", psched: "Schedule Difficulty", results: "League Results", storylines: "Storylines" };
+        window.__ffLeagueTitles = FF_LEAGUE_TITLES;
+        let ffViewTitle = key === "risk" ? "Starters at Risk" : FF_VIEW_TITLES[key];
+        if (key === "league") {
+          if (arg === "#pp-explorer") ffViewTitle = "Playoff Path";
+          else if (arg === "#po-sched") ffViewTitle = "Schedule Difficulty";
+          else ffViewTitle = FF_LEAGUE_TITLES[(window.__subnavState && window.__subnavState.league) || "power"] || "Power Rankings";
+        }
+        if (ffViewTitle) { const hn = document.getElementById("league-name"); if (hn) hn.textContent = ffViewTitle; }
         const anchorEl = key === "risk" ? document.getElementById("risk-panel") : (arg ? document.querySelector(arg) : null);
         if (anchorEl) setTimeout(() => anchorEl.scrollIntoView({ block: "start" }), 30);
         /* Where the nav itself scrolls sideways (phone bottom bar,
@@ -8277,7 +8419,7 @@ ${rdP ? "" : `
       /* ================= Methodology ================= */
       document.getElementById("method-body").innerHTML = `
         <h2>The promise: values computed by our own algorithm</h2>
-        <p>This board exists to be checked daily, so its prices have to be stable, explainable, and earned. Every value here is computed by our <strong>proprietary Dynasty Value Algorithm (snapshot dated ${DATA.league.snapshot})</strong>, built from deep analytics, and priced for a 12-team superflex, 1 PPR dynasty format before your league's own scoring is applied. The algorithm weighs a player's production, his role and usage, his age, his draft pedigree while he is young, and his availability into a single price per player — Josh Allen, Jahmyr Gibbs, Brock Bowers, Bijan Robinson, and Jaxon Smith-Njigba sit at the top because the algorithm prices them there. <strong>The algorithm is the ground truth this page stands behind.</strong></p>
+        <p>This board exists to be checked daily, so its prices have to be stable, explainable, and earned. Every value here is computed by our <strong>proprietary algorithm (snapshot dated ${DATA.league.snapshot})</strong>, built from deep analytics, and priced for a 12-team superflex, 1 PPR dynasty format before your league's own scoring is applied. The algorithm weighs a player's production, his role and usage, his age, his draft pedigree while he is young, and his availability into a single price per player — Josh Allen, Jahmyr Gibbs, Brock Bowers, Bijan Robinson, and Jaxon Smith-Njigba sit at the top because the algorithm prices them there. <strong>The algorithm is the ground truth this page stands behind.</strong></p>
         <h2>How each value is built</h2>
         <ol>
           <li><strong>Production and role.</strong> What a player has done this season counts more as the games pile up. The model watches his role alongside his points — snap share and opportunities usually move one to two weeks before the scoring does — so a growing role is priced before it fully shows up in the box score, and a shrinking one is priced before the points dry up.</li>
@@ -8304,7 +8446,7 @@ ${rdP ? "" : `
         <h2>Honest limits</h2>
         <ul>
           <li><strong>It's a snapshot.</strong> Rosters, standings, algorithm prices, and ranks are as of ${DATA.league.snapshot} (NFL Week ${DATA.league.week}). Later news is not priced in.</li>
-          <li><strong>One algorithm, one number.</strong> Every value on this page comes from the same Dynasty Value Algorithm — our proprietary model, generated from deep analytics. Every price is computed here; none is an outside ranking republished as-is.</li>
+          <li><strong>One algorithm, one number.</strong> Every value on this page comes from the same proprietary algorithm — our own model, generated from deep analytics. Every price is computed here; none is an outside ranking republished as-is.</li>
           <li><strong>No betting-odds signal.</strong> Sportsbook props are sharp weekly information, but feeding them in needs a paid odds API — deliberately out of scope for a zero-cost build, and dynasty prices move on years, not on this week's prop line.</li>
           <li><strong>Form is a lean, not a verdict.</strong> Where a value leans on recent form, that's form not fully priced in yet — sized so that being wrong costs a little, never a roster.</li>
         </ul>`;
@@ -10693,8 +10835,8 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         h1: "Fantasy Player Values",
         sub: `2026 season · NFL Week ${DATA.league.week} · Values as of ${DATA.league.snapshot} · Injuries refresh daily · Browsing as a guest — no league connected`,
         title: "Fantasy Forensics — Player Values",
-        footer: "Fantasy Forensics · Values are computed by our proprietary Dynasty Value Algorithm (" + DATA.league.snapshot + " snapshot), adjusted for the scoring format set in the League Format tool. Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot. Injury designations refresh daily after it; the values themselves re-price with each new snapshot.",
-        boardIntro: `Every price on this board is computed by our <strong>proprietary Dynasty Value Algorithm</strong>, built from deep analytics. It weighs production, role and usage, age, and availability into a single value for every player, priced for <strong>the scoring format</strong> set in the <strong>League Format</strong> tool. Where a player’s recent form runs ahead of his price — or behind it — he is flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>. Tap “Why?” on any player for his season line, his usage, and his value history. No league needed — connect one only for the team tools.`,
+        footer: "Fantasy Forensics · Values are computed by our proprietary algorithm (" + DATA.league.snapshot + " snapshot), adjusted for the scoring format set in the League Format tool. Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot. Injury designations refresh daily after it; the values themselves re-price with each new snapshot.",
+        boardIntro: `Every price on this board is computed by our <strong>proprietary algorithm</strong>, built from deep analytics. It weighs production, role and usage, age, and availability into a single value for every player, priced for <strong>the scoring format</strong> set in the <strong>League Format</strong> tool. Where a player’s recent form runs ahead of his price — or behind it — he is flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>. Tap “Why?” on any player for his season line, his usage, and his value history. No league needed — connect one only for the team tools.`,
         calcIntro: `Add <strong>any players or draft picks</strong> to either side — no rosters, no league needed. Picks are the standard rookie slots (2027–2029, 1st through 4th round, early/mid/late), priced on the same ladder the league views use. The verdict is a <strong>pure value comparison</strong> on the same algorithm that prices the board, with the <strong>value adjustment</strong> applied — the side whose value sits concentrated in its best players earns an adjustment because the best player in a deal carries weight beyond raw totals, so one stud is not outweighed by three lesser pieces just because their prices add up. Connect a league and the calculator adds roster-fit notes and title-odds impact for both teams.`,
       };
 
@@ -10823,12 +10965,43 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
       if (heroForm) heroForm.addEventListener("submit", e => {
         e.preventDefault();
         const v = (document.getElementById("hero-username").value || "").trim();
+        if (window.__cbMode === "espn") {
+          /* ESPN pill mode (Batch 2, Nov 10, 2026): the same bar
+             takes a league URL — hand it to the dialog's ESPN tab
+             and its Load button, mirroring the Sleeper path. */
+          if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
+          if (typeof slpSetPlatform === "function") slpSetPlatform("espn");
+          const ei = document.getElementById("espn-input");
+          if (ei) ei.value = v;
+          if (v) { const go = document.getElementById("espn-go"); if (go) go.click(); }
+          return;
+        }
         const inp = document.getElementById("slp-username");
         if (inp) inp.value = v;
         if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
         if (typeof slpSetPlatform === "function") slpSetPlatform("sleeper");
         if (v) { const go = document.getElementById("slp-go"); if (go) go.click(); }
       });
+      /* Connect-bar platform pills (Batch 2): Sleeper is the default
+         mode; the ESPN pill swaps THIS bar to a league-URL entry —
+         deliberately no auto-detection of pasted text. */
+      window.__cbMode = "sleeper";
+      const cbPillSlp = document.getElementById("cb-pill-sleeper");
+      const cbPillEspn = document.getElementById("cb-pill-espn");
+      function cbSetMode(m) {
+        window.__cbMode = m;
+        const inp = document.getElementById("hero-username");
+        const go = document.getElementById("cb-go");
+        if (cbPillSlp) { cbPillSlp.classList.toggle("on", m === "sleeper"); cbPillSlp.setAttribute("aria-pressed", String(m === "sleeper")); }
+        if (cbPillEspn) { cbPillEspn.classList.toggle("on", m === "espn"); cbPillEspn.setAttribute("aria-pressed", String(m === "espn")); }
+        if (inp) {
+          inp.placeholder = m === "espn" ? "Enter your ESPN URL" : "Enter your Sleeper username";
+          inp.setAttribute("aria-label", m === "espn" ? "ESPN league URL" : "Sleeper username");
+        }
+        if (go) go.textContent = m === "espn" ? "Load my league →" : "Analyze my league →";
+      }
+      if (cbPillSlp) cbPillSlp.addEventListener("click", () => cbSetMode("sleeper"));
+      if (cbPillEspn) cbPillEspn.addEventListener("click", () => cbSetMode("espn"));
       const heroEspn = document.getElementById("hero-espn");
       if (heroEspn) heroEspn.addEventListener("click", () => {
         if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
@@ -10872,7 +11045,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         if (br) br.setAttribute("aria-pressed", String(rd));
         document.body.classList.toggle("redraft", rd);
         const kt = document.getElementById("hero-kicker-txt");
-        if (kt) kt.textContent = rd ? "REDRAFT VALUES · REST OF SEASON" : "DYNASTY VALUE ALGORITHM";
+        if (kt) kt.textContent = rd ? "REDRAFT VALUES · REST OF SEASON" : "DYNASTY VALUES";
         const fn = document.getElementById("format-note");
         if (fn) fn.textContent = rd ? "Redraft prices — rest of season" : "Dynasty prices — long-term value, picks count";
         const note = document.getElementById("board-mode-note");
@@ -12056,12 +12229,13 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         document.getElementById("teams-intro").innerHTML = TEAMS_INTRO_DEMO + (isEspn ? ESPN_TEAMS_NOTE : "");
         document.getElementById("waiver-intro").innerHTML = WAIVER_INTRO_DEMO + waiverSystemSentence() + (isEspn ? ESPN_WAIVER_NOTE : "");
         document.getElementById("calc-intro").innerHTML = CALC_INTRO_DEMO;
-        document.getElementById("league-name").textContent = C.league.name;
+        /* #league-name is the view title now (Batch 2) — the league's
+           identity rides in the sidebar switcher and league-sub. */
         document.getElementById("league-sub").textContent = slpLeagueSub(C, (C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "Redraft" : "Dynasty");
         document.title = "Fantasy Forensics — " + C.league.name;
         document.getElementById("page-footer").textContent = isEspn
-          ? `Fantasy Forensics · Values are computed by our proprietary ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "Redraft Value Engine" : "Dynasty Value Algorithm"} (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, scoring and matchups are live from ESPN (league ${C.leagueId}), pulled ${C.today}. ESPN doesn't publish full transaction history or traded future picks, so the waiver wire runs on rosters + projections and pick capital assumes each team holds its own picks. Player values: ${DATA.league.snapshot} · Rosters imported: ${C.today}.`
-          : `Fantasy Forensics · Values are computed by our proprietary ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "Redraft Value Engine" : "Dynasty Value Algorithm"} (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "" : "picks and "}matchups are live from Sleeper for @${C.username}, pulled ${C.today}. Player values: ${DATA.league.snapshot} · Rosters imported: ${C.today}.`;
+          ? `Fantasy Forensics · Values are computed by our proprietary algorithm (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, scoring and matchups are live from ESPN (league ${C.leagueId}), pulled ${C.today}. ESPN doesn't publish full transaction history or traded future picks, so the waiver wire runs on rosters + projections and pick capital assumes each team holds its own picks. Player values: ${DATA.league.snapshot} · Rosters imported: ${C.today}.`
+          : `Fantasy Forensics · Values are computed by our proprietary algorithm (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "" : "picks and "}matchups are live from Sleeper for @${C.username}, pulled ${C.today}. Player values: ${DATA.league.snapshot} · Rosters imported: ${C.today}.`;
         document.getElementById("mode-badge").textContent = isEspn ? "Your ESPN league" : "Your league";
         renderLeagueSwitcher();
         const disc = document.getElementById("slp-disconnect");
@@ -15357,7 +15531,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
          type: 300–500 words of prose (tables excluded); every number must
          come from the fresh snapshot — never carried over, never invented;
          no competitor names; describe the model only as our proprietary
-         Dynasty Value Algorithm built on deep analytics and consensus —
+         algorithm, built on deep analytics and consensus —
          no recipes, no ratios, no internal weights. EMITTED-COPY BAN
          (articles AND per-player why strings alike): stats only — never
          the words "clock" or "tilt", never factors, weights, caps, blend
@@ -21727,7 +21901,7 @@ window.__lifeline = (function () {
     (function () {
       var mainBtns = document.querySelectorAll("#site-main [data-pnav]");
       var subBar = document.getElementById("site-sub");
-      var subBtns = document.querySelectorAll("#site-sub [data-pnav-sub]");
+      var subBtns = document.querySelectorAll("[data-pnav-sub]");
       var MAIN_FOR = { values: "players", radar: "players", ineff: "players", roster: "myteam", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", upgrades: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "command" };
       var GROUP_FOR = { players: "players", myteam: "myteam", trades: "trades", league: "league" };
       function setMainSel(key) {
@@ -21736,11 +21910,46 @@ window.__lifeline = (function () {
       function setSubSel(btn) {
         subBtns.forEach(function (b) { b.setAttribute("aria-selected", b === btn ? "true" : "false"); });
       }
-      function showGroup(group) {
-        if (!group) { subBar.hidden = true; return; }
-        subBar.hidden = false;
-        subBtns.forEach(function (b) { b.hidden = b.dataset.group !== group; });
+      /* Batch 2 (Nov 10, 2026): sub-tools live in per-section
+         dropdown boxes inside the rail (.sb-subgroup, directly under
+         the parent item). On phones the same buttons relocate into
+         the in-flow pill strip (#site-sub) — one set of buttons, one
+         set of handlers, two homes chosen by width. */
+      var subGroups = {};
+      document.querySelectorAll(".sb-subgroup").forEach(function (g) { subGroups[g.dataset.subgroup] = g; });
+      var mqPhone = window.matchMedia("(max-width: 640px)");
+      var curGroup = "players";
+      function applyGroupVisibility() {
+        if (mqPhone.matches) {
+          Object.keys(subGroups).forEach(function (g) { subGroups[g].hidden = true; });
+          subBar.hidden = !curGroup;
+          subBtns.forEach(function (b) { b.hidden = b.dataset.group !== curGroup; });
+        } else {
+          subBar.hidden = true;
+          Object.keys(subGroups).forEach(function (g) { subGroups[g].hidden = g !== curGroup; });
+          subBtns.forEach(function (b) { b.hidden = false; });
+        }
       }
+      function placeSubs() {
+        if (mqPhone.matches) {
+          ["myteam", "trades", "players", "league"].forEach(function (g) {
+            var box = subGroups[g]; if (!box) return;
+            while (box.firstChild) subBar.appendChild(box.firstChild);
+          });
+        } else {
+          subBtns.forEach(function (b) {
+            var box = subGroups[b.dataset.group];
+            if (box && b.parentElement !== box) box.appendChild(b);
+          });
+        }
+        applyGroupVisibility();
+      }
+      function showGroup(group) {
+        curGroup = group || null;
+        applyGroupVisibility();
+      }
+      if (typeof mqPhone.addEventListener === "function") mqPhone.addEventListener("change", placeSubs);
+      placeSubs();
       function syncNav(key, arg) {
         if (key === "draft" || key === "format" || key === "how") { setMainSel(""); showGroup(null); return; }
         if (key === "tools") { setMainSel("tools"); showGroup(null); return; }
@@ -21757,7 +21966,7 @@ window.__lifeline = (function () {
           else if (arg === "#po-sched") sub = "psched";
           else sub = (window.__subnavState && window.__subnavState.league) || "power";
         }
-        var btn = document.querySelector('#site-sub [data-pnav-sub="' + sub + '"][data-group="' + main + '"]');
+        var btn = document.querySelector('[data-pnav-sub="' + sub + '"][data-group="' + main + '"]');
         if (btn) setSubSel(btn);
       }
       function goSub(key) {
@@ -21827,7 +22036,7 @@ window.__lifeline = (function () {
           var def = DEFAULTS[key];
           goSub(def);
           setMainSel(key);
-          var defBtn = document.querySelector('#site-sub [data-pnav-sub="' + def + '"][data-group="' + key + '"]');
+          var defBtn = document.querySelector('[data-pnav-sub="' + def + '"][data-group="' + key + '"]');
           if (defBtn) setSubSel(defBtn);
         });
       });
@@ -21854,6 +22063,21 @@ window.__lifeline = (function () {
           return r;
         };
       }
+      /* League subview switches made inside the view (the subnav
+         strips) bypass activateNav — keep the header title honest
+         there too (Batch 2, Nov 10, 2026). */
+      var origShowSubNav = window.showSubNav;
+      if (typeof origShowSubNav === "function") {
+        window.showSubNav = function (tab, sub) {
+          var r = origShowSubNav(tab, sub);
+          if (tab === "league" && window.__ffLeagueTitles) {
+            var t = window.__ffLeagueTitles[sub];
+            var hn = document.getElementById("league-name");
+            if (t && hn) hn.textContent = t;
+          }
+          return r;
+        };
+      }
       /* Targets + Real Trades subtabs stay visible in BOTH modes
          (Eric, 2026-10-29, fresh-eyes audit): Player Targets runs its
          own redraft logic and Real Trades carries a format filter, so
@@ -21861,7 +22085,7 @@ window.__lifeline = (function () {
       /* Landing is unchanged (values home): highlight Players, Player Values. */
       setMainSel("players");
       showGroup("players");
-      var homeBtn = document.querySelector('#site-sub [data-pnav-sub="values"][data-group="players"]');
+      var homeBtn = document.querySelector('[data-pnav-sub="values"][data-group="players"]');
       if (homeBtn) setSubSel(homeBtn);
     })();
     </script>
@@ -21881,7 +22105,7 @@ window.__lifeline = (function () {
         if (pill.getAttribute("data-tools-draft") === "sheet" && window.drDraft && window.drDraft.goSheet) window.drDraft.goSheet();
         return;
       }
-      var btn = document.querySelector('#site-sub [data-pnav-sub="' + pill.getAttribute("data-tools-pill") + '"][data-group="' + pill.getAttribute("data-tools-group") + '"]');
+      var btn = document.querySelector('[data-pnav-sub="' + pill.getAttribute("data-tools-pill") + '"][data-group="' + pill.getAttribute("data-tools-group") + '"]');
       if (btn) btn.click();
     });
     </script>
@@ -21953,7 +22177,7 @@ window.__lifeline = (function () {
         if (!window.GUEST_MODE) return;
         var f = document.getElementById("page-footer");
         if (f && f.textContent.indexOf("Values are computed by our proprietary") >= 0) {
-          f.textContent = f.textContent.replace(/Dynasty Value Algorithm|Redraft Value Engine/, VALMODE === "redraft" ? "Redraft Value Engine" : "Dynasty Value Algorithm");
+          f.textContent = f.textContent.replace(/Dynasty Value Algorithm|Redraft Value Engine/g, "proprietary algorithm");
         }
       } catch (e) {}
     });
