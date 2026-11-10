@@ -3496,25 +3496,25 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         .sb-subgroup { display: none !important; }
       }
 
-      /* --- Command Center composition (Nov 10, 2026 redesign) ---
-         Eric rejected both fixed-height tiles with internally
-         scrolling bodies (content clipped, not fitted) and any
-         headline-only summary layer: every box keeps ALL of its
-         content, fully visible. The twelve pieces — Needs You
-         First, the Trade Board, the league header strip, the eight
-         tiles (the Week Matchup tile was cut by Eric) and the
-         Manager Score bar — are composed as one free-form layout
-         on a 12-column grid at desktop / iPad-landscape widths,
-         sized from the measured content: the queue takes the wide
-         share and is NEVER height-capped (every entry shows), the
-         radar's flags run two abreast in a half-width tile, the
-         Fantasy Tools links run three abreast in a full-width
-         strip, and the ticker chart is height-capped so the stat
-         tiles share one band. Tile heights are natural (no fixed
-         height, no internal scroll) — the composition is what
-         makes it fit, not compression. Shorter landscape windows
-         tighten one notch further. Below 1024px the tiles keep
-         their long-standing tall format. */
+      /* --- Command Center composition (Nov 10, 2026, Concept 3) ---
+         Eric picked Concept 3, "Lobby + Action Slip", from the
+         three-concepts review and directed the build himself: the
+         Action Slip rail starts at the VERY TOP of the content area,
+         aligned with the team header, and the stat strip (Playoff
+         Odds / Power Rank / Grades / Stock / Manager Score) spans
+         only the main column — it is cut off at the Manager Score
+         and never stretches under the slip. Main column: team header,
+         stat strip, magic/archetype line, Needs You First (the whole
+         panel, every entry, never capped), then Opportunity Radar
+         and Most Added side by side — each shows exactly four rows
+         with an internal scroll for the rest (Eric's one sanctioned
+         exception to the no-hidden-content rule) — then Trade Ideas
+         and the Fantasy Tools strip. The slip carries Your Next
+         Move (top move + the rest of the list), the Trade Board,
+         the Top Trade Idea and the Manager Score, sticky on wide
+         screens; on phones it becomes a compact section on top.
+         Every figure is the existing CC data, recomposed — no
+         values, grades or odds changed. */
       /* CC header removal (Eric, Nov 10, 2026): on the Command Center
          the persistent page header (view title + league-type toggle +
          Disconnect row) is hidden — the sidebar already names the
@@ -3523,88 +3523,144 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          every other view exactly as before; activateNav flips the
          body class. */
       body.ff-on-command header.league { display: none; }
-      @media (min-width: 1024px) {
-        #cc-out { display: flex; flex-wrap: wrap; gap: 10px 12px; }
-        #cc-out > .cc-queue { flex: 5 1 0; min-width: 0; margin-bottom: 0; padding: 10px 14px; }
-        #cc-out > .cc-tb { flex: 2 1 0; min-width: 0; margin-bottom: 0; padding: 10px 14px; }
-        #cc-out .cc-queue-h { font-size: 13.5px; }
-        #cc-out .cc-queue-it { padding: 5px 2px; }
-        #cc-out .cc-q-player { font-size: 14.5px; }
-        #cc-out .cc-q-issue { font-size: 13.5px; }
-        #cc-out .cc-queue-note { font-size: 13.5px; margin: 4px 0 1px; }
-        #cc-out > .cc-layout { flex: 1 1 100%; margin-top: 0; gap: 10px; }
-        #cc-out > .cc-spot, #cc-out > .cc-empty { flex: 1 1 100%; }
-        #cc-out .cc-spot { padding: 10px 14px; }
-        /* league header as one slim strip: team, league, chips and
-           actions share a single row instead of three stacked lines */
-        #cc-out .cc-spot-top { align-items: center; gap: 8px 14px; }
-        #cc-out .cc-spot-top > div:first-child { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px; min-width: 0; }
-        #cc-out .cc-spot-team { font-size: 18px; }
-        #cc-out .cc-chips { display: inline-flex; margin-top: 0; }
-        #cc-out .cc-chips .chip { font-size: 11px; padding: 2px 7px; }
-        #cc-out .cc-spot-record { font-size: 13.5px; padding: 1px 8px; }
-        #cc-out .cc-spot-league { font-size: 12.5px; }
-        #cc-out .cc-spot-actions .cc-enter, #cc-out .cc-spot-actions .cc-hide { padding: 5px 12px; font-size: 12.5px; margin-top: 0; }
-        /* the composition grid */
-        #cc-out .cc-grid {
-          grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px; margin-top: 10px;
-          grid-template-areas:
-            "odds odds odds power power power ticker ticker ticker moves moves moves"
-            "radar radar radar radar radar radar trades trades trades waivers waivers waivers"
-            "tools tools tools tools tools tools tools tools tools tools tools tools";
-        }
-        #cc-out .cc-tile { height: auto; padding: 10px 13px; }
-        #cc-out .cc-tile-body { flex: none; overflow: visible; }
-        #cc-out .cc-tile-h { margin-bottom: 6px; font-size: 13px; }
-        #cc-out .cc-tile-big { font-size: 23px; }
-        #cc-out .cc-tile-sub { font-size: 12.5px; margin-top: 2px; line-height: 1.3; }
-        /* tile order is ff4CCGridHtml's push order: 1 Odds,
-           2 Power, 3 Ticker, 4 Moves, 5 Radar, 6 Trade Ideas,
-           7 Most Added, 8 Fantasy Tools */
-        #cc-out .cc-grid > .cc-tile:nth-child(1) { grid-area: odds; }
-        #cc-out .cc-grid > .cc-tile:nth-child(2) { grid-area: power; }
-        #cc-out .cc-grid > .cc-tile:nth-child(3) { grid-area: ticker; }
-        #cc-out .cc-grid > .cc-tile:nth-child(4) { grid-area: moves; }
-        #cc-out .cc-grid > .cc-tile:nth-child(5) { grid-area: radar; }
-        #cc-out .cc-grid > .cc-tile:nth-child(6) { grid-area: trades; }
-        #cc-out .cc-grid > .cc-tile:nth-child(7) { grid-area: waivers; }
-        #cc-out .cc-grid > .cc-tile:nth-child(8) { grid-area: tools; }
-        /* per-tile layout compaction — spacing and type only,
-           every row and figure stays on the tile */
-        #cc-out .cc-tile-bar { margin-top: 6px; }
-        #cc-out .cc-power-grades { margin-top: 7px; font-size: 15px; }
-        #cc-out .cc-power-meta { margin-top: 7px; font-size: 13px; }
-        #cc-out .cc-grid > .cc-tile:nth-child(3) svg { max-height: 74px; }
-        #cc-out .cc-grid-move { padding: 5px 2px; }
-        #cc-out .cc-grid > .cc-tile:nth-child(5) .cc-tile-rows { grid-template-columns: 1fr 1fr; gap: 5px 16px; }
-        #cc-out .cc-grid > .cc-tile:nth-child(5) .cc-tile-body { padding-bottom: 3px; }
-        /* Most Added rows stay ONE column (Nov 10, 2026 fix): the old
-           1fr 1fr split squeezed each row to ~105px inside this
-           3-column-wide tile — the name ellipsized to 0 and the adds
-           count overflowed on top of the avatar. */
-        #cc-out .cc-grid > .cc-tile:nth-child(7) .cc-tile-rows { gap: 5px; }
-        #cc-out .cc-tile img.cc-radar-face, #cc-out .cc-tile img.cc-wv-face { width: 30px; height: 30px; }
-        #cc-out .cc-radar-row .t-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        #cc-out .cc-grid > .cc-tile:nth-child(8) .cc-tile-rows { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
-        #cc-out .cc-tool-link { font-size: 12.5px; padding: 6px 10px; text-align: center; }
-        #cc-out .cc-tile-foot { padding-top: 6px; }
-        #cc-out .cc-ms-bar { margin-top: 8px; padding: 6px 14px; }
-        #cc-out .cc-rail { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 4px; scrollbar-width: thin; }
-        #cc-out .cc-rail-h { flex: 0 0 auto; align-self: center; }
-        #cc-out .cc-rail-it { flex: 0 0 248px; width: 248px; }
+      /* Concept 3 layout (Eric, Nov 10, 2026) */
+      #cc-out .cc-spot { border: 0; border-radius: 0; padding: 0; background: none; }
+      #cc-out #cc-tabs .cc-tabs { margin-bottom: 10px; }
+      /* two regions from the very top: main column + slip rail */
+      #cc-out .cc3-wrap { display: flex; flex-direction: column; gap: 14px; }
+      #cc-out .cc3-main { min-width: 0; }
+      #cc-out .cc3-slip { order: -1; }
+      @media (min-width: 641px) {
+        #cc-out .cc3-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 262px; gap: 20px; align-items: start; }
+        #cc-out .cc3-slip { order: 0; position: sticky; top: 10px; }
       }
+      @media (min-width: 1200px) {
+        #cc-out .cc3-wrap { grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; }
+      }
+      /* team header — density from the concept: name + record + chip,
+         league line, format chips, actions on the right */
+      #cc-out .cc-spot-team { font-size: 22px; }
+      #cc-out .cc-spot-league { font-size: 13.5px; }
+      /* stat strip — main column only, cut off at the Manager Score */
+      #cc-out .cc3-strip { display: flex; flex-wrap: wrap; border-top: 1px solid rgba(255,255,255,.14); border-bottom: 1px solid rgba(255,255,255,.14); margin-top: 12px; }
+      #cc-out .cc3-ss { padding: 8px 12px 8px 0; margin-right: 12px; border-right: 1px solid rgba(255,255,255,.07); min-width: 0; }
+      #cc-out .cc3-ss:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
+      #cc-out .cc3-ss-stock { flex: 0 1 196px; }
+      #cc-out .cc3-ss-stock .cc3-ss-sub { white-space: nowrap; }
+      #cc-out .cc-chips { margin-top: 5px; }
+      .cc3-ss-k { font-size: 9.5px; letter-spacing: .13em; font-weight: 800; color: var(--ink-3); text-transform: uppercase; }
+      .cc3-ss-v { font-family: "Space Grotesk", sans-serif; font-size: 19px; font-weight: 700; line-height: 1.2; }
+      .cc3-ss-v .t-up { color: #C6FF00; }
+      .cc3-ss-v .t-dn { color: #FF2E88; }
+      .cc3-ss-v.cc3-grades { font-size: 13.5px; padding-top: 4px; white-space: nowrap; }
+      .cc3-ss-sub { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; line-height: 1.35; }
+      #cc-out .cc3-ss .cc-tile-bar { height: 5px; margin-top: 6px; max-width: 130px; }
+      #cc-out .cc3-ss-chart svg { height: 24px; width: auto; max-width: 96px; display: block; }
+      .cc3-ss-stockline { display: flex; align-items: center; gap: 9px; margin-top: 2px; }
+      /* the Manager Score bar, restyled as the strip's last cell */
+      #cc-out .cc3-ss-ms .cc-ms-bar { border: 0; border-top: 0; background: none; margin: 0; padding: 0; width: auto; display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 8px; }
+      #cc-out .cc3-ss-ms .cc-ms-bar-label { flex: 0 0 100%; font-family: Inter, sans-serif; font-size: 9.5px; letter-spacing: .13em; font-weight: 800; color: var(--ink-3); }
+      #cc-out .cc3-ss-ms .cc-ms-bar-score { color: #00E5FF; font-size: 19px; }
+      #cc-out .cc3-ss-ms .cc-ms-bar-sub { display: none; }
+      #cc-out .cc3-ss-ms .cc-ms-bar-arrow { margin-left: 0; font-size: 15px; }
+      .cc3-magic { font-size: 12px; color: var(--ink-3); margin: 7px 0 0; line-height: 1.45; }
+      /* section headers */
+      .cc3-h { font-family: "Space Grotesk", sans-serif; font-size: 12px; letter-spacing: .13em; font-weight: 700; text-transform: uppercase; margin: 0 0 4px; }
+      .cc3-h.lime { color: #C6FF00; }
+      .cc3-h.pink { color: #FF2E88; }
+      .cc3-h.cyan { color: #00E5FF; }
+      .cc3-sec-gap { margin-top: 20px; }
+      .cc3-more { display: inline-block; margin-top: 6px; background: none; border: 0; padding: 0; font: inherit; font-size: 13px; font-weight: 700; color: #00E5FF; cursor: pointer; }
+      .cc3-more:hover { color: #C6FF00; }
+      /* Needs You First — the concept's open queue: no box, hairline
+         rows, urgency accent on the left; never height-capped */
+      #cc-out .cc-queue { border: 0; border-radius: 0; background: none; padding: 0; margin: 18px 0 0; }
+      #cc-out .cc-queue-h { color: #FF2E88; font-size: 12px; letter-spacing: .13em; margin-bottom: 2px; }
+      #cc-out .cc-queue.clean .cc-queue-h { color: #C6FF00; }
+      #cc-out .cc-queue-it { border-top: 1px solid rgba(255,255,255,.09); border-left: 3px solid #FF2E88; padding: 6px 2px 6px 10px; }
+      #cc-out .cc-q-player { font-size: 15px; }
+      #cc-out .cc-q-issue { font-size: 13.5px; }
+      #cc-out .cc-queue-it:has(.cc-q-issue.bye) { border-left-color: #00E5FF; }
+      #cc-out .cc-queue-it:has(.cc-q-issue.dbt), #cc-out .cc-queue-it:has(.cc-q-issue.fyi) { border-left-color: rgba(255,255,255,.25); }
+      #cc-out .cc-queue-it.static { border-top: 1px solid rgba(255,255,255,.09); }
+      /* the two lobby lists: exactly four rows, scroll for the rest */
+      #cc-out .cc3-lists { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 16px; }
+      @media (min-width: 641px) {
+        #cc-out .cc3-lists { grid-template-columns: 1fr 1fr; gap: 0 26px; }
+        #cc-out .cc3-ideascol { grid-column: 1 / -1; margin-top: 18px; }
+      }
+      @media (min-width: 1200px) {
+        #cc-out .cc3-lists { grid-template-columns: 1fr 1fr 1fr; }
+        #cc-out .cc3-ideascol { grid-column: auto; margin-top: 0; }
+      }
+      .cc3-scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.25) transparent; }
+      .cc3-scroll::-webkit-scrollbar { width: 5px; }
+      .cc3-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.22); border-radius: 99px; }
+      .cc3-scroll .cc-tile-rows { gap: 0; }
+      #cc-out .cc3-scroll img.cc-radar-face, #cc-out .cc3-scroll img.cc-wv-face { width: 30px; height: 30px; }
+      .cc3-radar-scroll.scrolls { max-height: 156px; }
+      .cc3-radar-scroll .cc-radar-row { height: 39px; box-sizing: border-box; border-bottom: 1px solid rgba(255,255,255,.06); }
+      .cc3-radar-scroll .t-name { font-weight: 600; font-size: 13.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .cc3-radar-scroll .t-meta { color: var(--ink-3); font-size: 12.5px; font-weight: 500; }
+      .cc3-added-scroll.scrolls { max-height: 192px; }
+      .cc3-added-scroll .cc-wv-row { height: 48px; box-sizing: border-box; border-bottom: 1px solid rgba(255,255,255,.06); }
+      /* Trade Ideas stream */
+      #cc-out .cc3-ideas { cursor: pointer; border-top: 1px solid rgba(255,255,255,.09); }
+      #cc-out .cc3-ideas .cc-tile-row { padding: 4px 2px 0; }
+      /* Fantasy Tools strip */
+      #cc-out .cc3-tools .cc-tile-rows { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+      #cc-out .cc3-tools .cc-tool-link { font-size: 12.5px; padding: 6px 10px; text-align: center; }
+      @media (max-width: 640px) {
+        #cc-out .cc3-tools .cc-tile-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      /* leagues rail — one horizontal strip under the composition */
+      #cc-out .cc-rail { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 10px; padding-bottom: 4px; scrollbar-width: thin; margin-top: 18px; }
+      #cc-out .cc-rail-h { flex: 0 0 auto; align-self: center; }
+      #cc-out .cc-rail-it { flex: 0 0 248px; width: 248px; }
+      #cc-out .cc-rail.cc-manage-open { display: block; overflow-x: visible; }
+      /* ---- the Action Slip ---- */
+      #cc-out .cc3-slip { border: 1px solid rgba(255,255,255,.12); border-left: 4px solid #C6FF00; border-radius: 10px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); box-sizing: border-box; }
+      .cc3-slip-tag { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: .16em; font-weight: 800; color: #C6FF00; }
+      .cc3-mini-h { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: .14em; font-weight: 800; color: var(--ink-3); text-transform: uppercase; margin-bottom: 5px; }
+      #cc-out .cc3-slip h3.cc3-next-title { font-family: "Space Grotesk", sans-serif; font-size: 19px; line-height: 1.3; margin: 6px 0 4px; }
+      #cc-out .cc3-slip p { color: var(--ink-2); font-size: 13px; line-height: 1.5; margin: 0; }
+      #cc-out .cc3-slip hr { border: 0; border-top: 1px solid rgba(255,255,255,.1); margin: 13px 0; }
+      .cc3-next-sub .cc-q-issue { font-size: 13px; }
+      .cc3-cta { display: block; width: 100%; text-align: center; background: #C6FF00; color: #0A0A1A; font: inherit; font-weight: 800; font-size: 13.5px; border: 0; border-radius: 8px; padding: 10px; margin-top: 10px; cursor: pointer; box-sizing: border-box; }
+      .cc3-cta:hover { background: #d8ff4d; }
+      .cc3-ghost { display: block; width: 100%; text-align: center; border: 1px solid rgba(255,255,255,.16); background: none; color: var(--ink); font: inherit; font-weight: 700; font-size: 13px; border-radius: 8px; padding: 9px; margin-top: 8px; cursor: pointer; box-sizing: border-box; }
+      .cc3-ghost:hover { border-color: rgba(0,229,255,.6); color: #00E5FF; }
+      .cc3-slip-moves { margin-top: 8px; }
+      .cc3-slip-move { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: baseline; width: 100%; text-align: left; border: 0; border-top: 1px solid rgba(255,255,255,.08); background: none; color: var(--ink); font: inherit; padding: 6px 2px; cursor: pointer; box-sizing: border-box; }
+      .cc3-slip-move .cc-q-player { font-size: 13.5px; }
+      .cc3-slip-move .cc-q-issue { font-size: 12.5px; }
+      .cc3-slip-move:hover .cc-q-player { text-decoration: underline; }
+      /* the Trade Board section inside the slip keeps its own render;
+         the slip supplies the heading, so the section's own hides */
+      #cc-out .cc3-slip .cc-tb .cc-queue-h { display: none; }
+      #cc-out .cc3-slip .cc-tb .tb-open-board { display: block; width: 100%; margin-top: 8px; border-radius: 8px; padding: 9px; }
+      #cc-out .cc3-slip .cc-tb .tb-card { margin-top: 8px; }
+      .cc3-idea-name { color: var(--ink); }
+      .cc3-idea-gain { color: #00E5FF; }
+      .cc3-ms-line { display: flex; align-items: baseline; gap: 10px; }
+      .cc3-ms-num { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 22px; color: #00E5FF; }
+      .cc3-ms-sub { color: var(--ink-3); font-size: 12px; }
+      .cc3-ms-link { background: none; border: 0; padding: 0; margin-top: 2px; font: inherit; font-size: 13px; font-weight: 700; color: #00E5FF; cursor: pointer; }
+      .cc3-ms-link:hover { color: #C6FF00; }
+      @media (max-width: 640px) {
+        #cc-out .cc3-slip { padding: 12px 14px; }
+        #cc-out .cc3-slip h3.cc3-next-title { font-size: 17px; }
+      }
+      /* shorter landscape windows tighten one notch, same as before */
       @media (min-width: 1024px) and (max-height: 980px) {
-        #cc-out .cc-spot { padding: 8px 14px; }
-        #cc-out .cc-grid { gap: 8px; margin-top: 6px; }
-        #cc-out .cc-tile { padding: 8px 12px; }
-        #cc-out .cc-grid > .cc-tile:nth-child(3) svg { max-height: 38px; }
-        #cc-out .cc-tile img.cc-radar-face, #cc-out .cc-tile img.cc-wv-face { width: 28px; height: 28px; }
-        #cc-out .cc-grid > .cc-tile:nth-child(5) .cc-tile-rows { gap: 4px 14px; }
-        #cc-out .cc-grid > .cc-tile:nth-child(7) .cc-tile-rows { gap: 4px; }
-        #cc-out .cc-queue-it { padding: 3px 2px; }
-        #cc-out .cc-tool-link { padding: 3px 8px; }
-        #cc-out .cc-ms-bar { padding: 3px 14px; }
-        #cc-out .cc-power-grades, #cc-out .cc-power-meta { margin-top: 5px; }
+        #cc-out .cc-queue { margin-top: 10px; }
+        #cc-out .cc-queue-it { padding: 3px 2px 3px 10px; }
+        #cc-out .cc3-lists { margin-top: 10px; }
+        #cc-out .cc3-ss { padding-top: 4px; padding-bottom: 4px; }
+        .cc3-magic { margin-top: 4px; }
+        #cc-out .cc3-tools .cc-tool-link { padding: 4px 8px; }
+        #cc-out .cc-spot-team { font-size: 21px; }
+        .cc3-sec-gap { margin-top: 12px; }
       }
       </style>
     <div class="subnav-mount subnav-head" data-subnav-mount="league"></div>
@@ -19836,7 +19892,7 @@ window.drDraft = {
         if (ck && ck !== "sleeper:" + String(lg.league_id)) return;
         go();
       }
-      function ff4CCGridHtml(idx, d) {
+      function ff4CCPieces(idx, d) {
         const snap = (ff4.ccSnaps || {})[idx] || null;
         const tiles = [];
         const frac = d.odds == null ? 0 : Math.max(0, Math.min(1, d.odds));
@@ -19949,7 +20005,39 @@ window.drDraft = {
           <button type="button" class="cc-tool-link" data-cc-grid-tool="psched">Schedule Difficulty</button>
           <button type="button" class="cc-tool-link" data-cc-grid-tool="risk">Starters at Risk</button>`;
         tiles.push(`<div class="cc-tile" style="--tile-accent:#FF2E88"><div class="cc-tile-h">Fantasy Tools</div><div class="cc-tile-body"><div class="cc-tile-rows">${toolsLinks}</div></div></div>`);
-        return tiles.join("");
+        /* Concept 3 pieces (Nov 10, 2026): the same figures the
+           tiles carried, handed to ff4CCRenderSpot as named parts —
+           the stat-strip values, the magic/archetype line, and the
+           stream bodies (Next Moves / Radar / Trade Ideas / Most
+           Added / Tools) — so the Lobby + Action Slip layout
+           composes them without recomputing anything. The tiles
+           array above is still built for the record but no longer
+           rendered. */
+        const gradesCell = d.powerGrades ? ["QB", "RB", "WR", "TE"].map(pos => `${pos} <b>${esc(d.powerGrades[pos])}</b>`).join(" · ") : "";
+        let stockMain = "", stockNote = "";
+        if (d.ticker && d.ticker.sums && d.ticker.sums.length >= 2) {
+          const wp0b = (d.tickerWk && typeof d.tickerWk.pct === "number") ? d.tickerWk.pct : null;
+          if (wp0b != null) { stockMain = `<span class="${wp0b > 0 ? "t-up" : wp0b < 0 ? "t-dn" : ""}">${wp0b > 0 ? "▲ +" : wp0b < 0 ? "▼ −" : ""}${Math.abs(wp0b).toFixed(1)}%</span>`; stockNote = "this week"; }
+          else { const rp = d.ticker.rangePct; stockMain = `<span class="${rp > 0 ? "t-up" : rp < 0 ? "t-dn" : ""}">${rp > 0 ? "▲ +" : rp < 0 ? "▼ −" : ""}${Math.abs(rp).toFixed(1)}%</span>`; stockNote = `since ${esc(d.ticker.since)}`; }
+        } else if (d.tickerWk && typeof d.tickerWk.pct === "number") {
+          const wp = d.tickerWk.pct; stockMain = `<span class="${wp > 0 ? "t-up" : wp < 0 ? "t-dn" : ""}">${wp > 0 ? "▲ +" : wp < 0 ? "▼ −" : ""}${Math.abs(wp).toFixed(1)}%</span>`; stockNote = "this week";
+        } else if (!Array.isArray(d.portfolio)) stockNote = "Portfolio values are still loading — reopen this league to refresh.";
+        else if (!d.portfolio.length) stockNote = "No players on this roster.";
+        else stockNote = "Value history needs more snapshots.";
+        const magicParts = [];
+        if (d.magic && !d.magic.locked && !d.magic.capped) magicParts.push(`Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"} (${oddsPct(d.magic.pct)} playoff odds)`);
+        else if (d.magic && d.magic.capped) magicParts.push("No win total reaches 90% playoff odds");
+        if (d.elim) magicParts.push("Eliminated from the playoffs");
+        else if (d.clinched) magicParts.push("Playoff spot locked up");
+        if (d.powerCoreAge != null) magicParts.push(`Core age ${d.powerCoreAge}`);
+        if (d.powerArch) magicParts.push(esc((typeof archTag === "function") ? archTag(d.powerArch) : d.powerArch));
+        return {
+          oddsLabel, oddsCol: col, oddsFrac: frac, oddsSub,
+          powerBig, gradesCell, tickerChart, stockMain, stockNote,
+          teamValueText: `Team value ${fmt(d.teamValue != null ? d.teamValue : (d.portfolioTotal || 0))}`,
+          magicLine: magicParts.join(" · "),
+          movesBody, watchBody, tradeBody, wvBody, toolsLinks
+        };
       }
       /* Your Next Moves view (Eric, 2026-10-27): the focused
          league's own moves, full-size — the tile is the teaser,
@@ -19991,6 +20079,16 @@ window.drDraft = {
       function ff4CCRenderSpot() {
         const spot = document.getElementById("cc-spot");
         if (!spot) return;
+        /* Concept 3 (Nov 10, 2026): the spot render now composes
+           three mounts — the header + stat strip in #cc-spot, the
+           streams in #cc-spot2 (below Needs You First in the main
+           column), and the Action Slip in #cc-slip. Every path
+           through this function rebuilds or clears all three, so a
+           league switch never leaves a stale stream or slip. */
+        const spot2El = document.getElementById("cc-spot2");
+        const slipEl = document.getElementById("cc-slip");
+        if (spot2El) spot2El.innerHTML = "";
+        if (slipEl) slipEl.innerHTML = "";
         const idx = ff4.ccFocus;
         if (idx == null) {
           const done = (ff4.ccDone || 0) >= (ff4.ccLeagues || []).length;
@@ -20007,27 +20105,73 @@ window.drDraft = {
         /* Spot footnotes retired (Eric, 2026-10-27): the magic
            number now lives in the Playoff Odds tile; the swing
            game and value-trend lines are gone entirely. */
+        /* Concept 3 (Nov 10, 2026): header + stat strip in the main
+           column (the strip ends at the Manager Score cell — the
+           ffMSBarHtml bar restyled as that cell), the streams below
+           Needs You First, and the Action Slip in the rail. The
+           slip's Trade Board section mounts #cc-tb, refilled from
+           the Trade Board's own state right after the build. */
         let ccMSBar = "";
         try { if (typeof window.ffMSBarHtml === "function") ccMSBar = window.ffMSBarHtml(idx, d) || ""; } catch (e) { /* Manager Score bar is best-effort */ }
+        const P = ff4CCPieces(idx, d);
         spot.innerHTML = `<div class="cc-spot-top"><div>
             <div class="cc-spot-team">${esc(d.teamName)}${d.record ? ` <span class="cc-spot-record">${esc(d.record)}</span>` : ""} <span class="you-tag">Your team</span></div>
             <div class="cc-spot-league">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div>
             <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
           </div><div class="cc-spot-actions"><button type="button" class="cc-enter" data-cc-open="1">Open league →</button><button type="button" class="cc-hide" data-cc-hide="1">Hide league</button></div></div>
-          <div class="cc-grid">${ff4CCGridHtml(idx, d)}</div>${ccMSBar}`;
+          <div class="cc3-strip" id="cc3-strip">
+            <div class="cc3-ss"><div class="cc3-ss-k">Playoff Odds</div><div class="cc3-ss-v" style="color:${P.oddsCol}">${esc(P.oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(P.oddsFrac * 100)}%;background:${P.oddsCol}"></div></div><div class="cc3-ss-sub">${esc(P.oddsSub)}</div></div>
+            <div class="cc3-ss"><div class="cc3-ss-k">Power Rank</div><div class="cc3-ss-v">${esc(P.powerBig)}</div></div>
+            ${P.gradesCell ? `<div class="cc3-ss"><div class="cc3-ss-k">Grades</div><div class="cc3-ss-v cc3-grades">${P.gradesCell}</div></div>` : ""}
+            <div class="cc3-ss cc3-ss-stock"><div class="cc3-ss-k">Stock</div><div class="cc3-ss-stockline">${P.tickerChart ? `<span class="cc3-ss-chart">${P.tickerChart}</span>` : ""}<span class="cc3-ss-v">${P.stockMain}</span></div><div class="cc3-ss-sub">${esc(P.teamValueText)}${P.stockNote ? ` · ${esc(P.stockNote)}` : ""}</div></div>
+            <div class="cc3-ss cc3-ss-ms">${ccMSBar}</div>
+          </div>
+          ${P.magicLine ? `<p class="cc3-magic">${P.magicLine}</p>` : ""}`;
+        if (spot2El) {
+          const nRadar = Array.isArray(d.radarWatch) ? d.radarWatch.length : 0;
+          const nAdded = Array.isArray(d.waiverTops) ? d.waiverTops.length : 0;
+          spot2El.innerHTML = `<div class="cc3-lists">
+            <div class="cc3-listcol"><p class="cc3-h cyan">Opportunity Radar</p><div class="cc3-scroll cc3-radar-scroll${nRadar > 4 ? " scrolls" : ""}" data-cc3-scroll="radar">${P.watchBody}</div><button type="button" class="cc3-more" data-cc-grid-tool="radar">Opportunity Radar →</button></div>
+            <div class="cc3-listcol"><p class="cc3-h cyan">Most Added This Week</p><div class="cc3-scroll cc3-added-scroll${nAdded > 4 ? " scrolls" : ""}" data-cc3-scroll="added">${P.wvBody}</div><button type="button" class="cc3-more" data-cc-grid-tool="waivers">Waiver Targets →</button></div>
+            <div class="cc3-listcol cc3-ideascol"><p class="cc3-h lime">Trade Ideas</p><div class="cc3-ideas" id="cc3-ideas">${P.tradeBody}</div><button type="button" class="cc3-more" data-cc-grid-tool="targets">Player Targets →</button></div>
+          </div>
+          <p class="cc3-h pink cc3-sec-gap">Fantasy Tools</p>
+          <div class="cc3-tools"><div class="cc-tile-rows">${P.toolsLinks}</div></div>`;
+        }
+        if (slipEl) {
+          const mv0 = (Array.isArray(d.nextMoves) && d.nextMoves.length) ? d.nextMoves[0] : null;
+          const mvRest = (Array.isArray(d.nextMoves) ? d.nextMoves : []).slice(1);
+          const idea0 = (Array.isArray(d.tradeIdeas) && d.tradeIdeas.length) ? d.tradeIdeas[0] : null;
+          let slpUser = null;
+          try { const slp9 = (typeof slpState !== "undefined") ? slpState : null; slpUser = slp9 && slp9.user ? slp9.user : null; } catch (e) {}
+          const msScoreM = /cc-ms-bar-score">([^<]+)</.exec(ccMSBar || "");
+          const msSubM = /cc-ms-bar-sub">([^<]+)</.exec(ccMSBar || "");
+          const msSlip = msScoreM
+            ? `<p class="cc3-ms-line"><span class="cc3-ms-num">${msScoreM[1]}</span>${msSubM ? `<span class="cc3-ms-sub">${msSubM[1]}</span>` : ""}</p><button type="button" class="cc3-ms-link" data-ms-open="1">Full breakdown →</button>`
+            : `<p>See how you grade as a manager.</p><button type="button" class="cc3-ms-link" data-ms-open="1">Full breakdown →</button>`;
+          slipEl.innerHTML = `<div class="cc3-slip-tag">▣ ACTION SLIP — ALWAYS HERE</div>
+          <div class="cc3-mini-h" style="margin-top:14px">Your next move · ${esc(d.teamName)}</div>
+          ${mv0 ? `<h3 class="cc3-next-title">${esc(mv0.player)}</h3><p class="cc3-next-sub"><span class="cc-q-issue ${mv0.cls || ""}">${esc(mv0.issue)}</span></p><button type="button" class="cc3-cta" data-cc-grid-tool="${mv0.tool}">${mv0.tool === "lineup" ? "Fix it in Lineup Analyzer" : "Open →"}</button>${mvRest.length ? `<div class="cc3-slip-moves">${mvRest.map(m => `<button type="button" class="cc3-slip-move" data-cc-grid-tool="${m.tool}"><span class="cc-q-player">${esc(m.player)}</span><span class="cc-q-issue ${m.cls || ""}">${esc(m.issue)}</span></button>`).join("")}</div>` : ""}` : `<p>No standout moves right now.</p>`}
+          ${slpUser ? `<hr><div class="cc3-mini-h">Trade Board</div><div class="cc-tb" id="cc-tb"></div>` : ""}
+          <hr>
+          <div class="cc3-mini-h">Top trade idea</div>
+          ${idea0 ? `<p><b class="cc3-idea-name">${esc(idea0.target)}</b> ${esc(idea0.pos)} · ${esc(idea0.team || "")} — <b class="cc3-idea-gain">+${idea0.dPpg.toFixed(1)} pts/wk</b><br>from ${esc(idea0.partner)}${idea0.kind === "depth" ? " · depth add" : idea0.kind === "tier" ? " · tier-up" : ""}</p><button type="button" class="cc3-ghost" data-cc-grid-tool="targets">See all Player Targets →</button>` : `<p>No buy ideas clear the bar right now.</p>`}
+          <hr>
+          <div class="cc3-mini-h">Manager Score</div>
+          ${msSlip}`;
+          try { if (typeof ff4RenderCCTB === "function") ff4RenderCCTB(); } catch (e) {}
+        }
         const ob = spot.querySelector("[data-cc-open]"); if (ob) ob.addEventListener("click", () => ff4CCOpen(idx));
         const hb = spot.querySelector("[data-cc-hide]"); if (hb) hb.addEventListener("click", () => ff4CCHideLeague(idx));
-        spot.querySelectorAll("[data-cc-grid-tool]").forEach(b => b.addEventListener("click", () => ff4CCGoTool(idx, b.dataset.ccGridTool)));
-        /* Whole-tile click (Eric, 2026-10-27): tapping anywhere on
-           a tile that isn't one of its own buttons follows the
-           tile's destination. Fantasy Tools has no tile destination
-           — its four links are the navigation. */
-        spot.querySelectorAll("[data-cc-tile-nav]").forEach(el => {
-          el.addEventListener("click", e => { if (e.target.closest && e.target.closest("[data-cc-grid-tool]")) return; ff4CCGoTool(idx, el.dataset.ccTileNav); });
-          el.setAttribute("role", "button");
-          el.setAttribute("tabindex", "0");
-          el.addEventListener("keydown", e => { if (e.target !== el) return; if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ff4CCGoTool(idx, el.dataset.ccTileNav); } });
-        });
+        [spot, spot2El, slipEl].forEach(root => { if (!root) return; root.querySelectorAll("[data-cc-grid-tool]").forEach(b => b.addEventListener("click", () => ff4CCGoTool(idx, b.dataset.ccGridTool))); });
+        /* The Trade Ideas stream keeps the old tile's whole-block
+           destination (Player Targets) on top of its footer link. */
+        const ideasEl = document.getElementById("cc3-ideas");
+        if (ideasEl) {
+          ideasEl.setAttribute("role", "button"); ideasEl.setAttribute("tabindex", "0");
+          ideasEl.addEventListener("click", () => ff4CCGoTool(idx, "targets"));
+          ideasEl.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ff4CCGoTool(idx, "targets"); } });
+        }
       }
 
       /* Command Center prefs (window.__ffPrefs, defined with the saved-
@@ -20336,7 +20480,7 @@ window.drDraft = {
             /* A league is loaded but there's no Sleeper league list
                (e.g. an ESPN league): spotlight the loaded league alone. */
             ff4.ccLeagues = []; ff4.ccUser = null; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = 0; ff4.ccDone = 0;
-            out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-spot" id="cc-spot"></div>`;
+            out.innerHTML = `<div class="cc3-wrap"><div class="cc3-main"><div class="cc-spot" id="cc-spot"></div><div class="cc-queue" id="cc-queue"></div><div id="cc-spot2"></div></div><aside class="cc3-slip" id="cc-slip" aria-label="Action slip"></aside></div>`;
             const me = DATA.teams.find(t => t.isUser) || null;
             const items = me ? ff4CCQueueFor(me, me.lineupWeek || Number(DATA.league.week) || 1) : [];
             const q = document.getElementById("cc-queue");
@@ -20383,7 +20527,7 @@ window.drDraft = {
         if (espnEntry) entries.push(espnEntry);
         ff4.ccMixed = entries.length > leagues.length;
         ff4.ccLeagues = entries; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
-        out.innerHTML = `<div class="cc-queue" id="cc-queue"></div><div class="cc-tb" id="cc-tb"></div><div class="cc-layout"><div class="cc-spot" id="cc-spot"></div><div id="cc-tabs"></div><div class="cc-rail" id="cc-rail"></div></div>`;
+        out.innerHTML = `<div id="cc-tabs"></div><div class="cc3-wrap"><div class="cc3-main"><div class="cc-spot" id="cc-spot"></div><div class="cc-queue" id="cc-queue"></div><div id="cc-spot2"></div></div><aside class="cc3-slip" id="cc-slip" aria-label="Action slip"></aside></div><div class="cc-rail" id="cc-rail"></div>`;
         ff4CCRenderTabs(); ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
         ff4.ccSessionBusy = true;
         (async () => {
