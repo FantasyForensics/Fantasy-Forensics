@@ -2795,7 +2795,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .cc-rail { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; min-width: 0; }
       .cc-rail.cc-manage-open { display: block; }
       .cc-rail-h { font-family: "Space Grotesk", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); grid-column: 1 / -1; }
-      .cc-tabs { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+      .cc-tabs { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 14px 0 2px; }
       .cc-tab { border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 7px 14px; background: rgba(255,255,255,.04); color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
       .cc-tab.on { background: var(--accent); border-color: var(--accent); color: #150826; }
       .cc-manage { margin-left: auto; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 7px 14px; background: transparent; color: var(--ink-3); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
@@ -2939,7 +2939,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            and smaller display type so more of the dashboard fits one
            phone screen. Phone-only: tablet/desktop rules above stand. */
         .cc-layout { gap: 10px; }
-        .cc-tabs { margin-bottom: 8px; }
+        .cc-tabs { margin-top: 10px; }
         .cc-tab, .cc-manage { padding: 6px 12px; }
         .cc-spot { padding: 14px; }
         .cc-spot-team { font-size: 20px; }
@@ -2964,63 +2964,33 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         .cc-tile-big { font-size: 24px; }
         .cc-spot-record { font-size: 13px; }
       }
-      /* ---------- Trade Board ---------- */
-      .cc-tb { margin-bottom: 16px; }
-      .cc-tb:not(:empty) { border: 1px solid rgba(0,229,255,.35); border-radius: 16px; padding: 14px 18px; background: linear-gradient(150deg, rgba(0,229,255,.05), rgba(255,255,255,.012)); }
+      /* ---------- League Activity ---------- */
       .tb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-bottom: 12px; }
       .tb-count { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 17px; }
       .tb-refresh, .tb-open-board { font: inherit; font-size: 13px; font-weight: 700; color: var(--accent); background: none; border: 1px solid rgba(198,255,0,.45); border-radius: 999px; padding: 5px 13px; cursor: pointer; }
       .tb-open-board { margin-top: 12px; }
-      .tb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 12px; }
-      .tb-card { border: 1px solid rgba(255,255,255,.13); border-radius: 14px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); }
-      .tb-card.compact { margin-top: 10px; }
-      .tb-card-top { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; justify-content: space-between; margin-bottom: 4px; }
-      .tb-league { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 15.5px; color: var(--ink); }
-      .tb-when { color: var(--ink-3); font-size: 12.5px; }
-      .tb-parties { font-size: 14.5px; color: var(--ink-2); margin-bottom: 10px; }
-      .tb-parties b { color: var(--ink); }
-      .tb-multi { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--cyan); border: 1px solid rgba(0,229,255,.4); border-radius: 999px; padding: 1px 7px; white-space: nowrap; }
-      .tb-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
-      @media (max-width: 520px) { .tb-cols { grid-template-columns: 1fr; } }
-      .tb-col-h { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-3); border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 5px; margin-bottom: 6px; }
-      .tb-asset { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; padding: 3px 0; }
-      .tb-asset-main { display: flex; flex-direction: column; min-width: 0; }
-      .tb-asset-name { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; }
-      /* Text-length caps (Eric, 2026-11-10): Trade Board cards —
-         league names, parties and asset names ellipsis instead of
-         stretching the card; columns get min-width:0. */
-      .tb-card { min-width: 0; }
-      .tb-card-top { display: flex; gap: 8px; min-width: 0; align-items: baseline; }
-      .tb-league { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .tb-when { flex: 0 0 auto; }
-      .tb-parties { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .tb-asset-main { min-width: 0; }
-      .tb-asset-name { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
-      .tb-col { min-width: 0; }
-      .tb-asset-sub { font-size: 12px; color: var(--ink-3); line-height: 1.35; }
-      .tb-val { font-family: "Space Grotesk", sans-serif; font-size: 14px; color: var(--ink); white-space: nowrap; }
-      .tb-val.na { font-family: "Inter", sans-serif; font-size: 12px; color: var(--ink-3); }
-      .tb-none { color: var(--ink-3); font-size: 13.5px; padding: 3px 0; }
-      .tb-verdict { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; border-radius: 10px; padding: 9px 12px; margin-top: 12px; font-size: 14px; line-height: 1.45; }
-      .tb-verdict b { font-family: "Space Grotesk", sans-serif; font-size: 15px; }
-      .tb-verdict.good { background: rgba(198,255,0,.09); border: 1px solid rgba(198,255,0,.4); }
-      .tb-verdict.good b { color: var(--accent); }
-      .tb-verdict.bad { background: rgba(255,46,136,.08); border: 1px solid rgba(255,46,136,.4); }
-      .tb-verdict.bad b { color: #FF7EB6; }
-      .tb-verdict.fair { background: rgba(0,229,255,.07); border: 1px solid rgba(0,229,255,.4); }
-      .tb-verdict.fair b { color: var(--cyan); }
-      .tb-verdict.na { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.18); }
-      .tb-verdict.na b { color: var(--ink-2); }
-      .tb-fit { margin: 10px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 13.5px; line-height: 1.5; }
-      .tb-note, .tb-espn { color: var(--ink-3); font-size: 13px; line-height: 1.5; margin: 10px 0 0; }
-      .tb-actions { margin-top: 12px; }
-      .tb-calc-btn { font: inherit; font-size: 13.5px; font-weight: 700; color: #0A0A1A; background: var(--accent); border: 0; border-radius: 999px; padding: 7px 15px; cursor: pointer; }
+      .tb-note { color: var(--ink-3); font-size: 13px; line-height: 1.5; margin: 10px 0 0; }
       .tb-empty { color: var(--ink-2); font-size: 15px; line-height: 1.55; border: 1px dashed rgba(255,255,255,.2); border-radius: 14px; padding: 18px; }
       .tb-empty p { margin: 0 0 10px; }
       .tb-loading { color: var(--ink-2); font-size: 15px; }
-      .tb-subh { font-family: "Space Grotesk", sans-serif; font-size: 18px; margin: 24px 0 10px; }
-      .tb-mini { display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
-      .tb-mini b { color: var(--ink); font-family: "Space Grotesk", sans-serif; }
+      /* League Activity rows (Eric, 2026-11-10): one add or drop per
+         row — kind chip, player over team · league, relative time.
+         Names ellipsis instead of stretching the row (the text-cap
+         pass that used to guard the old Trade Board cards). */
+      .la-list { display: flex; flex-direction: column; }
+      .la-row { display: flex; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.06); min-width: 0; }
+      .la-row:last-child { border-bottom: 0; }
+      .la-kind { flex: 0 0 auto; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+      .la-kind.add { color: var(--accent); border: 1px solid rgba(198,255,0,.45); background: rgba(198,255,0,.07); }
+      .la-kind.drop { color: #FF7EB6; border: 1px solid rgba(255,46,136,.45); background: rgba(255,46,136,.07); }
+      .la-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+      .la-player { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .la-meta { font-size: 12.5px; color: var(--ink-3); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .la-when { flex: 0 0 auto; font-size: 12.5px; color: var(--ink-3); white-space: nowrap; }
+      /* Command Center slip: four rows visible, the rest scroll —
+         the Radar / Most Added pattern (rows are fixed-height). */
+      #cc-la .la-row { height: 52px; box-sizing: border-box; }
+      .cc-la-scroll.scrolls { max-height: 208px; }
       /* ---------- Opportunity Radar ---------- */
       .launch-badge { display: inline-block; vertical-align: middle; margin-left: 10px; font-family: "Space Grotesk", sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0A0A1A; background: var(--accent); border-radius: 999px; padding: 3px 10px; }
       /* ---------- founding waitlist band ---------- */
@@ -3165,7 +3135,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           <button type="button" role="tab" data-pnav-sub="upgrades" data-group="trades" aria-selected="false">Upgrade Finder</button>
           <button type="button" role="tab" data-pnav-sub="counter" data-group="trades" aria-selected="false">Counteroffers</button>
           <button type="button" role="tab" data-pnav-sub="realtrades" data-group="trades" aria-selected="false">Real Trades</button>
-          <button type="button" role="tab" data-pnav-sub="tradeboard" data-group="trades" aria-selected="false">Trade Board</button>
+          <button type="button" role="tab" data-pnav-sub="tradeboard" data-group="trades" aria-selected="false">League Activity</button>
         </div>
         <button role="tab" type="button" data-pnav="players" aria-selected="true">Players<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 6h10M9 12h10M9 18h10"/><circle cx="4.8" cy="6" r="1.15"/><circle cx="4.8" cy="12" r="1.15"/><circle cx="4.8" cy="18" r="1.15"/></svg></span></button>
         <div class="sb-subgroup" data-subgroup="players">
@@ -3527,7 +3497,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          with an internal scroll for the rest (Eric's one sanctioned
          exception to the no-hidden-content rule) — then Trade Ideas
          and the Fantasy Tools strip. The slip carries Your Next
-         Move (top move + the rest of the list), the Trade Board,
+         Move (top move + the rest of the list), League Activity,
          the Top Trade Idea and the Manager Score, sticky on wide
          screens; on phones it becomes a compact section on top.
          Every figure is the existing CC data, recomposed — no
@@ -3542,7 +3512,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       body.ff-on-command header.league { display: none; }
       /* Concept 3 layout (Eric, Nov 10, 2026) */
       #cc-out .cc-spot { border: 0; border-radius: 0; padding: 0; background: none; }
-      #cc-out #cc-tabs .cc-tabs { margin-bottom: 10px; }
+      #cc-out #cc-tabs .cc-tabs { margin: 12px 0 2px; }
       /* two regions from the very top: main column + slip rail */
       #cc-out .cc3-wrap { display: flex; flex-direction: column; gap: 14px; }
       #cc-out .cc3-main { min-width: 0; }
@@ -3595,7 +3565,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          whole region, like the boxes used to feel. Map: Needs You
          First #FF2E88 pink · Action Slip #C6FF00 lime · Opportunity
          Radar #FF4081 rose · Most Added #448AFF blue · Trade Ideas
-         #69F0AE mint · Trade Board #00E5FF cyan · Manager Score
+         #69F0AE mint · League Activity #00E5FF cyan · Manager Score
          #FFAB40 amber · strip keys: Odds lime, Power Rank cyan,
          Grades #B388FF violet, Stock #FFC400. */
       #cc-out .cc3-ss-odds .cc3-ss-k { color: #C6FF00; }
@@ -3735,11 +3705,9 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .cc3-slip-move .cc-q-player { font-size: 13.5px; }
       .cc3-slip-move .cc-q-issue { font-size: 12.5px; }
       .cc3-slip-move:hover .cc-q-player { text-decoration: underline; }
-      /* the Trade Board section inside the slip keeps its own render;
-         the slip supplies the heading, so the section's own hides */
-      #cc-out .cc3-slip .cc-tb .cc-queue-h { display: none; }
-      #cc-out .cc3-slip .cc-tb .tb-open-board { display: block; width: 100%; margin-top: 8px; border-radius: 8px; padding: 9px; }
-      #cc-out .cc3-slip .cc-tb .tb-card { margin-top: 8px; }
+      /* the League Activity section inside the slip keeps its own
+         render; the slip supplies the heading */
+      #cc-out .cc3-slip .cc-la .tb-open-board { display: block; width: 100%; margin-top: 8px; border-radius: 8px; padding: 9px; }
       .cc3-idea-name { color: var(--ink); }
       .cc3-idea-gain { color: #69F0AE; }
       .cc3-ms-line { display: flex; align-items: baseline; gap: 10px; }
@@ -4063,11 +4031,11 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
 
       <section class="tab" id="tab-tradeboard" role="tabpanel">
-        <h2 class="block-title">Trade Board</h2>
-        <div id="tb-out"></div>
+        <h2 class="block-title">League Activity</h2>
+        <div id="la-out"></div>
         <details class="how-box">
           <summary>How this works</summary>
-          <p class="tab-intro">Every proposed trade still waiting on an answer, from every Sleeper league you play in — each one graded with the same engine as the Trade Calculator, picks priced by where they're projected to land. One screen for all of them: review them here — the accept / reject decision itself stays in Sleeper.</p>
+          <p class="tab-intro">Every add and drop from the last two weeks across your Sleeper leagues — waiver claims and free-agent pickups, most recent first. One screen for the whole league pulse: who's churning, who's stashing, who just grabbed a starter's backup.</p>
         </details>
       </section>
 
@@ -4141,7 +4109,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
             <button type="button" class="tools-pill" style="--tile-accent:#69F0AE" data-tools-pill="targets" data-tools-group="trades"><span class="tools-pill-t">Player Targets</span><span class="tools-pill-s">Players worth trading for</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#00E5FF" data-tools-pill="counter" data-tools-group="trades"><span class="tools-pill-t">Counteroffers</span><span class="tools-pill-s">Build a fair counteroffer</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#B388FF" data-tools-pill="upgrades" data-tools-group="trades"><span class="tools-pill-t">Upgrade Finder</span><span class="tools-pill-s">Deals that upgrade your starters</span></button>
-            <button type="button" class="tools-pill" style="--tile-accent:#FFC400" data-tools-pill="tradeboard" data-tools-group="trades"><span class="tools-pill-t">Trade Board</span><span class="tools-pill-s">Proposed trades awaiting an answer</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FFC400" data-tools-pill="tradeboard" data-tools-group="trades"><span class="tools-pill-t">League Activity</span><span class="tools-pill-s">Adds & drops across your leagues</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#448AFF" data-tools-pill="realtrades" data-tools-group="trades"><span class="tools-pill-t">Real Trades</span><span class="tools-pill-s">Real league deals, graded</span></button>
           </div>
         </div>
@@ -4887,7 +4855,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         /* (1a) League wire — REMOVED (Eric, 2026-10-23): the ticker is
            global-only now (injuries, engine movers, trending, news).
            A league's own trades and waiver claims live in the Sleeper
-           app, and its pending offers live on the Trade Board —
+           app, and its adds & drops live in League Activity —
            duplicating league activity here cost the Wire its focus.
            WIRE_LEAGUE_ITEMS is still populated by the connect flow but
            no longer read by the ticker. */
@@ -5762,7 +5730,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            resolve through the subnav state (already updated above for
            this switch); in-view subnav switches re-title through the
            showSubNav wrapper in the nav script. */
-        const FF_VIEW_TITLES = { command: "Command Center", values: "Fantasy Player Values", trades: "Trade Calculator", targets: "Player Targets", upgrades: "Upgrade Finder", realtrades: "Real Trades", tradeboard: "Trade Board", roster: "Roster", lineup: "Lineup Analyzer", waivers: "Waiver Targets", bye: "Bye Week Planner", teamport: "Team Portfolio", moves: "Next Moves", radar: "Opportunity Radar", ineff: "Inefficiency Board", tools: "Tools", draft: "Draft Room", format: "League Format", how: "How It Works" };
+        const FF_VIEW_TITLES = { command: "Command Center", values: "Fantasy Player Values", trades: "Trade Calculator", targets: "Player Targets", upgrades: "Upgrade Finder", realtrades: "Real Trades", tradeboard: "League Activity", roster: "Roster", lineup: "Lineup Analyzer", waivers: "Waiver Targets", bye: "Bye Week Planner", teamport: "Team Portfolio", moves: "Next Moves", radar: "Opportunity Radar", ineff: "Inefficiency Board", tools: "Tools", draft: "Draft Room", format: "League Format", how: "How It Works" };
         const FF_LEAGUE_TITLES = { power: "Power Rankings", mscore: "Manager Score", rosters: "Rosters", outlook: "Season Outlook", odds: "Playoff Odds", ppath: "Playoff Path", psched: "Schedule Difficulty", results: "League Results", storylines: "Storylines" };
         window.__ffLeagueTitles = FF_LEAGUE_TITLES;
         let ffViewTitle = key === "risk" ? "Starters at Risk" : FF_VIEW_TITLES[key];
@@ -11112,8 +11080,8 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
       /* Activation render (Eric, 2026-11-03): the Upgrade Finder only
          renders when called — it is never built at connect/apply — so
          every route that lands here must call it. The other
-         activation-rendered views (Radar, Team Portfolio, Trade Board,
-         Inefficiency) hook activateNav the same way; the Finder was
+         activation-rendered views (Radar, Team Portfolio, League
+         Activity, Inefficiency) hook activateNav the same way; the Finder was
          missing its hook, so links that navigate without rendering
          first (the Command Center tool links) landed on a blank tab. */
       (function () {
@@ -12831,7 +12799,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           else if (key === "radar" && typeof window.renderRadar === "function") window.renderRadar();
           else if (key === "ineff" && typeof window.renderIneff === "function") window.renderIneff();
           else if (key === "teamport" && typeof window.tpRender === "function") window.tpRender();
-          else if (key === "tradeboard" && typeof window.ff4TBEnsure === "function") window.ff4TBEnsure(false);
+          else if (key === "tradeboard" && typeof window.ff4LAEnsure === "function") window.ff4LAEnsure(false);
           else if (key === "command" && typeof window.ff4RenderCC === "function") window.ff4RenderCC();
           else if (key === "moves" && typeof window.ff4RenderMovesCurrent === "function") window.ff4RenderMovesCurrent();
           else if (key === "roster" && typeof window.renderMyRoster === "function") window.renderMyRoster();
@@ -19302,8 +19270,6 @@ window.drDraft = {
               pool prices one); ranks above the fixable versions;
            6  an IR-slot violation — a player parked in an IR slot
               whose designation no longer makes him IR-eligible;
-           7  an incoming trade offer awaiting his decision (joined
-              at render from the Trade Board pass, not here);
            8  a lock-risk GTD — a Questionable starter whose only
               eligible bench replacements all kick off EARLIER than
               him in the baked GAME_LOCKS for the week (weeks with no
@@ -19314,9 +19280,10 @@ window.drDraft = {
          panel holds fewer than 2 critical entries.
          Severity tiers (prio): 0 = empty slot / no-fix emergency,
          1 = Out-or-0 with a bench fix, 2 = bye starter with a fix,
-         3 = IR violation, 4 = pending offer (render), 5 = lock-risk
-         GTD, 6 = big-gap swap. Cross-league bubble ordering happens
-         in ff4CCRenderQueue. */
+         3 = IR violation, 5 = lock-risk GTD, 6 = big-gap swap
+         (tier 4 was pending offers — retired with category 7 when
+         offer detection was removed). Cross-league bubble ordering
+         happens in ff4CCRenderQueue. */
       const NYF_BIG_GAP = 4.0;
       const NYF_TUNE_MIN = 0.4;
       const NYF_IR_OK = { Out: 1, IR: 1, PUP: 1, Suspended: 1 };
@@ -20312,8 +20279,8 @@ window.drDraft = {
       /* Command Center league-rundown grid (Eric, 2026-10-26): the
          focused league as nine tiles. Tool links deep-link when the
          league is already loaded; otherwise they load it first (the
-         Trade Board's open-in-calculator pattern), and fall back to
-         opening the league for ESPN entries. */
+         old Trade Board's open-in-calculator pattern), and fall back
+         to opening the league for ESPN entries. */
       async function ff4CCGoTool(idx, navKey) {
         const lg = (ff4.ccLeagues || [])[idx];
         const go = () => {
@@ -20580,8 +20547,8 @@ window.drDraft = {
            column (the strip ends at the Manager Score cell — the
            ffMSBarHtml bar restyled as that cell), the streams below
            Needs You First, and the Action Slip in the rail. The
-           slip's Trade Board section mounts #cc-tb, refilled from
-           the Trade Board's own state right after the build. */
+           slip's League Activity section mounts #cc-la, refilled
+           from the activity feed's own state right after the build. */
         let ccMSBar = "";
         try { if (typeof window.ffMSBarHtml === "function") ccMSBar = window.ffMSBarHtml(idx, d) || ""; } catch (e) { /* Manager Score bar is best-effort */ }
         const P = ff4CCPieces(idx, d);
@@ -20589,7 +20556,7 @@ window.drDraft = {
             <div class="cc-spot-team"><span class="cc-tname" title="${esc(d.teamName)}">${esc(d.teamName)}</span>${d.record ? ` <span class="cc-spot-record">${esc(d.record)}</span>` : ""} <span class="you-tag">Your team</span></div>
             <div class="cc-spot-league">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div>
             <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
-          </div><div class="cc-spot-actions"><button type="button" class="cc-enter" data-cc-open="1">Open league →</button><button type="button" class="cc-hide" data-cc-hide="1">Hide league</button></div></div>
+          </div><div class="cc-spot-actions"><button type="button" class="cc-manage cc-refresh" id="cc-refresh" data-cc-refresh="1"${ff4.ccRefreshing ? " disabled" : ""}>${ff4.ccRefreshing ? `<span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Refreshing…` : "↻ Refresh"}</button></div></div>
           <div class="cc3-strip" id="cc3-strip">
             <div class="cc3-ss cc3-ss-odds"><div class="cc3-ss-k">Playoff Odds</div><div class="cc3-ss-v" style="color:${P.oddsCol}">${esc(P.oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(P.oddsFrac * 100)}%;background:${P.oddsCol}"></div></div><div class="cc3-ss-sub">${esc(P.oddsSub)}</div></div>
             <div class="cc3-ss cc3-ss-pow"><div class="cc3-ss-k">Power Rank</div><div class="cc3-ss-v">${esc(P.powerBig)}</div></div>
@@ -20623,15 +20590,14 @@ window.drDraft = {
           slipEl.innerHTML = `<div class="cc3-slip-tag">▣ ACTION SLIP — ALWAYS HERE</div>
           <div class="cc3-slip-sec sec-move"><div class="cc3-mini-h">Your next move · ${esc(d.teamName)}</div>
           ${mv0 ? `<h3 class="cc3-next-title">${esc(mv0.player)}</h3><p class="cc3-next-sub"><span class="cc-q-issue ${mv0.cls || ""}">${esc(mv0.issue)}</span></p><button type="button" class="cc3-cta" data-cc-grid-tool="${mv0.tool}">${mv0.tool === "lineup" ? "Fix it in Lineup Analyzer" : "Open →"}</button>${mvRest.length ? `<div class="cc3-slip-moves">${mvRest.map(m => `<button type="button" class="cc3-slip-move" data-cc-grid-tool="${m.tool}"><span class="cc-q-player">${esc(m.player)}</span><span class="cc-q-issue ${m.cls || ""}">${esc(m.issue)}</span></button>`).join("")}</div>` : ""}` : `<p>No standout moves right now.</p>`}</div>
-          ${slpUser ? `<div class="cc3-slip-sec sec-tb"><div class="cc3-mini-h">Trade Board</div><div class="cc-tb" id="cc-tb"></div></div>` : ""}
+          ${slpUser ? `<div class="cc3-slip-sec sec-tb"><div class="cc3-mini-h">League Activity</div><div class="cc-la" id="cc-la"></div></div>` : ""}
           <div class="cc3-slip-sec sec-idea"><div class="cc3-mini-h">Top trade idea</div>
           ${idea0 ? `<p><b class="cc3-idea-name">${esc(idea0.target)}</b> ${esc(idea0.pos)} · ${esc(idea0.team || "")} — <b class="cc3-idea-gain">+${idea0.dPpg.toFixed(1)} pts/wk</b><br>from ${esc(idea0.partner)}${idea0.kind === "depth" ? " · depth add" : idea0.kind === "tier" ? " · tier-up" : ""}</p><button type="button" class="cc3-ghost" data-cc-grid-tool="targets">See all Player Targets →</button>` : `<p>No buy ideas clear the bar right now.</p>`}</div>
           <div class="cc3-slip-sec sec-ms"><div class="cc3-mini-h">Manager Score</div>
           ${msSlip}</div>`;
-          try { if (typeof ff4RenderCCTB === "function") ff4RenderCCTB(); } catch (e) {}
+          try { if (typeof ff4RenderCCLA === "function") ff4RenderCCLA(); } catch (e) {}
         }
-        const ob = spot.querySelector("[data-cc-open]"); if (ob) ob.addEventListener("click", () => ff4CCOpen(idx));
-        const hb = spot.querySelector("[data-cc-hide]"); if (hb) hb.addEventListener("click", () => ff4CCHideLeague(idx));
+        const rb2 = spot.querySelector("[data-cc-refresh]"); if (rb2) rb2.addEventListener("click", () => ff4CCRefresh());
         [spot, spot2El, slipEl].forEach(root => { if (!root) return; root.querySelectorAll("[data-cc-grid-tool]").forEach(b => b.addEventListener("click", () => ff4CCGoTool(idx, b.dataset.ccGridTool))); });
         /* The Trade Ideas stream keeps the old tile's whole-block
            destination (Player Targets) on top of its footer link. */
@@ -20736,24 +20702,22 @@ window.drDraft = {
         try { if (window.renderLeagueSwitcher) window.renderLeagueSwitcher(); } catch (e) {}
         ff4CCFixFocusAfterPrefs();
       }
-      function ff4CCHideLeague(idx) {
-        const lg = (ff4.ccLeagues || [])[idx]; if (!lg) return;
-        const pr = ff4CCPrefs();
-        const k = ff4CCLeagueKey(lg);
-        if (pr.hiddenLeagues.indexOf(k) === -1) pr.hiddenLeagues.push(k);
-        ff4CCPrefsSave(pr);
-        ff4CCAfterPrefsChange();
-      }
-      /* Tabs bar (lives above the queue so it reads as the view switcher
-         for the whole dashboard, and stays visible on phones where the
-         rail itself turns into a horizontal scroller). */
+      /* (Removed Nov 10, 2026: the spot header's Hide league button
+         went with Open league when Refresh took their place in the
+         header. Hiding a league still lives in the Manage editor —
+         its per-league Hide/Unhide writes the same hiddenLeagues
+         prefs this function wrote, so nothing was lost.) */
+      /* Tabs bar (Eric, Nov 10, 2026: moved to the BOTTOM of the
+         Command Center, directly below the leagues rail it filters,
+         so the whole dashboard shifts up into the space it used to
+         take at the top. The Refresh button left this row for the
+         focused league's header — see ff4CCRefresh.) */
       function ff4CCRenderTabs() {
         const el = document.getElementById("cc-tabs"); if (!el) return;
         const tab = ff4.ccTab || "all";
         const hiddenCount = (ff4.ccLeagues || []).filter(lg => ff4CCIsHidden(lg)).length;
         const tabs = [["all", "All"], ["dynasty", "Dynasty"], ["redraft", "Redraft"], ["custom", "Custom"]].map(([v, label]) => `<button type="button" class="cc-tab${tab === v ? " on" : ""}" data-cc-tab="${v}" role="tab" aria-selected="${tab === v}">${label}</button>`).join("");
-        const refreshing = !!ff4.ccRefreshing;
-        el.innerHTML = `<div class="cc-tabs" role="tablist" aria-label="Command Center views">${tabs}<button type="button" class="cc-manage cc-refresh" id="cc-refresh" data-cc-refresh="1"${refreshing ? " disabled" : ""}>${refreshing ? `<span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Refreshing…` : "↻ Refresh"}</button><button type="button" class="cc-manage" data-cc-manage="1">Manage${hiddenCount ? ` · ${hiddenCount} hidden` : ""}</button></div>`;
+        el.innerHTML = `<div class="cc-tabs" role="tablist" aria-label="Command Center views">${tabs}<button type="button" class="cc-manage" data-cc-manage="1">Manage${hiddenCount ? ` · ${hiddenCount} hidden` : ""}</button></div>`;
         el.querySelectorAll("[data-cc-tab]").forEach(b => b.addEventListener("click", () => {
           ff4.ccTab = b.dataset.ccTab;
           ff4CCRenderTabs(); ff4CCRenderRail(); ff4CCRenderQueue();
@@ -20764,18 +20728,19 @@ window.drDraft = {
           else if (ff4.ccFocus != null && !vis.includes(ff4.ccFocus)) ff4CCFocusLeague(vis[0]);
         }));
         el.querySelectorAll("[data-cc-manage]").forEach(b => b.addEventListener("click", () => ff4CCOpenManage()));
-        el.querySelectorAll("[data-cc-refresh]").forEach(b => b.addEventListener("click", () => ff4CCRefresh()));
       }
-      /* ↻ Refresh (Eric, Nov 10): sits in the tabs row next to Manage
-         (NOT the old pre-Round-3 utility row — that placement stays
-         gone). A real refresh, not a page reload: force the full CC
+      /* ↻ Refresh (Eric, Nov 10): lives in the focused league's
+         header, in the spot where Open league / Hide league used to
+         sit (both deleted the same day; opening a league still
+         happens from the rail and queue rows, hiding from Manage).
+         A real refresh, not a page reload: force the full CC
          re-pull (ff4RenderCC(true) refetches every league's rosters,
          lineups and transactions and rebuilds odds, tiles, slip and
-         Needs You First) and force a fresh Trade Board pass so the
-         offers and the "last checked" time update. The button shows
-         a busy state until the rebuild settles; a league whose
-         re-pull fails keeps its failed state in place — the pass
-         never blanks the Command Center. */
+         Needs You First) and force a fresh League Activity pass so
+         the feed and its "last checked" time update. The button
+         shows a busy state until the rebuild settles; a league
+         whose re-pull fails keeps its failed state in place — the
+         pass never blanks the Command Center. */
       function ff4CCRefresh() {
         if (ff4.ccRefreshing) return;
         ff4.ccRefreshing = true;
@@ -20783,17 +20748,17 @@ window.drDraft = {
            Sleeper weekly projections land alongside the league
            re-pull, and Needs You First re-renders when they arrive. */
         try { ffLiveProjEnsure(true); } catch (e) { /* best-effort */ }
-        ff4CCRenderTabs();
+        try { ff4CCRenderSpot(); } catch (e) { /* busy state paints on the current header */ }
         ff4RenderCC(true);
-        try { ff4TBEnsure(true); } catch (e) { /* board re-check is best-effort */ }
+        try { ff4LAEnsure(true); } catch (e) { /* activity re-check is best-effort */ }
         const t0 = Date.now();
         const iv = setInterval(() => {
-          let tbBusy = false;
-          try { tbBusy = !!ff4TBState().loading; } catch (e) {}
-          if ((!ff4.ccSessionBusy && ff4.ccSessionDone && !tbBusy) || Date.now() - t0 > 180000) {
+          let laBusy = false;
+          try { laBusy = !!ff4LAState().loading; } catch (e) {}
+          if ((!ff4.ccSessionBusy && ff4.ccSessionDone && !laBusy) || Date.now() - t0 > 180000) {
             clearInterval(iv);
             ff4.ccRefreshing = false;
-            ff4CCRenderTabs();
+            try { ff4CCRenderSpot(); } catch (e) { /* restore the button label */ }
           }
         }, 600);
       }
@@ -20928,28 +20893,14 @@ window.drDraft = {
         const visQ = new Set(ff4CCVisibleOrder());
         const crit = [];
         Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.queueItems) crit.push(...s.queueItems); });
-        /* Category 7 (Eric, 2026-11-10): incoming offers awaiting his
-           decision join from the Trade Board pass — that pass is the
-           one place offers are graded, so the queue reads its state,
-           and ff4RenderCCTB re-renders the queue when it lands. */
-        let tbReady = false;
-        try {
-          const tb = ff4TBState();
-          tbReady = !!tb.loaded;
-          if (tb.loaded) (tb.incoming || []).forEach(o => {
-            const idx = (ff4.ccLeagues || []).findIndex(e => e && !ff4CCIsEspn(e) && String(e.league_id || "") === String(o.leagueId));
-            if (idx < 0) return;
-            const snap = (ff4.ccSnaps || {})[idx];
-            crit.push({ prio: 4, cls: "offer", cat: 7, act: "tb", margin: (typeof o.margin === "number") ? o.margin : 0, idx,
-              player: "Offer from " + o.otherName,
-              issue: "Trade offer waiting on your answer · sent " + o.when,
-              leagueName: snap ? snap.leagueName : o.leagueName, teamName: snap ? (snap.teamName || "") : "", platform: "Sleeper" });
-          });
-        } catch (e) {}
+        /* Category 7 (incoming trade offers) was REMOVED on
+           2026-11-10: Sleeper's public feed never publishes pending
+           offers, so the category could only ever render empty or
+           stale. The other categories and their severity ordering
+           are unchanged; tier 4 simply has no producer now. */
         /* Ordering (Eric, 2026-11-10): severity first; within a tier,
            a playoff-bubble league (sim odds 10–90%, not clinched)
-           jumps a coasting one; then league order; offers keep the
-           Trade Board's worst-first margin order inside their tier. */
+           jumps a coasting one; then league order. */
         const bubbleOf = idx => {
           const s = (ff4.ccSnaps || {})[idx];
           if (!s || s.odds == null || s.clinched) return 1;
@@ -20968,12 +20919,9 @@ window.drDraft = {
           Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.tuneItems) tuneV.push(...s.tuneItems); });
           tuneV = tuneV.filter(t => visQ.has(t.idx)).sort((a, b) => b.gain - a.gain);
         }
-        const rowHtml = it => it.act === "tb"
-          ? `<button type="button" class="cc-queue-it" data-cc-tb="1" title="${esc(it.player)} — ${esc(it.issue)}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></button>`
-          : `<button type="button" class="cc-queue-it${it.cat === "tune" ? " tune" : ""}" data-cc-open="${it.idx}" title="${esc(it.player)} — ${esc(it.issue)}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></button>`;
+        const rowHtml = it => `<button type="button" class="cc-queue-it${it.cat === "tune" ? " tune" : ""}" data-cc-open="${it.idx}" title="${esc(it.player)} — ${esc(it.issue)}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></button>`;
         const wire = () => {
           q.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
-          q.querySelectorAll("[data-cc-tb]").forEach(b => b.addEventListener("click", () => { activateNav("tradeboard"); window.scrollTo({ top: 0 }); }));
           ff4CCQueueCap(q);
         };
         if (!itemsV.length) {
@@ -20995,23 +20943,20 @@ window.drDraft = {
             q.innerHTML = ff4CCQueueHead(0) + `<p class="cc-queue-note">No leagues in this view.</p>`;
             return;
           }
-          /* The all-clear names offers, so it waits for the Trade
-             Board pass; ff4RenderCCTB re-renders when it lands. */
-          const hasUser = !!((typeof slpState !== "undefined") && slpState && slpState.user);
-          if (hasUser && !tbReady) {
-            q.innerHTML = ff4CCQueueHead(0) + `<p class="cc-queue-note cc-loading">Checking for offers waiting on you…</p>`;
-            return;
-          }
+          /* (The all-clear used to wait for the offers pass before
+             declaring nothing was waiting; with offer detection
+             removed on 2026-11-10 it renders as soon as the league
+             pass settles.) */
           const qCountV = Object.values(ff4.ccSnaps || {}).filter(s => s && visQ.has(s.idx)).reduce((n, s) => n + (s.qCount || 0), 0);
           if (!tuneV.length) {
             q.innerHTML = ff4CCQueueHead(0)
-              + ff4CCClearHtml("No zeros in any lineup, no empty slots, no offers waiting on you.")
+              + ff4CCClearHtml("No zeros in any lineup, no empty slots.")
               + (qCountV > 0 ? `<p class="cc-queue-note">${qCountV} starter${qCountV === 1 ? " is" : "s are"} Questionable — worth a check in the Lineup Analyzer before lock.</p>` : "");
             return;
           }
           q.innerHTML = ff4CCQueueHead(0)
             + `<div class="cc-queue-list cc3-scroll">`
-            + ff4CCClearHtml("No zeros in any lineup, no empty slots, no offers waiting on you.")
+            + ff4CCClearHtml("No zeros in any lineup, no empty slots.")
             + `<div class="cc-queue-sub">Lineup fine-tuning</div>`
             + tuneV.map(rowHtml).join("")
             + `</div>`
@@ -21041,7 +20986,7 @@ window.drDraft = {
         /* Session cache (Eric, 2026-10-29): a tab return must not
            re-pull every league and rebuild the dashboard — the first
            build stays live for the whole visit, the same pattern the
-           Trade Board's sig cache already uses. The key covers the
+           League Activity feed's sig cache already uses. The key covers the
            Sleeper user, the league set, any ESPN entry, and the active
            connected league (loading a different league from a card
            changes the focus, so it misses the cache on purpose). The
@@ -21132,7 +21077,7 @@ window.drDraft = {
         if (espnEntry) entries.push(espnEntry);
         ff4.ccMixed = entries.length > leagues.length;
         ff4.ccLeagues = entries; ff4.ccUser = user; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = null; ff4.ccDone = 0;
-        out.innerHTML = `<div id="cc-tabs"></div><div class="cc3-wrap"><div class="cc3-main"><div class="cc-spot" id="cc-spot"></div><div class="cc-queue" id="cc-queue"></div><div id="cc-spot2"></div></div><aside class="cc3-slip" id="cc-slip" aria-label="Action slip"></aside></div><div class="cc-rail" id="cc-rail"></div>`;
+        out.innerHTML = `<div class="cc3-wrap"><div class="cc3-main"><div class="cc-spot" id="cc-spot"></div><div class="cc-queue" id="cc-queue"></div><div id="cc-spot2"></div></div><aside class="cc3-slip" id="cc-slip" aria-label="Action slip"></aside></div><div class="cc-rail" id="cc-rail"></div><div id="cc-tabs"></div>`;
         ff4CCRenderTabs(); ff4CCRenderQueue(); ff4CCRenderRail(); ff4CCRenderSpot();
         ff4.ccSessionBusy = true;
         (async () => {
@@ -21150,11 +21095,10 @@ window.drDraft = {
             if (!ff4.ccDead && ff4.ccDone >= entries.length) ff4.ccSessionDone = true;
           } finally { ff4.ccSessionBusy = false; }
         })();
-        /* The Trade Board's compact section rides the same league
-           set: its pass is independent (own fetches, own swaps,
-           serialized through the same context lock) and fills
-           #cc-tb when it lands. */
-        ff4TBEnsure(false);
+        /* The League Activity feed rides the same league set: its
+           pass is independent (own fetches) and fills #cc-la when
+           it lands. */
+        ff4LAEnsure(false);
       }
       window.ff4RenderCC = ff4RenderCC;
       /* Swap the CC empty state between its connect prompt and the
@@ -21271,440 +21215,186 @@ window.drDraft = {
         window.addEventListener("modechange", () => { setTimeout(ff4RenderPP, 80); setTimeout(() => { if (typeof window.renderLifeline === "function") window.renderLifeline(); }, 80); });
       })();
 
-      /* ================= Trade Board (Oct 23, 2026) =================
-         Every pending (proposed, unanswered) trade across the user's
-         connected Sleeper leagues, graded on the spot by the same
-         engine as the Trade Calculator. Sleeper's per-week
-         transactions feed carries trades across their lifecycle; a
-         pending offer is status "pending" (slpWireItems discards
-         those — the board is where they live). The pass mirrors the
-         Command Center's light pass: per league, fetch the bundle,
-         scan the current week plus a look-back (pending offers
-         persist until resolved; dedupe by transaction_id), build
-         the league, swap context, grade, restore. Picks in a pending
-         offer price off the ladder with the tier taken from the
-         ORIGINAL team's sim-projected finish (projFinishRanks +
-         pickTierFromRank, the site's one canonical mapping), stated
-         on the card; FAAB in a deal is shown as dollars, never
-         folded into the value totals. ESPN pending offers are NOT
-         retrievable (the data sits behind ESPN's credentialed API
-         and this site collects no ESPN credentials), so a connected
-         ESPN league gets one honest line — never fabricated data. */
-      function ff4TBState() {
-        if (!ff4.tb) ff4.tb = { loading: false, loaded: false, sig: "", incoming: [], sent: [], espnNote: false, failed: 0, checkedAt: null, wkChecked: 0, wkTotal: 0 };
-        return ff4.tb;
+      /* ================= League Activity (Nov 10, 2026) =================
+         Recent adds & drops across the user's connected Sleeper
+         leagues, from the public per-week transactions feed — the
+         replacement for the Trade Board. WHY THE CHANGE (Eric,
+         2026-11-10): Sleeper's public feed never exposes pending
+         trade offers (proven live today: a real offer sent to his
+         D74 team was absent from the feed 10+ minutes later on
+         cache-busted re-checks), so an offers board graded a feed
+         that could not see the thing it promised. Pending offers
+         exist only behind Sleeper's authenticated session; this
+         site connects username-only and collects no Sleeper
+         credentials, so offer detection was removed everywhere
+         (the Trade Board UI and Needs You First category 7) and
+         this feed — built from data the public API actually
+         publishes — took the slot. Completed trades are NOT part
+         of this feed: Eric picked adds & drops. ESPN provides no
+         transactions feed to outside tools, so the feed covers
+         Sleeper leagues and degrades silently without them. The
+         pass mirrors the Command Center's light pass: per league,
+         fetch rosters/users plus the transaction buckets, build
+         the feed, sort newest first. */
+      function ff4LAState() {
+        if (!ff4.la) ff4.la = { loading: false, loaded: false, sig: "", items: [], failed: 0, checkedAt: null };
+        return ff4.la;
       }
-      function ff4TBWhen(ts) {
-        if (!ts) return "this week";
-        const d = Math.floor((Date.now() - ts) / 86400000);
-        return d <= 0 ? "today" : d === 1 ? "1d ago" : d + "d ago";
+      function ff4LAWhen(ts) {
+        if (!ts) return "";
+        const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+        if (s < 90) return "just now";
+        const m = Math.floor(s / 60);
+        if (m < 60) return m + "m ago";
+        const h = Math.floor(m / 60);
+        if (h < 24) return h + "h ago";
+        const d = Math.floor(h / 24);
+        return d === 1 ? "1d ago" : d + "d ago";
       }
-      /* FF-11 (audit 2026-11-08): honest coverage wording for the
-         weekly transaction scan — empty only ever means "checked and
-         found none"; partial or failed checks say so, and nothing
-         here claims the private trade inbox itself was read. */
-      function ff4TBCovText(tb) {
-        if (!tb || !tb.wkTotal || tb.wkChecked >= tb.wkTotal) return "";
-        if (tb.wkChecked === 0) return "The transaction check didn't go through for any league this time, so an offer could be missing from this list.";
-        return `Checked ${tb.wkChecked} of ${tb.wkTotal} league-weeks of transactions — some weeks couldn't be pulled, so an offer could be missing from this list.`;
-      }
-      function ff4TBCovNote(tb) {
-        const t = ff4TBCovText(tb);
-        return t ? `<p class="tb-espn">${esc(t)}</p>` : "";
-      }
-      function ff4TBEnsure(force) {
-        const tb = ff4TBState();
+      function ff4LAEnsure(force) {
+        const la = ff4LAState();
         const slp = (typeof slpState !== "undefined") ? slpState : null;
         const user = slp && slp.user ? slp.user : null;
         const leagues = slp && Array.isArray(slp.leagues) ? slp.leagues : [];
-        if (!user || !leagues.length) { ff4RenderTB(); ff4RenderCCTB(); return; }
-        const espnEntry = ff4CCEspnEntry();
-        const sig = user.user_id + "|" + leagues.map(l => l.league_id).join(",") + "|" + (espnEntry ? espnEntry.leagueId : "");
-        if (!force && (tb.loading || (tb.loaded && tb.sig === sig))) { ff4RenderTB(); ff4RenderCCTB(); return; }
-        /* The loading flag flips BEFORE any render: ff4RenderTB
-           calls back into ff4TBEnsure when it finds the board
-           unloaded, and it must see the pass already running. */
-        tb.loading = true; tb.sig = sig;
-        ff4RenderTB(); ff4RenderCCTB();
+        if (!user || !leagues.length) { ff4RenderLA(); ff4RenderCCLA(); return; }
+        const sig = user.user_id + "|" + leagues.map(l => l.league_id).join(",");
+        if (!force && (la.loading || (la.loaded && la.sig === sig))) { ff4RenderLA(); ff4RenderCCLA(); return; }
+        /* The loading flag flips BEFORE any render: the renderers
+           call back into ff4LAEnsure when they find the feed
+           unloaded, and they must see the pass already running. */
+        la.loading = true; la.sig = sig;
+        ff4RenderLA(); ff4RenderCCLA();
         (async () => {
-          const incoming = [], sent = [];
-          let failed = 0, wkChecked = 0, wkTotal = 0;
+          const items = [];
+          let failed = 0;
           for (let i = 0; i < leagues.length; i++) {
-            try {
-              const offers = await ff4TBLeague(leagues[i], user);
-              if (offers.coverage) { wkChecked += offers.coverage.checked; wkTotal += offers.coverage.total; }
-              offers.forEach(o => (o.sent ? sent : incoming).push(o));
-            } catch (e) { failed++; }
+            try { items.push(...await ff4LALeague(leagues[i])); }
+            catch (e) { failed++; }
           }
-          /* Worst-for-you first among the offers waiting on an
-             answer (margin = your adjusted edge; negative means the
-             deal costs you) — the ones to decide sit on top. Offers
-             you sent sort newest first. */
-          incoming.sort((a, b) => a.margin - b.margin || (b.created || 0) - (a.created || 0));
-          sent.sort((a, b) => (b.created || 0) - (a.created || 0));
-          const cur = ff4TBState();
+          items.sort((a, b) => (b.created || 0) - (a.created || 0));
+          const cur = ff4LAState();
           if (cur.sig !== sig) return; /* a newer pass owns the state */
-          cur.incoming = incoming; cur.sent = sent; cur.failed = failed; cur.checkedAt = Date.now();
-          cur.wkChecked = wkChecked; cur.wkTotal = wkTotal;
-          cur.espnNote = !!ff4CCEspnEntry();
+          cur.items = items.slice(0, 200);
+          cur.failed = failed;
+          cur.checkedAt = Date.now();
           cur.loading = false; cur.loaded = true;
-          ff4RenderTB(); ff4RenderCCTB();
+          ff4RenderLA(); ff4RenderCCLA();
         })();
       }
 
-      async function ff4TBLeague(lg, user) {
-        const week = ff4CCWeek(lg);
-        const [league, rosters, users] = await Promise.all([
-          slpGet(`/league/${lg.league_id}`), slpGet(`/league/${lg.league_id}/rosters`), slpGet(`/league/${lg.league_id}/users`)
+      /* One league's adds & drops from the last two weeks: the
+         current week's transactions bucket plus the three before
+         it (Sleeper files transactions by league week), filtered
+         to completed free-agent / waiver moves inside the 14-day
+         window — each add and each drop its own feed item. Team
+         names come from the league's own rosters/users bundle. */
+      async function ff4LALeague(lg) {
+        const [rosters, users] = await Promise.all([
+          slpGet(`/league/${lg.league_id}/rosters`), slpGet(`/league/${lg.league_id}/users`)
         ]);
-        if (!league || !rosters || !users) throw new Error("bundle");
-        const myRoster = rosters.find(r => r.owner_id === user.user_id || (r.co_owners || []).includes(user.user_id));
-        if (!myRoster) return [];
-        const myRid = myRoster.roster_id;
-        const wks = [];
-        for (let w = week; w >= Math.max(1, week - 7); w--) wks.push(w);
-        /* FF-11 (audit 2026-11-08): per-week success is tracked —
-           a failed week used to be indistinguishable from an empty
-           one, so a total fetch failure rendered as "no offers".
-           The graded array carries its coverage for the renderers. */
-        const wkRes = await Promise.all(wks.map(w => slpGet(`/league/${lg.league_id}/transactions/${w}`)
-          .then(a => ({ ok: Array.isArray(a), txs: Array.isArray(a) ? a : [] }))
-          .catch(() => ({ ok: false, txs: [] }))));
-        const wkChecked = wkRes.filter(r => r.ok).length;
-        const withCoverage = arr => { arr.coverage = { checked: wkChecked, total: wks.length }; return arr; };
-        const arrs = wkRes.map(r => r.txs);
-        const seen = new Set();
-        const pending = [];
-        arrs.flat().filter(Boolean).forEach(tx => {
-          if (!tx || tx.type !== "trade" || (tx.status !== "pending" && tx.status !== "proposed")) return;
-          if (tx.transaction_id) { if (seen.has(tx.transaction_id)) return; seen.add(tx.transaction_id); }
-          if (!(tx.roster_ids || []).includes(myRid)) return;
-          pending.push(tx);
+        if (!rosters || !users) throw new Error("bundle");
+        const teamOf = {};
+        rosters.forEach(r => {
+          const u = users.find(x => x && x.user_id === r.owner_id);
+          teamOf[r.roster_id] = (u && u.metadata && u.metadata.team_name) || (u && u.display_name) || ("Team " + r.roster_id);
         });
-        if (!pending.length) return withCoverage([]);
-        /* Real pick ownership for the build, same two-leg merge as
-           the full connect: the pending offer's picks still sit with
-           their current holders, and the calculator deep-link needs
-           the pick objects minted on the right teams. */
-        let tradedPicks = [];
-        try { tradedPicks = (await slpGet(`/league/${lg.league_id}/traded_picks`)) || []; } catch (e) { /* default ownership stands */ }
-        if (league.draft_id) {
-          try { const d = await slpGet(`/draft/${league.draft_id}/traded_picks`); if (Array.isArray(d)) tradedPicks = tradedPicks.concat(d); } catch (e) { /* league leg stands */ }
-        }
-        const built = buildConnLeague({ user, league, rosters, users, tradedPicks, matchups: null, week, transactions: [] });
-        await ff4CCLock();
-        let graded = [];
-        try {
-          const cap = ff4CCCapture();
-          try {
-            ff4CCSwap(built);
-            const me = DATA.teams.find(t => t.isUser) || DATA.teams.find(t => t.rid === myRid);
-            if (!me) return withCoverage([]);
-            let ranks = null;
-            if (DATA.teams.length === 12) {
-              /* The shared cached sim (audit FF-06): the same
-                 3,000-sim / seed-20261017 result the Command Center
-                 caches for this league — no separate 1,500-sim run
-                 on a different seed, so projected finishes agree
-                 with every other odds surface. */
-              try { const ent = (typeof ff4CCSimCached === "function") ? ff4CCSimCached("Sleeper:" + lg.league_id, 0, me) : null; const sim = (ent && ent.sim) ? ent.sim : window.buildSeasonSim({ sims: 3000, seed: 20261017 }); ranks = projFinishRanks(sim); } catch (e) { ranks = null; }
-            }
-            graded = pending.map(tx => ff4TBGrade(tx, { lg, me, myRid, user, ranks })).filter(Boolean);
-          } finally { ff4CCRestore(cap); }
-        } finally { ff4.ccBusy = false; }
-        /* The fit-note pass borrowed the calculator's state (see
-           ff4TBGrade); it was restored silently in-context, so
-           re-render the calculator once here, under the restored
-           active league, to leave its UI exactly as it was. */
-        try { renderSide("A"); renderSide("B"); renderVerdict(); } catch (e) { /* calculator not mounted yet */ }
-        return withCoverage(graded);
-      }
-
-      /* Grade one pending trade inside the swapped league context.
-         The verdict follows the calculator's own convention: each
-         side's total is what that side GIVES (raw sum + value
-         adjustment via vaPair), and in a multi-team deal the other
-         side is everything flowing to the user — so the user's
-         gives are priced against the user's gets, exactly. */
-      function ff4TBGrade(tx, ctx) {
-        try {
-          const { lg, me, myRid, user, ranks } = ctx;
-          const rids = tx.roster_ids || [];
-          const otherRids = rids.filter(r => r !== myRid);
-          if (!otherRids.length) return null;
-          const sentByMe = tx.creator != null && String(tx.creator) === String(user.user_id);
-          const seasonNum = Number(DATA.league.season) || Number(lg.season) || 2026;
-          const n = DATA.teams.length;
-          const RD_ORD = { 1: "1st", 2: "2nd", 3: "3rd", 4: "4th" };
-          const TIDX = { Early: 0, Mid: 1, Late: 2 };
-          const give = [], get = [], giveVals = [], getVals = [], giveCalc = [], getCalc = [];
-          let unpricedNote = false, unpricedPick = false;
-
-          const playerRow = pid => {
-            const p = PBY[pid];
-            if (!p) return { label: window.ffStubPlayerName ? window.ffStubPlayerName(pid) : "Player " + pid, sub: "", value: 0 };
-            if (p.unpriced) unpricedNote = true;
-            return {
-              label: p.name,
-              sub: [p.pos + (p.posRank || ""), p.team].filter(Boolean).join(" · "),
-              value: dispVal(p),
-            };
+        const week = ff4CCWeek(lg);
+        const wks = [];
+        for (let w = week; w >= Math.max(1, week - 3); w--) wks.push(w);
+        const arrs = await Promise.all(wks.map(w => slpGet(`/league/${lg.league_id}/transactions/${w}`).catch(() => [])));
+        const cutoff = Date.now() - 14 * 86400000;
+        const seen = new Set();
+        const out = [];
+        arrs.flat().filter(Boolean).forEach(tx => {
+          if (!tx || (tx.type !== "free_agent" && tx.type !== "waiver")) return;
+          if (tx.status && tx.status !== "complete") return;
+          if (!tx.created || tx.created < cutoff) return;
+          const push = (pid, rid, kind) => {
+            const key = String(tx.transaction_id || "") + ":" + kind + ":" + pid;
+            if (seen.has(key)) return;
+            seen.add(key);
+            out.push({
+              leagueId: String(lg.league_id), leagueName: lg.name || "League",
+              kind, pid: String(pid), team: teamOf[rid] || ("Team " + rid), created: tx.created
+            });
           };
-          const adds = tx.adds || {}, drops = tx.drops || {};
-          const handled = new Set();
-          Object.entries(adds).forEach(([pid, dest]) => {
-            handled.add(pid);
-            const row = playerRow(pid);
-            if (dest === myRid) { get.push(row); getVals.push(row.value); getCalc.push({ kind: "player", id: pid }); }
-            else if (drops[pid] === myRid || (me.playerIds || []).includes(pid)) { give.push(row); giveVals.push(row.value); giveCalc.push({ kind: "player", id: pid }); }
-          });
-          Object.entries(drops).forEach(([pid, from]) => {
-            if (handled.has(pid)) return;
-            handled.add(pid);
-            if (from === myRid) { const row = playerRow(pid); give.push(row); giveVals.push(row.value); giveCalc.push({ kind: "player", id: pid }); }
-          });
-
-          (tx.draft_picks || []).forEach(dp => {
-            const toMe = dp.owner_id === myRid, fromMe = dp.previous_owner_id === myRid;
-            if (!toMe && !fromMe) return; /* moves inside the other side of a multi-team deal */
-            const season = Number(dp.season), round = Number(dp.round);
-            const origTeam = TBY[dp.roster_id];
-            const origName = origTeam ? origTeam.name : "Team " + dp.roster_id;
-            const key = `${season}-${round}-${dp.roster_id}`;
-            /* The pick object lives on its current holder's list
-               (real ownership from traded_picks) — normally the
-               roster Sleeper names as previous owner, but the key
-               is unique league-wide, so scan every team rather than
-               assume where it sits. */
-            let pk = null, pkHolder = null;
-            for (const t of DATA.teams) { const f = (t.picks || []).find(p => p.key === key); if (f) { pk = f; pkHolder = t; break; } }
-            let tier = null, value = null;
-            if (ranks && ranks[dp.roster_id]) tier = pickTierFromRank(ranks[dp.roster_id], n);
-            else if (pk) tier = tierOfPick(pk);
-            if (tier) {
-              const dy = Math.min(Math.max(season - seasonNum, 1), 3);
-              const row = SLP_LADDER[dy] && SLP_LADDER[dy][round - 1];
-              if (row) value = Math.round(row[TIDX[tier]] * pickScalar(SETTINGS, season, round, tier));
-            }
-            if (value == null && pk) value = pickPrice(pk);
-            if (value == null) unpricedPick = true;
-            const rowOut = {
-              label: `${season} ${RD_ORD[round] || "Round " + round}` + (tier ? ` · ${tier.toUpperCase()}` : "") + ` · via ${origName}`,
-              sub: tier ? (ranks && ranks[dp.roster_id]
-                ? `Tier from ${origName}'s projected finish (${typeof slpOrd === "function" ? slpOrd(ranks[dp.roster_id]) : ranks[dp.roster_id]} of ${n})`
-                : `Tier from ${origName}'s current standing`) : "",
-              value,
-            };
-            if (pk) (toMe ? getCalc : giveCalc).push({ kind: "pick", key, fromTeam: pkHolder.rid });
-            if (toMe) { get.push(rowOut); if (value != null) getVals.push(value); }
-            else { give.push(rowOut); if (value != null) giveVals.push(value); }
-          });
-
-          const budgets = tx.waiver_budget ? (Array.isArray(tx.waiver_budget) ? tx.waiver_budget : [tx.waiver_budget]) : [];
-          budgets.forEach(wb => {
-            const amt = Number(wb && wb.amount) || 0;
-            if (!amt) return;
-            const rowOut = { label: `$${amt} FAAB`, sub: "Waiver budget — shown, not priced into the totals", value: null };
-            if (wb.receiver === myRid) get.push(rowOut);
-            else if (wb.sender === myRid) give.push(rowOut);
-          });
-
-          if (!give.length && !get.length) return null;
-          const giveRaw = giveVals.reduce((s, v) => s + v, 0);
-          const getRaw = getVals.reduce((s, v) => s + v, 0);
-          const [adjGive, adjGet] = vaPair(giveVals, getVals);
-          const giveAdj = giveRaw + adjGive, getAdj = getRaw + adjGet;
-          const diff = getAdj - giveAdj;
-          const pct = Math.abs(diff) / Math.max(giveAdj, getAdj, 1);
-          const otherName = otherRids.map(r => (TBY[r] ? TBY[r].name : "Team " + r)).join(" + ");
-          const pctTxt = Math.max(1, Math.round(pct * 100));
-          let band, head, line;
-          if (!(giveRaw + getRaw > 0)) {
-            band = "ungraded"; head = "Can't grade this one";
-            line = "The pieces in this offer sit outside the priced pool, so there's no honest number to put on it.";
-          } else if (pct <= 0.05) {
-            band = "fair"; head = "Fair trade";
-            line = `Values are within 5% — you'd give ${fmt(giveAdj)} for ${fmt(getAdj)}.`;
-          } else if (pct <= 0.10) {
-            band = diff > 0 ? "closeyou" : "closethem";
-            head = diff > 0 ? "Close — slight edge to you" : `Close — slight edge to ${otherName}`;
-            line = diff > 0
-              ? `You'd come out ahead by ${fmt(Math.abs(diff))} — about ${pctTxt}% in your favor.`
-              : `You'd give up ${fmt(Math.abs(diff))} more than you get back — about ${pctTxt}% against you.`;
-          } else {
-            band = diff > 0 ? "you" : "them";
-            head = diff > 0 ? "Edge to you" : `Edge to ${otherName}`;
-            line = diff > 0
-              ? `You'd come out ahead by ${fmt(Math.abs(diff))} — about ${pctTxt}% in your favor.`
-              : `You'd come out behind by ${fmt(Math.abs(diff))} — about ${pctTxt}% against you.`;
-          }
-
-          /* Fit notes for the user's side, from the calculator's own
-             fit logic: borrow calc state with the offer loaded (you
-             on side A), read fitNotes("A"), then put the state back
-             untouched. The calculator UI re-renders later, under the
-             restored league (see ff4TBLeague). */
-          let fit = [];
-          try {
-            if (giveCalc.length || getCalc.length) {
-              const savedA = { team: calc.A.team, src: calc.A.src, assets: calc.A.assets.map(a => ({ ...a })) };
-              const savedB = { team: calc.B.team, src: calc.B.src, assets: calc.B.assets.map(a => ({ ...a })) };
-              try {
-                calc.A.team = myRid; calc.A.src = "team"; calc.A.assets = giveCalc.slice();
-                calc.B.team = otherRids[0]; calc.B.src = "team"; calc.B.assets = getCalc.slice();
-                fit = fitNotes("A").filter(nt => nt && typeof nt === "object" && (nt.cls === "good" || nt.cls === "warn")).slice(0, 2).map(nt => nt.txt);
-              } finally {
-                calc.A.team = savedA.team; calc.A.src = savedA.src; calc.A.assets = savedA.assets;
-                calc.B.team = savedB.team; calc.B.src = savedB.src; calc.B.assets = savedB.assets;
-              }
-            }
-          } catch (e) { fit = []; }
-
-          return {
-            id: String(tx.transaction_id || (lg.league_id + ":" + (tx.created || "") + ":" + otherRids.join("-"))),
-            leagueId: String(lg.league_id), leagueName: lg.name || DATA.league.name || "League",
-            chips: ff4CCChips(lg), sent: sentByMe, created: tx.created || 0, when: ff4TBWhen(tx.created),
-            otherRids, otherName, multi: rids.length > 2, myRid,
-            give, get, giveAdj, getAdj, diff, pct,
-            margin: diff / Math.max(giveAdj, getAdj, 1),
-            hasAdj: giveAdj !== giveRaw || getAdj !== getRaw,
-            band, head, line, fit, unpricedNote, unpricedPick,
-            giveCalc, getCalc,
-          };
-        } catch (e) { return null; }
+          Object.entries(tx.adds || {}).forEach(([pid, rid]) => push(pid, rid, "add"));
+          Object.entries(tx.drops || {}).forEach(([pid, rid]) => push(pid, rid, "drop"));
+        });
+        return out;
       }
 
-      function ff4TBRowHtml(row) {
-        const val = row.value == null ? `<span class="tb-val na">not priced</span>` : `<span class="tb-val num">${fmt(row.value)}</span>`;
-        return `<div class="tb-asset"><div class="tb-asset-main"><span class="tb-asset-name">${esc(row.label)}</span>${row.sub ? `<span class="tb-asset-sub">${esc(row.sub)}</span>` : ""}</div>${val}</div>`;
+      function ff4LAPlayerName(pid) {
+        const p = (typeof PBY !== "undefined") ? PBY[pid] : null;
+        if (p && p.name) return p.name;
+        return window.ffStubPlayerName ? window.ffStubPlayerName(pid) : "Player " + pid;
+      }
+      function ff4LARowHtml(it) {
+        const nm = ff4LAPlayerName(it.pid);
+        return `<div class="la-row"><span class="la-kind ${it.kind}">${it.kind === "add" ? "Added" : "Dropped"}</span><span class="la-main"><span class="la-player" title="${esc(nm)}">${esc(nm)}</span><span class="la-meta" title="${esc(it.team)} · ${esc(it.leagueName)}">${esc(it.team)} · ${esc(it.leagueName)}</span></span><span class="la-when">${esc(ff4LAWhen(it.created))}</span></div>`;
       }
 
-      function ff4TBCardHtml(o, compact) {
-        const bandCls = { fair: "fair", closeyou: "good", you: "good", closethem: "bad", them: "bad", ungraded: "na" }[o.band] || "fair";
-        const parties = o.sent ? `You → <b>${esc(o.otherName)}</b>` : `<b>${esc(o.otherName)}</b> → you`;
-        const multi = o.multi ? ` <span class="tb-multi">${o.otherRids.length + 1}-team deal</span>` : "";
-        if (compact) {
-          return `<article class="tb-card compact">
-            <div class="tb-card-top"><span class="tb-league">${esc(o.leagueName)}</span><span class="tb-when">${o.sent ? "You sent this" : "Sent to you"} · ${esc(o.when)}</span></div>
-            <div class="tb-parties">${parties}${multi}</div>
-            <div class="tb-mini"><span>You give <b>${fmt(o.giveAdj)}</b>: ${esc(o.give.map(r => r.label).join(", ") || "—")}</span><span>You get <b>${fmt(o.getAdj)}</b>: ${esc(o.get.map(r => r.label).join(", ") || "—")}</span></div>
-            <div class="tb-verdict ${bandCls}"><b>${esc(o.head)}</b><span>${esc(o.line)}</span></div>
-            <div class="tb-actions"><button type="button" class="tb-calc-btn" data-tb-calc="${esc(o.id)}">Open in calculator</button></div>
-          </article>`;
-        }
-        return `<article class="tb-card">
-          <div class="tb-card-top"><span class="tb-league">${esc(o.leagueName)}</span><span class="tb-when">${o.sent ? "You sent this" : "Sent to you"} · ${esc(o.when)}</span></div>
-          <div class="tb-parties">${parties}${multi}</div>
-          <div class="cc-chips">${(o.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
-          <div class="tb-cols">
-            <div class="tb-col"><div class="tb-col-h">You give · ${fmt(o.giveAdj)}</div>${o.give.map(ff4TBRowHtml).join("") || `<div class="tb-none">Nothing</div>`}</div>
-            <div class="tb-col"><div class="tb-col-h">You get · ${fmt(o.getAdj)}</div>${o.get.map(ff4TBRowHtml).join("") || `<div class="tb-none">Nothing</div>`}</div>
-          </div>
-          <div class="tb-verdict ${bandCls}"><b>${esc(o.head)}</b><span>${esc(o.line)}</span></div>
-          ${o.fit && o.fit.length ? `<ul class="tb-fit">${o.fit.map(t => `<li>${esc(t)}</li>`).join("")}</ul>` : ""}
-          ${o.hasAdj ? `<p class="tb-note">Totals are the adjusted totals, the same ones the calculator's verdict uses — open it there for the full breakdown.</p>` : ""}
-          ${o.unpricedNote ? `<p class="tb-note">Includes a player outside the priced pool — he counts as 0 in the totals.</p>` : ""}
-          ${o.unpricedPick ? `<p class="tb-note">Includes a pick outside the priced window — it isn't counted in the totals.</p>` : ""}
-          <div class="tb-actions"><button type="button" class="tb-calc-btn" data-tb-calc="${esc(o.id)}">Open in calculator</button></div>
-        </article>`;
-      }
-
-      function ff4RenderTB() {
-        const out = document.getElementById("tb-out");
+      function ff4RenderLA() {
+        const out = document.getElementById("la-out");
         if (!out) return;
         const slp = (typeof slpState !== "undefined") ? slpState : null;
         const user = slp && slp.user ? slp.user : null;
-        const tb = ff4TBState();
+        const la = ff4LAState();
         if (!user) {
           const espn = ff4CCEspnEntry();
           out.innerHTML = `<div class="tb-empty"><p>${espn
-            ? "You're connected with an ESPN league. The Trade Board reads pending offers from Sleeper — ESPN doesn't share them with outside tools, so there's nothing it can grade from an ESPN league."
-            : "Connect with your Sleeper username and every trade offer waiting on you, in every league you play in, lands here — graded, so you can clear them from one screen."}</p><button type="button" class="locked-cta" id="tb-connect">Connect your league</button></div>`;
-          const b = document.getElementById("tb-connect");
+            ? "League Activity reads the adds & drops in your Sleeper leagues — ESPN doesn't provide a transactions feed to outside tools."
+            : "Connect with your Sleeper username and the latest adds & drops from every league you play in land here, most recent first."}</p><button type="button" class="locked-cta" id="la-connect">Connect your league</button></div>`;
+          const b = document.getElementById("la-connect");
           if (b) b.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
           return;
         }
-        if (tb.loading || !tb.loaded) {
-          out.innerHTML = `<p class="tb-loading"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Pulling every league's pending offers and grading them…</p>`;
-          if (!tb.loading) ff4TBEnsure(false);
+        if (la.loading || !la.loaded) {
+          out.innerHTML = `<p class="tb-loading"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Pulling the last two weeks of adds & drops from your leagues…</p>`;
+          if (!la.loading) ff4LAEnsure(false);
           return;
         }
         const parts = [];
-        parts.push(`<div class="tb-head"><span class="tb-count">${tb.incoming.length} offer${tb.incoming.length === 1 ? "" : "s"} waiting on you</span><button type="button" class="tb-refresh" id="tb-refresh">Re-check offers</button></div>`);
-        if (tb.espnNote) parts.push(`<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>`);
-        if (tb.failed) parts.push(`<p class="tb-espn">${tb.failed} league${tb.failed === 1 ? "" : "s"} couldn't be checked just now — hit Re-check to try again.</p>`);
-        { const covNote = ff4TBCovNote(tb); if (covNote) parts.push(covNote); }
-        if (tb.incoming.length) parts.push(`<div class="tb-grid">${tb.incoming.map(o => ff4TBCardHtml(o, false)).join("")}</div>`);
-        else if (tb.wkTotal && tb.wkChecked === 0) parts.push(`<div class="tb-empty"><p>Couldn't check your leagues' transactions just now — hit Re-check offers to try again.</p></div>`);
-        else parts.push(`<div class="tb-empty"><p>No trades waiting on you — nothing found in the last 8 weeks of transactions.</p></div>`);
-        if (tb.sent.length) {
-          parts.push(`<h3 class="tb-subh">Waiting on them — offers you sent</h3><div class="tb-grid">${tb.sent.map(o => ff4TBCardHtml(o, false)).join("")}</div>`);
-        }
+        const shown = la.items.slice(0, 30);
+        const when = la.checkedAt ? new Date(la.checkedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
+        parts.push(`<div class="tb-head"><span class="tb-count">${la.items.length} move${la.items.length === 1 ? "" : "s"} in the last two weeks</span><button type="button" class="tb-refresh" id="la-refresh">Re-check</button></div>`);
+        if (la.failed) parts.push(`<p class="tb-note">${la.failed} league${la.failed === 1 ? "" : "s"} couldn't be checked just now — hit Re-check to try again.</p>`);
+        if (shown.length) parts.push(`<div class="la-list">${shown.map(ff4LARowHtml).join("")}</div>`);
+        else parts.push(`<div class="tb-empty"><p>No adds or drops in the last two weeks.</p></div>`);
+        if (when) parts.push(`<p class="tb-note">Last checked ${when}.</p>`);
         out.innerHTML = parts.join("");
-        const rb = document.getElementById("tb-refresh");
-        if (rb) rb.addEventListener("click", () => ff4TBEnsure(true));
-        out.querySelectorAll("[data-tb-calc]").forEach(b => b.addEventListener("click", () => ff4TBOpenCalc(b.dataset.tbCalc)));
+        const rb = document.getElementById("la-refresh");
+        if (rb) rb.addEventListener("click", () => ff4LAEnsure(true));
       }
 
-      function ff4RenderCCTB() {
-        const el = document.getElementById("cc-tb");
+      function ff4RenderCCLA() {
+        const el = document.getElementById("cc-la");
         if (!el) return;
         const slp = (typeof slpState !== "undefined") ? slpState : null;
         const user = slp && slp.user ? slp.user : null;
         if (!user) { el.innerHTML = ""; return; }
-        const tb = ff4TBState();
-        if (tb.loading || !tb.loaded) {
-          el.innerHTML = `<div class="cc-queue-h">Trade Board</div><p class="cc-queue-note cc-loading"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Checking for offers waiting on you…</p>`;
+        const la = ff4LAState();
+        if (la.loading || !la.loaded) {
+          el.innerHTML = `<p class="cc-queue-note cc-loading"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Checking your leagues' latest moves…</p>`;
           return;
         }
-        /* Hidden leagues never show their trades here (the pass still
+        /* Hidden leagues never show their moves here (the pass still
            fetches them; this render is the choke point). */
         const sessU = ff4CCSessionUsername();
-        const incoming = tb.incoming.filter(o => !ff4CCIsHiddenKey("sleeper:" + String(o.leagueId), sessU));
-        if (!incoming.length) {
-          const when = tb.checkedAt ? new Date(tb.checkedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
-          el.innerHTML = `<div class="cc-queue-h">Trade Board</div><p class="cc-queue-note">No incoming trades across all your leagues.${when ? ` Last checked ${when}.` : ""}</p>`
-            + (tb.failed ? `<p class="cc-queue-note">Couldn't check ${tb.failed} league${tb.failed === 1 ? "" : "s"} — reopen Command Center to retry.</p>` : "")
-            + (ff4TBCovText(tb) ? `<p class="cc-queue-note">${esc(ff4TBCovText(tb))}</p>` : "")
-            + (tb.espnNote ? `<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>` : "")
-            + `<button type="button" class="tb-open-board" id="cc-tb-open">Open the Trade Board →</button>`;
-          const ob0 = document.getElementById("cc-tb-open");
-          if (ob0) ob0.addEventListener("click", () => { activateNav("tradeboard"); window.scrollTo({ top: 0 }); });
-          return;
+        const items = la.items.filter(it => !ff4CCIsHiddenKey("sleeper:" + String(it.leagueId), sessU));
+        let body;
+        if (!items.length) {
+          const when = la.checkedAt ? new Date(la.checkedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
+          body = `<p class="cc-queue-note">No adds or drops in the last two weeks.${when ? ` Last checked ${when}.` : ""}</p>`
+            + (la.failed ? `<p class="cc-queue-note">Couldn't check ${la.failed} league${la.failed === 1 ? "" : "s"} — reopen Command Center to retry.</p>` : "");
+        } else {
+          body = `<div class="cc3-scroll cc-la-scroll${items.length > 4 ? " scrolls" : ""}">${items.slice(0, 12).map(ff4LARowHtml).join("")}</div>`;
         }
-        el.innerHTML = `<div class="cc-queue-h">Trade Board · ${incoming.length} waiting on you</div>`
-          + incoming.map(o => ff4TBCardHtml(o, true)).join("")
-          + (tb.espnNote ? `<p class="tb-espn">Your ESPN league isn't here — ESPN doesn't share pending offers with outside tools, so there's nothing to grade from it.</p>` : "")
-          + `<button type="button" class="tb-open-board" id="cc-tb-open">Open the Trade Board →</button>`;
-        const ob = document.getElementById("cc-tb-open");
+        el.innerHTML = body + `<button type="button" class="tb-open-board" id="cc-la-open">Open League Activity →</button>`;
+        const ob = document.getElementById("cc-la-open");
         if (ob) ob.addEventListener("click", () => { activateNav("tradeboard"); window.scrollTo({ top: 0 }); });
-        el.querySelectorAll("[data-tb-calc]").forEach(b => b.addEventListener("click", () => ff4TBOpenCalc(b.dataset.tbCalc)));
-        /* NYF category 7 rides this pass: whenever the board state
-           changes, the queue re-renders so offers waiting on Eric
-           join Needs You First (and the all-clear waits for it). */
-        try { if (typeof ff4CCRenderQueue === "function") ff4CCRenderQueue(); } catch (e) {}
       }
-
-      async function ff4TBOpenCalc(id) {
-        const tb = ff4TBState();
-        const o = [...tb.incoming, ...tb.sent].find(x => x.id === id);
-        if (!o) return;
-        if (connLeagueKey !== "sleeper:" + o.leagueId) {
-          const slp = (typeof slpState !== "undefined") ? slpState : null;
-          const lg = slp && (slp.leagues || []).find(l => String(l.league_id) === o.leagueId);
-          if (!lg) return;
-          try { await slpLoadLeague(lg, { skipTabRefresh: true }); } catch (e) { return; }
-          if (connLeagueKey !== "sleeper:" + o.leagueId) return;
-        }
-        try {
-          calc.A.team = o.myRid; calc.A.src = "team"; calc.A.assets = o.giveCalc.map(a => ({ ...a }));
-          calc.B.team = o.otherRids[0]; calc.B.src = "team"; calc.B.assets = o.getCalc.map(a => ({ ...a }));
-          renderSide("A"); renderSide("B"); renderVerdict();
-        } catch (e) { return; }
-        activateNav("trades");
-        window.scrollTo({ top: 0 });
-      }
-      window.ff4TBEnsure = ff4TBEnsure;
+      window.ff4LAEnsure = ff4LAEnsure;
 
       /* ---------------- nav wiring ---------------- */
       (function () {
@@ -21713,7 +21403,7 @@ window.drDraft = {
           window.activateNav = function (k, a) {
             const r = orig(k, a);
                 if (k === "command") ff4RenderCC();
-            if (k === "tradeboard") ff4TBEnsure(false);
+            if (k === "tradeboard") ff4LAEnsure(false);
             if (k === "league") { setTimeout(ff4RenderPP, 40); setTimeout(() => { if (typeof window.renderLifeline === "function") window.renderLifeline(); }, 40); }
             return r;
           };
