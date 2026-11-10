@@ -1593,7 +1593,13 @@
         padding: 5px 12px; border-radius: 999px; cursor: pointer;
         background: var(--surface); border: 1px solid var(--line); color: var(--ink-2);
         font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 13px;
-       flex: 0 0 auto; white-space: nowrap; }
+       flex: 0 0 auto; white-space: nowrap; max-width: min(240px, 62vw); overflow: hidden; }
+      .ls-pill-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      /* Text-length caps (Eric, 2026-11-10): the connect dialog's
+         league list — long league names ellipsis, never stretch. */
+      .slp-league { min-width: 0; }
+      .slp-league-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .slp-league-meta { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .ls-pill:hover { color: var(--ink); border-color: rgba(255,255,255,.28); }
       .ls-pill.active {
         background: var(--accent); color: var(--accent-ink); border-color: transparent;
@@ -2980,6 +2986,17 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .tb-asset { display: flex; gap: 8px; align-items: baseline; justify-content: space-between; padding: 3px 0; }
       .tb-asset-main { display: flex; flex-direction: column; min-width: 0; }
       .tb-asset-name { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+      /* Text-length caps (Eric, 2026-11-10): Trade Board cards —
+         league names, parties and asset names ellipsis instead of
+         stretching the card; columns get min-width:0. */
+      .tb-card { min-width: 0; }
+      .tb-card-top { display: flex; gap: 8px; min-width: 0; align-items: baseline; }
+      .tb-league { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .tb-when { flex: 0 0 auto; }
+      .tb-parties { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .tb-asset-main { min-width: 0; }
+      .tb-asset-name { display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+      .tb-col { min-width: 0; }
       .tb-asset-sub { font-size: 12px; color: var(--ink-3); line-height: 1.35; }
       .tb-val { font-family: "Space Grotesk", sans-serif; font-size: 14px; color: var(--ink); white-space: nowrap; }
       .tb-val.na { font-family: "Inter", sans-serif; font-size: 12px; color: var(--ink-3); }
@@ -3569,12 +3586,41 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .cc3-h.lime { color: #C6FF00; }
       .cc3-h.pink { color: #FF2E88; }
       .cc3-h.cyan { color: #00E5FF; }
+      .cc3-h.rose { color: #FF4081; }
+      .cc3-h.blue { color: #448AFF; }
+      .cc3-h.mint { color: #69F0AE; }
+      /* Section color coding (Eric, Nov 10): every Command Center
+         section carries its own accent — the old tile palette —
+         as a colored header plus a subtle tinted wash over the
+         whole region, like the boxes used to feel. Map: Needs You
+         First #FF2E88 pink · Action Slip #C6FF00 lime · Opportunity
+         Radar #FF4081 rose · Most Added #448AFF blue · Trade Ideas
+         #69F0AE mint · Trade Board #00E5FF cyan · Manager Score
+         #FFAB40 amber · strip keys: Odds lime, Power Rank cyan,
+         Grades #B388FF violet, Stock #FFC400. */
+      #cc-out .cc3-ss-odds .cc3-ss-k { color: #C6FF00; }
+      #cc-out .cc3-ss-pow .cc3-ss-k { color: #00E5FF; }
+      #cc-out .cc3-ss-grd .cc3-ss-k { color: #B388FF; }
+      #cc-out .cc3-ss-stk .cc3-ss-k { color: #FFC400; }
+      #cc-out .cc3-ss-ms .cc-ms-bar-label { color: #FFAB40; }
+      #cc-out .cc3-ss-ms .cc-ms-bar-score { color: #FFAB40; }
+      #cc-out .cc3-listcol { border: 1px solid transparent; border-radius: 12px; padding: 9px 11px; }
+      #cc-out .cc3-col-radar { background: rgba(255,64,129,.05); border-color: rgba(255,64,129,.20); }
+      #cc-out .cc3-col-added { background: rgba(68,138,255,.05); border-color: rgba(68,138,255,.22); }
+      #cc-out .cc3-ideascol { background: rgba(105,240,174,.045); border-color: rgba(105,240,174,.20); }
+      #cc-out .cc3-col-radar .cc3-more { color: #FF4081; }
+      #cc-out .cc3-col-added .cc3-more { color: #448AFF; }
+      #cc-out .cc3-ideascol .cc3-more { color: #69F0AE; }
       .cc3-sec-gap { margin-top: 20px; }
       .cc3-more { display: inline-block; margin-top: 6px; background: none; border: 0; padding: 0; font: inherit; font-size: 13px; font-weight: 700; color: #00E5FF; cursor: pointer; }
       .cc3-more:hover { color: #C6FF00; }
       /* Needs You First — the concept's open queue: no box, hairline
-         rows, urgency accent on the left; never height-capped */
-      #cc-out .cc-queue { border: 0; border-radius: 0; background: none; padding: 0; margin: 18px 0 0; }
+         rows, urgency accent on the left. Display rule (Eric,
+         2026-11-10): five rows visible, the rest scroll inside the
+         panel, with a +N more bar at the bottom edge (iPad hides
+         scrollbars) — the list itself stays uncapped. */
+      #cc-out .cc-queue { border: 1px solid rgba(255,46,136,.20); border-radius: 12px; background: rgba(255,46,136,.045); padding: 10px 12px; margin: 18px 0 0; }
+      #cc-out .cc-queue.clean { background: rgba(198,255,0,.04); border-color: rgba(198,255,0,.18); }
       #cc-out .cc-queue-h { color: #FF2E88; font-size: 12px; letter-spacing: .13em; margin-bottom: 2px; }
       #cc-out .cc-queue.clean .cc-queue-h { color: #C6FF00; }
       #cc-out .cc-queue-it { border-top: 1px solid rgba(255,255,255,.09); border-left: 3px solid #FF2E88; padding: 6px 2px 6px 10px; }
@@ -3583,6 +3629,48 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       #cc-out .cc-queue-it:has(.cc-q-issue.bye) { border-left-color: #00E5FF; }
       #cc-out .cc-queue-it:has(.cc-q-issue.dbt), #cc-out .cc-queue-it:has(.cc-q-issue.fyi) { border-left-color: rgba(255,255,255,.25); }
       #cc-out .cc-queue-it.static { border-top: 1px solid rgba(255,255,255,.09); }
+      /* NYF panel mechanics (2026-11-10): scroll window, +N more
+         affordance, fine-tuning subhead + quiet rows, all-clear row. */
+      #cc-out .cc-queue-list { overflow-y: auto; }
+      #cc-out .cc-queue-more { font-size: 12px; font-weight: 700; letter-spacing: .05em; color: var(--ink-2); padding: 7px 2px 0; }
+      #cc-out .cc-queue-sub { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); padding: 12px 2px 2px; }
+      #cc-out .cc-queue-it.tune { border-left-color: rgba(255,255,255,.18); }
+      #cc-out .cc-queue-it.tune .cc-q-player { color: var(--ink-2); font-weight: 600; font-size: 14px; }
+      #cc-out .cc-queue-it.tune .cc-q-issue { color: var(--ink-2); font-weight: 500; }
+      #cc-out .cc-queue-clear { padding: 8px 2px 4px; }
+      #cc-out .cc-q-clear-h { display: block; font-weight: 700; font-size: 15px; color: #C6FF00; }
+      #cc-out .cc-q-clear-s { display: block; color: var(--ink-2); font-size: 13.5px; margin-top: 2px; }
+      #cc-out .cc-q-issue.offer { color: #C6FF00; }
+      /* Progressive loading (Eric, 2026-11-10): small inline spinner
+         + per-section loading rows, so each region shows its own
+         progress inside its own (washed) region. */
+      .cc-spin-sm { width: 14px; height: 14px; border-width: 2px; margin-top: 0; display: inline-block; vertical-align: -2px; }
+      #cc-out .cc-queue-busy { display: flex; gap: 9px; align-items: center; color: var(--ink-2); font-size: 13.5px; padding: 8px 2px 2px; margin: 0; }
+      #cc-out .cc-loadrow { display: flex; gap: 9px; align-items: center; color: var(--ink-2); font-size: 13.5px; margin: 0; padding: 10px 2px; }
+      #cc-out .cc3-slip .cc-loadrow { padding: 4px 0; }
+      #cc-out .cc-status .cc-spin-sm, #cc-out .cc-queue-note .cc-spin-sm, .tb-loading .cc-spin-sm { margin-right: 2px; }
+      /* Text-length caps (Eric, 2026-11-10): no league, team or
+         player name may overflow its container or push a neighbor —
+         flex children get min-width:0, name/identifier spans get
+         single-line ellipsis (full text rides the row's title),
+         sentence text wraps. Applies at every width. */
+      #cc-out .cc-spot-top > div:first-child { min-width: 0; }
+      #cc-out .cc-spot-team { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+      #cc-out .cc-tname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #cc-out .cc-spot-team .you-tag, #cc-out .cc-spot-record { flex: 0 0 auto; }
+      #cc-out .cc-spot-league { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #cc-out .cc-queue-it { display: flex; flex-wrap: wrap; column-gap: 8px; align-items: baseline; }
+      #cc-out .cc-q-player { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #cc-out .cc-q-where { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #cc-out .cc3-next-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #cc-out .cc3-slip-move .cc-q-player { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #cc-out .cc3-slip-move .cc-q-issue { min-width: 0; flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #cc-out .chip { max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #cc-out .cc-rail-top { display: flex; gap: 8px; min-width: 0; align-items: baseline; }
+      #cc-out .cc-rail-team { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #cc-out .cc-rail-odds { flex: 0 0 auto; }
+      #cc-out .cc-rail-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #cc-out .cc3-ms-sub { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       /* the two lobby lists: exactly four rows, scroll for the rest */
       #cc-out .cc3-lists { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 16px; }
       @media (min-width: 641px) {
@@ -3619,7 +3707,19 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       #cc-out .cc-rail-it { flex: 0 0 248px; width: 248px; }
       #cc-out .cc-rail.cc-manage-open { display: block; overflow-x: visible; }
       /* ---- the Action Slip ---- */
-      #cc-out .cc3-slip { border: 1px solid rgba(255,255,255,.12); border-left: 4px solid #C6FF00; border-radius: 10px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); box-sizing: border-box; }
+      #cc-out .cc3-slip { border: 1px solid rgba(255,255,255,.12); border-left: 4px solid #C6FF00; border-radius: 10px; padding: 14px 16px; background: linear-gradient(160deg, rgba(198,255,0,.05), rgba(255,255,255,.012)); box-sizing: border-box; }
+      /* slip sub-sections carry their own washes (see the color map
+         above); the wrappers replace the old <hr> separators, so
+         the slip's total height does not grow */
+      .cc3-slip-sec { border-radius: 9px; padding: 8px 9px; margin: 10px -9px 0; }
+      .cc3-slip-sec.sec-move { background: rgba(198,255,0,.05); }
+      .cc3-slip-sec.sec-tb { background: rgba(0,229,255,.05); }
+      .cc3-slip-sec.sec-idea { background: rgba(105,240,174,.05); }
+      .cc3-slip-sec.sec-ms { background: rgba(255,171,64,.06); }
+      #cc-out .cc3-slip .sec-move .cc3-mini-h { color: #C6FF00; }
+      #cc-out .cc3-slip .sec-tb .cc3-mini-h { color: #00E5FF; }
+      #cc-out .cc3-slip .sec-idea .cc3-mini-h { color: #69F0AE; }
+      #cc-out .cc3-slip .sec-ms .cc3-mini-h { color: #FFAB40; }
       .cc3-slip-tag { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: .16em; font-weight: 800; color: #C6FF00; }
       .cc3-mini-h { font-family: "Space Grotesk", sans-serif; font-size: 10px; letter-spacing: .14em; font-weight: 800; color: var(--ink-3); text-transform: uppercase; margin-bottom: 5px; }
       #cc-out .cc3-slip h3.cc3-next-title { font-family: "Space Grotesk", sans-serif; font-size: 19px; line-height: 1.3; margin: 6px 0 4px; }
@@ -3641,11 +3741,11 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       #cc-out .cc3-slip .cc-tb .tb-open-board { display: block; width: 100%; margin-top: 8px; border-radius: 8px; padding: 9px; }
       #cc-out .cc3-slip .cc-tb .tb-card { margin-top: 8px; }
       .cc3-idea-name { color: var(--ink); }
-      .cc3-idea-gain { color: #00E5FF; }
+      .cc3-idea-gain { color: #69F0AE; }
       .cc3-ms-line { display: flex; align-items: baseline; gap: 10px; }
-      .cc3-ms-num { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 22px; color: #00E5FF; }
+      .cc3-ms-num { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 22px; color: #FFAB40; }
       .cc3-ms-sub { color: var(--ink-3); font-size: 12px; }
-      .cc3-ms-link { background: none; border: 0; padding: 0; margin-top: 2px; font: inherit; font-size: 13px; font-weight: 700; color: #00E5FF; cursor: pointer; }
+      .cc3-ms-link { background: none; border: 0; padding: 0; margin-top: 2px; font: inherit; font-size: 13px; font-weight: 700; color: #FFAB40; cursor: pointer; }
       .cc3-ms-link:hover { color: #C6FF00; }
       @media (max-width: 640px) {
         #cc-out .cc3-slip { padding: 12px 14px; }
@@ -11813,6 +11913,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             pf: Math.round(pf * 100) / 100,
             pa: Math.round(pa * 100) / 100,
             playerIds: (r.players || []).slice(),
+            irIds: (r.reserve || []).slice(),
             lineup,
             lineupWeek,
             picks: [],
@@ -12174,7 +12275,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         wrap.hidden = false;
         pills.innerHTML = items.map((it, i) => {
           const active = it.key === connLeagueKey;
-          return `<button type="button" class="ls-pill${active ? " active" : ""}" data-ls="${i}" aria-pressed="${active}"${active ? ' aria-current="true"' : ""}>${esc(it.name)}<span class="ls-meta">${esc(it.meta)}</span></button>`;
+          return `<button type="button" class="ls-pill${active ? " active" : ""}" data-ls="${i}" aria-pressed="${active}"${active ? ' aria-current="true"' : ""} title="${esc(it.name)}"><span class="ls-pill-name">${esc(it.name)}</span><span class="ls-meta">${esc(it.meta)}</span></button>`;
         }).join("");
         pills.querySelectorAll("[data-ls]").forEach(btn => btn.addEventListener("click", () => {
           const it = items[Number(btn.dataset.ls)];
@@ -13003,7 +13104,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         const espnStubs = [];
         const teams = (raw.teams || []).map(t => {
           const rec = (t.record && t.record.overall) || {};
-          const playerIds = [], lineup = [];
+          const playerIds = [], lineup = [], irIds = [];
           ((t.roster && t.roster.entries) || []).forEach(e => {
             const pl = (e.playerPoolEntry && e.playerPoolEntry.player) || {};
             let sid = espnMapPlayer(pl);
@@ -13029,6 +13130,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
               }
             }
             playerIds.push(sid);
+            if (e.lineupSlotId === 21) irIds.push(sid);
             const pr = espnProjOf(pl, season, week);
             if (pr) proj[sid] = pr;
             if (!ESPN_BENCH_SLOTS[e.lineupSlotId]) {
@@ -13049,7 +13151,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             record: (rec.wins || 0) + "-" + (rec.losses || 0) + (rec.ties ? "-" + rec.ties : ""),
             pf: Math.round((Number(rec.pointsFor) || 0) * 100) / 100,
             pa: Math.round((Number(rec.pointsAgainst) || 0) * 100) / 100,
-            playerIds, lineup, picks: [], picksVal: 0, arch: "crossroads", expl: "",
+            playerIds, lineup, irIds, picks: [], picksVal: 0, arch: "crossroads", expl: "",
             strengths: {}, grades: {},
           };
         });
@@ -18889,9 +18991,11 @@ window.drDraft = {
          is the Sleeper lookup's leagues PLUS the session's stored
          ESPN league (ff4CCEspnEntry / ff4CCLoadEspn, built through
          the real ESPN builder), and in a mixed set every card and
-         queue row carries its platform. "Needs you first" aggregates Out/IR
-         starters, bye starters and Doubtful starters across every
-         league — only what each league pass already loaded proves.
+         queue row carries its platform. "Needs you first" aggregates
+         critical-only lineup problems (Eric's 2026-11-10 category
+         set — see ff4CCQueueFor) plus offers awaiting a decision,
+         across every league — only what each league pass already
+         loaded proves.
          The magic/swing lines follow the Explorer's fail-closed
          rule: when a league's playoff format can't be read, they're
          omitted with a note and the ring still comes from the sim. */
@@ -19033,13 +19137,15 @@ window.drDraft = {
          league's starter slots over the full roster (bestBallLineup()
          can't source that fill — it deliberately excludes Out/IR
          players, which are exactly what the queue hunts).
-         Critical items are provable problems in that set, and only
-         these: a starter who is Out or on IR, a starter who is
-         Doubtful, or a starter on bye in the CURRENT week (wk — the
-         site's active NFL week). A future week's bye never queues,
-         Questionable never queues, and a bench player never queues
-         (Eric, 2026-10-27: the bench-Out FYI is gone — the queue
-         carries only time-critical starter issues).
+         Critical items are provable problems in that set. The
+         category set is Eric's critical-only list (2026-11-10,
+         ff4CCQueueFor below): Out/IR/projected-0 starters, starters
+         on bye in the lineup week (wk), empty slots, IR-slot
+         violations, and the two computed kinds (big-gap swaps,
+         lock-risk GTDs). A bench player never queues on his own —
+         bench byes are explicitly noise (Eric: five Bears on a
+         Week 10 bye while benched means he's already aware) — and a
+         future week's bye never queues.
          Designations and body parts come from the player pool the
          page already carries — nothing is invented. */
       function ff4CCStarters(me) {
@@ -19051,35 +19157,244 @@ window.drDraft = {
         return starters;
       }
 
+      /* NYF selectivity (Eric, 2026-11-10): Needs You First is
+         critical-only. The complete qualifying set — nothing else
+         queues:
+           1  a starter Out / on IR / projected 0 in the actual
+              starting lineup (a stale designation outvoted by a real
+              projection keeps the old verify-before-lock row);
+           2  a big lineup leak — a bench player projected at least
+              NYF_BIG_GAP more than a replaceable starter (smaller
+              gains stay in the Lineup Analyzer / Next Moves, whose
+              0.5 floor is untouched);
+           3  a starter on bye still sitting in the lineup;
+           4  an empty starting slot;
+           5  a waiver emergency — 1 or 3 with NO eligible bench
+              replacement (the top waiver cover is named when the
+              pool prices one); ranks above the fixable versions;
+           6  an IR-slot violation — a player parked in an IR slot
+              whose designation no longer makes him IR-eligible;
+           7  an incoming trade offer awaiting his decision (joined
+              at render from the Trade Board pass, not here);
+           8  a lock-risk GTD — a Questionable starter whose only
+              eligible bench replacements all kick off EARLIER than
+              him in the baked GAME_LOCKS for the week (weeks with no
+              baked locks stay silent — a kickoff is never invented).
+         Below the critical line, a fine-tuning backfill (swaps at
+         NYF_TUNE_MIN or better) rides along on the returned array's
+         .tune property; the renderers show it only when the whole
+         panel holds fewer than 2 critical entries.
+         Severity tiers (prio): 0 = empty slot / no-fix emergency,
+         1 = Out-or-0 with a bench fix, 2 = bye starter with a fix,
+         3 = IR violation, 4 = pending offer (render), 5 = lock-risk
+         GTD, 6 = big-gap swap. Cross-league bubble ordering happens
+         in ff4CCRenderQueue. */
+      const NYF_BIG_GAP = 4.0;
+      const NYF_TUNE_MIN = 0.4;
+      const NYF_IR_OK = { Out: 1, IR: 1, PUP: 1, Suspended: 1 };
+
       function ff4CCQueueFor(me, wk) {
         const items = [];
-        /* Out / Doubtful rows also carry the player's rest-of-season
-           projection when it is positive (Eric, 2026-10-27: a stale Out
-           tag must never hide real projected points — DJ Moore and
-           Breece Hall both project points while flagged Out). The
-           weekly engine is not used here on purpose: it zeroes a
-           player whose designation conflicts with his projection
-           (the optimizer's auto-bench rule), which would hide exactly
-           the points this row exists to show. The rest-of-season rate
-           is week-independent and is the same number the lineup rows
-           show. Bye rows carry no projection: a bye means no game, so
-           there is nothing to project. */
+        const tune = [];
+        /* Out rows also carry the player's rest-of-season projection
+           when it is positive (Eric, 2026-10-27: a stale Out tag must
+           never hide real projected points). The weekly engine is
+           not used for that text on purpose: wkProj's raw return
+           keeps the conflict visible instead of zeroing it. The
+           rest-of-season rate is week-independent and is the same
+           number the lineup rows show. */
         const projTxt = p => {
           try {
             const rp = rosProj(p);
             return (typeof rp === "number" && isFinite(rp) && rp > 0) ? " · projects " + (Math.round(rp * 10) / 10).toFixed(1) + " pts/wk" : "";
           } catch (e) { return ""; }
         };
-        ff4CCStarters(me).forEach(p => {
-          if (p.inj === "Out" || p.inj === "IR") {
-            let wpc = null; try { wpc = (typeof wkProj === "function") ? wkProj(p) : null; } catch (e) {}
-            if (wpc && wpc.conflict) items.push({ prio: 0, cls: "dbt", player: p.name, issue: "Listed " + p.inj + " — but projected to play; verify before lock" + projTxt(p) });
-            else items.push({ prio: 0, cls: "out", player: p.name, issue: (p.inj === "IR" ? "Injured reserve" : "Out") + (p.ibp ? " — " + p.ibp : "") + projTxt(p) });
+        const push = (prio, cls, player, issue, cat, extra) => items.push(Object.assign({ prio, cls, player, issue, cat }, extra || {}));
+        try {
+          const slots = starterSlots();
+          const slotCands = {};
+          slots.forEach(s => { slotCands[s.label] = s.cands; });
+          const irSet = new Set((me.irIds || []).map(String));
+          const lineupEntries = (me.lineup || []).map(l => ({ id: l.id, slot: l.slot, p: PBY[l.id] || null }));
+          const hasSet = lineupEntries.length > 0;
+          /* Starters with their slot labels: the set lineup when
+             there is one, else the value fill ff4CCStarters already
+             trusts (guest / demo — no slot claims there). */
+          const starters = hasSet
+            ? lineupEntries.filter(e => e.p).map(e => ({ p: e.p, slot: e.slot }))
+            : ff4CCStarters(me).map(p => ({ p, slot: null }));
+          const starterIds = new Set(starters.map(s => String(s.p.id)));
+          const bench = (me.playerIds || []).map(id => PBY[id])
+            .filter(p => p && !starterIds.has(String(p.id)) && !irSet.has(String(p.id)) && !isUnsigned(p));
+          const projL = p => { try { return wkProjLineup(p, wk); } catch (e) { return { pts: 0 }; } };
+          const bestOf = pool => pool.map(p => ({ p, pts: projL(p).pts })).filter(x => x.pts > 0).sort((a, b) => b.pts - a.pts)[0] || null;
+          const coverFor = (slotLabel, pos) => {
+            const cs = (slotLabel && slotCands[slotLabel]) || (pos ? [pos] : null);
+            if (!cs) return null;
+            return bestOf(bench.filter(p => cs.includes(p.pos) && !wkIsBye(p, wk)));
+          };
+          const waiverFor = (slotLabel, pos) => {
+            const cs = (slotLabel && slotCands[slotLabel]) || (pos ? [pos] : null);
+            if (!cs) return null;
+            return bestOf((DATA.players || []).filter(p => p && p.owner == null && !p.unpriced && !isUnsigned(p) && cs.includes(p.pos) && !wkIsBye(p, wk)));
+          };
+          const problemIds = new Set();
+
+          /* Categories 4 first only in computation order — the
+             severity sort at the end decides what Eric sees first. */
+          if (hasSet) {
+            const expected = slots.map(s => s.label);
+            const placeholderSlots = [];
+            lineupEntries.forEach(e => {
+              const i = expected.indexOf(e.slot);
+              if (i >= 0) expected.splice(i, 1);
+              if (!e.p) placeholderSlots.push(e.slot);
+            });
+            placeholderSlots.concat(expected).forEach(lbl => {
+              const cov = coverFor(lbl, null);
+              const wv = cov ? null : waiverFor(lbl, null);
+              push(0, "out", "Empty " + lbl + " slot", "No player set at " + lbl
+                + (cov ? " — " + cov.p.name + " is on your bench" : (wv ? " — top waiver cover: " + wv.p.name : "")), 4);
+            });
           }
-          else if (window.TEAM_BYE && window.TEAM_BYE[p.team] === wk) items.push({ prio: 1, cls: "bye", player: p.name, issue: "On bye in Week " + wk });
-          else if (p.inj === "Doubtful") items.push({ prio: 2, cls: "dbt", player: p.name, issue: "Doubtful" + (p.ibp ? " — " + p.ibp : "") + projTxt(p) });
-        });
+
+          starters.forEach(({ p, slot }) => {
+            const isBye = !!(window.TEAM_BYE && window.TEAM_BYE[p.team] === wk);
+            if (isBye) {
+              const cov = coverFor(slot, p.pos);
+              if (cov) push(2, "bye", p.name, "On bye in Week " + wk + " — " + cov.p.name + " can cover from your bench", 3);
+              else {
+                const wv = waiverFor(slot, p.pos);
+                push(0, "out", p.name, "On bye in Week " + wk + " — no bench cover" + (wv ? "; top waiver cover: " + wv.p.name : ""), 5);
+              }
+              problemIds.add(String(p.id));
+              return;
+            }
+            let pr = null; try { pr = wkProj(p, wk); } catch (e) {}
+            if (pr && pr.conflict) {
+              push(1, "dbt", p.name, "Listed " + p.inj + " — but projected to play; verify before lock" + projTxt(p), 1);
+              problemIds.add(String(p.id));
+              return;
+            }
+            const hardOut = p.inj === "Out" || p.inj === "IR" || p.inj === "PUP" || p.inj === "Suspended";
+            const isZero = !!pr && !pr.unpriced && pr.pts === 0;
+            if (hardOut || isZero) {
+              const base = hardOut
+                ? ((p.inj === "IR" ? "Injured reserve" : p.inj) + (p.ibp ? " — " + p.ibp : "") + projTxt(p))
+                : ("Projected 0 in Week " + wk + projTxt(p));
+              const cov = coverFor(slot, p.pos);
+              if (cov) push(1, "out", p.name, base + " — bench cover: " + cov.p.name, 1);
+              else {
+                const wv = waiverFor(slot, p.pos);
+                push(0, "out", p.name, base + " — no bench cover" + (wv ? "; top waiver cover: " + wv.p.name : ""), 5);
+              }
+              problemIds.add(String(p.id));
+              return;
+            }
+            if (p.inj === "Questionable") {
+              const locks = (window.GAME_LOCKS || {})[wk] || null;
+              const mine = locks ? locks[p.team] : null;
+              if (mine && typeof mine.t === "number") {
+                const cs = (slot && slotCands[slot]) || [p.pos];
+                const reps = bench.filter(b => cs.includes(b.pos) && !wkIsBye(b, wk))
+                  .map(b => ({ p: b, pts: projL(b).pts })).filter(x => x.pts > 0);
+                if (reps.length && reps.every(x => { const L = locks[x.p.team]; return !!(L && typeof L.t === "number" && L.t < mine.t); })) {
+                  const firstT = Math.min(...reps.map(x => locks[x.p.team].t));
+                  const day = new Date(firstT).toLocaleDateString("en-US", { weekday: "short" });
+                  push(5, "dbt", p.name, "Questionable" + (p.ibp ? " — " + p.ibp : "") + " — your only bench cover plays earlier (" + day + "); decide before that game locks", 8);
+                }
+              }
+            }
+          });
+
+          /* Category 6 — IR-slot violations. */
+          (me.irIds || []).forEach(id => {
+            const p = PBY[id];
+            if (!p || NYF_IR_OK[p.inj]) return;
+            push(3, "dbt", p.name, p.inj
+              ? "Listed " + p.inj + " but still in your IR slot — that blocks other roster moves until he comes out"
+              : "Healthy again but still in your IR slot — that blocks other roster moves until he comes out", 6);
+          });
+
+          /* Categories 2 + fine-tuning — one pairing pass over the
+             optimal lineup, the same construction Your Next Moves
+             uses (optimal ins against the lowest-projected eligible
+             starter not in the optimal, each displaced starter used
+             once). Problem starters are not swap fodder: their fix
+             is the category 1/3/5 row above, not a "leak". Only a
+             real set lineup can leak, so the guest/demo fill skips
+             this pass. */
+          if (hasSet) {
+            try {
+              const opt = wkOptimal(me.playerIds || [], wk);
+              const optIds = new Set((opt.lineup || []).map(l => String(l.p.id)));
+              const curProj = starters.filter(s => !problemIds.has(String(s.p.id)))
+                .map(s => { const pr = projL(s.p); return { p: s.p, pts: pr.pts, unpriced: !!pr.unpriced }; });
+              const cands = [];
+              (opt.lineup || []).forEach(l => {
+                if (starterIds.has(String(l.p.id)) || l.proj.unpriced) return;
+                const s = slots.find(x => x.label === l.slot);
+                const cs = s ? s.cands : [l.p.pos];
+                const outs = curProj.filter(x => !optIds.has(String(x.p.id)) && !x.unpriced && cs.includes(x.p.pos));
+                if (!outs.length) return;
+                outs.sort((a, b) => a.pts - b.pts);
+                const gain = (Math.round(l.proj.pts * 10) - Math.round(outs[0].pts * 10)) / 10;
+                if (gain >= NYF_TUNE_MIN) cands.push({ gain, inP: l.p, outP: outs[0].p });
+              });
+              cands.sort((a, b) => b.gain - a.gain);
+              const usedOut = new Set();
+              cands.forEach(c => {
+                if (usedOut.has(String(c.outP.id))) return;
+                usedOut.add(String(c.outP.id));
+                const row = { cls: "fyi", player: c.inP.name, issue: "over " + c.outP.name + " (+" + c.gain.toFixed(1) + " pts this week)", gain: c.gain, inId: String(c.inP.id), outId: String(c.outP.id) };
+                if (c.gain >= NYF_BIG_GAP) items.push(Object.assign({}, row, { prio: 6, cat: 2 }));
+                else tune.push(Object.assign({}, row, { prio: 7, cat: "tune" }));
+              });
+            } catch (e) { /* swap pass never breaks the queue */ }
+          }
+        } catch (e) { /* a queue failure renders the all-clear, never a crash */ }
+        items.sort((a, b) => a.prio - b.prio);
+        items.tune = tune;
         return items;
+      }
+
+      /* Panel helpers for the NYF renderers: the header carries the
+         CRITICAL count at every size (Eric, 2026-11-10); the cap
+         helper makes exactly five rows visible and scrolls the rest
+         inside the panel, keeping the +N more bar honest as it
+         scrolls (iPad hides scrollbars, so the count is the cue). */
+      function ff4CCQueueHead(n) {
+        return `<div class="cc-queue-h">Needs you first${n > 0 ? " · " + n : ""}</div>`;
+      }
+      function ff4CCClearHtml(sub) {
+        return `<div class="cc-queue-clear"><span class="cc-q-clear-h">All clear — nothing needs you.</span><span class="cc-q-clear-s">${esc(sub)}</span></div>`;
+      }
+      function ff4CCQueueCap(q) {
+        try {
+          const list = q.querySelector(".cc-queue-list");
+          if (!list) return;
+          const kids = [...list.children];
+          if (kids.length <= 5) return;
+          let h = 0;
+          for (let i = 0; i < 5; i++) h += kids[i].offsetHeight;
+          list.style.maxHeight = h + "px";
+          const more = q.querySelector(".cc-queue-more");
+          if (!more) return;
+          const upd = () => {
+            const lr = list.getBoundingClientRect();
+            let hidden = 0;
+            kids.forEach(k => {
+              if (!k.classList.contains("cc-queue-it")) return;
+              const r = k.getBoundingClientRect();
+              const top = (r.top - lr.top) + list.scrollTop;
+              if (top + r.height > list.scrollTop + list.clientHeight + 1) hidden++;
+            });
+            more.style.display = hidden > 0 ? "" : "none";
+            if (hidden > 0) more.textContent = "+" + hidden + " more below";
+          };
+          list.addEventListener("scroll", upd, { passive: true });
+          upd();
+        } catch (e) {}
       }
 
 
@@ -19165,7 +19480,9 @@ window.drDraft = {
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
             const wk = Number(DATA.league.week) || week;
             const qwk = me.lineupWeek || wk;
-            snap.queueItems = ff4CCQueueFor(me, qwk).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper" }));
+            const nqS = ff4CCQueueFor(me, qwk);
+            snap.queueItems = nqS.map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper" }));
+            snap.tuneItems = (nqS.tune || []).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper" }));
             try { snap.qCount = ff4CCStarters(me).filter(p => p.inj === "Questionable").length; } catch (e) { snap.qCount = 0; }
             const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
             const streak = myRoster.settings && myRoster.settings.streak ? String(myRoster.settings.streak) : null;
@@ -19268,7 +19585,9 @@ window.drDraft = {
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
             const wk = Number(DATA.league.week) || 1;
-            snap.queueItems = ff4CCQueueFor(me, wk).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "ESPN" }));
+            const nqE = ff4CCQueueFor(me, wk);
+            snap.queueItems = nqE.map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "ESPN" }));
+            snap.tuneItems = (nqE.tune || []).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "ESPN" }));
             try { snap.qCount = ff4CCStarters(me).filter(p => p.inj === "Questionable").length; } catch (e) { snap.qCount = 0; }
             const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
             if (byeNames.length) snap.status = `${byeNames.length} starter${byeNames.length === 1 ? "" : "s"} on bye in Week ${wk + 1}: ${byeNames.slice(0, 3).join(", ")}${byeNames.length > 3 ? "…" : ""}`;
@@ -20093,10 +20412,22 @@ window.drDraft = {
         if (idx == null) {
           const done = (ff4.ccDone || 0) >= (ff4.ccLeagues || []).length;
           if (done && !ff4CCVisibleOrder().length) { spot.innerHTML = `<p class="cc-status">No leagues in this view — open Manage to pick or unhide leagues.</p>`; return; }
-          spot.innerHTML = `<p class="cc-status cc-loading">Loading your leagues…</p>`; return;
+          /* Progressive loading (Eric, 2026-11-10): every region
+             paints its own spinner immediately instead of sitting
+             blank behind the cross-league pass; each fills in place
+             when its league/detail lands. */
+          spot.innerHTML = `<p class="cc-status cc-loading"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Loading your leagues…</p>`;
+          if (spot2El) spot2El.innerHTML = `<p class="cc-loadrow"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span>Loading Radar, Most Added and Trade Ideas…</p>`;
+          if (slipEl) slipEl.innerHTML = `<p class="cc-loadrow"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span>Building your action slip…</p>`;
+          return;
         }
         const d = ff4.ccDetail[idx];
-        if (!d) { spot.innerHTML = `<p class="cc-status cc-loading">Building this league's full picture…</p>`; return; }
+        if (!d) {
+          spot.innerHTML = `<p class="cc-status cc-loading"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Building this league's full picture…</p>`;
+          if (spot2El) spot2El.innerHTML = `<p class="cc-loadrow"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span>Loading Radar, Most Added and Trade Ideas…</p>`;
+          if (slipEl) slipEl.innerHTML = `<p class="cc-loadrow"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span>Building your action slip…</p>`;
+          return;
+        }
         if (d.failed) {
           spot.innerHTML = `<div class="cc-name">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div><p class="cc-status">This league couldn't be loaded here. Open it in full to see everything.</p><button type="button" class="cc-enter" data-cc-open="1">Open league →</button>`;
           const fb = spot.querySelector("[data-cc-open]"); if (fb) fb.addEventListener("click", () => ff4CCOpen(idx));
@@ -20115,15 +20446,15 @@ window.drDraft = {
         try { if (typeof window.ffMSBarHtml === "function") ccMSBar = window.ffMSBarHtml(idx, d) || ""; } catch (e) { /* Manager Score bar is best-effort */ }
         const P = ff4CCPieces(idx, d);
         spot.innerHTML = `<div class="cc-spot-top"><div>
-            <div class="cc-spot-team">${esc(d.teamName)}${d.record ? ` <span class="cc-spot-record">${esc(d.record)}</span>` : ""} <span class="you-tag">Your team</span></div>
+            <div class="cc-spot-team"><span class="cc-tname" title="${esc(d.teamName)}">${esc(d.teamName)}</span>${d.record ? ` <span class="cc-spot-record">${esc(d.record)}</span>` : ""} <span class="you-tag">Your team</span></div>
             <div class="cc-spot-league">${esc(ff4CCLgLabel(d.leagueName, d.platform))}</div>
             <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
           </div><div class="cc-spot-actions"><button type="button" class="cc-enter" data-cc-open="1">Open league →</button><button type="button" class="cc-hide" data-cc-hide="1">Hide league</button></div></div>
           <div class="cc3-strip" id="cc3-strip">
-            <div class="cc3-ss"><div class="cc3-ss-k">Playoff Odds</div><div class="cc3-ss-v" style="color:${P.oddsCol}">${esc(P.oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(P.oddsFrac * 100)}%;background:${P.oddsCol}"></div></div><div class="cc3-ss-sub">${esc(P.oddsSub)}</div></div>
-            <div class="cc3-ss"><div class="cc3-ss-k">Power Rank</div><div class="cc3-ss-v">${esc(P.powerBig)}</div></div>
-            ${P.gradesCell ? `<div class="cc3-ss"><div class="cc3-ss-k">Grades</div><div class="cc3-ss-v cc3-grades">${P.gradesCell}</div></div>` : ""}
-            <div class="cc3-ss cc3-ss-stock"><div class="cc3-ss-k">Stock</div><div class="cc3-ss-stockline">${P.tickerChart ? `<span class="cc3-ss-chart">${P.tickerChart}</span>` : ""}<span class="cc3-ss-v">${P.stockMain}</span></div><div class="cc3-ss-sub">${esc(P.teamValueText)}${P.stockNote ? ` · ${esc(P.stockNote)}` : ""}</div></div>
+            <div class="cc3-ss cc3-ss-odds"><div class="cc3-ss-k">Playoff Odds</div><div class="cc3-ss-v" style="color:${P.oddsCol}">${esc(P.oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(P.oddsFrac * 100)}%;background:${P.oddsCol}"></div></div><div class="cc3-ss-sub">${esc(P.oddsSub)}</div></div>
+            <div class="cc3-ss cc3-ss-pow"><div class="cc3-ss-k">Power Rank</div><div class="cc3-ss-v">${esc(P.powerBig)}</div></div>
+            ${P.gradesCell ? `<div class="cc3-ss cc3-ss-grd"><div class="cc3-ss-k">Grades</div><div class="cc3-ss-v cc3-grades">${P.gradesCell}</div></div>` : ""}
+            <div class="cc3-ss cc3-ss-stock cc3-ss-stk"><div class="cc3-ss-k">Stock</div><div class="cc3-ss-stockline">${P.tickerChart ? `<span class="cc3-ss-chart">${P.tickerChart}</span>` : ""}<span class="cc3-ss-v">${P.stockMain}</span></div><div class="cc3-ss-sub">${esc(P.teamValueText)}${P.stockNote ? ` · ${esc(P.stockNote)}` : ""}</div></div>
             <div class="cc3-ss cc3-ss-ms">${ccMSBar}</div>
           </div>
           ${P.magicLine ? `<p class="cc3-magic">${P.magicLine}</p>` : ""}`;
@@ -20131,9 +20462,9 @@ window.drDraft = {
           const nRadar = Array.isArray(d.radarWatch) ? d.radarWatch.length : 0;
           const nAdded = Array.isArray(d.waiverTops) ? d.waiverTops.length : 0;
           spot2El.innerHTML = `<div class="cc3-lists">
-            <div class="cc3-listcol"><p class="cc3-h cyan">Opportunity Radar</p><div class="cc3-scroll cc3-radar-scroll${nRadar > 4 ? " scrolls" : ""}" data-cc3-scroll="radar">${P.watchBody}</div><button type="button" class="cc3-more" data-cc-grid-tool="radar">Opportunity Radar →</button></div>
-            <div class="cc3-listcol"><p class="cc3-h cyan">Most Added This Week</p><div class="cc3-scroll cc3-added-scroll${nAdded > 4 ? " scrolls" : ""}" data-cc3-scroll="added">${P.wvBody}</div><button type="button" class="cc3-more" data-cc-grid-tool="waivers">Waiver Targets →</button></div>
-            <div class="cc3-listcol cc3-ideascol"><p class="cc3-h lime">Trade Ideas</p><div class="cc3-ideas" id="cc3-ideas">${P.tradeBody}</div><button type="button" class="cc3-more" data-cc-grid-tool="targets">Player Targets →</button></div>
+            <div class="cc3-listcol cc3-col-radar"><p class="cc3-h rose">Opportunity Radar</p><div class="cc3-scroll cc3-radar-scroll${nRadar > 4 ? " scrolls" : ""}" data-cc3-scroll="radar">${P.watchBody}</div><button type="button" class="cc3-more" data-cc-grid-tool="radar">Opportunity Radar →</button></div>
+            <div class="cc3-listcol cc3-col-added"><p class="cc3-h blue">Most Added This Week</p><div class="cc3-scroll cc3-added-scroll${nAdded > 4 ? " scrolls" : ""}" data-cc3-scroll="added">${P.wvBody}</div><button type="button" class="cc3-more" data-cc-grid-tool="waivers">Waiver Targets →</button></div>
+            <div class="cc3-listcol cc3-ideascol"><p class="cc3-h mint">Trade Ideas</p><div class="cc3-ideas" id="cc3-ideas">${P.tradeBody}</div><button type="button" class="cc3-more" data-cc-grid-tool="targets">Player Targets →</button></div>
           </div>
           <p class="cc3-h pink cc3-sec-gap">Fantasy Tools</p>
           <div class="cc3-tools"><div class="cc-tile-rows">${P.toolsLinks}</div></div>`;
@@ -20150,15 +20481,13 @@ window.drDraft = {
             ? `<p class="cc3-ms-line"><span class="cc3-ms-num">${msScoreM[1]}</span>${msSubM ? `<span class="cc3-ms-sub">${msSubM[1]}</span>` : ""}</p><button type="button" class="cc3-ms-link" data-ms-open="1">Full breakdown →</button>`
             : `<p>See how you grade as a manager.</p><button type="button" class="cc3-ms-link" data-ms-open="1">Full breakdown →</button>`;
           slipEl.innerHTML = `<div class="cc3-slip-tag">▣ ACTION SLIP — ALWAYS HERE</div>
-          <div class="cc3-mini-h" style="margin-top:14px">Your next move · ${esc(d.teamName)}</div>
-          ${mv0 ? `<h3 class="cc3-next-title">${esc(mv0.player)}</h3><p class="cc3-next-sub"><span class="cc-q-issue ${mv0.cls || ""}">${esc(mv0.issue)}</span></p><button type="button" class="cc3-cta" data-cc-grid-tool="${mv0.tool}">${mv0.tool === "lineup" ? "Fix it in Lineup Analyzer" : "Open →"}</button>${mvRest.length ? `<div class="cc3-slip-moves">${mvRest.map(m => `<button type="button" class="cc3-slip-move" data-cc-grid-tool="${m.tool}"><span class="cc-q-player">${esc(m.player)}</span><span class="cc-q-issue ${m.cls || ""}">${esc(m.issue)}</span></button>`).join("")}</div>` : ""}` : `<p>No standout moves right now.</p>`}
-          ${slpUser ? `<hr><div class="cc3-mini-h">Trade Board</div><div class="cc-tb" id="cc-tb"></div>` : ""}
-          <hr>
-          <div class="cc3-mini-h">Top trade idea</div>
-          ${idea0 ? `<p><b class="cc3-idea-name">${esc(idea0.target)}</b> ${esc(idea0.pos)} · ${esc(idea0.team || "")} — <b class="cc3-idea-gain">+${idea0.dPpg.toFixed(1)} pts/wk</b><br>from ${esc(idea0.partner)}${idea0.kind === "depth" ? " · depth add" : idea0.kind === "tier" ? " · tier-up" : ""}</p><button type="button" class="cc3-ghost" data-cc-grid-tool="targets">See all Player Targets →</button>` : `<p>No buy ideas clear the bar right now.</p>`}
-          <hr>
-          <div class="cc3-mini-h">Manager Score</div>
-          ${msSlip}`;
+          <div class="cc3-slip-sec sec-move"><div class="cc3-mini-h">Your next move · ${esc(d.teamName)}</div>
+          ${mv0 ? `<h3 class="cc3-next-title">${esc(mv0.player)}</h3><p class="cc3-next-sub"><span class="cc-q-issue ${mv0.cls || ""}">${esc(mv0.issue)}</span></p><button type="button" class="cc3-cta" data-cc-grid-tool="${mv0.tool}">${mv0.tool === "lineup" ? "Fix it in Lineup Analyzer" : "Open →"}</button>${mvRest.length ? `<div class="cc3-slip-moves">${mvRest.map(m => `<button type="button" class="cc3-slip-move" data-cc-grid-tool="${m.tool}"><span class="cc-q-player">${esc(m.player)}</span><span class="cc-q-issue ${m.cls || ""}">${esc(m.issue)}</span></button>`).join("")}</div>` : ""}` : `<p>No standout moves right now.</p>`}</div>
+          ${slpUser ? `<div class="cc3-slip-sec sec-tb"><div class="cc3-mini-h">Trade Board</div><div class="cc-tb" id="cc-tb"></div></div>` : ""}
+          <div class="cc3-slip-sec sec-idea"><div class="cc3-mini-h">Top trade idea</div>
+          ${idea0 ? `<p><b class="cc3-idea-name">${esc(idea0.target)}</b> ${esc(idea0.pos)} · ${esc(idea0.team || "")} — <b class="cc3-idea-gain">+${idea0.dPpg.toFixed(1)} pts/wk</b><br>from ${esc(idea0.partner)}${idea0.kind === "depth" ? " · depth add" : idea0.kind === "tier" ? " · tier-up" : ""}</p><button type="button" class="cc3-ghost" data-cc-grid-tool="targets">See all Player Targets →</button>` : `<p>No buy ideas clear the bar right now.</p>`}</div>
+          <div class="cc3-slip-sec sec-ms"><div class="cc3-mini-h">Manager Score</div>
+          ${msSlip}</div>`;
           try { if (typeof ff4RenderCCTB === "function") ff4RenderCCTB(); } catch (e) {}
         }
         const ob = spot.querySelector("[data-cc-open]"); if (ob) ob.addEventListener("click", () => ff4CCOpen(idx));
@@ -20283,7 +20612,8 @@ window.drDraft = {
         const tab = ff4.ccTab || "all";
         const hiddenCount = (ff4.ccLeagues || []).filter(lg => ff4CCIsHidden(lg)).length;
         const tabs = [["all", "All"], ["dynasty", "Dynasty"], ["redraft", "Redraft"], ["custom", "Custom"]].map(([v, label]) => `<button type="button" class="cc-tab${tab === v ? " on" : ""}" data-cc-tab="${v}" role="tab" aria-selected="${tab === v}">${label}</button>`).join("");
-        el.innerHTML = `<div class="cc-tabs" role="tablist" aria-label="Command Center views">${tabs}<button type="button" class="cc-manage" data-cc-manage="1">Manage${hiddenCount ? ` · ${hiddenCount} hidden` : ""}</button></div>`;
+        const refreshing = !!ff4.ccRefreshing;
+        el.innerHTML = `<div class="cc-tabs" role="tablist" aria-label="Command Center views">${tabs}<button type="button" class="cc-manage cc-refresh" id="cc-refresh" data-cc-refresh="1"${refreshing ? " disabled" : ""}>${refreshing ? `<span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Refreshing…` : "↻ Refresh"}</button><button type="button" class="cc-manage" data-cc-manage="1">Manage${hiddenCount ? ` · ${hiddenCount} hidden` : ""}</button></div>`;
         el.querySelectorAll("[data-cc-tab]").forEach(b => b.addEventListener("click", () => {
           ff4.ccTab = b.dataset.ccTab;
           ff4CCRenderTabs(); ff4CCRenderRail(); ff4CCRenderQueue();
@@ -20294,6 +20624,34 @@ window.drDraft = {
           else if (ff4.ccFocus != null && !vis.includes(ff4.ccFocus)) ff4CCFocusLeague(vis[0]);
         }));
         el.querySelectorAll("[data-cc-manage]").forEach(b => b.addEventListener("click", () => ff4CCOpenManage()));
+        el.querySelectorAll("[data-cc-refresh]").forEach(b => b.addEventListener("click", () => ff4CCRefresh()));
+      }
+      /* ↻ Refresh (Eric, Nov 10): sits in the tabs row next to Manage
+         (NOT the old pre-Round-3 utility row — that placement stays
+         gone). A real refresh, not a page reload: force the full CC
+         re-pull (ff4RenderCC(true) refetches every league's rosters,
+         lineups and transactions and rebuilds odds, tiles, slip and
+         Needs You First) and force a fresh Trade Board pass so the
+         offers and the "last checked" time update. The button shows
+         a busy state until the rebuild settles; a league whose
+         re-pull fails keeps its failed state in place — the pass
+         never blanks the Command Center. */
+      function ff4CCRefresh() {
+        if (ff4.ccRefreshing) return;
+        ff4.ccRefreshing = true;
+        ff4CCRenderTabs();
+        ff4RenderCC(true);
+        try { ff4TBEnsure(true); } catch (e) { /* board re-check is best-effort */ }
+        const t0 = Date.now();
+        const iv = setInterval(() => {
+          let tbBusy = false;
+          try { tbBusy = !!ff4TBState().loading; } catch (e) {}
+          if ((!ff4.ccSessionBusy && ff4.ccSessionDone && !tbBusy) || Date.now() - t0 > 180000) {
+            clearInterval(iv);
+            ff4.ccRefreshing = false;
+            ff4CCRenderTabs();
+          }
+        }, 600);
       }
       /* Manage editor: every league the site knows (this session's plus
          saved records from other accounts), grouped by account. Picks
@@ -20416,35 +20774,121 @@ window.drDraft = {
         const q = document.getElementById("cc-queue");
         if (!q) return;
         const leagues = ff4.ccLeagues || [];
-        if ((ff4.ccDone || 0) < leagues.length) {
-          q.className = "cc-queue";
-          q.innerHTML = `<div class="cc-queue-h">Needs you first</div><p class="cc-queue-note cc-loading">Checking your starters in every league…</p>`;
-          return;
-        }
-        const items = [];
-        Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.queueItems) items.push(...s.queueItems); });
-        items.sort((a, b) => a.prio - b.prio || a.idx - b.idx);
+        /* Progressive loading (Eric, 2026-11-10): the queue no
+           longer waits for every league — entries from leagues that
+           have landed render immediately, and a spinner row marks
+           the pass still running. */
+        const ccBusy = (ff4.ccDone || 0) < leagues.length;
         /* The queue follows the active tab: the Custom tab's queue is
            only its picked leagues, a hidden league never queues. */
         const visQ = new Set(ff4CCVisibleOrder());
-        const itemsV = items.filter(it => visQ.has(it.idx));
+        const crit = [];
+        Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.queueItems) crit.push(...s.queueItems); });
+        /* Category 7 (Eric, 2026-11-10): incoming offers awaiting his
+           decision join from the Trade Board pass — that pass is the
+           one place offers are graded, so the queue reads its state,
+           and ff4RenderCCTB re-renders the queue when it lands. */
+        let tbReady = false;
+        try {
+          const tb = ff4TBState();
+          tbReady = !!tb.loaded;
+          if (tb.loaded) (tb.incoming || []).forEach(o => {
+            const idx = (ff4.ccLeagues || []).findIndex(e => e && !ff4CCIsEspn(e) && String(e.league_id || "") === String(o.leagueId));
+            if (idx < 0) return;
+            const snap = (ff4.ccSnaps || {})[idx];
+            crit.push({ prio: 4, cls: "offer", cat: 7, act: "tb", margin: (typeof o.margin === "number") ? o.margin : 0, idx,
+              player: "Offer from " + o.otherName,
+              issue: "Trade offer waiting on your answer · sent " + o.when,
+              leagueName: snap ? snap.leagueName : o.leagueName, teamName: snap ? (snap.teamName || "") : "", platform: "Sleeper" });
+          });
+        } catch (e) {}
+        /* Ordering (Eric, 2026-11-10): severity first; within a tier,
+           a playoff-bubble league (sim odds 10–90%, not clinched)
+           jumps a coasting one; then league order; offers keep the
+           Trade Board's worst-first margin order inside their tier. */
+        const bubbleOf = idx => {
+          const s = (ff4.ccSnaps || {})[idx];
+          if (!s || s.odds == null || s.clinched) return 1;
+          return (s.odds >= 0.10 && s.odds <= 0.90) ? 0 : 1;
+        };
+        crit.sort((a, b) => (a.prio - b.prio)
+          || (bubbleOf(a.idx) - bubbleOf(b.idx))
+          || (a.idx - b.idx)
+          || (((a.margin != null) ? a.margin : 0) - ((b.margin != null) ? b.margin : 0)));
+        const itemsV = crit.filter(it => visQ.has(it.idx));
+        /* Fine-tuning backfill (Eric, 2026-11-10): fills the panel
+           only when the whole view holds fewer than 2 critical
+           entries, sorted by gain across leagues. */
+        let tuneV = [];
+        if (itemsV.length < 2) {
+          Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.tuneItems) tuneV.push(...s.tuneItems); });
+          tuneV = tuneV.filter(t => visQ.has(t.idx)).sort((a, b) => b.gain - a.gain);
+        }
+        const rowHtml = it => it.act === "tb"
+          ? `<button type="button" class="cc-queue-it" data-cc-tb="1" title="${esc(it.player)} — ${esc(it.issue)}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></button>`
+          : `<button type="button" class="cc-queue-it${it.cat === "tune" ? " tune" : ""}" data-cc-open="${it.idx}" title="${esc(it.player)} — ${esc(it.issue)}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></button>`;
+        const wire = () => {
+          q.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
+          q.querySelectorAll("[data-cc-tb]").forEach(b => b.addEventListener("click", () => { activateNav("tradeboard"); window.scrollTo({ top: 0 }); }));
+          ff4CCQueueCap(q);
+        };
         if (!itemsV.length) {
+          if (ccBusy) {
+            q.className = "cc-queue";
+            q.innerHTML = ff4CCQueueHead(0)
+              + `<p class="cc-queue-busy"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span>Checking your starters in every league…</p>`
+              + (tuneV.length ? `<div class="cc-queue-list cc3-scroll"><div class="cc-queue-sub">Lineup fine-tuning</div>` + tuneV.map(rowHtml).join("") + `</div>` : "");
+            wire();
+            return;
+          }
           q.className = "cc-queue clean";
           const tabQ = ff4.ccTab || "all";
+          if (tabQ === "custom" && !ff4CCPrefs().customLeagues.length) {
+            q.innerHTML = ff4CCQueueHead(0) + `<p class="cc-queue-note">No leagues picked for this tab yet — open Manage to pick them.</p>`;
+            return;
+          }
+          if (visQ.size === 0) {
+            q.innerHTML = ff4CCQueueHead(0) + `<p class="cc-queue-note">No leagues in this view.</p>`;
+            return;
+          }
+          /* The all-clear names offers, so it waits for the Trade
+             Board pass; ff4RenderCCTB re-renders when it lands. */
+          const hasUser = !!((typeof slpState !== "undefined") && slpState && slpState.user);
+          if (hasUser && !tbReady) {
+            q.innerHTML = ff4CCQueueHead(0) + `<p class="cc-queue-note cc-loading">Checking for offers waiting on you…</p>`;
+            return;
+          }
           const qCountV = Object.values(ff4.ccSnaps || {}).filter(s => s && visQ.has(s.idx)).reduce((n, s) => n + (s.qCount || 0), 0);
-          const noteQ = tabQ === "custom" && !ff4CCPrefs().customLeagues.length
-            ? "No leagues picked for this tab yet — open Manage to pick them."
-            : (visQ.size === 0 ? "No leagues in this view." : (qCountV > 0 ? `No critical lineup issues — ${qCountV} starter${qCountV === 1 ? " is" : "s are"} Questionable, worth a check in the Lineup Analyzer before lock.` : "You're all set — nothing pending, every starter ready."));
-          q.innerHTML = `<div class="cc-queue-h">Needs you first</div><p class="cc-queue-note">${noteQ}</p>`;
+          if (!tuneV.length) {
+            q.innerHTML = ff4CCQueueHead(0)
+              + ff4CCClearHtml("No zeros in any lineup, no empty slots, no offers waiting on you.")
+              + (qCountV > 0 ? `<p class="cc-queue-note">${qCountV} starter${qCountV === 1 ? " is" : "s are"} Questionable — worth a check in the Lineup Analyzer before lock.</p>` : "");
+            return;
+          }
+          q.innerHTML = ff4CCQueueHead(0)
+            + `<div class="cc-queue-list cc3-scroll">`
+            + ff4CCClearHtml("No zeros in any lineup, no empty slots, no offers waiting on you.")
+            + `<div class="cc-queue-sub">Lineup fine-tuning</div>`
+            + tuneV.map(rowHtml).join("")
+            + `</div>`
+            + (tuneV.length > 3 ? `<div class="cc-queue-more">+${tuneV.length - 3} more below</div>` : "");
+          wire();
           return;
         }
-        q.className = itemsV.length ? "cc-queue" : "cc-queue clean";
+        q.className = "cc-queue";
         const leaguesWithItems = new Set(itemsV.map(it => it.idx)).size;
-        const partialNote = leaguesWithItems < visQ.size ? `<p class="cc-queue-note">Every other league is clear — nothing urgent there.</p>` : "";
-        q.innerHTML = `<div class="cc-queue-h">Needs you first</div>`
-          + itemsV.map(it => `<button type="button" class="cc-queue-it" data-cc-open="${it.idx}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></button>`).join("")
-          + partialNote
-        q.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
+        const partialNote = ccBusy
+          ? `<p class="cc-queue-busy"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span>Checking your other leagues…</p>`
+          : (leaguesWithItems < visQ.size ? `<p class="cc-queue-note">Every other league is clear — nothing urgent there.</p>` : "");
+        const totalRows = itemsV.length + tuneV.length;
+        q.innerHTML = ff4CCQueueHead(itemsV.length)
+          + `<div class="cc-queue-list cc3-scroll">`
+          + itemsV.map(rowHtml).join("")
+          + (tuneV.length ? `<div class="cc-queue-sub">Lineup fine-tuning</div>` + tuneV.map(rowHtml).join("") : "")
+          + `</div>`
+          + (totalRows > 5 ? `<div class="cc-queue-more">+${totalRows - 5} more below</div>` : "")
+          + partialNote;
+        wire();
       }
 
       function ff4RenderCC(force) {
@@ -20482,12 +20926,29 @@ window.drDraft = {
             ff4.ccLeagues = []; ff4.ccUser = null; ff4.ccSnaps = {}; ff4.ccDetail = {}; ff4.ccDetailBusy = {}; ff4.ccFocus = 0; ff4.ccDone = 0;
             out.innerHTML = `<div class="cc3-wrap"><div class="cc3-main"><div class="cc-spot" id="cc-spot"></div><div class="cc-queue" id="cc-queue"></div><div id="cc-spot2"></div></div><aside class="cc3-slip" id="cc-slip" aria-label="Action slip"></aside></div>`;
             const me = DATA.teams.find(t => t.isUser) || null;
-            const items = me ? ff4CCQueueFor(me, me.lineupWeek || Number(DATA.league.week) || 1) : [];
+            const nq1 = me ? ff4CCQueueFor(me, me.lineupWeek || Number(DATA.league.week) || 1) : [];
+            const items = nq1;
+            const tune1 = (nq1.tune || []).slice().sort((a, b) => b.gain - a.gain);
+            const tuneShow1 = items.length < 2 ? tune1 : [];
             const q = document.getElementById("cc-queue");
             q.className = "cc-queue" + (items.length ? "" : " clean");
-            q.innerHTML = `<div class="cc-queue-h">Needs you first</div>` + (items.length
-              ? items.map(it => `<div class="cc-queue-it static"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(me.name)} · ${esc(DATA.league.name || "")}</span></div>`).join("")
-              : `<p class="cc-queue-note">${(() => { try { const qn = me ? ff4CCStarters(me).filter(p => p.inj === "Questionable").length : 0; return qn > 0 ? `No critical lineup issues — ${qn} starter${qn === 1 ? " is" : "s are"} Questionable, worth a check in the Lineup Analyzer before lock.` : "You're all set — nothing pending, every starter ready."; } catch (e) { return "You're all set — nothing pending, every starter ready."; } })()}</p>`);
+            const rowS = it => `<div class="cc-queue-it static${it.cat === "tune" ? " tune" : ""}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(me.name)} · ${esc(DATA.league.name || "")}</span></div>`;
+            let bodyS;
+            if (!items.length && !tuneShow1.length) {
+              let qn = 0; try { qn = me ? ff4CCStarters(me).filter(p => p.inj === "Questionable").length : 0; } catch (e) {}
+              bodyS = ff4CCClearHtml("No zeros in this lineup, no empty slots.")
+                + (qn > 0 ? `<p class="cc-queue-note">${qn} starter${qn === 1 ? " is" : "s are"} Questionable — worth a check in the Lineup Analyzer before lock.</p>` : "");
+            } else {
+              const rowCount1 = items.length + tuneShow1.length;
+              bodyS = `<div class="cc-queue-list cc3-scroll">`
+                + (items.length ? "" : ff4CCClearHtml("No zeros in this lineup, no empty slots."))
+                + items.map(rowS).join("")
+                + (tuneShow1.length ? `<div class="cc-queue-sub">Lineup fine-tuning</div>` + tuneShow1.map(rowS).join("") : "")
+                + `</div>`
+                + (rowCount1 > 5 ? `<div class="cc-queue-more">+${rowCount1 - 5} more below</div>` : "");
+            }
+            q.innerHTML = ff4CCQueueHead(items.length) + bodyS;
+            ff4CCQueueCap(q);
             const chips = [];
             const cl = window.CONN_LEAGUE || {};
             if (cl.leagueType) chips.push(cl.leagueType === "dynasty" ? "Dynasty" : "Redraft");
@@ -21020,7 +21481,7 @@ window.drDraft = {
           return;
         }
         if (tb.loading || !tb.loaded) {
-          out.innerHTML = `<p class="tb-loading">Pulling every league's pending offers and grading them…</p>`;
+          out.innerHTML = `<p class="tb-loading"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Pulling every league's pending offers and grading them…</p>`;
           if (!tb.loading) ff4TBEnsure(false);
           return;
         }
@@ -21049,7 +21510,7 @@ window.drDraft = {
         if (!user) { el.innerHTML = ""; return; }
         const tb = ff4TBState();
         if (tb.loading || !tb.loaded) {
-          el.innerHTML = `<div class="cc-queue-h">Trade Board</div><p class="cc-queue-note cc-loading">Checking for offers waiting on you…</p>`;
+          el.innerHTML = `<div class="cc-queue-h">Trade Board</div><p class="cc-queue-note cc-loading"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Checking for offers waiting on you…</p>`;
           return;
         }
         /* Hidden leagues never show their trades here (the pass still
@@ -21074,6 +21535,10 @@ window.drDraft = {
         const ob = document.getElementById("cc-tb-open");
         if (ob) ob.addEventListener("click", () => { activateNav("tradeboard"); window.scrollTo({ top: 0 }); });
         el.querySelectorAll("[data-tb-calc]").forEach(b => b.addEventListener("click", () => ff4TBOpenCalc(b.dataset.tbCalc)));
+        /* NYF category 7 rides this pass: whenever the board state
+           changes, the queue re-renders so offers waiting on Eric
+           join Needs You First (and the all-clear waits for it). */
+        try { if (typeof ff4CCRenderQueue === "function") ff4CCRenderQueue(); } catch (e) {}
       }
 
       async function ff4TBOpenCalc(id) {
