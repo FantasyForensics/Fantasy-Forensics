@@ -790,6 +790,24 @@
       .pick-chip { background: var(--chip); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
       .pick-chip b { font-variant-numeric: tabular-nums; color: var(--ink); }
 
+      /* Power Rankings toggle (Phase 3 piece 1): dynasty switches
+         between the Current Power list and the Franchise Value list;
+         redraft has one list and no toggle. */
+      .ff-power-toggle { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 12px; }
+      .ff-power-toggle button {
+        font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 14.5px;
+        background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line);
+        border-radius: 999px; padding: 7px 16px; cursor: pointer;
+      }
+      .ff-power-toggle button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: rgba(198,255,0,.4); }
+      .ff-power-note { color: var(--ink-2); font-size: 14px; margin: -4px 0 12px; }
+      .ff-power-quiet, .ff-power-empty {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 18px 20px; margin-bottom: 14px;
+      }
+      .ff-power-quiet h3, .ff-power-empty h3 { font-size: 19px; margin: 0 0 6px; }
+      .ff-power-quiet p, .ff-power-empty p { color: var(--ink-2); margin: 0; }
+
       /* ---------- calculator ---------- */
       .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
       @media (max-width: 760px) { .calc-grid { grid-template-columns: 1fr; } }
@@ -3537,6 +3555,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       #cc-out .cc3-ss[data-cc-grid-tool]:active { background: rgba(255,255,255,.09); }
       #cc-out .cc3-ss[data-cc-grid-tool]:focus-visible { outline: 2px solid rgba(198,255,0,.5); outline-offset: -2px; }
       #cc-out .cc3-ss-stock { flex: 0 1 196px; }
+      /* Redraft strip (Phase 3 piece 1): four cells keep the dynasty
+         widths; this spacer absorbs the fifth cell's share so the gap
+         sits on the far right instead of stretching the cells. */
+      #cc-out .cc3-strip-gap { flex: 1 1 0; min-width: 0; }
       #cc-out .cc3-ss-stock .cc3-ss-sub { white-space: nowrap; }
       #cc-out .cc-chips { margin-top: 5px; }
       .cc3-ss-k { font-size: 9.5px; letter-spacing: .13em; font-weight: 800; color: var(--ink-3); text-transform: uppercase; }
@@ -3553,12 +3575,6 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       #cc-out .cc3-ss .cc-tile-bar { height: 5px; margin-top: 6px; max-width: 130px; }
       #cc-out .cc3-ss-chart svg { height: 24px; width: auto; max-width: 96px; display: block; }
       .cc3-ss-stockline { display: flex; align-items: center; gap: 9px; margin-top: 2px; }
-      /* the Manager Score bar, restyled as the strip's last cell */
-      #cc-out .cc3-ss-ms .cc-ms-bar { border: 0; border-top: 0; background: none; margin: 0; padding: 0; width: 100%; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 1px 8px; }
-      #cc-out .cc3-ss-ms .cc-ms-bar-label { flex: 0 0 100%; font-family: Inter, sans-serif; font-size: 9.5px; letter-spacing: .13em; font-weight: 800; color: var(--ink-3); white-space: normal; }
-      #cc-out .cc3-ss-ms .cc-ms-bar-score { color: #00E5FF; font-size: 19px; }
-      #cc-out .cc3-ss-ms .cc-ms-bar-sub { display: none; }
-      #cc-out .cc3-ss-ms .cc-ms-bar-arrow { margin-left: 0; font-size: 15px; }
       .cc3-magic { font-size: 12px; color: var(--ink-3); margin: 7px 0 0; line-height: 1.45; }
       /* ONE ROW AT EVERY WIDTH (Eric, 2026-11-10, correction): "The
          whole point was to have it all one row at the top." An earlier
@@ -3569,17 +3585,20 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          and below 900px the chrome and type step down again, the
          Stock sparkline stacks over its value, and the Stock / Odds
          sub-lines truncate with an ellipsis (Eric sanctioned ticker
-         truncation) — so Odds · Power · Grades · Stock · Manager
-         Score hold one row from desktop down to a 390px phone, with
-         Manager Score directly right of Stock at every width. */
+         truncation) — so Odds · Power · Franchise · Grades · Stock
+         hold one row from desktop down to a 390px phone. Manager
+         Score left the strip in Phase 3 piece 1 (its section under
+         the Action Slip stays); redraft runs four cells at the same
+         widths with a gap spacer on the far right. */
       @media (max-width: 1240px) {
         #cc-out .cc3-ss { padding: 7px 8px 7px 0; margin-right: 8px; }
         #cc-out .cc3-ss:last-child { padding-right: 0; margin-right: 0; }
         #cc-out .cc3-ss-odds { flex: 1.3 1 0; }
         #cc-out .cc3-ss-pow { flex: 0.95 1 0; }
+        #cc-out .cc3-ss-fr { flex: 0.95 1 0; }
         #cc-out .cc3-ss-grd { flex: 1.35 1 0; }
         #cc-out .cc3-ss-stock { flex: 1.9 1 0; }
-        #cc-out .cc3-ss-ms { flex: 1.5 1 0; }
+        #cc-out .cc3-strip-gap { flex-grow: 0.95; }
         #cc-out .cc3-ss-stock .cc3-ss-sub { white-space: normal; }
         #cc-out .cc3-ss .cc-tile-bar { max-width: 100%; }
         #cc-out .cc3-ss-chart svg { max-width: 48px; height: 18px; }
@@ -3596,15 +3615,13 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         #cc-out .cc3-ss:last-child { padding-right: 0; margin-right: 0; }
         #cc-out .cc3-ss-odds { flex-grow: 1.25; }
         #cc-out .cc3-ss-pow { flex-grow: 1.05; }
+        #cc-out .cc3-ss-fr { flex-grow: 1; }
         #cc-out .cc3-ss-grd { flex-grow: 1.3; }
         #cc-out .cc3-ss-stock { flex-grow: 1.05; }
-        #cc-out .cc3-ss-ms { flex-grow: 1.05; }
+        #cc-out .cc3-strip-gap { flex-grow: 1; }
         .cc3-ss-k { font-size: 8.2px; letter-spacing: .03em; }
-        #cc-out .cc3-ss-ms .cc-ms-bar-label { font-size: 8.2px; letter-spacing: .03em; }
         .cc3-ss-v { font-size: 16px; }
         #cc-out .cc3-ss-stock .cc3-ss-v { font-size: 13.5px; white-space: nowrap; }
-        #cc-out .cc3-ss-ms .cc-ms-bar-score { font-size: 16px; }
-        #cc-out .cc3-ss-ms .cc-ms-bar-arrow { font-size: 13px; }
         .cc3-ss-v.cc3-grades { font-size: 12.5px; gap: 2px 5px; }
         .cc3-gr i { font-size: 9.5px; }
         .cc3-ss-stockline { flex-direction: column; align-items: flex-start; gap: 1px; margin-top: 3px; }
@@ -3631,6 +3648,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          Grades #B388FF violet, Stock #FFC400. */
       #cc-out .cc3-ss-odds .cc3-ss-k { color: #C6FF00; }
       #cc-out .cc3-ss-pow .cc3-ss-k { color: #00E5FF; }
+      #cc-out .cc3-ss-fr .cc3-ss-k { color: #FFAB40; }
       #cc-out .cc3-ss-grd .cc3-ss-k { color: #B388FF; }
       #cc-out .cc3-ss-stk .cc3-ss-k { color: #FFC400; }
       #cc-out .cc3-ss-ms .cc-ms-bar-label { color: #FFAB40; }
@@ -6386,6 +6404,24 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         if (!SUBNAV_DEFS[tab]) return;
         if (!SUBNAV_DEFS[tab].some(([k]) => k === sub)) sub = SUBNAV_DEFS[tab][0][0];
         window.__subnavState[tab] = sub;
+        if (tab === "league" && sub === "power") {
+          /* Phase 3 piece 1: the Power page opens on the strip's
+             deep-link request when one is pending, otherwise on the
+             seasonal default (in-season Current Power; offseason
+             Franchise in dynasty). The request is consumed once — a
+             plain tab entry never inherits a stale deep link.
+             Re-render only when the resolved view differs from
+             what's on screen, so roster expansions survive tab
+             switches. */
+          try {
+            if (!window.__ffPowerViewDeep) window.__ffPowerView = null;
+            window.__ffPowerViewDeep = false;
+            if (typeof renderPower === "function" && window.__ffPowerRendered) {
+              const want = (typeof ffPowerViewResolve === "function") ? ffPowerViewResolve() : null;
+              if (want && want !== window.__ffPowerRendered) renderPower();
+            }
+          } catch (e) { /* Power view resolution is best-effort */ }
+        }
         if (tab === "league") {
           const gateP = document.getElementById("league-gate-text");
           if (gateP && LEAGUE_GATE_TEXT[sub]) gateP.innerHTML = LEAGUE_GATE_TEXT[sub];
@@ -6420,20 +6456,98 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
       /* ---------- power rankings ---------- */
       function gradeClass(g) { if (!g) return ""; return (g.startsWith("A") || g === "B+") ? "good" : (g.startsWith("D") || g === "F") ? "bad" : ""; }
+      /* Phase 3 piece 1 — which Power Rankings list the page shows.
+         Dynasty has two lists (Current Power, Franchise Value);
+         redraft has one (Current Power). A strip deep link
+         (window.__ffPowerView) wins when set; otherwise the seasonal
+         default: offseason dynasty opens on Franchise (Current Power
+         is quiet until projections publish), everything else opens on
+         Current Power. __ffPowerViewDeep marks a pending deep-link
+         request for showSubNav to consume once; __ffPowerRendered
+         records the view actually on screen. */
+      window.__ffPowerView = null;
+      window.__ffPowerViewDeep = false;
+      window.__ffPowerRendered = null;
+      function ffPowerViewResolve() {
+        const rd = (typeof VALMODE !== "undefined" && VALMODE === "redraft");
+        if (rd) return "cp";
+        if (window.__ffPowerView === "fr" || window.__ffPowerView === "cp") return window.__ffPowerView;
+        let phase = "in-season";
+        try { if (typeof ffPhaseState === "function") phase = ffPhaseState().phase || phase; } catch (e) {}
+        return phase === "offseason" ? "fr" : "cp";
+      }
       function renderPower() {
         const el = document.getElementById("power-list");
-        el.innerHTML = DATA.teams.map(t => {
+        if (!el) return;
+        /* Phase 3 piece 1: two lists in dynasty behind a toggle —
+           Current Power and Franchise Value; redraft keeps one list
+           (Current Power). A strip deep link wins when set; otherwise
+           the seasonal default (offseason dynasty opens on Franchise).
+           Preseason Current Power is a forecast. */
+        const rdP = typeof VALMODE !== "undefined" && VALMODE === "redraft";
+        const view = ffPowerViewResolve();
+        let ph = { phase: "in-season" };
+        try { if (typeof ffPhaseState === "function") ph = ffPhaseState(); } catch (e) {}
+        const isOffseason = ph.phase === "offseason";
+        const isPreseason = ph.phase === "preseason";
+        window.__ffPowerRendered = view;
+        const toggleHtml = rdP ? "" : `<div class="ff-power-toggle" role="tablist" aria-label="Power Rankings view">
+          <button type="button" data-ff-power-view="cp" aria-pressed="${view === "cp"}">Current Power${isPreseason ? " · forecast" : ""}</button>
+          <button type="button" data-ff-power-view="fr" aria-pressed="${view === "fr"}">Franchise Value</button>
+        </div>${(isPreseason && view === "cp") ? `<p class="ff-power-note">Current Power is a forecast from next-season projections — no games played yet.</p>` : ""}`;
+        const wireToggle = () => {
+          el.querySelectorAll("[data-ff-power-view]").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const v = btn.getAttribute("data-ff-power-view");
+              if (v === "cp" || v === "fr") { window.__ffPowerView = v; renderPower(); }
+            });
+          });
+        };
+        const finishQuiet = () => {
+          wireToggle();
+          try { if (typeof window.ffMSPowerLine === "function") window.ffMSPowerLine(el); } catch (e) { /* Manager Score line is best-effort */ }
+          renderRosterView();
+        };
+        if (rdP && isOffseason) {
+          /* Redraft has nothing live in the offseason — no Franchise
+             ranking and no Current Power — so the page says so
+             instead of showing stale numbers. */
+          el.innerHTML = `<div class="ff-power-empty"><h3>Power Rankings</h3><p>Power Rankings return when the new season's projections publish. There is no current-season ranking in the offseason.</p></div>`;
+          finishQuiet();
+          return;
+        }
+        if (!rdP && view === "cp" && isOffseason) {
+          /* Deep offseason dynasty: the Franchise list leads and the
+             Current Power list is a quiet note, not a stale table. */
+          el.innerHTML = toggleHtml + `<div class="ff-power-quiet"><h3>Current Power</h3><p>Current Power returns when 2027 projections publish. Franchise Value is live — switch to Franchise Value above to see it.</p></div>`;
+          finishQuiet();
+          return;
+        }
+        const rankOf = t => (view === "fr" ? t.frRank : t.cpRank);
+        const teamsSorted = DATA.teams.slice().sort((a, b) => {
+          const ra = rankOf(a), rb = rankOf(b);
+          return ((ra == null ? 999 : ra) - (rb == null ? 999 : rb)) || ((a.powerRank || 999) - (b.powerRank || 999));
+        });
+        el.innerHTML = toggleHtml + teamsSorted.map(t => {
           /* Slot tags mark the best-ball lineup — the same optimal lineup
              starters value is summed from — not the manager's set lineup. */
           const bbLineup = t.bestLineup ? t.bestLineup.map(l => ({ id: l.p.id, slot: l.slot })) : t.lineup;
           /* Redraft mode re-prices this whole card in rest-of-season
              value and drops the dynasty furniture: no archetype tag,
              no pick capital, no picks in the roster detail. */
-          const rdP = typeof VALMODE !== "undefined" && VALMODE === "redraft";
           const pv = p => rdP ? dispVal(p) : p.value;
           const totDisp = t.playerIds.reduce((s2, id) => { const p = PBY[id]; return p ? s2 + pv(p) : s2; }, 0);
           const stDisp = bbLineup.reduce((s2, l) => { const p = PBY[l.id]; return p ? s2 + pv(p) : s2; }, 0);
-          const explTxt = rdP ? `${t.record} start · power rank #${t.powerRank} of ${DATA.teams.length}.${t.isUser ? " This is your roster." : ""}` : (typeof slpExpl === "function" ? slpExpl(t, t.arch) : t.expl);
+          const cpDisp = t.cpRank == null ? "—" : t.cpRank;
+          const frDisp = t.frRank == null ? "—" : t.frRank;
+          const userBit = t.isUser ? (t.coOwned ? ` You co-own this roster with ${t.owner}.` : " This is your roster.") : "";
+          /* S4: the card explanation no longer cites the old blended
+             "power rank" — it reads the ranking on display, generated
+             live by slpExpl (Current Power rank + Stance, or the
+             Franchise rank on the Franchise list). */
+          const explTxt = rdP
+            ? `${t.record} start · Current Power #${cpDisp} of ${DATA.teams.length}.${userBit}`
+            : (typeof slpExpl === "function" ? slpExpl(t, t.arch, null, view) : t.expl);
           const lineupIds = new Set(bbLineup.map(l => l.id));
           const slotOf = {};
           bbLineup.forEach(l => { slotOf[l.id] = l.slot; });
@@ -6468,7 +6582,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           const ss = window.SeasonSim ? window.SeasonSim.results[t.rid] : null;
           return `<article class="team-card${t.isUser ? " mine" : ""}">
             <div class="team-head">
-              <div class="rank-num">${t.powerRank}</div>
+              <div class="rank-num">${view === "fr" ? frDisp : cpDisp}</div>
               <div class="team-main">
                 <div class="team-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div>
                 <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div>
@@ -6476,19 +6590,22 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 ${rdP ? "" : `
               <div class="arch ${archClass}">${archTag(t.arch)}</div>`}
             </div>
-            <div class="power-row">
-              <div class="power-bar"><div class="power-fill" style="width:${t.power}%"></div></div>
-              <div class="power-num">${t.power} <small>POWER${rdP ? " · REDRAFT" : ""}</small></div>
-            </div>
+            ${view === "fr" ? `<div class="stat-row">
+              <div><span>Players value</span><b>${fmt(t.frPlayers || 0)}</b></div>
+              <div><span>Pick capital</span><b>${fmt(t.frPicks || 0)}</b></div>
+            </div>` : `<div class="power-row">
+              <div class="power-bar"><div class="power-fill" style="width:${t.cpScore == null ? 0 : t.cpScore}%"></div></div>
+              <div class="power-num">${t.cpScore == null ? "—" : t.cpScore} <small>CURRENT POWER${t.cpForecast ? " · FORECAST" : ""}${rdP ? " · REDRAFT" : ""}</small></div>
+            </div>`}
             <p class="expl">${esc(explTxt)}</p>
             <div class="stat-row">
               ${rdP ? `<div><span>Proj. pts/wk ROS · best lineup</span><b>${Math.round(t.rosOpt || 0)}</b></div>` : ""}
               <div><span>Starters value · best-ball</span><b>${fmt(rdP ? stDisp : t.starterVal)}</b></div>
-              <div><span>Roster value</span><b>${fmt(rdP ? totDisp : t.totalVal)}</b></div>
-              ${rdP ? "" : `<div><span>Pick capital</span><b>${fmt(t.picksVal)}</b></div>`}
+              ${view === "fr" ? "" : `<div><span>Roster value</span><b>${fmt(rdP ? totDisp : t.totalVal)}</b></div>`}
+              ${(rdP || view === "fr") ? "" : `<div><span>Pick capital</span><b>${fmt(t.picksVal)}</b></div>`}
               <div><span>Core age</span><b>${t.coreAge != null ? t.coreAge : t.avgAgeTop}</b></div>
             </div>
-            ${ss ? `<div class="stat-row">
+            ${(ss && !isOffseason) ? `<div class="stat-row">
               <div><span>Exp. wins (ROS sim)</span><b>${ss.expWins.toFixed(1)}</b></div>
               <div><span>Playoff odds</span><b>${playoffLabel(ss)}</b></div>
               <div><span>Title odds · if in playoffs</span><b>${titlePct(ss)}</b><div class="p-sub">${oddsPct(ss.champ)} overall</div></div>
@@ -6509,6 +6626,7 @@ ${rdP ? "" : `
             </div>
           </article>`;
         }).join("");
+        wireToggle();
         try { if (typeof window.ffMSPowerLine === "function") window.ffMSPowerLine(el); } catch (e) { /* Manager Score line is best-effort */ }
         el.querySelectorAll("[data-expand]").forEach(btn => {
           btn.addEventListener("click", () => {
@@ -12857,20 +12975,18 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         if (t.frRank > third) return "crossroads";
         return ca && ca.delta < 0 ? "dynasty" : "win-now";
       }
-      function slpExpl(t, arch, user) {
-        const recM = /(\d+)-(\d+)/.exec(t.record || "");
-        const recW = recM ? +recM[1] : 0, recL = recM ? +recM[2] : 0;
-        const line = arch === "win-now"
-          ? "a top lineup with a veteran core — built to win now, because the window is this one."
-          : arch === "dynasty"
-            ? "a top lineup with a young core — built to win now and keep winning."
-            : arch === "rebuilder"
-              ? (recW > recL ? "a roster graded as build-for-next-year, even though the record says otherwise." : "the standings and the roster agree this is a build-for-next-year team.")
-              : "caught between timelines — good enough to matter, not quite built to finish it.";
-        let s = `${t.record} start and power rank #${t.powerRank} — ${line}`;
-        if (t.isUser && t.coOwned) s += ` You co-own this roster with ${t.owner}.`;
-        else if (t.isUser) s += " This is your roster.";
-        return s;
+      /* Phase 3 piece 1 (S4): the Power-card explanation no longer
+         cites the old blended "power rank" — it reads the ranking on
+         display: Current Power rank + Stance, or the Franchise rank
+         on the Franchise list. The old arch-templated flavor line
+         goes with it. `view` is "cp" by default; renderPower passes
+         "fr" for Franchise cards. */
+      function slpExpl(t, arch, user, view) {
+        const cpDisp = t.cpRank == null ? "—" : t.cpRank;
+        const frDisp = t.frRank == null ? "—" : t.frRank;
+        const userBit = t.isUser ? (t.coOwned ? ` You co-own this roster with ${t.owner}.` : " This is your roster.") : "";
+        if (view === "fr") return `${t.record} start · Franchise Value #${frDisp} of ${DATA.teams.length}.${userBit}`;
+        return `${t.record} start · Current Power #${cpDisp} of ${DATA.teams.length}${t.stanceLabel ? ` · ${t.stanceLabel}` : ""}.${userBit}`;
       }
 
       /* Mirror of setLeague() for the connected league: same owner remap,
@@ -17370,36 +17486,73 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
       }
 
       window.sharePowerImage = function () {
-        const teams = DATA.teams.slice().sort((a, b) => a.powerRank - b.powerRank);
-        if (!teams.length) return;
+        /* Phase 3 piece 1: TWO cards in dynasty — a Current Power
+           card and a Franchise Value card — sharing whichever view is
+           active on the Power page (offseason is always the Franchise
+           card). Redraft has one card, the Current Power card. The
+           Franchise card shows players + picks as separate subtotals
+           per team, never a blended figure. The last share is stashed
+           (view + title + rows) for the verification harness. */
         const rd = typeof VALMODE !== "undefined" && VALMODE === "redraft";
+        let phase = "in-season";
+        try { if (typeof ffPhaseState === "function") phase = ffPhaseState().phase || phase; } catch (e) {}
+        const view = rd ? "cp" : (phase === "offseason" ? "fr" : (window.__ffPowerRendered || "cp"));
+        const teams = DATA.teams.slice().sort((a, b) => {
+          const ra = view === "fr" ? a.frRank : a.cpRank, rb = view === "fr" ? b.frRank : b.cpRank;
+          return ((ra == null ? 999 : ra) - (rb == null ? 999 : rb)) || ((a.powerRank || 999) - (b.powerRank || 999));
+        });
+        if (!teams.length) return;
         const W = 1080, rowH = 86, top = 205, H = top + teams.length * rowH + 120;
         const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
         const ctx = cv.getContext("2d");
         const lg = (window.CONN_LEAGUE && window.CONN_LEAGUE.meta && window.CONN_LEAGUE.meta.name) || DATA.league.name || "Your league";
-        shChrome(ctx, W, H, "FANTASY FORENSICS · POWER RANKINGS",
-          rd ? "Redraft Power Rankings" : "Power Rankings",
-          `${lg} · NFL Week ${DATA.league.week} · ${rd ? "rest-of-season value" : "dynasty value"}`);
+        const forecast = !rd && view === "cp" && phase === "preseason";
+        const title = view === "fr" ? "Franchise Value Rankings" : (rd ? "Redraft Power Rankings" : "Current Power Rankings");
+        const sub = view === "fr"
+          ? `${lg} · NFL Week ${DATA.league.week} · players + picks shown separately`
+          : `${lg} · NFL Week ${DATA.league.week} · ${rd ? "rest-of-season value" : "current-season strength"}${forecast ? " · forecast" : ""}`;
+        shChrome(ctx, W, H, view === "fr" ? "FANTASY FORENSICS · FRANCHISE VALUE" : "FANTASY FORENSICS · POWER RANKINGS", title, sub);
+        const rows = [];
         teams.forEach((t, i) => {
+          const rank = view === "fr" ? t.frRank : t.cpRank;
           const y = top + i * rowH;
           ctx.fillStyle = t.isUser ? "rgba(198,255,0,.08)" : (i % 2 ? SH.panel : SH.panel2);
           ctx.beginPath(); ctx.roundRect(40, y, W - 80, rowH - 12, 14); ctx.fill();
           ctx.fillStyle = t.isUser ? SH.lime : SH.ink2; ctx.font = shFont(700, 40);
-          ctx.fillText(String(t.powerRank), 66, y + 52);
+          ctx.fillText(rank == null ? "—" : String(rank), 66, y + 52);
           ctx.fillStyle = SH.ink; ctx.font = shFont(700, 33);
           let name = t.name + (t.isUser ? "  ★" : "");
           while (ctx.measureText(name).width > 560 && name.length > 4) name = name.slice(0, -2);
           ctx.fillText(name, 140, y + 42);
           ctx.fillStyle = SH.ink3; ctx.font = shFont(500, 23);
-          ctx.fillText(`${t.record} · ${t.pf.toLocaleString("en-US")} pts for${rd ? "" : " · " + archTag(t.arch)}`, 140, y + 70);
-          // power bar + score
-          const bx = 730, bw = 210;
-          ctx.fillStyle = "rgba(255,255,255,.10)"; ctx.beginPath(); ctx.roundRect(bx, y + 26, bw, 16, 8); ctx.fill();
-          ctx.fillStyle = t.isUser ? SH.lime : SH.cyan; ctx.beginPath(); ctx.roundRect(bx, y + 26, Math.max(16, bw * t.power / 100), 16, 8); ctx.fill();
-          ctx.fillStyle = SH.ink; ctx.font = shFont(700, 34); ctx.textAlign = "right";
-          ctx.fillText(String(t.power), W - 62, y + 46); ctx.textAlign = "left";
+          let tag = "";
+          if (!rd) {
+            if (view === "fr") tag = (t.frTag && typeof archTag === "function") ? archTag(t.frTag) : ((t.arch && typeof archTag === "function") ? archTag(t.arch) : "");
+            else tag = t.stanceLabel || "";
+          }
+          ctx.fillText(`${t.record} · ${t.pf.toLocaleString("en-US")} pts for${tag ? " · " + tag : ""}`, 140, y + 70);
+          if (view === "fr") {
+            /* Players + picks as separate subtotals — no bar, no
+               blended total anywhere on this card. */
+            ctx.fillStyle = SH.ink; ctx.font = shFont(700, 28); ctx.textAlign = "right";
+            ctx.fillText("Players " + fmt(t.frPlayers || 0), W - 62, y + 40);
+            ctx.fillStyle = SH.ink3; ctx.font = shFont(500, 23);
+            ctx.fillText("Picks " + fmt(t.frPicks || 0), W - 62, y + 70);
+            ctx.textAlign = "left";
+            rows.push({ name: t.name, rank: rank == null ? null : rank, players: t.frPlayers || 0, picks: t.frPicks || 0 });
+          } else {
+            // power bar + score
+            const bx = 730, bw = 210;
+            const sc = t.cpScore;
+            ctx.fillStyle = "rgba(255,255,255,.10)"; ctx.beginPath(); ctx.roundRect(bx, y + 26, bw, 16, 8); ctx.fill();
+            ctx.fillStyle = t.isUser ? SH.lime : SH.cyan; ctx.beginPath(); ctx.roundRect(bx, y + 26, Math.max(16, bw * (sc == null ? 0 : sc) / 100), 16, 8); ctx.fill();
+            ctx.fillStyle = SH.ink; ctx.font = shFont(700, 34); ctx.textAlign = "right";
+            ctx.fillText(sc == null ? "—" : String(sc), W - 62, y + 46); ctx.textAlign = "left";
+            rows.push({ name: t.name, rank: rank == null ? null : rank, score: sc == null ? null : sc });
+          }
         });
-        shDeliver(cv, "fantasy-forensics-power-rankings.png");
+        window.__ffLastPowerShare = { view, title, rows };
+        shDeliver(cv, view === "fr" ? "fantasy-forensics-franchise-value-rankings.png" : (rd ? "fantasy-forensics-power-rankings.png" : "fantasy-forensics-current-power-rankings.png"));
       };
 
       window.shareVerdictImage = function () {
@@ -20761,7 +20914,11 @@ window.drDraft = {
         const me = DATA.teams.find(t => t.isUser) || (ridFallback != null ? DATA.teams.find(t => t.rid === ridFallback) : null);
         if (!me) return null;
         const snap = ff4.ccSnaps ? ff4.ccSnaps[idx] : null;
-        const d = { idx, leagueName: DATA.league.name || "", chips: chipsIn || [], teamName: me.name, record: me.record, powerRank: me.powerRank, total: DATA.teams.length, status: snap ? (snap.status || "") : "" };
+        /* Phase 3 piece 1 (new reads only — d.powerRank above is
+           untouched): the strip's Power cell reads the engine's
+           Current Power rank and its Franchise cell the Franchise
+           rank, straight off the team object. */
+        const d = { idx, leagueName: DATA.league.name || "", chips: chipsIn || [], teamName: me.name, record: me.record, powerRank: me.powerRank, cpRank: (me.cpRank != null) ? me.cpRank : null, frRank: (me.frRank != null) ? me.frRank : null, isRedraft: (typeof tpIsRedraft === "function") ? tpIsRedraft() : false, total: DATA.teams.length, status: snap ? (snap.status || "") : "" };
         let sim = simIn || null;
         if (DATA.teams.length === 12) {
           if (!sim) { try { sim = buildSeasonSim(); } catch (e) { sim = null; } }
@@ -21281,6 +21438,12 @@ window.drDraft = {
         else if (d.magic && d.magic.capped) magicLine = `<div class="cc-tile-sub">No win total reaches 90% playoff odds</div>`;
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="odds" style="--tile-accent:#C6FF00"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div><div class="cc-tile-sub">${esc(oddsSub)}</div>${magicLine}</div></div>`);
         const powerBig = d.powerRank == null ? "—" : `#${d.powerRank} of ${d.total}`;
+        /* Phase 3 piece 1: the strip reads these — Current Power rank
+           for the Power cell, Franchise rank for the Franchise cell
+           (rank only, never subtotals). powerBig above is untouched
+           (the unrendered tile record keeps it). */
+        const cpBig = d.cpRank == null ? "—" : `#${d.cpRank} of ${d.total}`;
+        const frBig = d.frRank == null ? "—" : `#${d.frRank} of ${d.total}`;
         let powerExtra = "";
         if (d.powerGrades) powerExtra += `<div class="cc-power-grades">${["QB", "RB", "WR", "TE"].map(pos => `<span>${pos} <b style="color:${ffGradeColor(d.powerGrades[pos])}">${esc(d.powerGrades[pos])}</b></span>`).join("")}</div>`;
         const archBits = [];
@@ -21419,7 +21582,7 @@ window.drDraft = {
         if (d.powerArch) magicParts.push(esc((typeof archTag === "function") ? archTag(d.powerArch) : d.powerArch));
         return {
           oddsLabel, oddsCol: col, oddsFrac: frac, oddsSub,
-          powerBig, gradesCell, tickerChart, stockMain, stockNote,
+          powerBig, cpBig, frBig, isRedraft: !!d.isRedraft, gradesCell, tickerChart, stockMain, stockNote,
           teamValueText: `Team value ${fmt(d.teamValue != null ? d.teamValue : (d.portfolioTotal || 0))}`,
           magicLine: magicParts.join(" · "),
           movesBody, watchBody, tradeBody, wvBody, toolsLinks
@@ -21461,6 +21624,18 @@ window.drDraft = {
           return;
         }
         ff4RenderMoves(pick);
+      }
+      /* Phase 3 piece 1 — strip deep links into the Power Rankings
+         page. A strip cell carrying data-cc-power-view="cp"|"fr"
+         requests that list; any other strip cell clears the request
+         and the page opens on its seasonal default. The request is
+         consumed once by showSubNav (league/power). */
+      function ff4CCSetPowerView(el) {
+        try {
+          const v = el && el.getAttribute ? el.getAttribute("data-cc-power-view") : null;
+          if (v === "cp" || v === "fr") { window.__ffPowerView = v; window.__ffPowerViewDeep = true; }
+          else { window.__ffPowerView = null; window.__ffPowerViewDeep = false; }
+        } catch (e) {}
       }
       function ff4CCRenderSpot() {
         const spot = document.getElementById("cc-spot");
@@ -21504,8 +21679,10 @@ window.drDraft = {
            number now lives in the Playoff Odds tile; the swing
            game and value-trend lines are gone entirely. */
         /* Concept 3 (Nov 10, 2026): header + stat strip in the main
-           column (the strip ends at the Manager Score cell — the
-           ffMSBarHtml bar restyled as that cell), the streams below
+           column (the strip ends at the Stock cell — the Manager
+           Score bar is still computed here because the Action Slip's
+           Manager Score section reads its score out of it, but it is
+           no longer a strip cell, Phase 3 piece 1), the streams below
            Needs You First, and the Action Slip in the rail. The
            slip's League Activity section mounts #cc-la, refilled
            from the activity feed's own state right after the build. */
@@ -21519,10 +21696,11 @@ window.drDraft = {
           </div><div class="cc-spot-actions"><button type="button" class="cc-manage cc-refresh" id="cc-refresh" data-cc-refresh="1"${ff4.ccRefreshing ? " disabled" : ""}>${ff4.ccRefreshing ? `<span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Refreshing…` : "↻ Refresh"}</button></div></div>
           <div class="cc3-strip" id="cc3-strip">
             <div class="cc3-ss cc3-ss-odds" data-cc-grid-tool="odds" role="button" tabindex="0"><div class="cc3-ss-k">Playoff Odds</div><div class="cc3-ss-v" style="color:${P.oddsCol}">${esc(P.oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(P.oddsFrac * 100)}%;background:${P.oddsCol}"></div></div><div class="cc3-ss-sub">${esc(P.oddsSub)}</div></div>
-            <div class="cc3-ss cc3-ss-pow" data-cc-grid-tool="power" role="button" tabindex="0"><div class="cc3-ss-k">Power Rank</div><div class="cc3-ss-v">${esc(P.powerBig)}</div></div>
+            <div class="cc3-ss cc3-ss-pow" data-cc-grid-tool="power" data-cc-power-view="cp" role="button" tabindex="0"><div class="cc3-ss-k">Power Rank</div><div class="cc3-ss-v">${esc(P.cpBig)}</div></div>
+            ${P.isRedraft ? "" : `<div class="cc3-ss cc3-ss-fr" data-cc-grid-tool="power" data-cc-power-view="fr" role="button" tabindex="0"><div class="cc3-ss-k">Franchise</div><div class="cc3-ss-v">${esc(P.frBig)}</div></div>`}
             ${P.gradesCell ? `<div class="cc3-ss cc3-ss-grd" data-cc-grid-tool="power" role="button" tabindex="0"><div class="cc3-ss-k">Grades</div><div class="cc3-ss-v cc3-grades">${P.gradesCell}</div></div>` : ""}
             <div class="cc3-ss cc3-ss-stock cc3-ss-stk" data-cc-grid-tool="teamport" role="button" tabindex="0"><div class="cc3-ss-k">Stock</div><div class="cc3-ss-stockline">${P.tickerChart ? `<span class="cc3-ss-chart">${P.tickerChart}</span>` : ""}<span class="cc3-ss-v">${P.stockMain}</span></div><div class="cc3-ss-sub">${esc(P.teamValueText)}${P.stockNote ? ` · ${esc(P.stockNote)}` : ""}</div></div>
-            <div class="cc3-ss cc3-ss-ms">${ccMSBar}</div>
+            ${P.isRedraft ? `<div class="cc3-strip-gap" aria-hidden="true"></div>` : ""}
           </div>
           ${P.magicLine ? `<p class="cc3-magic">${P.magicLine}</p>` : ""}`;
         if (spot2El) {
@@ -21593,7 +21771,7 @@ window.drDraft = {
           }
         }
         const rb2 = spot.querySelector("[data-cc-refresh]"); if (rb2) rb2.addEventListener("click", () => ff4CCRefresh());
-        [spot, spot2El, slipEl].forEach(root => { if (!root) return; root.querySelectorAll("[data-cc-grid-tool]").forEach(b => { b.addEventListener("click", () => ff4CCGoTool(idx, b.dataset.ccGridTool)); if (b.tagName !== "BUTTON") b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ff4CCGoTool(idx, b.dataset.ccGridTool); } }); }); });
+        [spot, spot2El, slipEl].forEach(root => { if (!root) return; root.querySelectorAll("[data-cc-grid-tool]").forEach(b => { b.addEventListener("click", () => { ff4CCSetPowerView(b); ff4CCGoTool(idx, b.dataset.ccGridTool); }); if (b.tagName !== "BUTTON") b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ff4CCSetPowerView(b); ff4CCGoTool(idx, b.dataset.ccGridTool); } }); }); });
         /* The Trade Ideas stream keeps the old tile's whole-block
            destination (Player Targets) on top of its footer link. */
         const ideasEl = document.getElementById("cc3-ideas");
