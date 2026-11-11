@@ -5570,18 +5570,71 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
             .forEach((t, i) => { t.grades[pos] = GRADE_LADDER[i] || "F"; });
         });
         const pctile = (vals, x) => 100 * vals.filter(v => v <= x).length / vals.length;
-        const svs = DATA.teams.map(t => t.starterVal), rps = DATA.teams.map(t => t.rosOpt);
-        /* Power score (Eric's rebuild, Oct 20): dynasty = half starters
-           value percentile, half rest-of-season projected-points
-           percentile; redraft = projected points alone (there is no
-           future season to price). Points scored so far no longer enter
-           the score — a past box score isn't a forecast — and actual PF
-           survives only as the last-resort tie-break. */
+        const rps = DATA.teams.map(t => t.rosOpt);
+        /* Power score (Eric's rebuild, Nov 11): the ranking answers how
+           good a team is IN TOTAL, then lets this season speak. Dynasty
+           leads with total roster value — every player plus pick
+           capital (t.totalVal + t.picksVal, both re-derived above) at
+           70% — with the shared season sim's playoff odds at 20% and
+           title odds at 10%. Odds, never raw record: the record is
+           already inside the odds, so counting both would pay it
+           twice. Dynasty values never zero an injured player, so a
+           hurt star no longer taxes the ranking the way the old
+           injury-filtered starters-value half did. Redraft flips the
+           emphasis (Eric, Nov 11): this season is the whole game, so
+           the odds carry it — playoff 40%, title 40% — and total
+           roster value (redraft values: rest-of-season, a player done
+           for the year priced at 0, no picks) steadies it at 20%.
+           The odds read is the ONE shared 3,000-sim run every odds
+           surface reads, gated by the same freshness fingerprint the
+           Command Center uses (ff4CCFreshSim) — never a second sim.
+           Two timing cases: during the first boot frames the
+           fingerprint helper is not loaded yet, but the sim in
+           window.SeasonSim was built from this very DATA moments
+           earlier, so it is read directly; and on a fresh connect the
+           sim lands on a timer after recomputeValues first runs, so
+           for the connected league on screen the shared sim is built
+           on the spot (the connect flow still installs and caches its
+           own build exactly as before). When no fresh sim can exist
+           for the DATA in place — a background snapshot of another
+           league, a league size the sim does not cover — THIS pass
+           falls back to 70% total roster value + 30% rest-of-season
+           projection percentile; the next recompute with the sim in
+           hand prices the real odds. Nothing is fabricated. Actual PF
+           survives only as the last-resort tie-break, as before. */
         const rdPower = VALMODE === "redraft";
-        DATA.teams.forEach(t => {
-          t.power = roundPower(rdPower ? pctile(rps, t.rosOpt)
-            : 0.5 * pctile(svs, t.starterVal) + 0.5 * pctile(rps, t.rosOpt));
-        });
+        /* Total roster value per mode: dynasty counts pick capital,
+           redraft does not — a redraft roster is its players alone,
+           the same total the Power Rankings card prints (Sleeper
+           redraft leagues can carry future picks in the data model;
+           Eric's design leaves them out of redraft power). */
+        const taOf = t => (t.totalVal || 0) + (rdPower ? 0 : (t.picksVal || 0));
+        const tas = DATA.teams.map(taOf);
+        let simRes = null;
+        try {
+          let s = null;
+          if (typeof ff4CCFreshSim === "function") s = ff4CCFreshSim();
+          else if (window.SeasonSim && window.SeasonSim.results) s = window.SeasonSim;
+          if (!s && typeof window.buildSeasonSim === "function" && DATA.teams.length === 12
+              && window.CONN_LEAGUE && DATA.league === window.CONN_LEAGUE.league) {
+            s = window.buildSeasonSim();
+            if (s && s.results && !window.SeasonSim) window.SeasonSim = s;
+          }
+          if (s && s.results) simRes = s.results;
+        } catch (e) { simRes = null; }
+        const haveOdds = !!simRes && DATA.teams.length > 0 && DATA.teams.every(t => { const r = simRes[t.rid]; return r && isFinite(r.playoff) && isFinite(r.champ); });
+        if (haveOdds) {
+          const pos = DATA.teams.map(t => simRes[t.rid].playoff), cps = DATA.teams.map(t => simRes[t.rid].champ);
+          const wV = rdPower ? 0.2 : 0.7, wP = rdPower ? 0.4 : 0.2, wT = rdPower ? 0.4 : 0.1;
+          DATA.teams.forEach(t => {
+            const r = simRes[t.rid];
+            t.power = roundPower(wV * pctile(tas, taOf(t)) + wP * pctile(pos, r.playoff) + wT * pctile(cps, r.champ));
+          });
+        } else {
+          DATA.teams.forEach(t => {
+            t.power = roundPower(0.7 * pctile(tas, taOf(t)) + 0.3 * pctile(rps, t.rosOpt));
+          });
+        }
         DATA.teams.sort((a, b) => b.power - a.power || b.rosOpt - a.rosOpt || b.starterVal - a.starterVal || b.pf - a.pf);
         DATA.teams.forEach((t, i) => { t.powerRank = i + 1; });
       }
@@ -8775,7 +8828,7 @@ ${rdP ? "" : `
         <h2>The injury feed — what it shows, and what it won't</h2>
         <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
         <h2>Power rankings &amp; the team tags</h2>
-        <p>Power score combines starters value and rest-of-season projected points, each as a league percentile. Points scored so far don't enter it — a September box score isn't a forecast. In redraft mode the score is projected points alone — this season's projected production. <strong>Starters value is best-ball:</strong> the value of each team's best possible lineup under its league's slots, filled by dynasty value the way the Lineup Analyzer's optimizer fills its slots — never the lineup the manager happens to have set on Sleeper. Bye weeks are ignored (a star on bye counts at full value — this measures roster strength, not one week), while players on IR / PUP stay excluded. A player listed Out is handled the way the optimizer handles him: still projected to play, he keeps his projection and is flagged a status conflict; not projected, he's excluded. The <strong>projected-points half</strong> is the Season Outlook engine's number: the same best-possible lineup construction, scored by rest-of-season projected points per week — the identical optimal-lineup total that drives the playoff odds, so the ranking and the odds can never disagree about how strong a lineup projects.</p> The team tag reads that ranking together with the age of each team's starting core. The top third splits by core age: a veteran core is tagged <strong>Win-Now ⏳</strong> — its window is this season — and a young core <strong>Dynasty 👑</strong>, built to contend now and for years. The middle third is <strong>Crossroads 🔀</strong>: close enough to contend, one decision from either direction. The bottom third is <strong>Rebuilder 🔨</strong>, playing for next year. The tags drive Player Targets: contenders see buys, rebuilders see sells, and Crossroads teams pick a path.</p>
+        <p>Power score asks how good a team is in total — and then lets this season speak. In a dynasty league the ranking leads with <strong>total roster value</strong>: every player on the roster, plus the team's draft-pick capital. An injured star still counts at full value — a great roster having a hurt month is still a great roster. This season's voice is the season simulation: each team's <strong>playoff odds</strong> and <strong>title odds</strong> lift or temper the ranking, so a leaner roster in the middle of a real run can climb past a richer team that is fading, and a loaded team sleepwalking out of the race slides. In redraft there is no next year to price, so the emphasis flips — the odds carry the ranking, and roster value plays a supporting role; redraft values are rest-of-season values, so a player done for the season adds nothing to his team's total, exactly as he should.</p> The team tag reads that ranking together with the age of each team's starting core. The top third splits by core age: a veteran core is tagged <strong>Win-Now ⏳</strong> — its window is this season — and a young core <strong>Dynasty 👑</strong>, built to contend now and for years. The middle third is <strong>Crossroads 🔀</strong>: close enough to contend, one decision from either direction. The bottom third is <strong>Rebuilder 🔨</strong>, playing for next year. The tags drive Player Targets: contenders see buys, rebuilders see sells, and Crossroads teams pick a path.</p>
         <h2>Honest limits</h2>
         <ul>
           <li><strong>It's a snapshot.</strong> Rosters, standings, algorithm prices, and ranks are as of ${DATA.league.snapshot} (NFL Week ${DATA.league.week}). Later news is not priced in.</li>
