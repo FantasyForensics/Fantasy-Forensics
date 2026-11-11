@@ -3665,6 +3665,24 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       #cc-out .cc-queue-list { overflow-y: auto; }
       #cc-out .cc-queue-more { font-size: 12px; font-weight: 700; letter-spacing: .05em; color: var(--ink-2); padding: 7px 2px 0; }
       #cc-out .cc-queue-sub { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); padding: 12px 2px 2px; }
+      /* Dismiss / Handled (Eric, 2026-11-10): the check-off button
+         on queue rows and slip moves, and the collapsed Handled row
+         that collects muted alerts at the bottom of each panel. */
+      #cc-out .cc-q-dismiss { margin-left: auto; flex: 0 0 auto; align-self: center; border: 1px solid rgba(255,255,255,.18); background: none; color: var(--ink-2); font: inherit; font-size: 12px; font-weight: 700; line-height: 1; border-radius: 999px; padding: 3px 8px; cursor: pointer; }
+      #cc-out .cc-q-dismiss:hover { color: #0A0A1A; background: #C6FF00; border-color: #C6FF00; }
+      #cc-out .cc-q-restore { margin-left: auto; flex: 0 0 auto; align-self: center; border: 1px solid rgba(255,255,255,.18); background: none; color: var(--ink-2); font: inherit; font-size: 11.5px; font-weight: 700; line-height: 1; border-radius: 999px; padding: 3px 8px; cursor: pointer; }
+      #cc-out .cc-q-restore:hover { color: var(--ink); border-color: rgba(255,255,255,.45); }
+      #cc-out .cc-handled { border-top: 1px solid rgba(255,255,255,.09); margin-top: 8px; padding-top: 6px; }
+      .cc-handled-toggle { border: 0; background: none; color: var(--ink-3); font: inherit; font-size: 12px; font-weight: 700; letter-spacing: .05em; cursor: pointer; padding: 2px; }
+      .cc-handled-toggle:hover { color: var(--ink); }
+      #cc-out .cc-handled-list { margin-top: 2px; }
+      #cc-out .cc-queue-it.handled { opacity: .55; }
+      #cc-slip .cc-dismiss-btn { display: block; margin-top: 8px; border: 1px solid rgba(255,255,255,.18); background: none; color: var(--ink-2); font: inherit; font-size: 12px; font-weight: 700; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+      #cc-slip .cc-dismiss-btn:hover { color: #0A0A1A; background: #C6FF00; border-color: #C6FF00; }
+      #cc-slip .cc3-slip-sec.sec-handled { background: rgba(255,255,255,.03); }
+      #cc-slip .cc-handled-it { display: flex; gap: 8px; align-items: center; border-top: 1px solid rgba(255,255,255,.08); padding: 6px 2px; opacity: .6; font-size: 12.5px; }
+      #cc-slip .cc-handled-tx { flex: 1 1 auto; min-width: 0; }
+      #cc-slip .cc-handled-it .cc-q-restore { margin-left: auto; }
       #cc-out .cc-queue-it.tune { border-left-color: rgba(255,255,255,.18); }
       #cc-out .cc-queue-it.tune .cc-q-player { color: var(--ink-2); font-weight: 600; font-size: 14px; }
       #cc-out .cc-queue-it.tune .cc-q-issue { color: var(--ink-2); font-weight: 500; }
@@ -14155,11 +14173,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         function prefsClean(p) {
           function arr(v) { var out = []; (Array.isArray(v) ? v : []).forEach(function (x) { if (typeof x === "string" && x && out.indexOf(x) === -1) out.push(x); }); return out; }
           p = p || {};
-          return { hiddenLeagues: arr(p.hiddenLeagues), hiddenAccounts: arr((p.hiddenAccounts || []).map(function (u) { return String(u).trim().toLowerCase(); })), customLeagues: arr(p.customLeagues), updatedAt: Number(p.updatedAt) || 0 };
+          return { hiddenLeagues: arr(p.hiddenLeagues), hiddenAccounts: arr((p.hiddenAccounts || []).map(function (u) { return String(u).trim().toLowerCase(); })), customLeagues: arr(p.customLeagues), dismissedAlerts: arr(p.dismissedAlerts), updatedAt: Number(p.updatedAt) || 0 };
         }
         function prefsGet() {
           try { var raw = localStorage.getItem(PREFS_KEY); if (raw) return prefsClean(JSON.parse(raw)); } catch (e) {}
-          return { hiddenLeagues: [], hiddenAccounts: [], customLeagues: [], updatedAt: 0 };
+          return { hiddenLeagues: [], hiddenAccounts: [], customLeagues: [], dismissedAlerts: [], updatedAt: 0 };
         }
         function prefsSave(p) {
           var c = prefsClean(p); c.updatedAt = Date.now();
@@ -19802,7 +19820,7 @@ window.drDraft = {
               const cov = coverFor(lbl, null);
               const wv = cov ? null : waiverFor(lbl, null);
               push(0, "out", "Empty " + lbl + " slot", "No player set at " + lbl
-                + (cov ? " — " + cov.p.name + " is on your bench" : (wv ? " — top waiver cover: " + wv.p.name : "")), 4);
+                + (cov ? " — " + cov.p.name + " is on your bench" : (wv ? " — top waiver cover: " + wv.p.name : "")), 4, { pid: "slot:" + lbl });
             });
           }
 
@@ -19810,10 +19828,10 @@ window.drDraft = {
             const isBye = !!(window.TEAM_BYE && window.TEAM_BYE[p.team] === wk);
             if (isBye) {
               const cov = coverFor(slot, p.pos);
-              if (cov) push(2, "bye", p.name, "On bye in Week " + wk + " — " + cov.p.name + " can cover from your bench", 3);
+              if (cov) push(2, "bye", p.name, "On bye in Week " + wk + " — " + cov.p.name + " can cover from your bench", 3, { pid: String(p.id) });
               else {
                 const wv = waiverFor(slot, p.pos);
-                push(0, "out", p.name, "On bye in Week " + wk + " — no bench cover" + (wv ? "; top waiver cover: " + wv.p.name : ""), 5);
+                push(0, "out", p.name, "On bye in Week " + wk + " — no bench cover" + (wv ? "; top waiver cover: " + wv.p.name : ""), 5, { pid: String(p.id) });
               }
               problemIds.add(String(p.id));
               return;
@@ -19837,10 +19855,10 @@ window.drDraft = {
                 ? ((p.inj === "IR" ? "Injured reserve" : p.inj) + (p.ibp ? " — " + p.ibp : "") + projTxt(p))
                 : ("Projected 0 in Week " + wk + projTxt(p));
               const cov = coverFor(slot, p.pos);
-              if (cov) push(1, "out", p.name, base + " — bench cover: " + cov.p.name, 1);
+              if (cov) push(1, "out", p.name, base + " — bench cover: " + cov.p.name, 1, { pid: String(p.id) });
               else {
                 const wv = waiverFor(slot, p.pos);
-                push(0, "out", p.name, base + " — no bench cover" + (wv ? "; top waiver cover: " + wv.p.name : ""), 5);
+                push(0, "out", p.name, base + " — no bench cover" + (wv ? "; top waiver cover: " + wv.p.name : ""), 5, { pid: String(p.id) });
               }
               problemIds.add(String(p.id));
               return;
@@ -19855,7 +19873,7 @@ window.drDraft = {
                 if (reps.length && reps.every(x => { const L = locks[x.p.team]; return !!(L && typeof L.t === "number" && L.t < mine.t); })) {
                   const firstT = Math.min(...reps.map(x => locks[x.p.team].t));
                   const day = new Date(firstT).toLocaleDateString("en-US", { weekday: "short" });
-                  push(5, "dbt", p.name, "Questionable" + (p.ibp ? " — " + p.ibp : "") + " — your only bench cover plays earlier (" + day + "); decide before that game locks", 8);
+                  push(5, "dbt", p.name, "Questionable" + (p.ibp ? " — " + p.ibp : "") + " — your only bench cover plays earlier (" + day + "); decide before that game locks", 8, { pid: String(p.id) });
                 }
               }
             }
@@ -19867,7 +19885,7 @@ window.drDraft = {
             if (!p || NYF_IR_OK[p.inj]) return;
             push(3, "dbt", p.name, p.inj
               ? "Listed " + p.inj + " but still in your IR slot — that blocks other roster moves until he comes out"
-              : "Healthy again but still in your IR slot — that blocks other roster moves until he comes out", 6);
+              : "Healthy again but still in your IR slot — that blocks other roster moves until he comes out", 6, { pid: String(p.id) });
           });
 
           /* Categories 2 + fine-tuning — one pairing pass through
@@ -20019,8 +20037,8 @@ window.drDraft = {
             const wk = Number(DATA.league.week) || week;
             const qwk = me.lineupWeek || wk;
             const nqS = ff4CCQueueFor(me, qwk);
-            snap.queueItems = nqS.map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper" }));
-            snap.tuneItems = (nqS.tune || []).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper" }));
+            snap.queueItems = nqS.map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper", leagueId: snap.leagueId, wk: qwk }));
+            snap.tuneItems = (nqS.tune || []).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "Sleeper", leagueId: snap.leagueId, wk: qwk }));
             try { snap.qCount = ff4CCStarters(me).filter(p => p.inj === "Questionable").length; } catch (e) { snap.qCount = 0; }
             const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
             const streak = myRoster.settings && myRoster.settings.streak ? String(myRoster.settings.streak) : null;
@@ -20124,8 +20142,8 @@ window.drDraft = {
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
             const wk = Number(DATA.league.week) || 1;
             const nqE = ff4CCQueueFor(me, wk);
-            snap.queueItems = nqE.map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "ESPN" }));
-            snap.tuneItems = (nqE.tune || []).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "ESPN" }));
+            snap.queueItems = nqE.map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "ESPN", leagueId: snap.leagueId, wk: wk }));
+            snap.tuneItems = (nqE.tune || []).map(q => ({ ...q, idx, leagueName: snap.leagueName, teamName: me.name, platform: "ESPN", leagueId: snap.leagueId, wk: wk }));
             try { snap.qCount = ff4CCStarters(me).filter(p => p.inj === "Questionable").length; } catch (e) { snap.qCount = 0; }
             const byeNames = (me.bestLineup || []).map(x => x.p).filter(p => p && window.TEAM_BYE && window.TEAM_BYE[p.team] === wk + 1).map(p => p.name);
             if (byeNames.length) snap.status = `${byeNames.length} starter${byeNames.length === 1 ? "" : "s"} on bye in Week ${wk + 1}: ${byeNames.slice(0, 3).join(", ")}${byeNames.length > 3 ? "…" : ""}`;
@@ -20211,7 +20229,7 @@ window.drDraft = {
             for (const c of cands) {
               if (seen.has(c.cand.id)) continue;
               seen.add(c.cand.id);
-              rows.push({ partner: c.owner.name, target: c.cand.name, pos: c.cand.pos, team: c.cand.team || "", dPpg: (c.delta != null ? c.delta : c.dPpg) || 0, kind: c.kind });
+              rows.push({ partner: c.owner.name, target: c.cand.name, pos: c.cand.pos, team: c.cand.team || "", dPpg: (c.delta != null ? c.delta : c.dPpg) || 0, kind: c.kind, pid: String(c.cand.id) });
             }
           }
           if (!rows.length && typeof tgTierUps === "function") {
@@ -20219,7 +20237,7 @@ window.drDraft = {
               for (const t of tgTierUps(rid, g)) {
                 if (seen.has(t.cand.id)) continue;
                 seen.add(t.cand.id);
-                rows.push({ partner: t.owner.name, target: t.cand.name, pos: t.cand.pos, team: t.cand.team || "", dPpg: Math.max(0, rosProj(t.cand) - rosProj(t.anchor)), kind: "tier" });
+                rows.push({ partner: t.owner.name, target: t.cand.name, pos: t.cand.pos, team: t.cand.team || "", dPpg: Math.max(0, rosProj(t.cand) - rosProj(t.anchor)), kind: "tier", pid: String(t.cand.id) });
               }
               if (rows.length >= 3) break;
             }
@@ -20231,7 +20249,7 @@ window.drDraft = {
           if (!me || typeof buySuggestions !== "function") return null;
           const buys = buySuggestions(rid, me, { collectNear: (typeof VALMODE !== "undefined" && VALMODE === "dynasty") }) || [];
           buys.sort((a, b) => (b.score || 0) - (a.score || 0));
-          const legacy = buys.slice(0, 3).map(s => ({ partner: s.partner ? s.partner.name : "", target: s.target ? s.target.name : "", pos: s.target ? s.target.pos : "", team: s.target ? s.target.team : "", dPpg: s.dPpg || 0, kind: "buy" }));
+          const legacy = buys.slice(0, 3).map(s => ({ partner: s.partner ? s.partner.name : "", target: s.target ? s.target.name : "", pos: s.target ? s.target.pos : "", team: s.target ? s.target.team : "", dPpg: s.dPpg || 0, kind: "buy", pid: (s.target && s.target.id != null) ? String(s.target.id) : "" }));
           return legacy.length ? legacy : null;
         } catch (e) { return null; }
       }
@@ -20453,7 +20471,7 @@ window.drDraft = {
               nmOptIds = swapPairs.optIds || new Set();
               swapPairs.forEach(c => {
                 nmStartIns.add(c.inP.id);
-                moves.push({ kind: 1, gain: c.gain, player: `Start ${c.inP.name}`, issue: `over ${c.outP.name} (+${c.gain.toFixed(1)} pts this week)` + (c.chain ? ` · starts at ${c.inSlot}` : ""), cls: "", tool: "lineup" });
+                moves.push({ kind: 1, gain: c.gain, player: `Start ${c.inP.name}`, issue: `over ${c.outP.name} (+${c.gain.toFixed(1)} pts this week)` + (c.chain ? ` · starts at ${c.inSlot}` : ""), cls: "", tool: "lineup", pid: String(c.inP.id), oid: String(c.outP.id) });
               });
             }
           } catch (e) {}
@@ -20485,7 +20503,7 @@ window.drDraft = {
                 if (add > bestAdd) { bestAdd = add; best = pp; }
               });
               if (best) {
-                moves.push({ kind: 2, player: `Add ${best.name}`, issue: `Drop ${low.name} (+${bestAdd.toFixed(1)} pts/wk to your lineup)`, cls: "", tool: "waivers" });
+                moves.push({ kind: 2, player: `Add ${best.name}`, issue: `Drop ${low.name} (+${bestAdd.toFixed(1)} pts/wk to your lineup)`, cls: "", tool: "waivers", pid: String(best.id), oid: String(low.id) });
               }
             }
           } catch (e) {}
@@ -20501,7 +20519,7 @@ window.drDraft = {
                 const s = slots.find(x => x.label === r.slot);
                 const cs = s ? s.cands : [r.p.pos];
                 const covered = bench.some(b => cs.includes(b.pos) && BYE[b.team] !== wk + 1 && b.inj !== "Out" && b.inj !== "IR");
-                if (!covered) moves.push({ kind: 3, player: `${r.p.name}`, issue: `On bye next week — no backup at ${r.slot}`, cls: "bye", tool: "bye" });
+                if (!covered) moves.push({ kind: 3, player: `${r.p.name}`, issue: `On bye next week — no backup at ${r.slot}`, cls: "bye", tool: "bye", pid: String(r.p.id) });
               });
             }
           } catch (e) {}
@@ -21020,9 +21038,28 @@ window.drDraft = {
           <div class="cc3-tools"><div class="cc-tile-rows">${P.toolsLinks}</div></div>`;
         }
         if (slipEl) {
-          const mv0 = (Array.isArray(d.nextMoves) && d.nextMoves.length) ? d.nextMoves[0] : null;
-          const mvRest = (Array.isArray(d.nextMoves) ? d.nextMoves : []).slice(1);
-          const idea0 = (Array.isArray(d.tradeIdeas) && d.tradeIdeas.length) ? d.tradeIdeas[0] : null;
+          /* Dismissals in the slip (Eric, 2026-11-10): next moves
+             and the top trade idea can be checked off; handled
+             items collect in the Handled row at the slip's bottom.
+             League Activity (a feed) and Manager Score (a stat)
+             are not alerts and carry no check-off. */
+          const snapF = (ff4.ccSnaps || {})[idx];
+          const slipLg = snapF ? ff4LgKeyOf(snapF.platform, snapF.leagueId) : null;
+          let slipWk = 0;
+          try { slipWk = (typeof wkActiveWeek === "function" && wkActiveWeek()) || (Number(DATA.league.week) || 0); } catch (e) {}
+          const dsetS = ff4DismissedSet();
+          const mvKeyOf = m => "slip|" + slipLg + "|w" + (m.kind === 3 ? slipWk + 1 : slipWk) + "|mv" + m.kind + "|" + (m.pid != null ? m.pid : ("n:" + m.player)) + (m.oid != null ? ">" + m.oid : "");
+          const movesAll = Array.isArray(d.nextMoves) ? d.nextMoves : [];
+          const movesKeyed = movesAll.map(m => ({ m, k: slipLg ? mvKeyOf(m) : null }));
+          const mvAct = movesKeyed.filter(x => !x.k || !dsetS.has(x.k));
+          const mvHandled = movesKeyed.filter(x => x.k && dsetS.has(x.k));
+          const mv0x = mvAct.length ? mvAct[0] : null;
+          const mv0 = mv0x ? mv0x.m : null;
+          const mvRest = mvAct.slice(1);
+          const ideaAll = (Array.isArray(d.tradeIdeas) && d.tradeIdeas.length) ? d.tradeIdeas[0] : null;
+          const ideaK = (ideaAll && slipLg) ? ("slip|" + slipLg + "|w" + slipWk + "|idea|" + (ideaAll.pid ? ideaAll.pid : ("n:" + ideaAll.target))) : null;
+          const ideaHandled = (ideaAll && ideaK && dsetS.has(ideaK)) ? { i: ideaAll, k: ideaK } : null;
+          const idea0 = ideaHandled ? null : ideaAll;
           let slpUser = null;
           try { const slp9 = (typeof slpState !== "undefined") ? slpState : null; slpUser = slp9 && slp9.user ? slp9.user : null; } catch (e) {}
           const msScoreM = /cc-ms-bar-score">([^<]+)</.exec(ccMSBar || "");
@@ -21030,15 +21067,31 @@ window.drDraft = {
           const msSlip = msScoreM
             ? `<p class="cc3-ms-line"><span class="cc3-ms-num">${msScoreM[1]}</span>${msSubM ? `<span class="cc3-ms-sub">${msSubM[1]}</span>` : ""}</p><button type="button" class="cc3-ms-link" data-ms-open="1">Full breakdown →</button>`
             : `<p>See how you grade as a manager.</p><button type="button" class="cc3-ms-link" data-ms-open="1">Full breakdown →</button>`;
+          const slipHandled = mvHandled.map(x => ({ k: x.k, label: x.m.player, sub: x.m.issue }))
+            .concat(ideaHandled ? [{ k: ideaHandled.k, label: "Trade idea: " + ideaHandled.i.target, sub: "from " + ideaHandled.i.partner }] : []);
+          const slipHandledHtml = slipHandled.length
+            ? `<div class="cc3-slip-sec sec-handled"><button type="button" class="cc-handled-toggle" data-cc-handled-toggle="slip" aria-expanded="${ff4.ccHandledOpenS ? "true" : "false"}">Handled ✓ ${slipHandled.length}</button>${ff4.ccHandledOpenS ? `<div class="cc-handled-list">${slipHandled.map(h => `<div class="cc-handled-it"><span class="cc-handled-tx"><b>${esc(h.label)}</b>${h.sub ? ` <span>${esc(h.sub)}</span>` : ""}</span><button type="button" class="cc-q-restore" data-cc-slip-restore="${esc(h.k)}">Restore</button></div>`).join("")}</div>` : ""}</div>`
+            : "";
           slipEl.innerHTML = `<div class="cc3-slip-tag">▣ ACTION SLIP — ALWAYS HERE</div>
-          <div class="cc3-slip-sec sec-move"><div class="cc3-mini-h">Your next move · ${esc(d.teamName)}</div>
-          ${mv0 ? `<h3 class="cc3-next-title">${esc(mv0.player)}</h3><p class="cc3-next-sub"><span class="cc-q-issue ${mv0.cls || ""}">${esc(mv0.issue)}</span></p><button type="button" class="cc3-cta" data-cc-grid-tool="${mv0.tool}">${mv0.tool === "lineup" ? "Fix it in Lineup Analyzer" : "Open →"}</button>${mvRest.length ? `<div class="cc3-slip-moves">${mvRest.map(m => `<button type="button" class="cc3-slip-move" data-cc-grid-tool="${m.tool}"><span class="cc-q-player">${esc(m.player)}</span><span class="cc-q-issue ${m.cls || ""}">${esc(m.issue)}</span></button>`).join("")}</div>` : ""}` : `<p>No standout moves right now.</p>`}</div>
+          ${(movesAll.length && !mvAct.length) ? "" : `<div class="cc3-slip-sec sec-move"><div class="cc3-mini-h">Your next move · ${esc(d.teamName)}</div>
+          ${mv0 ? `<h3 class="cc3-next-title">${esc(mv0.player)}</h3><p class="cc3-next-sub"><span class="cc-q-issue ${mv0.cls || ""}">${esc(mv0.issue)}</span></p><button type="button" class="cc3-cta" data-cc-grid-tool="${mv0.tool}">${mv0.tool === "lineup" ? "Fix it in Lineup Analyzer" : "Open →"}</button>${mv0x.k ? `<button type="button" class="cc-dismiss-btn" data-cc-slip-dismiss="${esc(mv0x.k)}">✓ Got it</button>` : ""}${mvRest.length ? `<div class="cc3-slip-moves">${mvRest.map(x => `<div class="cc3-slip-move" role="button" tabindex="0" data-cc-grid-tool="${x.m.tool}"><span class="cc-q-player">${esc(x.m.player)}</span><span class="cc-q-issue ${x.m.cls || ""}">${esc(x.m.issue)}</span>${x.k ? `<button type="button" class="cc-q-dismiss" data-cc-slip-dismiss="${esc(x.k)}" title="Got it — hide this" aria-label="Mark handled">✓</button>` : ""}</div>`).join("")}</div>` : ""}` : `<p>No standout moves right now.</p>`}</div>`}
           ${slpUser ? `<div class="cc3-slip-sec sec-tb"><div class="cc3-mini-h">League Activity</div><div class="cc-la" id="cc-la"></div></div>` : ""}
-          <div class="cc3-slip-sec sec-idea"><div class="cc3-mini-h">Top trade idea</div>
-          ${idea0 ? `<p><b class="cc3-idea-name">${esc(idea0.target)}</b> ${esc(idea0.pos)} · ${esc(idea0.team || "")} — <b class="cc3-idea-gain">+${idea0.dPpg.toFixed(1)} pts/wk</b><br>from ${esc(idea0.partner)}${idea0.kind === "depth" ? " · depth add" : idea0.kind === "tier" ? " · tier-up" : ""}</p><button type="button" class="cc3-ghost" data-cc-grid-tool="targets">See all Player Targets →</button>` : `<p>No buy ideas clear the bar right now.</p>`}</div>
+          ${(ideaAll && !idea0) ? "" : `<div class="cc3-slip-sec sec-idea"><div class="cc3-mini-h">Top trade idea</div>
+          ${idea0 ? `<p><b class="cc3-idea-name">${esc(idea0.target)}</b> ${esc(idea0.pos)} · ${esc(idea0.team || "")} — <b class="cc3-idea-gain">+${idea0.dPpg.toFixed(1)} pts/wk</b><br>from ${esc(idea0.partner)}${idea0.kind === "depth" ? " · depth add" : idea0.kind === "tier" ? " · tier-up" : ""}</p><button type="button" class="cc3-ghost" data-cc-grid-tool="targets">See all Player Targets →</button>${ideaK ? `<button type="button" class="cc-dismiss-btn" data-cc-slip-dismiss="${esc(ideaK)}">✓ Got it</button>` : ""}` : `<p>No buy ideas clear the bar right now.</p>`}</div>`}
           <div class="cc3-slip-sec sec-ms"><div class="cc3-mini-h">Manager Score</div>
-          ${msSlip}</div>`;
+          ${msSlip}</div>${slipHandledHtml}`;
           try { if (typeof ff4RenderCCLA === "function") ff4RenderCCLA(); } catch (e) {}
+          if (!slipEl.dataset.dismissWired) {
+            slipEl.dataset.dismissWired = "1";
+            slipEl.addEventListener("click", e => {
+              const db = e.target.closest("[data-cc-slip-dismiss]");
+              if (db) { e.stopPropagation(); e.preventDefault(); const k = db.getAttribute("data-cc-slip-dismiss"); ff4SetDismissed(k, true, ff4DismissWkOf(k)); ff4CCRenderSpot(); return; }
+              const rb = e.target.closest("[data-cc-slip-restore]");
+              if (rb) { e.stopPropagation(); e.preventDefault(); const k = rb.getAttribute("data-cc-slip-restore"); ff4SetDismissed(k, false, ff4DismissWkOf(k)); ff4CCRenderSpot(); return; }
+              const tgl = e.target.closest("[data-cc-handled-toggle]");
+              if (tgl) { e.stopPropagation(); ff4.ccHandledOpenS = !ff4.ccHandledOpenS; ff4CCRenderSpot(); }
+            }, true);
+          }
         }
         const rb2 = spot.querySelector("[data-cc-refresh]"); if (rb2) rb2.addEventListener("click", () => ff4CCRefresh());
         [spot, spot2El, slipEl].forEach(root => { if (!root) return; root.querySelectorAll("[data-cc-grid-tool]").forEach(b => { b.addEventListener("click", () => ff4CCGoTool(idx, b.dataset.ccGridTool)); if (b.tagName !== "BUTTON") b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ff4CCGoTool(idx, b.dataset.ccGridTool); } }); }); });
@@ -21057,11 +21110,57 @@ window.drDraft = {
          when signed in. Defensive: without the layer, nothing is hidden. */
       function ff4CCPrefs() {
         try { if (window.__ffPrefs) return window.__ffPrefs.get(); } catch (e) {}
-        return { hiddenLeagues: [], hiddenAccounts: [], customLeagues: [], updatedAt: 0 };
+        return { hiddenLeagues: [], hiddenAccounts: [], customLeagues: [], dismissedAlerts: [], updatedAt: 0 };
       }
       function ff4CCPrefsSave(pr) {
         try { if (window.__ffPrefs) return window.__ffPrefs.save(pr); } catch (e) {}
         return pr;
+      }
+      /* Alert dismissals — "Got it" (Eric, 2026-11-10): Needs You
+         First entries and Action Slip items can be checked off.
+         A dismissal is keyed to the specific alert (league +
+         category + the players involved + NFL week) and stored in
+         the same prefs object as hidden leagues — localStorage for
+         everyone, mirrored to the signed-in account record by the
+         prefs sync — so a muted alert stays muted across visits
+         and devices. A materially changed situation keys
+         differently and shows again; a new week keys differently
+         too, so last week's mutes never swallow this week's. */
+      const FF4_DISMISS_CAP = 500;
+      function ff4LgKeyOf(platform, leagueId) {
+        const id = String(leagueId || "");
+        return String(platform || "").toLowerCase() === "espn"
+          ? (id.indexOf("espn:") === 0 ? id : "espn:" + id)
+          : "sleeper:" + id;
+      }
+      function ff4QueueKey(it) {
+        const ids = (it.inId != null || it.outId != null)
+          ? String(it.inId) + ">" + String(it.outId)
+          : String(it.pid != null ? it.pid : ("n:" + it.player));
+        return "nyf|" + ff4LgKeyOf(it.platform, it.leagueId) + "|w" + (it.wk || 0) + "|c" + it.cat + "|" + ids;
+      }
+      function ff4DismissedSet() {
+        try { const a = ff4CCPrefs().dismissedAlerts; return new Set(Array.isArray(a) ? a : []); } catch (e) { return new Set(); }
+      }
+      function ff4DismissWkOf(key) {
+        const m = /\|w(\d+)\|/.exec(String(key || ""));
+        return m ? Number(m[1]) : 0;
+      }
+      function ff4SetDismissed(key, on, curWk) {
+        if (!key) return;
+        try {
+          const pr = ff4CCPrefs();
+          let arr = Array.isArray(pr.dismissedAlerts) ? pr.dismissedAlerts.slice() : [];
+          if (on) { if (arr.indexOf(key) === -1) arr.push(key); }
+          else arr = arr.filter(k => k !== key);
+          /* Keys embed their week; once the calendar has moved
+             past a week, its alerts can never render again, so
+             those keys are dead weight — prune them on write. */
+          if (curWk) arr = arr.filter(k => { const m = /\|w(\d+)\|/.exec(k); return !m || Number(m[1]) >= curWk; });
+          if (arr.length > FF4_DISMISS_CAP) arr = arr.slice(arr.length - FF4_DISMISS_CAP);
+          pr.dismissedAlerts = arr;
+          ff4CCPrefsSave(pr);
+        } catch (e) { /* a failed save just leaves the alert visible next visit — never a crash */ }
       }
       function ff4CCSessionUsername() {
         try {
@@ -21361,30 +21460,59 @@ window.drDraft = {
           || (a.idx - b.idx)
           || (((a.margin != null) ? a.margin : 0) - ((b.margin != null) ? b.margin : 0)));
         const itemsV = crit.filter(it => visQ.has(it.idx));
+        /* Dismissals (Eric, 2026-11-10): entries the user checked
+           off leave the active list (and the header count) and
+           collect in the Handled row at the panel's bottom. The
+           fine-tuning backfill counts UNhandled criticals only —
+           a handled entry never backfills and never blocks one. */
+        const dsetQ = ff4DismissedSet();
+        itemsV.forEach(it => { it._k = ff4QueueKey(it); });
+        const critU = itemsV.filter(it => !dsetQ.has(it._k));
+        const critH = itemsV.filter(it => dsetQ.has(it._k));
         /* Fine-tuning backfill (Eric, 2026-11-10): fills the panel
            only when the whole view holds fewer than 2 critical
            entries, sorted by gain across leagues. */
-        let tuneV = [];
-        if (itemsV.length < 2) {
-          Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.tuneItems) tuneV.push(...s.tuneItems); });
-          tuneV = tuneV.filter(t => visQ.has(t.idx)).sort((a, b) => b.gain - a.gain);
+        let tuneU = [], tuneH = [];
+        if (critU.length < 2) {
+          let tuneAll = [];
+          Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.tuneItems) tuneAll.push(...s.tuneItems); });
+          tuneAll = tuneAll.filter(t => visQ.has(t.idx)).sort((a, b) => b.gain - a.gain);
+          tuneAll.forEach(t => { t._k = ff4QueueKey(t); });
+          tuneU = tuneAll.filter(t => !dsetQ.has(t._k));
+          tuneH = tuneAll.filter(t => dsetQ.has(t._k));
         }
+        const handledQ = critH.concat(tuneH);
         /* Rows are plain text, not buttons (Eric, 2026-11-10): tapping
            a player name here used to load that player's league — that
            league-switch is removed. Leagues are switched from the
            league bars at the bottom of the Command Center, nowhere
            else in this panel. The .static row style (already in the
            stylesheet) carries the non-interactive presentation. */
-        const rowHtml = it => `<div class="cc-queue-it static${it.cat === "tune" ? " tune" : ""}" title="${esc(it.player)} — ${esc(it.issue)}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></div>`;
+        const rowHtml = it => `<div class="cc-queue-it static${it.cat === "tune" ? " tune" : ""}" title="${esc(it.player)} — ${esc(it.issue)}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span><button type="button" class="cc-q-dismiss" data-cc-dismiss="${esc(it._k)}" title="Got it — hide this alert" aria-label="Mark handled">✓</button></div>`;
+        const handledRowHtml = it => `<div class="cc-queue-it static handled"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span><button type="button" class="cc-q-restore" data-cc-restore="${esc(it._k)}">Restore</button></div>`;
+        const handledHtml = handledQ.length
+          ? `<div class="cc-handled"><button type="button" class="cc-handled-toggle" data-cc-handled-toggle="queue" aria-expanded="${ff4.ccHandledOpenQ ? "true" : "false"}">Handled ✓ ${handledQ.length}</button>${ff4.ccHandledOpenQ ? `<div class="cc-handled-list">${handledQ.map(handledRowHtml).join("")}</div>` : ""}</div>`
+          : "";
         const wire = () => {
           ff4CCQueueCap(q);
+          if (!q.dataset.dismissWired) {
+            q.dataset.dismissWired = "1";
+            q.addEventListener("click", e => {
+              const db = e.target.closest("[data-cc-dismiss]");
+              if (db) { const k = db.getAttribute("data-cc-dismiss"); ff4SetDismissed(k, true, ff4DismissWkOf(k)); ff4CCRenderQueue(); return; }
+              const rb = e.target.closest("[data-cc-restore]");
+              if (rb) { const k = rb.getAttribute("data-cc-restore"); ff4SetDismissed(k, false, ff4DismissWkOf(k)); ff4CCRenderQueue(); return; }
+              if (e.target.closest("[data-cc-handled-toggle]")) { ff4.ccHandledOpenQ = !ff4.ccHandledOpenQ; ff4CCRenderQueue(); }
+            });
+          }
         };
-        if (!itemsV.length) {
+        if (!critU.length) {
           if (ccBusy) {
             q.className = "cc-queue";
             q.innerHTML = ff4CCQueueHead(0)
               + `<p class="cc-queue-busy"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span>Checking your starters in every league…</p>`
-              + (tuneV.length ? `<div class="cc-queue-list cc3-scroll"><div class="cc-queue-sub">Lineup fine-tuning</div>` + tuneV.map(rowHtml).join("") + `</div>` : "");
+              + (tuneU.length ? `<div class="cc-queue-list cc3-scroll"><div class="cc-queue-sub">Lineup fine-tuning</div>` + tuneU.map(rowHtml).join("") + `</div>` : "")
+              + handledHtml;
             wire();
             return;
           }
@@ -21403,35 +21531,39 @@ window.drDraft = {
              removed on 2026-11-10 it renders as soon as the league
              pass settles.) */
           const qCountV = Object.values(ff4.ccSnaps || {}).filter(s => s && visQ.has(s.idx)).reduce((n, s) => n + (s.qCount || 0), 0);
-          if (!tuneV.length) {
+          if (!tuneU.length) {
             q.innerHTML = ff4CCQueueHead(0)
               + ff4CCClearHtml("No zeros in any lineup, no empty slots.")
-              + (qCountV > 0 ? `<p class="cc-queue-note">${qCountV} starter${qCountV === 1 ? " is" : "s are"} Questionable — worth a check in the Lineup Analyzer before lock.</p>` : "");
+              + (qCountV > 0 ? `<p class="cc-queue-note">${qCountV} starter${qCountV === 1 ? " is" : "s are"} Questionable — worth a check in the Lineup Analyzer before lock.</p>` : "")
+              + handledHtml;
+            wire();
             return;
           }
           q.innerHTML = ff4CCQueueHead(0)
             + `<div class="cc-queue-list cc3-scroll">`
             + ff4CCClearHtml("No zeros in any lineup, no empty slots.")
             + `<div class="cc-queue-sub">Lineup fine-tuning</div>`
-            + tuneV.map(rowHtml).join("")
+            + tuneU.map(rowHtml).join("")
             + `</div>`
-            + (tuneV.length > 3 ? `<div class="cc-queue-more">+${tuneV.length - 3} more below</div>` : "");
+            + (tuneU.length > 3 ? `<div class="cc-queue-more">+${tuneU.length - 3} more below</div>` : "")
+            + handledHtml;
           wire();
           return;
         }
         q.className = "cc-queue";
-        const leaguesWithItems = new Set(itemsV.map(it => it.idx)).size;
+        const leaguesWithItems = new Set(critU.map(it => it.idx)).size;
         const partialNote = ccBusy
           ? `<p class="cc-queue-busy"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span>Checking your other leagues…</p>`
           : (leaguesWithItems < visQ.size ? `<p class="cc-queue-note">Every other league is clear — nothing urgent there.</p>` : "");
-        const totalRows = itemsV.length + tuneV.length;
-        q.innerHTML = ff4CCQueueHead(itemsV.length)
+        const totalRows = critU.length + tuneU.length;
+        q.innerHTML = ff4CCQueueHead(critU.length)
           + `<div class="cc-queue-list cc3-scroll">`
-          + itemsV.map(rowHtml).join("")
-          + (tuneV.length ? `<div class="cc-queue-sub">Lineup fine-tuning</div>` + tuneV.map(rowHtml).join("") : "")
+          + critU.map(rowHtml).join("")
+          + (tuneU.length ? `<div class="cc-queue-sub">Lineup fine-tuning</div>` + tuneU.map(rowHtml).join("") : "")
           + `</div>`
           + (totalRows > 5 ? `<div class="cc-queue-more">+${totalRows - 5} more below</div>` : "")
-          + partialNote;
+          + partialNote
+          + handledHtml;
         wire();
       }
 
