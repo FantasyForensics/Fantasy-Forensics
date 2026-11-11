@@ -23395,7 +23395,7 @@ window.__lifeline = (function () {
       mainBtns.forEach(function (btn) {
         btn.addEventListener("click", function () {
           var key = btn.dataset.pnav;
-          if (document.documentElement.classList.contains("sb-slim") && DEFAULTS[key]) {
+          if (document.documentElement.classList.contains("sb-slim") && DEFAULTS[key] && !mqPhone.matches) {
             btn.setAttribute("aria-haspopup", "true");
             toggleFlyout(key, btn);
             return;
