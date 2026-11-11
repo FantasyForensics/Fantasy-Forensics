@@ -3935,7 +3935,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div class="locked-state" data-locked="league">
           <div class="locked-body">
             <h2>Your league, analyzed</h2>
-            <p id="league-gate-text">Connect a league and this page opens with <strong>your team</strong> — power rank, playoff odds, this week's matchup, and top waiver targets — followed by <strong>power rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨. You're browsing as a guest, so there's no league to show yet.</p>
+            <p id="league-gate-text">Connect a league and this page opens with <strong>your team</strong> — Current Power rank, playoff odds, this week's matchup, and top waiver targets — followed by <strong>Current Power and Franchise Value rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨. You're browsing as a guest, so there's no league to show yet.</p>
             <div class="locked-actions">
               <button type="button" class="locked-cta">Connect your league</button>
             </div>
@@ -3958,7 +3958,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div id="power-list"></div>
         <details class="how-box">
           <summary>How this works</summary>
-          <p class="tab-intro" id="teams-intro">Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 3,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong> — tap any number and that league opens in the matching tool. Below it, every roster is graded on the same algorithm-driven engine: <strong>starting-lineup strength, total roster value, draft-pick capital, and points scored</strong> so far this season, each tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨 from its age curve, pick share, and record — tap a team to see its full roster and picks, and exactly where yours stacks up. Power in Dynasty mode counts roster value beyond this season as well as this year's projection, so these ranks differ from Redraft mode on purpose.</p>
+          <p class="tab-intro" id="teams-intro">Your team first, then the whole league. The spotlight card up top carries your <strong>Current Power rank</strong>, <strong>playoff odds</strong> from the 3,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong> — tap any number and that league opens in the matching tool. Below it, every roster is ranked two ways: <strong>Current Power</strong> — this season's strength, from optimal starters' rest-of-season projections, recent form, and bench depth (draft picks count for nothing here) — and <strong>Franchise Value</strong> — total roster value, with players and draft-pick capital shown as separate subtotals, never blended. Each team also carries its franchise tag — Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨 — from its Franchise rank and core age, and its trade stance — Buyer, Holding, Seller, or Maximal Seller — from its playoff odds. Tap a team to see its full roster and picks, and exactly where yours stacks up.</p>
         </details>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
@@ -3971,7 +3971,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div id="season-out"></div>
         <details class="how-box inseason">
           <summary>How this works</summary>
-          <p class="tab-intro">A <strong>separate engine</strong> that answers a different question: not what your players are worth, but what your team does <strong>this season</strong>. Every player is re-priced as a <strong>rest-of-season projection</strong> — a redraft lens: this year’s remaining points. Each team’s best lineup is projected, then the rest of the season is <strong>simulated 3,000 times</strong> (the remaining regular-season weeks, plus the playoffs). Nothing here feeds the dynasty values, the power score, or the trade calculator’s verdict — those stay exactly as they were. What it does feed is <strong>trade advice</strong>: Player Targets and the calculator show each deal’s title-odds swing next to its dynasty math, because a deal can be fair on value and still wrong for your window. Projections use <strong>this league’s actual scoring</strong> and do not move with the League format explorer.</p>
+          <p class="tab-intro">A <strong>separate engine</strong> that answers a different question: not what your players are worth, but what your team does <strong>this season</strong>. Every player is re-priced as a <strong>rest-of-season projection</strong> — a redraft lens: this year’s remaining points. Each team’s best lineup is projected, then the rest of the season is <strong>simulated 3,000 times</strong> (the remaining regular-season weeks, plus the playoffs). Nothing here feeds the dynasty values, Current Power, or the trade calculator’s verdict — those stay exactly as they were. What it does feed is <strong>trade advice</strong>: Player Targets and the calculator show each deal’s title-odds swing next to its dynasty math, because a deal can be fair on value and still wrong for your window. Projections use <strong>this league’s actual scoring</strong> and do not move with the League format explorer.</p>
         </details>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
@@ -5669,9 +5669,32 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         }
         DATA.teams.sort((a, b) => b.power - a.power || b.rosOpt - a.rosOpt || b.starterVal - a.starterVal || b.pf - a.pf);
         DATA.teams.forEach((t, i) => { t.powerRank = i + 1; });
+        /* Phase 3 piece 3 (S1): preserve the blended rank before the
+           flip below. slpArch — and the Phase-4 Targets/Finder gates
+           that still key on it — keep reading the blended-thirds tag
+           until Phase 4 retires them; only the DISPLAY meaning of
+           powerRank flips. The re-based franchise tag lives on
+           t.frTag (slpFrTag), never on t.arch. */
+        DATA.teams.forEach(t => { t.blendedRank = t.powerRank; });
         /* Two-rankings engine (Phase 1, dual-run): compute the new fields
            alongside the old power above; nothing displays them yet. */
         try { if (typeof ffComputeTwoRankings === "function") ffComputeTwoRankings(); } catch (e) {}
+        /* Phase 3 piece 3 (S1 sort flip): once Current Power is
+           computed, DATA.teams is ordered by Current Power score and
+           powerRank IS the Current Power rank — both formats, picks
+           counting zero in CP (the engine's recipe). When CP is quiet
+           (offseason / guest / no rosters) the blended order + rank
+           stand untouched, so no surface can show a stale CP number;
+           the offseason surfaces order explicitly off Franchise rank
+           instead (S12 Rosters, Power page). t.power itself keeps
+           computing exactly as before (dual-run). */
+        try {
+          const cpReady = DATA.teams.length > 0 && DATA.teams.every(t => t.cpScore != null && t.cpRank != null);
+          if (cpReady) {
+            DATA.teams.sort((a, b) => (b.cpScore - a.cpScore) || (b.rosOpt - a.rosOpt) || (b.starterVal - a.starterVal) || (b.pf - a.pf));
+            DATA.teams.forEach(t => { t.powerRank = t.cpRank; });
+          }
+        } catch (e) { /* the flip is best-effort; the blended order stands */ }
       }
 
       /* ================= Two-rankings engine (Phase 1, dual-run) =================
@@ -6384,7 +6407,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          each section describes itself instead of every subtab
          showing the same paragraph. */
       const LEAGUE_GATE_TEXT = {
-        power: `Connect a league and this page opens with <strong>your team</strong> — power rank, playoff odds, this week's matchup, and top waiver targets — followed by <strong>power rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨. You're browsing as a guest, so there's no league to show yet.`,
+        power: `Connect a league and this page opens with <strong>your team</strong> — Current Power rank, playoff odds, this week's matchup, and top waiver targets — followed by <strong>Current Power and Franchise Value rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨. You're browsing as a guest, so there's no league to show yet.`,
         mscore: `Connect a league and your <strong>Manager Score</strong> grades how you're running it — roster, assets, results, playoff outlook and future, each scored against the other teams in the league. You're browsing as a guest, so there's no score yet.`,
         rosters: `Connect a league to see <strong>every roster in it</strong> — starters, bench, and draft picks for every team, each player priced for your league's scoring. You're browsing as a guest, so there's no league to show yet.`,
         outlook: `Connect a league and the rest of its season is <strong>simulated 3,000 times</strong> — projected records, playoff odds, and title odds for every team. You're browsing as a guest, so there's no league to show yet.`,
@@ -6578,7 +6601,13 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           const pickChips = t.picks.filter(pk => pk.value >= 300)
             .sort((a, b) => b.value - a.value)
             .map(pk => `<span class="pick-chip">${esc(pk.label)} · <b>${fmt(pk.value)}</b></span>`).join("");
-          const archClass = archCls(t.arch);
+          /* Phase 3 piece 3 (S3/S6): the card chip prints the
+             franchise tag — re-based on Franchise rank + core age
+             (t.frTag), falling back to the old tag only when the
+             engine hasn't computed one. The Stance label lives in
+             the expl line, not here. */
+          const tagKey = (!rdP && t.frTag) ? t.frTag : t.arch;
+          const archClass = archCls(tagKey);
           const ss = window.SeasonSim ? window.SeasonSim.results[t.rid] : null;
           return `<article class="team-card${t.isUser ? " mine" : ""}">
             <div class="team-head">
@@ -6588,7 +6617,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
                 <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div>
               </div>
 ${rdP ? "" : `
-              <div class="arch ${archClass}">${archTag(t.arch)}</div>`}
+              <div class="arch ${archClass}">${archTag(tagKey)}</div>`}
             </div>
             ${view === "fr" ? `<div class="stat-row">
               <div><span>Players value</span><b>${fmt(t.frPlayers || 0)}</b></div>
@@ -6642,13 +6671,32 @@ ${rdP ? "" : `
       /* ---------- rosters (League sub-view) ----------
          Every team's full roster in power order — the same roster
          table the power cards expand to, rendered for all teams at
-         once. Re-rendered wherever renderPower runs. */
+         once. Re-rendered wherever renderPower runs.
+         Phase 3 piece 3 (S12): order + rank numbers follow Current
+         Power in-season (and preseason, as a forecast). In a dynasty
+         offseason Franchise leads — order + rank numbers follow the
+         Franchise rank, never a stale Current Power number. A redraft
+         offseason has nothing live, so the page says so outright
+         (the Power page's quiet-state pattern) instead of showing a
+         stale ranking. */
       function renderRosterView() {
         const el = document.getElementById("roster-list");
         if (!el) return;
         const rdP = typeof VALMODE !== "undefined" && VALMODE === "redraft";
         const pv = p => rdP ? dispVal(p) : p.value;
-        el.innerHTML = DATA.teams.map(t => {
+        let ph = { phase: "in-season" };
+        try { if (typeof ffPhaseState === "function") ph = ffPhaseState(); } catch (e) {}
+        const isOffseason = ph.phase === "offseason";
+        if (rdP && isOffseason) {
+          el.innerHTML = `<div class="ff-power-empty"><h3>Rosters</h3><p>Rosters return when the new season's projections publish. There is no current-season ranking in the offseason.</p></div>`;
+          return;
+        }
+        const rankOf = t => (!rdP && isOffseason) ? t.frRank : t.cpRank;
+        const teamsSorted = DATA.teams.slice().sort((a, b) => {
+          const ra = rankOf(a), rb = rankOf(b);
+          return ((ra == null ? 999 : ra) - (rb == null ? 999 : rb)) || ((a.powerRank || 999) - (b.powerRank || 999));
+        });
+        el.innerHTML = teamsSorted.map(t => {
           const bbLineup = t.bestLineup ? t.bestLineup.map(l => ({ id: l.p.id, slot: l.slot })) : t.lineup;
           const lineupIds = new Set(bbLineup.map(l => l.id));
           const slotOf = {};
@@ -6666,9 +6714,10 @@ ${rdP ? "" : `
               <td class="num wk-proj">${wkCell}</td>
               <td class="num">${p.unpriced ? '<span class="p-sub">Unpriced</span>' : fmt(pv(p))}</td></tr>`;
             }).join("");
+          const dispRank = rankOf(t);
           return `<article class="team-card${t.isUser ? " mine" : ""}">
             <div class="team-head">
-              <div class="rank-num">${t.powerRank}</div>
+              <div class="rank-num">${dispRank == null ? "—" : dispRank}</div>
               <div class="team-main">
                 <div class="team-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div>
                 <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div>
@@ -10059,7 +10108,7 @@ ${rdP ? "" : `
                 <div class="rank-num">${i + 1}</div>
                 <div class="team-main">
                   <div class="team-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div>
-                  <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for${rdS ? "" : ` · Tag: ${archTag(t.arch)}`}</div>
+                  <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for${(!rdS && t.stanceLabel) ? ` · Stance: ${esc(t.stanceLabel)}` : ""}</div>
                 </div>
               </div>
               <div class="prob-row"><span class="lbl">Playoffs</span><div class="prob-bar"><div class="prob-fill" style="width:${Math.round(r.playoff * 100)}%"></div></div><span class="prob-val">${playoffLabel(r)}</span></div>
@@ -10180,7 +10229,15 @@ ${rdP ? "" : `
           },
         };
 
-        return { results, means, meansWk, baseOpt, finderImpact, calcImpactHtml, impact, renderSeason, oddsWithMeans, path: pathAPI, format: FMT, playoffHtml: playoffSection, schedKey, recFp: (function () { try { return (DATA.league && DATA.league.week) + "|" + (DATA.teams || []).map(t => t.rid + ":" + t.record).join(";"); } catch (e) { return ""; } })(), ffp: (function () { try { return (DATA.league.week || "") + "|" + (DATA.teams || []).map(t => [t.rid, t.record, t.pf, (t.playerIds || []).slice().sort().join(",")].join(":")).join(";"); } catch (e) { return ""; } })() };
+        /* Phase 3 piece 3 (S1): fingerprint segments are canonicalised
+           by rid, not joined in DATA.teams array order — the S1 flip
+           re-orders that array (blended → Current Power), and a sim
+           stamped in the old order must still match the same league's
+           current inputs. Without this, ff4CCFreshSim() returns null
+           from connect until a sim is rebuilt in the new order, and
+           the engine reads the no-sim record fallback for Stance. */
+        const ffRidOrder = (a, b) => ((+a.rid || 0) - (+b.rid || 0)) || String(a.rid).localeCompare(String(b.rid));
+        return { results, means, meansWk, baseOpt, finderImpact, calcImpactHtml, impact, renderSeason, oddsWithMeans, path: pathAPI, format: FMT, playoffHtml: playoffSection, schedKey, recFp: (function () { try { return (DATA.league && DATA.league.week) + "|" + [...(DATA.teams || [])].sort(ffRidOrder).map(t => t.rid + ":" + t.record).join(";"); } catch (e) { return ""; } })(), ffp: (function () { try { return (DATA.league.week || "") + "|" + [...(DATA.teams || [])].sort(ffRidOrder).map(t => [t.rid, t.record, t.pf, (t.playerIds || []).slice().sort().join(",")].join(":")).join(";"); } catch (e) { return ""; } })() };
       };
       window.SeasonSim = DATA.teams.length ? window.buildSeasonSim() : null;
       window.SIM_BY_LEAGUE = {};
@@ -12918,8 +12975,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
       /* Archetypes (Eric, Oct 20, 2026) — dynasty only; redraft
          renders no archetype UI. Assigned after recomputeValues() has
          run, so powerRank and player values/ages are final. The
-         classifier: power thirds first (top / middle / bottom third
-         by powerRank), and the top third splits on CORE AGE.
+         classifier: blended-power thirds first (top / middle / bottom
+         third by t.blendedRank — the pre-flip rank recomputeValues
+         preserves, so this tag keeps its old meaning after the S1
+         flip; the re-based franchise tag is slpFrTag / t.frTag), and
+         the top third splits on CORE AGE.
          Core = the team's optimal starters (the rosOptimalLineup set).
          coreAgeDelta = (value-weighted average age of the core) minus
          (the value-weighted positional peak-age expectation for those
@@ -12951,8 +13011,14 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         t.coreAge = ca ? Math.round(ca.coreAge * 10) / 10 : null;
         t.corePeak = ca ? Math.round(ca.corePeak * 10) / 10 : null;
         t.coreAgeDelta = ca ? Math.round(ca.delta * 100) / 100 : null;
-        if (t.powerRank > n - third) return "rebuilder";
-        if (t.powerRank > third) return "crossroads";
+        /* Phase 3 piece 3 (S3): keys on the preserved blended rank,
+           NOT on t.powerRank — powerRank now means Current Power, and
+           this classifier's contract (until Phase 4 retires it) is
+           the old blended-thirds tag. The re-based franchise tag
+           (Franchise-rank thirds + core age) is slpFrTag / t.frTag. */
+        const rk = (t.blendedRank != null) ? t.blendedRank : t.powerRank;
+        if (rk > n - third) return "rebuilder";
+        if (rk > third) return "crossroads";
         return ca && ca.delta < 0 ? "dynasty" : "win-now";
       }
       /* Franchise tag (Phase 1 re-base): slpArch's exact shape, but
@@ -12960,9 +13026,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
          top third still splits on the core-age delta (young core →
          dynasty, older core → win-now). Dynasty only — redraft has no
          Franchise fields, so it returns null there (and when the
-         Franchise rank hasn't been computed yet). slpArch is untouched:
-         the old tag keeps computing off the old power rank until the
-         phase-3 display sweep retires it. */
+         Franchise rank hasn't been computed yet). slpArch is NOT
+         retired here: it keeps computing the old blended-thirds tag
+         off the preserved t.blendedRank (Phase 3 piece 3) for the
+         Phase-4 Targets/Finder gates that still key on it; display
+         surfaces read the re-based tag from t.frTag instead. */
       function slpFrTag(t, all) {
         if ((typeof VALMODE !== "undefined" && VALMODE === "redraft") || t.frRank == null) return null;
         const n = all.length;
@@ -13228,7 +13296,9 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            path off the new standings — reloading a league can
            never again replay last week's sim. */
         try {
-          const recNow = (DATA.league && DATA.league.week) + "|" + (DATA.teams || []).map(t => t.rid + ":" + t.record).join(";");
+          /* Phase 3 piece 3 (S1): rid-canonicalised like the sim's own
+             recFp stamp, so the comparison below is order-proof. */
+          const recNow = (DATA.league && DATA.league.week) + "|" + [...(DATA.teams || [])].sort((a, b) => ((+a.rid || 0) - (+b.rid || 0)) || String(a.rid).localeCompare(String(b.rid))).map(t => t.rid + ":" + t.record).join(";");
           const fpNow = (typeof ff4SimFp === "function") ? ff4SimFp() : recNow;
           const cs = window.SIM_BY_LEAGUE.conn;
           /* Unified fingerprint (audit FF-06): roster or points
@@ -17186,7 +17256,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
          window.applyLeagueModeChrome at the end of every mode
          transition, so none of this can drift from the toggle. */
       const RD_FINDER_INTRO = `Pick a team and the finder hunts <strong>production</strong>. Every idea is a <strong>win-now buy</strong>: bench depth goes out, a player who raises the optimal lineup's projected points per week comes in, and a deal that lowers projected points per week <strong>never appears</strong>, however the values balance. Targets are priced on rest-of-season production alone, and every other roster is a potential partner. Where a roster is <strong>lopsided</strong> — stacked at one position, thin at another, by projected starter points against the league — the finder leads with <strong>positional swaps</strong>: one surplus player flipped one-for-one for a comparable player at the thin position, value-matched, each with the reasoning spelled out on the card.`;
-      const RD_TEAMS_INTRO = `Your team first, then the whole league. The spotlight card up top carries your <strong>power rank</strong>, <strong>playoff odds</strong> from the 3,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong>. Below it, the <strong>Improve Your Odds</strong> panel prices the moves that most raise your title odds. Every roster below is graded on <strong>starting-lineup strength, total roster value, and points scored</strong> — in <strong>redraft prices</strong> throughout: rest-of-season production, priced for this year. In a redraft league every team is a contender or a spoiler. Tap a team to see its full roster. Power here prices this season alone, so the same league ranks differently than in Dynasty mode — that difference is the toggle working.`;
+      const RD_TEAMS_INTRO = `Your team first, then the whole league. The spotlight card up top carries your <strong>Current Power rank</strong>, <strong>playoff odds</strong> from the 3,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong>. Below it, the <strong>Improve Your Odds</strong> panel prices the moves that most raise your title odds. Every roster below is graded on <strong>starting-lineup strength, total roster value, and points scored</strong> — in <strong>redraft prices</strong> throughout: rest-of-season production, priced for this year. In a redraft league every team is a contender or a spoiler. Tap a team to see its full roster. Current Power here prices this season alone, so the same league ranks differently than in Dynasty mode — that difference is the toggle working.`;
       const RD_WAIVER_INTRO = `Every unrostered player in the snapshot, ranked for the team you pick — not by name value, but by <strong>what he would do for that lineup</strong>. Each target is ranked by what he would add over the weakest starter he'd have to beat at his position, flex and superflex slots included — his projected points per week against that starter's. In redraft, a pickup earns his roster spot by helping this season.`;
 
       window.applyLeagueModeChrome = function (rd) {
@@ -20150,17 +20220,25 @@ window.drDraft = {
       /* Records fingerprint for the sim-freshness rule: week +
          every team's W-L. A posted result changes it, and any sim
          built on the old fingerprint must go with it. */
+      /* Phase 3 piece 3 (S1): fingerprint segments are canonicalised
+         by rid — see buildSeasonSim's stamp above. The array order is
+         a display order now (Current Power), not a sim input. */
+      function ff4RidOrder(a, b) { return ((+a.rid || 0) - (+b.rid || 0)) || String(a.rid).localeCompare(String(b.rid)); }
       function ff4CCRecFp() {
-        try { return (DATA.league && DATA.league.week) + "|" + (DATA.teams || []).map(t => t.rid + ":" + t.record).join(";"); } catch (e) { return ""; }
+        try { return (DATA.league && DATA.league.week) + "|" + [...(DATA.teams || [])].sort(ff4RidOrder).map(t => t.rid + ":" + t.record).join(";"); } catch (e) { return ""; }
       }
       /* The one sim-input fingerprint (audit FF-06): week +
          every team's record, points-for and roster. buildSeasonSim
          stamps it on its result as `ffp`; every freshness decision
          about a sim compares against the fingerprint of the league
          context currently in DATA, so a sim built on older inputs
-         can never be served as current by ANY surface. */
+         can never be served as current by ANY surface. Segments are
+         canonicalised by rid (Phase 3 piece 3): DATA.teams order is
+         a display order (Current Power since the S1 flip), not a sim
+         input, so the stamp must match whatever order the array is
+         in when it is read. */
       function ff4SimFp() {
-        try { return (DATA.league.week || "") + "|" + DATA.teams.map(t => [t.rid, t.record, t.pf, (t.playerIds || []).slice().sort().join(",")].join(":")).join(";"); } catch (e) { return ""; }
+        try { return (DATA.league.week || "") + "|" + [...DATA.teams].sort(ff4RidOrder).map(t => [t.rid, t.record, t.pf, (t.playerIds || []).slice().sort().join(",")].join(":")).join(";"); } catch (e) { return ""; }
       }
       /* The active league's sim, only if it was built on the
          inputs the page currently carries — otherwise null, so
