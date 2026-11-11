@@ -3529,8 +3529,8 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       #cc-out .cc-spot-team { font-size: 22px; }
       #cc-out .cc-spot-league { font-size: 13.5px; }
       /* stat strip — main column only, cut off at the Manager Score */
-      #cc-out .cc3-strip { display: flex; flex-wrap: wrap; border-top: 1px solid rgba(255,255,255,.14); border-bottom: 1px solid rgba(255,255,255,.14); margin-top: 12px; }
-      #cc-out .cc3-ss { padding: 8px 12px 8px 0; margin-right: 12px; border-right: 1px solid rgba(255,255,255,.07); min-width: 0; }
+      #cc-out .cc3-strip { display: flex; flex-wrap: wrap; border-top: 1px solid rgba(255,255,255,.14); border-bottom: 1px solid rgba(255,255,255,.14); margin-top: 9px; }
+      #cc-out .cc3-ss { padding: 7px 12px 7px 0; margin-right: 12px; border-right: 1px solid rgba(255,255,255,.07); min-width: 0; }
       #cc-out .cc3-ss:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
       #cc-out .cc3-ss-stock { flex: 0 1 196px; }
       #cc-out .cc3-ss-stock .cc3-ss-sub { white-space: nowrap; }
@@ -3539,7 +3539,12 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .cc3-ss-v { font-family: "Space Grotesk", sans-serif; font-size: 19px; font-weight: 700; line-height: 1.2; }
       .cc3-ss-v .t-up { color: #C6FF00; }
       .cc3-ss-v .t-dn { color: #FF2E88; }
-      .cc3-ss-v.cc3-grades { font-size: 13.5px; padding-top: 4px; white-space: nowrap; }
+      /* Position grades (Eric, 2026-11-10): the one-line "QB A- · RB C · …"
+         string read cramped — now a stacked 2×2 grid, bigger and centered,
+         values unchanged. */
+      .cc3-ss-v.cc3-grades { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 14px; font-size: 15.5px; padding-top: 3px; white-space: normal; min-width: 118px; }
+      .cc3-gr { display: flex; align-items: baseline; justify-content: center; gap: 5px; }
+      .cc3-gr i { font-style: normal; font-family: Inter, sans-serif; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; color: var(--ink-3); }
       .cc3-ss-sub { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; line-height: 1.35; }
       #cc-out .cc3-ss .cc-tile-bar { height: 5px; margin-top: 6px; max-width: 130px; }
       #cc-out .cc3-ss-chart svg { height: 24px; width: auto; max-width: 96px; display: block; }
@@ -3551,6 +3556,26 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       #cc-out .cc3-ss-ms .cc-ms-bar-sub { display: none; }
       #cc-out .cc3-ss-ms .cc-ms-bar-arrow { margin-left: 0; font-size: 15px; }
       .cc3-magic { font-size: 12px; color: var(--ink-3); margin: 7px 0 0; line-height: 1.45; }
+      /* Narrow main column (Eric, 2026-11-10): below ~1240px the flex
+         strip wrapped one cell per row — Manager Score landed on its
+         own row and the whole menu sat ~180px lower. The strip is now
+         a pinned 3-column grid there: Odds / Power / Grades on row 1,
+         Stock on row 2 with Manager Score DIRECTLY to its right
+         (explicit placement, so the pairing holds even when a cell
+         is absent), and everything below slides up. */
+      @media (max-width: 1240px) {
+        #cc-out .cc3-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 12px; }
+        #cc-out .cc3-ss { margin-right: 0; border-right: 0; padding-right: 0; min-width: 0; }
+        #cc-out .cc3-ss-odds { grid-row: 1; grid-column: 1; }
+        #cc-out .cc3-ss-pow { grid-row: 1; grid-column: 2; }
+        #cc-out .cc3-ss-grd { grid-row: 1; grid-column: 3; }
+        #cc-out .cc3-ss-stock { grid-row: 2; grid-column: 1 / 3; flex: none; }
+        #cc-out .cc3-ss-ms { grid-row: 2; grid-column: 3; }
+        #cc-out .cc3-ss-stock .cc3-ss-sub { white-space: normal; }
+        #cc-out .cc3-ss .cc-tile-bar { max-width: 100%; }
+        .cc3-ss-stockline { flex-wrap: wrap; gap: 4px 9px; }
+        .cc3-ss-v.cc3-grades { min-width: 0; gap: 3px 8px; font-size: 14.5px; }
+      }
       /* section headers */
       .cc3-h { font-family: "Space Grotesk", sans-serif; font-size: 12px; letter-spacing: .13em; font-weight: 700; text-transform: uppercase; margin: 0 0 4px; }
       .cc3-h.lime { color: #C6FF00; }
@@ -10565,14 +10590,20 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
 
         /* Swap pairing, slot-aware: each incoming player is matched to the
            outgoing player holding his slot (fallback: the best remaining
-           projection), so "Start X over Y" is always a plausible move.
+           starter whose slot the incoming player can legally hold), so
+           "Start X over Y" is always an executable move. The old
+           any-remaining fallback could print a QB "over" a WR whose
+           slot he cannot take (2026-11-10) — an incoming player with
+           no legal out still appears in the recommended lineup table,
+           he just gets no 1-for-1 row.
            Bug C: a pair with no real gain (gain must exceed 0.05 pts) is
            not a recommendation and drops. The headline below is the sum
            of the SHOWN pairs, by construction. */
         const _usedOut = new Set();
+        const _slotDefs = (typeof starterSlots === "function") ? starterSlots() : [];
         const pairs = ins.map(inn => {
           const cand = outs.find(o => !_usedOut.has(o) && o.slot === inn.slot)
-            || outs.find(o => !_usedOut.has(o));
+            || outs.find(o => { if (_usedOut.has(o)) return false; const sd = _slotDefs.find(s => s.label === o.slot); return !!sd && sd.cands.includes(inn.p.pos); });
           if (cand) _usedOut.add(cand);
           return cand ? { inn, out: cand } : null;
         }).filter(x => x && (x.inn.proj.pts - x.out.proj.pts) > 0.05);
@@ -19477,6 +19508,159 @@ window.drDraft = {
         return starters;
       }
 
+      /* ============ Shared start/sit swap validation (2026-11-10) ============
+         Every surface that says "start X over Y" (Needs You First
+         big-gap + fine-tuning, the Command Center's Your Next Moves
+         and the Next Moves page fed by it) builds its pairs HERE, so
+         no surface can emit an illegal or mispriced swap.
+         The two rules this enforces (Eric, 2026-11-10, after a
+         "Stafford over Wilson +22" row that paired a QB with a WR
+         slot and scored the WR as zero):
+         ELIGIBILITY — the in-player must be able to hold the
+         out-player's actual slot (the starterSlots() cands for that
+         slot's label). When he cannot, the pair survives only as a
+         validated CHAIN: the resulting starter set must admit a
+         complete legal slot assignment (recomputed in ffSwapAssign),
+         and the row is labeled with the slot the in-player actually
+         takes.
+         POINTS — both sides are scored by wkProj for the same week:
+         the live weekly projection when the feed has landed, the
+         bake otherwise, with projection precedence intact (a player
+         with a real projection > 0 is never scored 0 for carrying an
+         Out/IR tag — wkProj returns his points with a conflict
+         flag). The old generators scored the out side with
+         wkProjLineup, whose lineup-context zeroing of conflict
+         players is exactly what manufactured the +22.
+         Candidate ins are the bench players who make the optimal
+         lineup ON THIS SAME BASIS (a greedy fill identical in shape
+         to wkOptimal but scored by wkProj, not wkProjLineup); the
+         outs are current starters that optimal leaves out. Gains
+         are in-minus-out on that one basis, rounded the way the
+         surfaces have always rounded. */
+      function ffSwapScore(p, wk) {
+        try { return wkProj(p, wk); } catch (e) { return { pts: 0, unpriced: !!(p && p.unpriced) }; }
+      }
+      /* Startability evidence for a proposed IN (current week only —
+         the only week ffSwapPairs is called for). Projection
+         precedence protects STARTERS from being scored zero on a
+         stale tag; being told to START a bench player demands the
+         stronger evidence: when his number rests on a status
+         conflict (a real projection outvoting an Out/IR tag), or
+         when it is an outlier line above 40, BOTH source families
+         (ESPN and the Sleeper/Rotowire feed, baked or live) must
+         carry him. A single-family line can be a bake artifact —
+         Zachariah Branch, 2026-11-10: designated Out, no Sleeper
+         line anywhere, and an ESPN stat line carrying a season
+         yardage total (rec_yds 1036.6) that scored as a 104.9-point
+         "projection". wkProjLineup's blanket zeroing used to hide
+         that whole class; this guard keeps it out of the swap
+         surfaces without touching wkProj itself. */
+      function ffSwapInOK(p, pr) {
+        if (!p || !pr) return false;
+        if (!pr.conflict && !(pr.pts > 40)) return true;
+        const id = p.id;
+        const slSide = !!((window.SLEEPER_STATS_LIVE && window.SLEEPER_STATS_LIVE[id]) || (window.SLEEPER_STATS && window.SLEEPER_STATS[id])
+          || (window.SLEEPER_PROJ_LIVE && window.SLEEPER_PROJ_LIVE[id] != null) || (window.SLEEPER_PROJ && window.SLEEPER_PROJ[id] != null));
+        const esSide = !!((window.ESPN_WK_STATS && window.ESPN_WK_STATS[id]) || (window.ESPN_WK_PROJ && window.ESPN_WK_PROJ[id] != null));
+        return slSide && esSide;
+      }
+      function ffSwapPool(ids, wk) {
+        return (ids || []).map(id => PBY[id]).filter(Boolean)
+          .map(p => { const pr = ffSwapScore(p, wk); return { p, pr, pts: pr.pts, unpriced: !!pr.unpriced, unsigned: !!pr.unsigned }; })
+          .filter(e => !e.unsigned)
+          .sort((a, b) => ((a.unpriced ? 1 : 0) - (b.unpriced ? 1 : 0)) || b.pts - a.pts);
+      }
+      function ffSwapFill(pool, slots) {
+        const used = new Set(); const lineup = [];
+        slots.forEach(s => {
+          for (const e of pool) {
+            if (used.has(e.p.id) || !s.cands.includes(e.p.pos)) continue;
+            used.add(e.p.id); lineup.push({ p: e.p, slot: s.label, pts: e.pts, pr: e.pr, unpriced: !!e.unpriced }); break;
+          }
+        });
+        return lineup;
+      }
+      /* A complete legal assignment for one exact starter set, or
+         null: greedy by projection first (the recomputed optimal
+         for that set); a most-constrained-first search as fallback,
+         so a legal set is never rejected on greedy's account. */
+      function ffSwapAssign(idSet, wk, slots) {
+        const ids = [...idSet];
+        const pool = ffSwapPool(ids, wk);
+        if (pool.length < slots.length) return null;
+        const greedy = ffSwapFill(pool, slots);
+        if (greedy.length === slots.length) return greedy;
+        const members = ids.map(id => PBY[id]).filter(Boolean);
+        const order = slots.map(s => ({ label: s.label, cands: s.cands, elig: members.filter(p => s.cands.includes(p.pos)) }))
+          .sort((a, b) => a.elig.length - b.elig.length);
+        const used = new Set(); const picked = [];
+        const dfs = i => {
+          if (i >= order.length) return true;
+          for (const p of order[i].elig) {
+            if (used.has(p.id)) continue;
+            used.add(p.id); picked.push({ p, slot: order[i].label });
+            if (dfs(i + 1)) return true;
+            used.delete(p.id); picked.pop();
+          }
+          return false;
+        };
+        return dfs(0) ? picked.map(x => ({ p: x.p, slot: x.slot, pts: ffSwapScore(x.p, wk).pts })) : null;
+      }
+      /* Validated swap pairs for one team. opts: { minGain,
+         excludeOutIds (starter ids that are never swap fodder —
+         NYF's problem starters), excludeInIds (roster ids that may
+         not be proposed as starters — IR-slot players) }. Returns an
+         array of { gain, inP, outP, chain, inSlot } with .optIds
+         attached (the swap-basis optimal lineup's ids, raw id type,
+         for consumers that protect them from drop suggestions). */
+      function ffSwapPairs(me, wk, opts) {
+        const o = opts || {};
+        const minGain = o.minGain != null ? o.minGain : 0.5;
+        const pairs = []; pairs.optIds = new Set();
+        const cur = (me.lineup || []).map(l => ({ p: PBY[l.id], slot: l.slot })).filter(r => r.p);
+        if (!cur.length) return pairs;
+        const slots = starterSlots();
+        if (!slots.length) return pairs;
+        const slotByLabel = {}; slots.forEach(s => { slotByLabel[s.label] = s; });
+        const pool = ffSwapPool(me.playerIds || [], wk);
+        const opt = ffSwapFill(pool, slots);
+        const optIdSet = new Set(opt.map(l => String(l.p.id)));
+        pairs.optIds = new Set(opt.map(l => l.p.id));
+        const curIds = new Set(cur.map(r => String(r.p.id)));
+        const outs = cur.map(r => {
+          const e = pool.find(x => String(x.p.id) === String(r.p.id));
+          return { p: r.p, slot: r.slot, pts: e ? e.pts : 0, unpriced: e ? !!e.unpriced : !!r.p.unpriced };
+        }).filter(x => !optIdSet.has(String(x.p.id)) && !x.unpriced && !(o.excludeOutIds && o.excludeOutIds.has(String(x.p.id))));
+        const cands = [];
+        opt.forEach(l => {
+          if (curIds.has(String(l.p.id)) || l.unpriced) return;
+          if (o.excludeInIds && o.excludeInIds.has(String(l.p.id))) return;
+          if (!ffSwapInOK(l.p, l.pr)) return;
+          outs.forEach(x => {
+            const gain = (Math.round(l.pts * 10) - Math.round(x.pts * 10)) / 10;
+            if (gain < minGain) return;
+            const sd = slotByLabel[x.slot];
+            const direct = sd ? sd.cands.includes(l.p.pos) : l.p.pos === x.p.pos;
+            if (direct) { cands.push({ gain, inP: l.p, outP: x.p, chain: false, inSlot: x.slot }); return; }
+            const newSet = new Set(cur.map(r => String(r.p.id)));
+            newSet.delete(String(x.p.id)); newSet.add(String(l.p.id));
+            if (newSet.size !== slots.length) return;
+            const assign = ffSwapAssign(newSet, wk, slots);
+            if (!assign) return;
+            const mine = assign.find(a => String(a.p.id) === String(l.p.id));
+            cands.push({ gain, inP: l.p, outP: x.p, chain: true, inSlot: mine ? mine.slot : l.slot });
+          });
+        });
+        cands.sort((a, b) => (b.gain - a.gain) || ((a.chain ? 1 : 0) - (b.chain ? 1 : 0)));
+        const usedIn = new Set(), usedOut = new Set();
+        cands.forEach(c => {
+          const ii = String(c.inP.id), oo = String(c.outP.id);
+          if (usedIn.has(ii) || usedOut.has(oo)) return;
+          usedIn.add(ii); usedOut.add(oo); pairs.push(c);
+        });
+        return pairs;
+      }
+
       /* NYF selectivity (Eric, 2026-11-10): Needs You First is
          critical-only. The complete qualifying set — nothing else
          queues:
@@ -19560,9 +19744,10 @@ window.drDraft = {
           const problemIds = new Set();
           /* Starters whose Out-ish designation is outvoted by a real
              weekly projection (wkProj conflict): under the projection-
-             precedence rule they are NOT problems — the swap pass
-             below scores them at the raw projected points recorded
-             here, not at wkProjLineup's zeroed value. */
+             precedence rule they are NOT problems, so the loop below
+             records them here and skips the problem rows. (The swap
+             pass needs no map: ffSwapPairs scores both sides with
+             wkProj itself, where the precedence already lives.) */
           const conflictPts = new Map();
 
           /* Categories 4 first only in computation order — the
@@ -19647,37 +19832,21 @@ window.drDraft = {
               : "Healthy again but still in your IR slot — that blocks other roster moves until he comes out", 6);
           });
 
-          /* Categories 2 + fine-tuning — one pairing pass over the
-             optimal lineup, the same construction Your Next Moves
-             uses (optimal ins against the lowest-projected eligible
-             starter not in the optimal, each displaced starter used
-             once). Problem starters are not swap fodder: their fix
-             is the category 1/3/5 row above, not a "leak". Only a
-             real set lineup can leak, so the guest/demo fill skips
-             this pass. */
+          /* Categories 2 + fine-tuning — one pairing pass through
+             the shared swap validator (ffSwapPairs): every pair is
+             slot-legal (a direct slot fit, or a chain whose
+             resulting lineup was recomputed legal) and priced on
+             the one live wkProj basis with projection precedence,
+             so a starter carrying a stale designation keeps his
+             real points as the out side. Problem starters are not
+             swap fodder: their fix is the category 1/3/5 row above,
+             not a "leak". Only a real set lineup can leak, so the
+             guest/demo fill skips this pass. */
           if (hasSet) {
             try {
-              const opt = wkOptimal(me.playerIds || [], wk);
-              const optIds = new Set((opt.lineup || []).map(l => String(l.p.id)));
-              const curProj = starters.filter(s => !problemIds.has(String(s.p.id)))
-                .map(s => { const pr = projL(s.p); const cp = conflictPts.get(String(s.p.id)); return { p: s.p, pts: cp != null ? cp : pr.pts, unpriced: !!pr.unpriced }; });
-              const cands = [];
-              (opt.lineup || []).forEach(l => {
-                if (starterIds.has(String(l.p.id)) || l.proj.unpriced) return;
-                const s = slots.find(x => x.label === l.slot);
-                const cs = s ? s.cands : [l.p.pos];
-                const outs = curProj.filter(x => !optIds.has(String(x.p.id)) && !x.unpriced && cs.includes(x.p.pos));
-                if (!outs.length) return;
-                outs.sort((a, b) => a.pts - b.pts);
-                const gain = (Math.round(l.proj.pts * 10) - Math.round(outs[0].pts * 10)) / 10;
-                if (gain >= NYF_TUNE_MIN) cands.push({ gain, inP: l.p, outP: outs[0].p });
-              });
-              cands.sort((a, b) => b.gain - a.gain);
-              const usedOut = new Set();
-              cands.forEach(c => {
-                if (usedOut.has(String(c.outP.id))) return;
-                usedOut.add(String(c.outP.id));
-                const row = { cls: "fyi", player: c.inP.name, issue: "over " + c.outP.name + " (+" + c.gain.toFixed(1) + " pts this week)", gain: c.gain, inId: String(c.inP.id), outId: String(c.outP.id) };
+              const swapPairs = ffSwapPairs(me, wk, { minGain: NYF_TUNE_MIN, excludeOutIds: problemIds, excludeInIds: irSet });
+              swapPairs.forEach(c => {
+                const row = { cls: "fyi", player: c.inP.name, issue: "over " + c.outP.name + " (+" + c.gain.toFixed(1) + " pts this week)" + (c.chain ? " · starts at " + c.inSlot : ""), gain: c.gain, inId: String(c.inP.id), outId: String(c.outP.id) };
                 if (c.gain >= NYF_BIG_GAP) items.push(Object.assign({}, row, { prio: 6, cat: 2 }));
                 else tune.push(Object.assign({}, row, { prio: 7, cat: "tune" }));
               });
@@ -20202,9 +20371,10 @@ window.drDraft = {
            deliberately separate from the Needs-you-first queue (which
            keeps only time-critical starter issues). Three kinds, in
            order: (1) lineup swaps — a bench player beating a current
-           starter on this week's projection (the same wkOptimal
-           engine the Lineup Analyzer uses, gain >= 0.5 pts as a
-           noise floor, each displaced starter used once); (2) one
+           starter on this week's projection (the shared ffSwapPairs
+           validator: slot-legal pairs on the live wkProj basis,
+           gain >= 0.5 pts as a noise floor, each displaced starter
+           used once); (2) one
            waiver add — only when the player improves the optimal
            lineup, tested the Waiver Targets way (B30, Eric,
            2026-11-07): re-run the whole ROS optimal lineup with him
@@ -20229,34 +20399,23 @@ window.drDraft = {
              (the Nov 7 review contradiction). */
           const nmStartIns = new Set();
           let nmOptIds = new Set();
-          /* (1) Lineup swaps, this week. */
+          /* (1) Lineup swaps, this week — through the shared swap
+             validator (ffSwapPairs): slot-legal pairs only (a direct
+             slot fit, or a chain whose resulting lineup was
+             recomputed legal), priced on the one live wkProj basis
+             with projection precedence, so a starter carrying a
+             stale Out tag keeps his real projected points instead of
+             being scored zero. The old pass scored the out side with
+             wkProjLineup and paired by the in-player's slot, which
+             is what produced "Stafford over Wilson, +22". */
           try {
-            if (curLineup.length && typeof wkOptimal === "function" && typeof wkActiveWeek === "function" && typeof wkProjLineup === "function") {
+            if (curLineup.length && typeof wkActiveWeek === "function" && typeof ffSwapPairs === "function") {
               const wk = wkActiveWeek();
-              const opt = wkOptimal(me.playerIds || [], wk);
-              const optIds = new Set((opt.lineup || []).map(l => l.p.id));
-              nmOptIds = optIds;
-              const slots = (typeof starterSlots === "function") ? starterSlots() : [];
-              const curProj = curLineup.map(r => ({ r, proj: wkProjLineup(r.p, wk) })).filter(x => !x.proj.unpriced);
-              const cands = [];
-              (opt.lineup || []).forEach(l => {
-                if (starterIds.has(l.p.id)) return;
-                if (l.proj.unpriced) return;
-                const s = slots.find(x => x.label === l.slot);
-                const cs = s ? s.cands : [l.p.pos];
-                const outs = curProj.filter(x => !optIds.has(x.r.id) && cs.includes(x.r.p.pos));
-                if (!outs.length) return;
-                outs.sort((a, b) => a.proj.pts - b.proj.pts);
-                const gain = (Math.round(l.proj.pts * 10) - Math.round(outs[0].proj.pts * 10)) / 10;
-                if (gain >= 0.5) cands.push({ gain, inP: l.p, outP: outs[0].r.p });
-              });
-              cands.sort((a, b) => b.gain - a.gain);
-              const usedOut = new Set();
-              cands.forEach(c => {
-                if (usedOut.has(c.outP.id)) return;
-                usedOut.add(c.outP.id);
+              const swapPairs = ffSwapPairs(me, wk, { minGain: 0.5, excludeInIds: new Set((me.irIds || []).map(String)) });
+              nmOptIds = swapPairs.optIds || new Set();
+              swapPairs.forEach(c => {
                 nmStartIns.add(c.inP.id);
-                moves.push({ kind: 1, gain: c.gain, player: `Start ${c.inP.name}`, issue: `over ${c.outP.name} (+${c.gain.toFixed(1)} pts this week)`, cls: "", tool: "lineup" });
+                moves.push({ kind: 1, gain: c.gain, player: `Start ${c.inP.name}`, issue: `over ${c.outP.name} (+${c.gain.toFixed(1)} pts this week)` + (c.chain ? ` · starts at ${c.inSlot}` : ""), cls: "", tool: "lineup" });
               });
             }
           } catch (e) {}
@@ -20663,7 +20822,7 @@ window.drDraft = {
            composes them without recomputing anything. The tiles
            array above is still built for the record but no longer
            rendered. */
-        const gradesCell = d.powerGrades ? ["QB", "RB", "WR", "TE"].map(pos => `${pos} <b>${esc(d.powerGrades[pos])}</b>`).join(" · ") : "";
+        const gradesCell = d.powerGrades ? ["QB", "RB", "WR", "TE"].map(pos => `<span class="cc3-gr"><i>${pos}</i><b>${esc(d.powerGrades[pos])}</b></span>`).join("") : "";
         let stockMain = "", stockNote = "";
         if (d.ticker && d.ticker.sums && d.ticker.sums.length >= 2) {
           const wp0b = (d.tickerWk && typeof d.tickerWk.pct === "number") ? d.tickerWk.pct : null;
