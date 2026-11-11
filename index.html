@@ -23794,6 +23794,132 @@ window.__lifeline = (function () {
   .ms-card-name { font-weight: 700; font-size: 15.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ms-card-score { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 24px; white-space: nowrap; }
 </style>
+<style>
+  /* ============================================================
+     COSMETIC THEME PASS (2026-11-11) — PRESENTATION ONLY.
+     Carries the Command Center's visual language (Nov 10 section
+     color map: tinted wash + accent border + colored headings +
+     card depth) across the other tools. Accents are the site's
+     own per-tool colors, taken from the Tools directory pills.
+     No layout, geometry, text, or behavior changes: this block
+     only paints (backgrounds, border colors, shadows, colors,
+     font weights, hover/focus states). Screen only, so the
+     Draft Sheet printout is untouched. Command Center excluded.
+     ============================================================ */
+  @media screen {
+    /* per-surface accent variables (default = brand lime) */
+    section.tab:not(#tab-command) { --ta: #C6FF00; --ta-rgb: 198,255,0; }
+    section.tab#tab-values { --ta: #C6FF00; --ta-rgb: 198,255,0; }
+    section.tab#tab-trades { --ta: #C6FF00; --ta-rgb: 198,255,0; }
+    section.tab#tab-targets { --ta: #69F0AE; --ta-rgb: 105,240,174; }
+    section.tab#tab-upgrades { --ta: #B388FF; --ta-rgb: 179,136,255; }
+    section.tab#tab-realtrades { --ta: #448AFF; --ta-rgb: 68,138,255; }
+    section.tab#tab-tradeboard { --ta: #FFC400; --ta-rgb: 255,196,0; }
+    section.tab#tab-teamport { --ta: #FFC400; --ta-rgb: 255,196,0; }
+    section.tab#tab-roster { --ta: #FFC400; --ta-rgb: 255,196,0; }
+    section.tab#tab-lineup { --ta: #B388FF; --ta-rgb: 179,136,255; }
+    section.tab#tab-moves { --ta: #FF6B35; --ta-rgb: 255,107,53; }
+    section.tab#tab-radar { --ta: #FF4081; --ta-rgb: 255,64,129; }
+    section.tab#tab-ineff { --ta: #69F0AE; --ta-rgb: 105,240,174; }
+    section.tab#tab-bye { --ta: #00E5FF; --ta-rgb: 0,229,255; }
+    section.tab#tab-waivers { --ta: #448AFF; --ta-rgb: 68,138,255; }
+    section.tab#tab-draft { --ta: #FF2E88; --ta-rgb: 255,46,136; }
+    section.tab#tab-league { --ta: #00E5FF; --ta-rgb: 0,229,255; }
+    #tab-league #lg-odds { --ta: #C6FF00; --ta-rgb: 198,255,0; }
+    #tab-league #lg-outlook { --ta: #B388FF; --ta-rgb: 179,136,255; }
+    #tab-league #lg-rosters { --ta: #FFC400; --ta-rgb: 255,196,0; }
+    #tab-league [data-subview="storylines"] { --ta: #FF4081; --ta-rgb: 255,64,129; }
+
+    /* section headings: CC weight + a thin accent bar under the title */
+    section.tab:not(#tab-command) .block-title {
+      font-weight: 800;
+      box-shadow: inset 0 -3px 0 rgba(var(--ta-rgb), .55);
+    }
+    /* card-level headings take the accent, like the CC section heads */
+    section.tab:not(#tab-command) .side h3,
+    section.tab:not(#tab-command) .suggestion h3,
+    section.tab:not(#tab-command) .wv-card h3,
+    section.tab:not(#tab-command) .mv-card h3,
+    section.tab:not(#tab-command) .path-head { color: var(--ta); }
+    section.tab:not(#tab-command) .verdict h3 { font-weight: 800; }
+    section.tab:not(#tab-command) .sec-head { font-weight: 800; }
+
+    /* cards: CC wash (accent-tinted gradient), accent-tinted border, depth */
+    section.tab:not(#tab-command) .card,
+    section.tab:not(#tab-command) .team-card,
+    section.tab:not(#tab-command) .side,
+    section.tab:not(#tab-command) .verdict,
+    section.tab:not(#tab-command) .suggestion,
+    section.tab:not(#tab-command) .wv-card,
+    section.tab:not(#tab-command) .mv-card,
+    section.tab:not(#tab-command) .ins-card,
+    section.tab:not(#tab-command) .rt-card,
+    section.tab:not(#tab-command) .rd-card,
+    section.tab:not(#tab-command) .how-box,
+    section.tab:not(#tab-command) .want-panel,
+    section.tab:not(#tab-command) .xlink,
+    section.tab:not(#tab-command) .tp-tablewrap {
+      background-image: linear-gradient(160deg, rgba(var(--ta-rgb), .055), rgba(255,255,255,.012));
+      border-color: rgba(var(--ta-rgb), .28);
+      box-shadow: 0 12px 32px rgba(0,0,0,.38);
+    }
+    /* risk cards keep their semantic border colors; wash + depth only */
+    section.tab:not(#tab-command) .risk-card {
+      background-image: linear-gradient(160deg, rgba(var(--ta-rgb), .055), rgba(255,255,255,.012));
+      box-shadow: 0 12px 32px rgba(0,0,0,.38);
+    }
+    /* the "your team" power card keeps its lime highlight */
+    section.tab#tab-league .team-card.mine {
+      border-color: rgba(198,255,0,.55);
+      box-shadow: 0 0 0 1px rgba(198,255,0,.22), 0 0 30px rgba(198,255,0,.13);
+    }
+    section.tab:not(#tab-command) .ins-card:hover,
+    section.tab:not(#tab-command) .ins-card:focus-visible { border-color: rgba(var(--ta-rgb), .6); }
+    section.tab:not(#tab-command) .how-box > summary { color: var(--ink); }
+
+    /* boards/tables: accent header row + accent row hover */
+    section.tab:not(#tab-command) .board {
+      background-image: linear-gradient(160deg, rgba(var(--ta-rgb), .045), rgba(255,255,255,.01));
+      border-color: rgba(var(--ta-rgb), .28);
+      box-shadow: 0 12px 32px rgba(0,0,0,.38);
+    }
+    section.tab:not(#tab-command) table.board-table th {
+      color: var(--ta);
+      background: rgba(var(--ta-rgb), .06);
+      border-bottom-color: rgba(var(--ta-rgb), .35);
+    }
+    section.tab:not(#tab-command) table.board-table tbody tr:not(.why-row):hover td {
+      background: rgba(var(--ta-rgb), .05);
+    }
+    /* phone card-layout boards stay borderless, exactly as designed */
+    @media (max-width: 640px) {
+      section.tab#tab-values .board,
+      section.tab#tab-league #final-standings .board {
+        background: transparent; background-image: none;
+        border-color: transparent; box-shadow: none;
+      }
+    }
+
+    /* buttons & pills: CC pop */
+    section.tab:not(#tab-command) .share-btn {
+      border-color: rgba(var(--ta-rgb), .4);
+      box-shadow: 0 4px 14px rgba(0,0,0,.3);
+    }
+    section.tab:not(#tab-command) .share-btn:hover { border-color: var(--ta); color: var(--ta); }
+    section.tab:not(#tab-command) .pos-filter button:hover { border-color: rgba(var(--ta-rgb), .6); }
+    section.tab:not(#tab-command) .ineff-row:hover { background: rgba(var(--ta-rgb), .04); }
+
+    /* Tools directory: each pill washes in its own accent and glows on hover */
+    #tab-tools .tools-group-h { color: var(--ink); font-weight: 800; }
+    #tab-tools .tools-pill {
+      background: linear-gradient(160deg, color-mix(in srgb, var(--tile-accent, #C6FF00) 8%, transparent), rgba(255,255,255,.008));
+      box-shadow: 0 8px 22px rgba(0,0,0,.35);
+    }
+    #tab-tools .tools-pill:hover {
+      box-shadow: 0 8px 22px rgba(0,0,0,.35), 0 0 18px color-mix(in srgb, var(--tile-accent, #C6FF00) 35%, transparent);
+    }
+  }
+</style>
 <script>
 /* === MS injury-freeze bakes (bake_ms_frozen.py — Manager Score only) === */
 window.MS_FROZEN_RD = {"10226":69,"10232":2182,"11370":218,"11581":533,"11583":17,"11618":68,"11624":446,"11626":46,"11630":41,"11643":178,"11655":444,"12481":1469,"12487":225,"12489":677,"12529":793,"12533":516,"12534":822,"12541":23,"13268":46,"13277":140,"13279":1148,"13287":2100,"13302":61,"13320":45,"13329":24,"13347":5,"13380":26,"13400":93,"13402":27,"13417":17,"13423":57,"2133":3101,"2216":2958,"4017":719,"4033":203,"4137":133,"4454":184,"4881":6991,"4943":1636,"4950":50,"5849":1848,"5850":1973,"5859":2987,"5872":501,"5892":847,"6819":100,"7049":73,"7083":113,"7525":2161,"7526":1345,"7543":1135,"7611":2011,"7670":50,"8110":274,"8117":29,"8121":329,"8137":2865,"8142":191,"8146":4002,"8154":203,"8207":294,"8676":112,"9225":131,"9481":27,"9486":169,"9508":56};
