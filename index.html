@@ -9129,7 +9129,7 @@ ${rdP ? "" : `
         el.innerHTML = `<div class="strip-card">
           <div class="strip-main">
             <div class="strip-title">Your team — ${esc(t.name)}</div>
-            <div class="strip-sub">Power rank <strong>#${t.powerRank} of ${DATA.teams.length}</strong>${rdStrip ? "" : ` · ${archTag(t.arch)}`} · ${esc(t.record)} · Roster value <strong>${fmt(rdStrip ? totDispS : t.totalVal)}</strong> (#${valRank} in the league) · Starters <strong>${fmt(rdStrip ? stDispS : t.starterVal)}</strong>${rdStrip ? "" : ` · Pick capital <strong>${fmt(t.picksVal)}</strong>`}${ss ? ` · This season: <strong>${playoffLabel(ss)}</strong> playoffs · <strong>${oddsPct(ss.champ)}</strong> title` : ""}</div>
+            <div class="strip-sub">Current Power <strong>#${t.cpRank == null ? "—" : t.cpRank} of ${DATA.teams.length}</strong>${(rdStrip || !t.stanceLabel) ? "" : ` · ${esc(t.stanceLabel)}`} · ${esc(t.record)} · Roster value <strong>${fmt(rdStrip ? totDispS : t.totalVal)}</strong> (#${valRank} in the league) · Starters <strong>${fmt(rdStrip ? stDispS : t.starterVal)}</strong>${rdStrip ? "" : ` · Pick capital <strong>${fmt(t.picksVal)}</strong>`}${ss ? ` · This season: <strong>${playoffLabel(ss)}</strong> playoffs · <strong>${oddsPct(ss.champ)}</strong> title` : ""}</div>
           </div>
           <button class="strip-btn" id="strip-go" type="button">See your team vs the league →</button>
         </div>`;
@@ -15721,7 +15721,10 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         const opp = oppRid != null ? teams.find(t => t.rid === oppRid) : null;
         return {
           me, total: teams.length,
-          powerRank: me.powerRank, power: me.power, record: me.record,
+          /* Phase 3 piece 2 (S49): the card stat is the Current Power
+             rank + score; the sub-line tag is the Stance label
+             (dynasty only — mtCard gates it on format, as before). */
+          powerRank: (me.cpRank != null) ? me.cpRank : null, power: (me.cpScore != null) ? me.cpScore : null, stance: (me.stanceLabel != null) ? me.stanceLabel : null, record: me.record,
           playoff: sr ? sr.playoff : null, champ: sr ? sr.champ : null, expWins: sr ? sr.expWins : null,
           clinched: sr ? !!sr.clinched : false, titleIfIn: sr ? titlePct(sr) : null,
           simPending: !sr && teams.length === 12 && !mtSimFailed.has(id),
@@ -15828,7 +15831,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             <button type="button" class="mt-open" data-mt-go="${lg.id}:teams">Open league →</button>
           </div>
           <div class="mt-stats">
-            <button type="button" class="mt-stat" data-mt-go="${lg.id}:teams"><span class="mt-lbl">Power rank</span><span class="mt-big">#${s.powerRank} <small>of ${s.total}</small></span><span class="mt-sub2">${s.power} power score${me.arch && !(typeof VALMODE !== "undefined" && VALMODE === "redraft") ? ` · ${esc(me.arch)}` : ""}</span></button>
+            <button type="button" class="mt-stat" data-mt-go="${lg.id}:teams"><span class="mt-lbl">Current Power</span><span class="mt-big">${s.powerRank == null ? "—" : `#${s.powerRank} <small>of ${s.total}</small>`}</span><span class="mt-sub2">${s.power == null ? "Current Power score —" : `${s.power} Current Power score`}${s.stance && !(typeof VALMODE !== "undefined" && VALMODE === "redraft") ? ` · ${esc(s.stance)}` : ""}</span></button>
             ${odds}
             ${match}
           </div>
@@ -20678,7 +20681,11 @@ window.drDraft = {
             ff4CCSwap(built);
             const me = DATA.teams.find(t => t.isUser) || DATA.teams.find(t => t.rid === myRoster.roster_id);
             if (!me) throw new Error("user team not found");
-            snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
+            /* Phase 3 piece 2 (S42): the stored snapshot rank takes
+               Current Power meaning — CP is sim-independent, so the
+               light-pass fingerprint mismatch (see piece-2 log item 8)
+               cannot move it. */
+            snap.teamName = me.name; snap.record = me.record; snap.powerRank = (me.cpRank != null) ? me.cpRank : null; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
               try { const ccSim = ff4CCSimCached("Sleeper:" + lg.league_id, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
             try { const fs = (typeof ff4CCIsActive === "function" && ff4CCIsActive(lg) && typeof ff4CCFreshSim === "function") ? ff4CCFreshSim() : null; if (fs && fs.results && fs.results[me.rid]) { snap.odds = fs.results[me.rid].playoff; snap.clinched = !!fs.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
@@ -20784,7 +20791,9 @@ window.drDraft = {
             ff4CCSwap(built);
             const me = DATA.teams.find(t => t.isUser);
             if (!me) throw new Error("user team not found");
-            snap.teamName = me.name; snap.record = me.record; snap.powerRank = me.powerRank; snap.total = DATA.teams.length;
+            /* Phase 3 piece 2 (S42): stored snapshot rank is Current
+               Power — same meaning as the Sleeper light pass. */
+            snap.teamName = me.name; snap.record = me.record; snap.powerRank = (me.cpRank != null) ? me.cpRank : null; snap.total = DATA.teams.length;
             if (DATA.teams.length === 12) {
               try { const ccSim = ff4CCSimCached("ESPN:" + entry.leagueId, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
             try { const fs = (typeof ff4CCIsActive === "function" && ff4CCIsActive(entry) && typeof ff4CCFreshSim === "function") ? ff4CCFreshSim() : null; if (fs && fs.results && fs.results[me.rid]) { snap.odds = fs.results[me.rid].playoff; snap.clinched = !!fs.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
@@ -20914,11 +20923,14 @@ window.drDraft = {
         const me = DATA.teams.find(t => t.isUser) || (ridFallback != null ? DATA.teams.find(t => t.rid === ridFallback) : null);
         if (!me) return null;
         const snap = ff4.ccSnaps ? ff4.ccSnaps[idx] : null;
-        /* Phase 3 piece 1 (new reads only — d.powerRank above is
-           untouched): the strip's Power cell reads the engine's
-           Current Power rank and its Franchise cell the Franchise
-           rank, straight off the team object. */
-        const d = { idx, leagueName: DATA.league.name || "", chips: chipsIn || [], teamName: me.name, record: me.record, powerRank: me.powerRank, cpRank: (me.cpRank != null) ? me.cpRank : null, frRank: (me.frRank != null) ? me.frRank : null, isRedraft: (typeof tpIsRedraft === "function") ? tpIsRedraft() : false, total: DATA.teams.length, status: snap ? (snap.status || "") : "" };
+        /* Phase 3 piece 1 (new reads only): the strip's Power cell reads
+           the engine's Current Power rank and its Franchise cell the
+           Franchise rank, straight off the team object.
+           Phase 3 piece 2 (S40): d.powerRank itself now takes Current
+           Power meaning too — the tile record and every d.powerRank
+           reader follow it. d.cpRank/d.frRank stay populated (the
+           strip depends on them). */
+        const d = { idx, leagueName: DATA.league.name || "", chips: chipsIn || [], teamName: me.name, record: me.record, powerRank: (me.cpRank != null) ? me.cpRank : null, cpRank: (me.cpRank != null) ? me.cpRank : null, frRank: (me.frRank != null) ? me.frRank : null, isRedraft: (typeof tpIsRedraft === "function") ? tpIsRedraft() : false, total: DATA.teams.length, status: snap ? (snap.status || "") : "" };
         let sim = simIn || null;
         if (DATA.teams.length === 12) {
           if (!sim) { try { sim = buildSeasonSim(); } catch (e) { sim = null; } }
@@ -20941,21 +20953,22 @@ window.drDraft = {
         } else d.noSim = true;
         /* Power Rank tile extras (Eric, 2026-10-27): the team's
            positional letter grades (already computed by
-           recomputeValues), its value-weighted core age, and its
-           archetype tag (dynasty only — redraft shows no tag). */
+           recomputeValues), its value-weighted core age, and — Phase 3
+           piece 2 (S40) — its Stance label from the engine, computed
+           in both formats internally and displayed dynasty-only
+           (redraft shows no tag). The old archetype tag (powerArch)
+           is retired here; the franchise tag still lives on the
+           Power page / franchise surfaces. */
         try {
           const g = me.grades || {};
           d.powerGrades = (["QB", "RB", "WR", "TE"].every(pos => g[pos])) ? { QB: g.QB, RB: g.RB, WR: g.WR, TE: g.TE } : null;
         } catch (e) { d.powerGrades = null; }
         try {
-          const isRd = (typeof tpIsRedraft === "function") ? tpIsRedraft() : false;
-          let archKey = null;
-          if (!isRd && typeof slpArch === "function") { try { archKey = slpArch(me, DATA.teams); } catch (e) {} }
+          d.powerStance = (me.stanceLabel != null) ? me.stanceLabel : null;
           let age = (me.coreAge != null) ? me.coreAge : null;
           if (age == null && typeof slpCoreAge === "function") { try { const ca = slpCoreAge(me); if (ca) age = Math.round(ca.coreAge * 10) / 10; } catch (e) {} }
-          d.powerArch = archKey || null;
           d.powerCoreAge = age;
-        } catch (e) { d.powerArch = null; d.powerCoreAge = null; }
+        } catch (e) { d.powerStance = null; d.powerCoreAge = null; }
         try {
           if (typeof tpBuild === "function") {
             const teamObj = { name: me.name, rid: me.rid, isUser: true, record: me.record, powerRank: me.powerRank,
@@ -21440,17 +21453,21 @@ window.drDraft = {
         const powerBig = d.powerRank == null ? "—" : `#${d.powerRank} of ${d.total}`;
         /* Phase 3 piece 1: the strip reads these — Current Power rank
            for the Power cell, Franchise rank for the Franchise cell
-           (rank only, never subtotals). powerBig above is untouched
-           (the unrendered tile record keeps it). */
+           (rank only, never subtotals). powerBig above now carries
+           Current Power meaning too (S40), and the tile below reads
+           cpBig — the same number the strip shows.
+           Phase 3 piece 2 (S37): the tile's rank number is Current
+           Power; the arch bits are a Stance chip (dynasty only —
+           redraft shows no tag). Grades grid and core-age display stay. */
         const cpBig = d.cpRank == null ? "—" : `#${d.cpRank} of ${d.total}`;
         const frBig = d.frRank == null ? "—" : `#${d.frRank} of ${d.total}`;
         let powerExtra = "";
         if (d.powerGrades) powerExtra += `<div class="cc-power-grades">${["QB", "RB", "WR", "TE"].map(pos => `<span>${pos} <b style="color:${ffGradeColor(d.powerGrades[pos])}">${esc(d.powerGrades[pos])}</b></span>`).join("")}</div>`;
         const archBits = [];
         if (d.powerCoreAge != null) archBits.push(`Core age ${d.powerCoreAge}`);
-        if (d.powerArch) archBits.push((typeof archTag === "function") ? archTag(d.powerArch) : d.powerArch);
+        if (!d.isRedraft && d.powerStance) archBits.push(d.powerStance);
         if (archBits.length) powerExtra += `<div class="cc-power-meta">${archBits.map(b => `<span>${esc(b)}</span>`).join("")}</div>`;
-        tiles.push(`<div class="cc-tile" data-cc-tile-nav="power" style="--tile-accent:#00E5FF"><div class="cc-tile-h">Power Rank</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(powerBig)}</div>${powerExtra}</div></div>`);
+        tiles.push(`<div class="cc-tile" data-cc-tile-nav="power" style="--tile-accent:#00E5FF"><div class="cc-tile-h">Power Rank</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(cpBig)}</div>${powerExtra}</div></div>`);
         /* Manager Score is NOT a grid tile (Eric, 2026-11-07): the
            grid stays the original nine tiles in their original
            order; the score rides in a slim bar under the grid —
@@ -21579,7 +21596,10 @@ window.drDraft = {
         if (d.elim) magicParts.push("Eliminated from the playoffs");
         else if (d.clinched) magicParts.push("Playoff spot locked up");
         if (d.powerCoreAge != null) magicParts.push(`Core age ${d.powerCoreAge}`);
-        if (d.powerArch) magicParts.push(esc((typeof archTag === "function") ? archTag(d.powerArch) : d.powerArch));
+        /* Phase 3 piece 2 (S38): the tag in the line is the Stance
+           label (dynasty only — redraft shows no tag). Magic-number /
+           swing-game math above is unchanged. */
+        if (!d.isRedraft && d.powerStance) magicParts.push(esc(d.powerStance));
         return {
           oddsLabel, oddsCol: col, oddsFrac: frac, oddsSub,
           powerBig, cpBig, frBig, isRedraft: !!d.isRedraft, gradesCell, tickerChart, stockMain, stockNote,
@@ -22090,10 +22110,12 @@ window.drDraft = {
              power rank, record, league name — and nothing else. The
              format-descriptor chips (Dynasty · Superflex · PPR …) are
              no longer printed on the bars; the format still drives
-             everything internally and still shows in the league detail. */
+             everything internally and still shows in the league detail.
+             Phase 3 piece 2 (S41): the rank slot is the Current Power
+             rank (snap.powerRank took CP meaning in S42). */
           const subBits = [];
           if (s.record) subBits.push(esc(s.record));
-          if (s.powerRank != null) subBits.push(`Power #${s.powerRank} of ${s.total || 12}`);
+          if (s.powerRank != null) subBits.push(`Current Power #${s.powerRank} of ${s.total || 12}`);
           subBits.push(esc(ff4CCLgLabel(s.leagueName, s.platform)));
           return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}">
             <div class="cc-rail-top"><span class="cc-rail-team">${esc(s.teamName || "Your team")}</span><span class="cc-rail-odds">${s.odds == null ? "—" : s.clinched ? "100%" : oddsPct(s.odds)}</span></div>
