@@ -5607,25 +5607,35 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         const taOf = t => (t.totalVal || 0) + (rdPower ? 0 : (t.picksVal || 0));
         const tas = DATA.teams.map(taOf);
         let simRes = null;
-        try {
-          let s = null;
-          if (typeof ff4CCFreshSim === "function") s = ff4CCFreshSim();
-          else if (window.SeasonSim && window.SeasonSim.results) s = window.SeasonSim;
-          /* Spot-manufactured sim (Phase 1 note): this build exists so
-             the OLD power formula above can read odds on a fresh
-             connect. It is MARKED degenerate, not removed: the
-             two-rankings engine (ffPhaseState().simDegenerate) never
-             lets it feed Stance or odds in the offseason — at
-             WEEKS_LEFT = 0 it is just final standings, not a forecast.
-             The old formula's read of it is intentionally untouched
-             in this phase. */
-          if (!s && typeof window.buildSeasonSim === "function" && DATA.teams.length === 12
-              && window.CONN_LEAGUE && DATA.league === window.CONN_LEAGUE.league) {
-            s = window.buildSeasonSim();
-            if (s && s.results && !window.SeasonSim) window.SeasonSim = s;
-          }
-          if (s && s.results) simRes = s.results;
-        } catch (e) { simRes = null; }
+        /* Degenerate-sim guard (defect fix, Nov 11): the same
+           ffPhaseState().simDegenerate marking the two-rankings
+           engine uses. When the phase gate says the sim is degenerate
+           (offseason / guest), the old formula must not read sim odds
+           at all — a 0-week sim's final standings are not a forecast,
+           and a week flip to one used to re-sort the power table off
+           those 0/1 odds. simRes stays null and the existing no-sim
+           fallback below prices the ranking. In-season the guard is
+           a no-op: the sim reads exactly as before. */
+        const ph = (typeof ffPhaseState === "function") ? ffPhaseState() : { simDegenerate: false };
+        if (!ph.simDegenerate) {
+          try {
+            let s = null;
+            if (typeof ff4CCFreshSim === "function") s = ff4CCFreshSim();
+            else if (window.SeasonSim && window.SeasonSim.results) s = window.SeasonSim;
+            /* Spot-manufactured sim (Phase 1 note): this build exists so
+               the OLD power formula above can read odds on a fresh
+               connect. It is MARKED degenerate, not removed: the
+               two-rankings engine (ffPhaseState().simDegenerate) never
+               lets it feed Stance or odds in the offseason — at
+               WEEKS_LEFT = 0 it is just final standings, not a forecast. */
+            if (!s && typeof window.buildSeasonSim === "function" && DATA.teams.length === 12
+                && window.CONN_LEAGUE && DATA.league === window.CONN_LEAGUE.league) {
+              s = window.buildSeasonSim();
+              if (s && s.results && !window.SeasonSim) window.SeasonSim = s;
+            }
+            if (s && s.results) simRes = s.results;
+          } catch (e) { simRes = null; }
+        }
         const haveOdds = !!simRes && DATA.teams.length > 0 && DATA.teams.every(t => { const r = simRes[t.rid]; return r && isFinite(r.playoff) && isFinite(r.champ); });
         if (haveOdds) {
           const pos = DATA.teams.map(t => simRes[t.rid].playoff), cps = DATA.teams.map(t => simRes[t.rid].champ);
@@ -5703,8 +5713,9 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          simDegenerate is true exactly when the phase is offseason or
          guest — the engine treats ANY sim as degenerate then, including
          the spot-manufactured one recomputeValues builds for the old
-         formula (its output is marked, not removed: the old power read
-         of it is intentionally untouched in this phase). */
+         formula (its output is marked, not removed; since the Nov 11
+         defect fix the old power formula gates it out too, via the
+         same simDegenerate check in recomputeValues). */
       window.ffPhaseState = function () {
         const lg = (typeof DATA !== "undefined" && DATA && DATA.league) || null;
         if (!lg) return { phase: "guest", weeksLeft: null, completedWeeks: 0, effWeek: null, leagueSeason: null, nflSeason: null, seasonType: null, projectionsNextSeason: false, simDegenerate: true, stanceQuiet: true, cpForecast: false, reason: "no league in DATA (guest stub)" };
