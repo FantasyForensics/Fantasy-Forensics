@@ -2812,7 +2812,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .cc-manage-row .cc-manage-name b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .cc-manage-row .cc-manage-name span { font-size: 12px; color: var(--ink-3); }
       .cc-manage-row .cc-hide { padding: 5px 10px; font-size: 12px; flex-shrink: 0; }
-      .cc-rail-it { text-align: left; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 12px 14px; background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.01)); color: var(--ink); font: inherit; cursor: pointer; width: 100%; }
+      .cc-rail-it { text-align: left; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 9px 12px; background: linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,.01)); color: var(--ink); font: inherit; cursor: pointer; width: 100%; }
       .cc-rail-it:hover, .cc-rail-it:focus-visible { border-color: rgba(0,229,255,.5); }
       .cc-rail-it.on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent), 0 0 12px rgba(198,255,0,.2); cursor: default; }
       .cc-rail-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
@@ -2863,7 +2863,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          .cc-tile-row + space-between layout let the nowrap count
          overflow a shrunken name cell and paint over the headshot. */
       .cc-wv-main { display: flex; flex-direction: column; gap: 1px; flex: 1 1 auto; min-width: 0; }
-      .cc-wv-row .t-name { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .cc-wv-row .t-name { font-weight: 700; min-width: 0; white-space: normal; overflow-wrap: break-word; }
       .cc-wv-row .t-meta { color: var(--ink-3); font-size: 12.5px; font-weight: 500; }
       .cc-wv-row .t-val { font-weight: 600; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
       .cc-power-grades { display: flex; justify-content: space-between; font-size: 17px; margin-top: 14px; }
@@ -2955,7 +2955,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         .cc-q-player { font-size: 14.5px; }
         .cc-q-issue { font-size: 13.5px; }
         .cc-queue-note { font-size: 13.5px; }
-        .cc-rail-it { padding: 10px 12px; }
+        .cc-rail-it { padding: 8px 10px; }
         .cc-rail-team { font-size: 14.5px; }
         .cc-rail-odds { font-size: 17px; }
         .cc-rail-sub { font-size: 12.5px; }
@@ -3532,6 +3532,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       #cc-out .cc3-strip { display: flex; flex-wrap: nowrap; border-top: 1px solid rgba(255,255,255,.14); border-bottom: 1px solid rgba(255,255,255,.14); margin-top: 9px; }
       #cc-out .cc3-ss { padding: 7px 12px 7px 0; margin-right: 12px; border-right: 1px solid rgba(255,255,255,.07); min-width: 0; }
       #cc-out .cc3-ss:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
+      #cc-out .cc3-ss[data-cc-grid-tool] { cursor: pointer; }
+      #cc-out .cc3-ss[data-cc-grid-tool]:hover { background: rgba(255,255,255,.05); }
+      #cc-out .cc3-ss[data-cc-grid-tool]:active { background: rgba(255,255,255,.09); }
+      #cc-out .cc3-ss[data-cc-grid-tool]:focus-visible { outline: 2px solid rgba(198,255,0,.5); outline-offset: -2px; }
       #cc-out .cc3-ss-stock { flex: 0 1 196px; }
       #cc-out .cc3-ss-stock .cc3-ss-sub { white-space: nowrap; }
       #cc-out .cc-chips { margin-top: 5px; }
@@ -3713,12 +3717,14 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .cc3-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.22); border-radius: 99px; }
       .cc3-scroll .cc-tile-rows { gap: 0; }
       #cc-out .cc3-scroll img.cc-radar-face, #cc-out .cc3-scroll img.cc-wv-face { width: 30px; height: 30px; }
-      .cc3-radar-scroll.scrolls { max-height: 156px; }
-      .cc3-radar-scroll .cc-radar-row { height: 39px; box-sizing: border-box; border-bottom: 1px solid rgba(255,255,255,.06); }
-      .cc3-radar-scroll .t-name { font-weight: 600; font-size: 13.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-      .cc3-radar-scroll .t-meta { color: var(--ink-3); font-size: 12.5px; font-weight: 500; }
+      /* Radar and Most Added share one tile box (Eric, 2026-11-10):
+         same scroll cap (4 rows), same 48px row — a min-height, so a
+         long name wrapping to two lines breathes instead of clipping;
+         one-line rows sit at exactly 48px in both sections. */
+      .cc3-radar-scroll.scrolls { max-height: 192px; }
+      .cc3-radar-scroll .cc-radar-row { min-height: 48px; box-sizing: border-box; border-bottom: 1px solid rgba(255,255,255,.06); }
       .cc3-added-scroll.scrolls { max-height: 192px; }
-      .cc3-added-scroll .cc-wv-row { height: 48px; box-sizing: border-box; border-bottom: 1px solid rgba(255,255,255,.06); }
+      .cc3-added-scroll .cc-wv-row { min-height: 48px; box-sizing: border-box; border-bottom: 1px solid rgba(255,255,255,.06); }
       /* Trade Ideas stream */
       #cc-out .cc3-ideas { cursor: pointer; border-top: 1px solid rgba(255,255,255,.09); }
       #cc-out .cc3-ideas .cc-tile-row { padding: 4px 2px 0; }
@@ -20733,6 +20739,19 @@ window.drDraft = {
         if (ck && ck !== "sleeper:" + String(lg.league_id)) return;
         go();
       }
+      /* Position-grade colors (Eric, 2026-11-10): the letter grades get a
+         green -> yellow -> red tier scale — A+ bright green, trailing down
+         through lime and yellow/amber to red at the bottom. ONE shared map
+         keyed by the grade string (the GRADE_LADDER steps + F); every
+         surface that renders these positional grades colors from here. */
+      const FF_GRADE_COLORS = {
+        "A+": "#2BFF5E", "A": "#4CE83F", "A-": "#74DE27",
+        "B+": "#9BD417", "B": "#C6E812", "B-": "#EBE70D",
+        "C+": "#FFD60A", "C": "#FFB020", "C-": "#FF8A3D",
+        "D+": "#FF6A30", "D": "#FF4A26", "D-": "#FF3324",
+        "F": "#E8002D"
+      };
+      function ffGradeColor(g) { return FF_GRADE_COLORS[g] || "inherit"; }
       function ff4CCPieces(idx, d) {
         const snap = (ff4.ccSnaps || {})[idx] || null;
         const tiles = [];
@@ -20746,7 +20765,7 @@ window.drDraft = {
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="odds" style="--tile-accent:#C6FF00"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div><div class="cc-tile-sub">${esc(oddsSub)}</div>${magicLine}</div></div>`);
         const powerBig = d.powerRank == null ? "—" : `#${d.powerRank} of ${d.total}`;
         let powerExtra = "";
-        if (d.powerGrades) powerExtra += `<div class="cc-power-grades">${["QB", "RB", "WR", "TE"].map(pos => `<span>${pos} <b>${esc(d.powerGrades[pos])}</b></span>`).join("")}</div>`;
+        if (d.powerGrades) powerExtra += `<div class="cc-power-grades">${["QB", "RB", "WR", "TE"].map(pos => `<span>${pos} <b style="color:${ffGradeColor(d.powerGrades[pos])}">${esc(d.powerGrades[pos])}</b></span>`).join("")}</div>`;
         const archBits = [];
         if (d.powerCoreAge != null) archBits.push(`Core age ${d.powerCoreAge}`);
         if (d.powerArch) archBits.push((typeof archTag === "function") ? archTag(d.powerArch) : d.powerArch);
@@ -20802,9 +20821,18 @@ window.drDraft = {
            leaving eight tiles in the grid. */
         let watchBody = "";
         if (Array.isArray(d.radarWatch) && d.radarWatch.length) {
+          /* Unified tile presentation (Eric, 2026-11-10): Radar rows
+             take Most Added's tile box — same face class, same row
+             box, name in the same .cc-wv-main block. Per Eric's
+             addendum the same day, the pos · team descriptor line is
+             REMOVED from Radar tiles (it crowded the name; people
+             know these players) — final Radar tile stack: headshot +
+             full player name, nothing else. (The opportunity reason
+             sentence was never part of this tile; it lives on the
+             Radar tab's cards.) Data and ranking untouched. */
           watchBody = `<div class="cc-tile-rows">` + d.radarWatch.map(w => {
-            const face = (typeof window.hsImg === "function") ? window.hsImg({ id: w.id }, "cc-radar-face") : "";
-            return `<div class="cc-radar-row">${face}<span class="t-name">${esc(w.name)} <span class="t-meta">${esc(w.pos)} · ${esc(w.team || "")}</span></span></div>`;
+            const face = (typeof window.hsImg === "function") ? window.hsImg({ id: w.id }, "cc-wv-face") : "";
+            return `<div class="cc-radar-row cc-wv-row">${face}<span class="cc-wv-main"><span class="t-name">${esc(w.name)}</span></span></div>`;
           }).join("") + `</div>`;
         } else {
           watchBody = `<p class="cc-tile-sub">No Radar flags on the wire this week.</p>`;
@@ -20854,7 +20882,7 @@ window.drDraft = {
            composes them without recomputing anything. The tiles
            array above is still built for the record but no longer
            rendered. */
-        const gradesCell = d.powerGrades ? ["QB", "RB", "WR", "TE"].map(pos => `<span class="cc3-gr"><i>${pos}</i><b>${esc(d.powerGrades[pos])}</b></span>`).join("") : "";
+        const gradesCell = d.powerGrades ? ["QB", "RB", "WR", "TE"].map(pos => `<span class="cc3-gr"><i>${pos}</i><b style="color:${ffGradeColor(d.powerGrades[pos])}">${esc(d.powerGrades[pos])}</b></span>`).join("") : "";
         let stockMain = "", stockNote = "";
         if (d.ticker && d.ticker.sums && d.ticker.sums.length >= 2) {
           const wp0b = (d.tickerWk && typeof d.tickerWk.pct === "number") ? d.tickerWk.pct : null;
@@ -20973,10 +21001,10 @@ window.drDraft = {
             <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
           </div><div class="cc-spot-actions"><button type="button" class="cc-manage cc-refresh" id="cc-refresh" data-cc-refresh="1"${ff4.ccRefreshing ? " disabled" : ""}>${ff4.ccRefreshing ? `<span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Refreshing…` : "↻ Refresh"}</button></div></div>
           <div class="cc3-strip" id="cc3-strip">
-            <div class="cc3-ss cc3-ss-odds"><div class="cc3-ss-k">Playoff Odds</div><div class="cc3-ss-v" style="color:${P.oddsCol}">${esc(P.oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(P.oddsFrac * 100)}%;background:${P.oddsCol}"></div></div><div class="cc3-ss-sub">${esc(P.oddsSub)}</div></div>
-            <div class="cc3-ss cc3-ss-pow"><div class="cc3-ss-k">Power Rank</div><div class="cc3-ss-v">${esc(P.powerBig)}</div></div>
-            ${P.gradesCell ? `<div class="cc3-ss cc3-ss-grd"><div class="cc3-ss-k">Grades</div><div class="cc3-ss-v cc3-grades">${P.gradesCell}</div></div>` : ""}
-            <div class="cc3-ss cc3-ss-stock cc3-ss-stk"><div class="cc3-ss-k">Stock</div><div class="cc3-ss-stockline">${P.tickerChart ? `<span class="cc3-ss-chart">${P.tickerChart}</span>` : ""}<span class="cc3-ss-v">${P.stockMain}</span></div><div class="cc3-ss-sub">${esc(P.teamValueText)}${P.stockNote ? ` · ${esc(P.stockNote)}` : ""}</div></div>
+            <div class="cc3-ss cc3-ss-odds" data-cc-grid-tool="odds" role="button" tabindex="0"><div class="cc3-ss-k">Playoff Odds</div><div class="cc3-ss-v" style="color:${P.oddsCol}">${esc(P.oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(P.oddsFrac * 100)}%;background:${P.oddsCol}"></div></div><div class="cc3-ss-sub">${esc(P.oddsSub)}</div></div>
+            <div class="cc3-ss cc3-ss-pow" data-cc-grid-tool="power" role="button" tabindex="0"><div class="cc3-ss-k">Power Rank</div><div class="cc3-ss-v">${esc(P.powerBig)}</div></div>
+            ${P.gradesCell ? `<div class="cc3-ss cc3-ss-grd" data-cc-grid-tool="power" role="button" tabindex="0"><div class="cc3-ss-k">Grades</div><div class="cc3-ss-v cc3-grades">${P.gradesCell}</div></div>` : ""}
+            <div class="cc3-ss cc3-ss-stock cc3-ss-stk" data-cc-grid-tool="teamport" role="button" tabindex="0"><div class="cc3-ss-k">Stock</div><div class="cc3-ss-stockline">${P.tickerChart ? `<span class="cc3-ss-chart">${P.tickerChart}</span>` : ""}<span class="cc3-ss-v">${P.stockMain}</span></div><div class="cc3-ss-sub">${esc(P.teamValueText)}${P.stockNote ? ` · ${esc(P.stockNote)}` : ""}</div></div>
             <div class="cc3-ss cc3-ss-ms">${ccMSBar}</div>
           </div>
           ${P.magicLine ? `<p class="cc3-magic">${P.magicLine}</p>` : ""}`;
@@ -21013,7 +21041,7 @@ window.drDraft = {
           try { if (typeof ff4RenderCCLA === "function") ff4RenderCCLA(); } catch (e) {}
         }
         const rb2 = spot.querySelector("[data-cc-refresh]"); if (rb2) rb2.addEventListener("click", () => ff4CCRefresh());
-        [spot, spot2El, slipEl].forEach(root => { if (!root) return; root.querySelectorAll("[data-cc-grid-tool]").forEach(b => b.addEventListener("click", () => ff4CCGoTool(idx, b.dataset.ccGridTool))); });
+        [spot, spot2El, slipEl].forEach(root => { if (!root) return; root.querySelectorAll("[data-cc-grid-tool]").forEach(b => { b.addEventListener("click", () => ff4CCGoTool(idx, b.dataset.ccGridTool)); if (b.tagName !== "BUTTON") b.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ff4CCGoTool(idx, b.dataset.ccGridTool); } }); }); });
         /* The Trade Ideas stream keeps the old tile's whole-block
            destination (Player Targets) on top of its footer link. */
         const ideasEl = document.getElementById("cc3-ideas");
@@ -21282,11 +21310,18 @@ window.drDraft = {
           const lg = leagues[i]; const s = ff4.ccSnaps[i]; const on = ff4.ccFocus === i;
           if (!s) return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}"><div class="cc-rail-top"><span class="cc-rail-team cc-loading">Loading…</span></div><div class="cc-rail-lg">${esc(ff4CCLgLabel(lg.name, ff4CCPlatform(lg)))}</div></button>`;
           if (s.failed) return `<button type="button" class="cc-rail-it" data-cc-open="${i}"><div class="cc-rail-top"><span class="cc-rail-team">Couldn't load</span></div><div class="cc-rail-lg">${esc(ff4CCLgLabel(s.leagueName, s.platform))} — tap to open it in full</div></button>`;
+          /* Slim league bars (Eric, 2026-11-10): team name, playoff %,
+             power rank, record, league name — and nothing else. The
+             format-descriptor chips (Dynasty · Superflex · PPR …) are
+             no longer printed on the bars; the format still drives
+             everything internally and still shows in the league detail. */
+          const subBits = [];
+          if (s.record) subBits.push(esc(s.record));
+          if (s.powerRank != null) subBits.push(`Power #${s.powerRank} of ${s.total || 12}`);
+          subBits.push(esc(ff4CCLgLabel(s.leagueName, s.platform)));
           return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}">
             <div class="cc-rail-top"><span class="cc-rail-team">${esc(s.teamName || "Your team")}</span><span class="cc-rail-odds">${s.odds == null ? "—" : s.clinched ? "100%" : oddsPct(s.odds)}</span></div>
-            <div class="cc-rail-sub">${esc(s.record || "")} · Power #${s.powerRank} of ${s.total || 12}</div>
-            <div class="cc-rail-lg">${esc(ff4CCLgLabel(s.leagueName, s.platform))}</div>
-            <div class="cc-chips">${(s.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
+            <div class="cc-rail-sub">${subBits.join(" · ")}</div>
           </button>`;
         }).join("") : ff4CCRailEmptyNote(tab, pr, leagues);
         rail.innerHTML = `<div class="cc-rail-h">Your leagues · by playoff odds</div>` + list;
@@ -21334,9 +21369,14 @@ window.drDraft = {
           Object.values(ff4.ccSnaps || {}).forEach(s => { if (s && s.tuneItems) tuneV.push(...s.tuneItems); });
           tuneV = tuneV.filter(t => visQ.has(t.idx)).sort((a, b) => b.gain - a.gain);
         }
-        const rowHtml = it => `<button type="button" class="cc-queue-it${it.cat === "tune" ? " tune" : ""}" data-cc-open="${it.idx}" title="${esc(it.player)} — ${esc(it.issue)}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></button>`;
+        /* Rows are plain text, not buttons (Eric, 2026-11-10): tapping
+           a player name here used to load that player's league — that
+           league-switch is removed. Leagues are switched from the
+           league bars at the bottom of the Command Center, nowhere
+           else in this panel. The .static row style (already in the
+           stylesheet) carries the non-interactive presentation. */
+        const rowHtml = it => `<div class="cc-queue-it static${it.cat === "tune" ? " tune" : ""}" title="${esc(it.player)} — ${esc(it.issue)}"><span class="cc-q-player">${esc(it.player)}</span><span class="cc-q-issue ${it.cls}">${esc(it.issue)}</span><span class="cc-q-where">${esc(it.teamName)} · ${esc(ff4CCLgLabel(it.leagueName, it.platform))}</span></div>`;
         const wire = () => {
-          q.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
           ff4CCQueueCap(q);
         };
         if (!itemsV.length) {
