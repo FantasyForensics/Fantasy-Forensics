@@ -5611,6 +5611,14 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           let s = null;
           if (typeof ff4CCFreshSim === "function") s = ff4CCFreshSim();
           else if (window.SeasonSim && window.SeasonSim.results) s = window.SeasonSim;
+          /* Spot-manufactured sim (Phase 1 note): this build exists so
+             the OLD power formula above can read odds on a fresh
+             connect. It is MARKED degenerate, not removed: the
+             two-rankings engine (ffPhaseState().simDegenerate) never
+             lets it feed Stance or odds in the offseason — at
+             WEEKS_LEFT = 0 it is just final standings, not a forecast.
+             The old formula's read of it is intentionally untouched
+             in this phase. */
           if (!s && typeof window.buildSeasonSim === "function" && DATA.teams.length === 12
               && window.CONN_LEAGUE && DATA.league === window.CONN_LEAGUE.league) {
             s = window.buildSeasonSim();
@@ -5633,7 +5641,392 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         }
         DATA.teams.sort((a, b) => b.power - a.power || b.rosOpt - a.rosOpt || b.starterVal - a.starterVal || b.pf - a.pf);
         DATA.teams.forEach((t, i) => { t.powerRank = i + 1; });
+        /* Two-rankings engine (Phase 1, dual-run): compute the new fields
+           alongside the old power above; nothing displays them yet. */
+        try { if (typeof ffComputeTwoRankings === "function") ffComputeTwoRankings(); } catch (e) {}
       }
+
+      /* ================= Two-rankings engine (Phase 1, dual-run) =================
+         Computes Current Power (Recipe A), Franchise Value, the re-based
+         franchise tag and Trade Stance ALONGSIDE the old power/arch.
+         Nothing displays these fields yet (phase 3) and nothing old is
+         retired: t.power / t.powerRank / t.arch / slpExpl keep computing
+         exactly as before; the new fields live beside them on each team:
+           t.cpScore, t.cpRank (+ t.cpForecast in preseason)
+           t.frPlayers, t.frPicks, t.frTotal, t.frRank, t.frTag (dynasty only)
+           t.stanceBand, t.stanceLabel, t.stanceWillingness, t.stanceLean,
+           t.stanceOdds, t.sellableInventory, t.buyerCapacity (+Pct)
+         The engine never throws: every step is guarded so a missing sim,
+         a missing matchup fetch or a missing helper leaves fields null
+         instead of breaking the page. Recompute triggers: recomputeValues
+         (every format/league change), the matchup fetch landing
+         (ffKickMatchupPts), and every sim landing (setConnectedLeague /
+         __ffOnSchedule). */
+      const FF_PEAKS = { QB: 31, RB: 26, WR: 28, TE: 28 };
+      const FF_STANCE_LABELS = { buyer: "Buyer", bubble: "Holding", seller: "Seller", maximal: "Maximal Seller" };
+      function ffPctile(vals, x) { return 100 * vals.filter(v => v <= x).length / Math.max(vals.length, 1); }
+      function ffParseRecord(rec) {
+        const m = /(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?/.exec(String(rec || ""));
+        if (!m) return { w: 0, l: 0, t: 0, games: 0, winPct: 0 };
+        const w = +m[1], l = +m[2], t = m[3] ? +m[3] : 0, games = w + l + t;
+        return { w, l, t, games, winPct: games ? (w + 0.5 * t) / games : 0 };
+      }
+      function ffCompletedWeeks() {
+        let n = 0;
+        try { (DATA.teams || []).forEach(t => { n = Math.max(n, ffParseRecord(t.record).games); }); } catch (e) {}
+        return n;
+      }
+      /* Live Sleeper NFL state, for the phase gate. Two sources, both
+         already fetched by the site: the boot-time state/nfl fetch
+         (stashed on window.__ffNflState) and the connect-time slpState.
+         (slpState is a const in a later script — the typeof read is
+         wrapped because it throws while that binding is uninitialised.) */
+      function ffNflState() {
+        try { if (window.__ffNflState && window.__ffNflState.season != null) return window.__ffNflState; } catch (e) {}
+        try {
+          if (typeof slpState !== "undefined" && slpState && slpState.season != null)
+            return { season: slpState.season, seasonType: slpState.seasonType || null, season_type: slpState.seasonType || null, week: slpState.week || null };
+        } catch (e) {}
+        return null;
+      }
+      /* Phase gate (Phase 1 decision, documented in phase-1-engine-log):
+         the projections-flip signal is the Sleeper NFL state season vs
+         the league's season, plus season_type. "pre" = preseason (the
+         bake describes the coming season: Current Power returns as a
+         forecast, Stance stays quiet until real games are played).
+         "post", week >= 18, or the NFL state season past the league's
+         season = offseason (league finished/rolled: Current Power and
+         Stance are NOT computed, Franchise leads). WEEKS_LEFT = 0 on
+         its own does NOT mean offseason during weeks 15–17 (playoffs):
+         the sim still runs a bracket and the odds are live, so the
+         finished check is week >= 18 / season_type, not WEEKS_LEFT.
+         simDegenerate is true exactly when the phase is offseason or
+         guest — the engine treats ANY sim as degenerate then, including
+         the spot-manufactured one recomputeValues builds for the old
+         formula (its output is marked, not removed: the old power read
+         of it is intentionally untouched in this phase). */
+      window.ffPhaseState = function () {
+        const lg = (typeof DATA !== "undefined" && DATA && DATA.league) || null;
+        if (!lg) return { phase: "guest", weeksLeft: null, completedWeeks: 0, effWeek: null, leagueSeason: null, nflSeason: null, seasonType: null, projectionsNextSeason: false, simDegenerate: true, stanceQuiet: true, cpForecast: false, reason: "no league in DATA (guest stub)" };
+        const leagueSeason = Number(lg.season) || null;
+        const completedWeeks = ffCompletedWeeks();
+        let effWeek = null;
+        try { effWeek = (typeof ffEffWeek === "function") ? ffEffWeek() : Number(lg.week); } catch (e) { effWeek = Number(lg.week); }
+        const weeksLeft = Math.max(0, 15 - (effWeek || 0));
+        const st = ffNflState();
+        const nflSeason = st && st.season != null ? Number(st.season) : null;
+        const seasonType = st ? (st.seasonType || st.season_type || null) : null;
+        let phase, projectionsNextSeason = false, reason = "";
+        if (seasonType === "pre") { phase = "preseason"; projectionsNextSeason = true; reason = "Sleeper season_type=pre — projections describe the coming season"; }
+        else if (nflSeason != null && leagueSeason != null && nflSeason > leagueSeason) { phase = "offseason"; reason = "NFL state season " + nflSeason + " is past league season " + leagueSeason + " (league unrolled)"; }
+        else if (seasonType === "post" || (effWeek != null && effWeek >= 18)) { phase = "offseason"; reason = "season finished (season_type=post / week>=18)"; }
+        else if (effWeek != null && effWeek >= 15) { phase = "playoffs"; reason = "weeks 15-17"; }
+        else { phase = "in-season"; reason = "regular season"; }
+        return { phase, weeksLeft, completedWeeks, effWeek, leagueSeason, nflSeason, seasonType, projectionsNextSeason, simDegenerate: (phase === "offseason" || phase === "guest"), stanceQuiet: (phase === "offseason" || phase === "guest" || phase === "preseason"), cpForecast: (phase === "preseason"), reason };
+      };
+      /* All-play win% + expected wins for EVERY team, from per-week
+         matchup points — the same beaten/denominator math as MS's
+         msApFromPts (which computes it for one team only). pts is
+         { rid: { week: points } }; periods is the completed-week list. */
+      function ffApFromPts(pts, periods) {
+        const rids = Object.keys(pts || {});
+        const winPct = {}, expWins = {}, formAvg = {};
+        if (!rids.length) return { winPct, expWins, formAvg, weeks: 0 };
+        rids.forEach(r => {
+          let beaten = 0, played = 0;
+          periods.forEach(w => {
+            const mine = pts[r][w];
+            if (mine == null) return;
+            let cnt = 0;
+            rids.forEach(o2 => {
+              if (o2 === r || pts[o2][w] == null) return;
+              cnt++;
+              if (mine > pts[o2][w]) beaten += 1;
+              else if (mine === pts[o2][w]) beaten += 0.5;
+            });
+            if (cnt) played++;
+          });
+          const denom = played * (rids.length - 1);
+          winPct[r] = denom ? (beaten / denom) * 100 : null;
+          expWins[r] = (rids.length - 1) ? beaten / (rids.length - 1) : null;
+          const last3 = periods.slice(-3).map(w => pts[r][w]).filter(v => v != null);
+          formAvg[r] = last3.length ? last3.reduce((s, v) => s + v, 0) / last3.length : null;
+        });
+        return { winPct, expWins, formAvg, weeks: periods.length };
+      }
+      /* First-man-up bench depth: best bench player's ROS per-game
+         projection at each of QB/RB/WR/TE, summed. Bench = roster
+         minus the optimal-lineup set; rosScore is the same per-game
+         Sleeper-only ROS rate rosOpt is built from. */
+      function ffBenchDepth(t) {
+        try {
+          const lu = rosOptimalLineup(t.playerIds || []);
+          const startIds = new Set((lu.lineup || []).map(l => l.p && l.p.id).filter(Boolean));
+          const best = { QB: 0, RB: 0, WR: 0, TE: 0 };
+          (t.playerIds || []).forEach(id => {
+            if (startIds.has(id)) return;
+            const p = (typeof PBY !== "undefined") ? PBY[id] : null;
+            if (!p || !(p.pos in best)) return;
+            const r = (typeof rosScore === "function") ? rosScore(p) : 0;
+            if (r > best[p.pos]) best[p.pos] = r;
+          });
+          return best.QB + best.RB + best.WR + best.TE;
+        } catch (e) { return 0; }
+      }
+      function ffNullStance(t) {
+        t.stanceBand = null; t.stanceLabel = null; t.stanceWillingness = null;
+        t.stanceLean = null; t.stanceOdds = null;
+        t.sellableInventory = null; t.buyerCapacity = null; t.buyerCapacityPct = null;
+      }
+      window.ffComputeTwoRankings = function () {
+        try {
+          const teams = (typeof DATA !== "undefined" && DATA.teams) || [];
+          if (!teams.length) return;
+          const rd = (typeof VALMODE !== "undefined" && VALMODE === "redraft");
+          const hasRosters = teams.some(t => Array.isArray(t.playerIds) && t.playerIds.length);
+          const ph = (typeof ffPhaseState === "function") ? ffPhaseState() : { phase: "in-season", weeksLeft: 99, completedWeeks: 9, simDegenerate: false, stanceQuiet: false, cpForecast: false };
+          const n = teams.length;
+          const completed = ph.completedWeeks || 0;
+          /* Early-season shrinkage (same pattern as the stance lock):
+             inside the early season (few completed weeks, n ≤ 6 —
+             the lock's week ≤ ~6) the all-play/form terms shrink
+             toward the median with n/(n+3); with 0 completed weeks
+             both sit at the median. Past the early season (n > 6)
+             the terms run unshrunk — the D74 acceptance table was
+             built unshrunk, and the brief scopes the shrinkage to
+             the early season. */
+          const shrink = completed <= 6 ? completed / (completed + 3) : 1;
+          /* ---- Franchise Value (dynasty only; redraft: no fields) ---- */
+          teams.forEach(t => {
+            if (rd) { t.frPlayers = null; t.frPicks = null; t.frTotal = null; t.frRank = null; t.frTag = null; }
+            else { t.frPlayers = t.totalVal || 0; t.frPicks = t.picksVal || 0; t.frTotal = t.frPlayers + t.frPicks; }
+          });
+          if (!rd) {
+            [...teams].sort((a, b) => (b.frTotal - a.frTotal) || ((b.frPlayers || 0) - (a.frPlayers || 0)) || ((b.rosOpt || 0) - (a.rosOpt || 0)))
+              .forEach((t, i) => { t.frRank = i + 1; });
+            /* Franchise tags live year-round (value + core age both exist
+               in the offseason) — re-based on Franchise rank, via the
+               same assignment the connect flow runs. */
+            if (typeof slpFrTag === "function") teams.forEach(t => { try { t.frTag = slpFrTag(t, teams); } catch (e) {} });
+          }
+          /* ---- Offseason / guest / no rosters: CP + Stance quiet ---- */
+          if (ph.phase === "offseason" || ph.phase === "guest" || !hasRosters) {
+            teams.forEach(t => { t.cpScore = null; t.cpRank = null; t.cpForecast = null; ffNullStance(t); });
+            return;
+          }
+          /* ---- Current Power, Recipe A (approved): 50% optimal-lineup
+             ROS projection + 25% all-play win% + 15% last-3 scoring +
+             10% bench depth, all as site percentiles (ties full weight),
+             roundPower rounding, 0–100. Picks count zero; odds are NOT
+             inputs. All-play/form terms shrink toward the median with
+             n/(n+3), n = completed weeks (0 weeks → both sit at 50).
+             Matchup data comes from the cached weekly-points fetch
+             (ffKickMatchupPts); until it lands both terms sit at the
+             median and the next recompute corrects them. ---- */
+          const mp = window.__ffMatchPts;
+          let apWin = null, apExp = null, formAvg = null;
+          if (mp && mp.pts && mp.weeks && mp.weeks.length) {
+            const ap = ffApFromPts(mp.pts, mp.weeks);
+            apWin = ap.winPct; apExp = ap.expWins; formAvg = ap.formAvg;
+          }
+          const rosVals = teams.map(t => t.rosOpt || 0);
+          const depthVals = teams.map(t => ffBenchDepth(t));
+          teams.forEach((t, i) => { t._ffDepth = depthVals[i]; });
+          const apVals = teams.map(t => (apWin && apWin[String(t.rid)] != null) ? apWin[String(t.rid)] : 50);
+          const formValsRaw = teams.map(t => (formAvg && formAvg[String(t.rid)] != null) ? formAvg[String(t.rid)] : null);
+          const formMedian = (() => { const vs = formValsRaw.filter(v => v != null).sort((a, b) => a - b); return vs.length ? vs[Math.floor(vs.length / 2)] : 0; })();
+          const formVals = formValsRaw.map(v => v == null ? formMedian : v);
+          teams.forEach(t => {
+            const pRos = ffPctile(rosVals, t.rosOpt || 0);
+            const pAp = ffPctile(apVals, (apWin && apWin[String(t.rid)] != null) ? apWin[String(t.rid)] : 50);
+            const pForm = ffPctile(formVals, (formAvg && formAvg[String(t.rid)] != null) ? formAvg[String(t.rid)] : formMedian);
+            const pDepth = ffPctile(depthVals, t._ffDepth);
+            const eAp = 50 + (pAp - 50) * shrink;
+            const eForm = 50 + (pForm - 50) * shrink;
+            t.cpScore = roundPower(0.50 * pRos + 0.25 * eAp + 0.15 * eForm + 0.10 * pDepth);
+            t.cpForecast = !!ph.cpForecast;
+            delete t._ffDepth;
+          });
+          [...teams].sort((a, b) => (b.cpScore - a.cpScore) || ((b.rosOpt || 0) - (a.rosOpt || 0)) || ((b.starterVal || 0) - (a.starterVal || 0)) || ((b.pf || 0) - (a.pf || 0)))
+            .forEach((t, i) => { t.cpRank = i + 1; });
+          /* ---- Stance: three separate fields, never blended ---- */
+          const valOf = p => rd ? (p.rdValue != null ? p.rdValue : p.value) : p.value;
+          const youngVal = [], sellInv = {};
+          teams.forEach(t => {
+            let tot = 0, old = 0, young = 0;
+            (t.playerIds || []).forEach(id => {
+              const p = (typeof PBY !== "undefined") ? PBY[id] : null;
+              if (!p) return;
+              const v = valOf(p) || 0;
+              tot += v;
+              if ((p.age ?? 0) >= (FF_PEAKS[p.pos] ?? 28)) old += v;
+              else young += v;
+            });
+            sellInv[String(t.rid)] = tot > 0 ? old / tot : 0;
+            youngVal.push(young);
+            t._ffYoung = young;
+          });
+          const pickVals = teams.map(t => t.picksVal || 0);
+          /* Sim odds — the ONE shared run, gated by the same freshness
+             fingerprint the old formula uses; degenerate in the
+             offseason (phase gate), so a finished season's final
+             standings can never classify anyone. */
+          let simRes = null;
+          if (!ph.simDegenerate) {
+            try {
+              let s = null;
+              if (typeof ff4CCFreshSim === "function") s = ff4CCFreshSim();
+              else if (window.SeasonSim && window.SeasonSim.results) s = window.SeasonSim;
+              if (s && s.results) simRes = s.results;
+            } catch (e) { simRes = null; }
+          }
+          const haveSim = !!simRes && teams.every(t => { const r = simRes[t.rid]; return r && isFinite(r.playoff); });
+          const pfVals = teams.map(t => t.pf || 0);
+          let actWeek = ph.effWeek || 99;
+          try { if (typeof wkActiveWeek === "function") actWeek = wkActiveWeek(); } catch (e) {}
+          const early = actWeek <= 6;
+          teams.forEach(t => {
+            if (ph.stanceQuiet) { ffNullStance(t); return; }
+            t.sellableInventory = sellInv[String(t.rid)];
+            const capPct = rd
+              ? ffPctile(youngVal, t._ffYoung)
+              : 0.7 * ffPctile(pickVals, t.picksVal || 0) + 0.3 * ffPctile(youngVal, t._ffYoung);
+            t.buyerCapacityPct = Math.round(capPct * 10) / 10;
+            t.buyerCapacity = capPct < (100 / 3) ? "limited" : capPct < (200 / 3) ? "moderate" : "strong";
+            delete t._ffYoung;
+            if (!haveSim) {
+              /* No-sim fallback (lock): sub-.400 record ⇒ Seller;
+                 no evidence ⇒ NOT a seller (Holding). Never a
+                 Maximal from record alone. */
+              const rec = ffParseRecord(t.record);
+              t.stanceOdds = null;
+              if (rec.games > 0 && rec.winPct < 0.400) { t.stanceBand = "seller"; t.stanceWillingness = "seller"; }
+              else { t.stanceBand = "bubble"; t.stanceWillingness = "bubble"; }
+              t.stanceLean = null;
+              t.stanceLabel = FF_STANCE_LABELS[t.stanceBand];
+              return;
+            }
+            const r = simRes[t.rid];
+            const odds = r.playoff, elim = !!r.elim, clinched = !!r.clinched;
+            t.stanceOdds = odds;
+            /* Bubble resolution: PF/all-play trajectory + luck gap.
+               Luck = all-play expected wins − actual wins. Inputs
+               shrink n/(n+3) early (same pattern as Current Power).
+               Seller's-trap override: strongly-negative luck
+               (≤ −1.5 wins) on a top-half PF scorer ⇒ lean Buyer. */
+            const pfPct = ffPctile(pfVals, t.pf || 0);
+            const effPfPct = 50 + (pfPct - 50) * shrink;
+            const rec = ffParseRecord(t.record);
+            const apW = (apWin && apWin[String(t.rid)] != null) ? apWin[String(t.rid)] : null;
+            const luck = (apExp && apExp[String(t.rid)] != null) ? (apExp[String(t.rid)] - rec.w) * shrink : null;
+            const topHalfPf = effPfPct >= 50;
+            const recWorse = apW != null && (rec.winPct * 100) < apW;
+            const recBetter = apW != null && (rec.winPct * 100) > apW;
+            let lean = null;
+            if (luck != null && luck <= -1.5 && topHalfPf) lean = "buyer";
+            else if (topHalfPf || recWorse) lean = "buyer";
+            else if (!topHalfPf && recBetter) lean = "seller";
+            t.stanceLean = lean;
+            /* Bands: ≥70% Buyer (or clinched), 35–70% Bubble,
+               <35% Seller, <10% or eliminated Maximal Seller.
+               2pp deadband at the 35/70 edges (no-persistence
+               hysteresis): Buyer needs ≥72%, Seller needs <33%.
+               Early season (week ≤6): bubble widened — Seller
+               <20% (deadband <18%), Maximal <12%. */
+            const hi = 0.72;
+            const lo = early ? 0.18 : 0.33;
+            const maxLo = early ? 0.12 : 0.10;
+            let band;
+            if (clinched || odds >= hi) band = "buyer";
+            else if (elim || odds < maxLo) band = "maximal";
+            else if (odds < lo) band = "seller";
+            else band = "bubble";
+            t.stanceBand = band;
+            t.stanceWillingness = band === "bubble" ? (lean ? "bubble-" + lean : "bubble") : band;
+            t.stanceLabel = FF_STANCE_LABELS[band];
+          });
+        } catch (e) { /* the engine never breaks the page */ }
+      };
+      /* Weekly matchup points for the connected league, cached for the
+         engine (all-play + last-3 form). Same source MS's msKickAp
+         uses — Sleeper /matchups/{w} per completed week (Sleeper) or
+         the connect-time schedule payload (ESPN) — fetched once per
+         league; the engine recomputes when it lands. Until it lands,
+         the all-play/form terms sit at the median (honest, not
+         fabricated). */
+      window.__ffMatchPts = null;
+      let ffMatchBusy = false;
+      window.ffKickMatchupPts = function () {
+        try {
+          const C = window.CONN_LEAGUE;
+          if (!C || window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE) return;
+          if (ffMatchBusy) return;
+          const completed = ffCompletedWeeks();
+          if (!completed) return;
+          if (C.platform === "sleeper") {
+            const key = "sleeper:" + C.leagueId;
+            const cached = window.__ffMatchPts;
+            if (cached && cached.key === key && cached.weeks && cached.weeks.length >= completed) return;
+            if (typeof slpGet !== "function") return;
+            ffMatchBusy = true;
+            (async () => {
+              try {
+                const lg = await slpGet("/league/" + C.leagueId).catch(() => null);
+                const regEnd = ((lg && lg.settings && Number(lg.settings.playoff_week_start)) || 15) - 1;
+                const last = Math.max(1, Math.min(completed, regEnd));
+                const weeks = [];
+                for (let w = 1; w <= last; w++) weeks.push(w);
+                const per = {};
+                await Promise.all(weeks.map(async w => { per[w] = await slpGet("/league/" + C.leagueId + "/matchups/" + w).catch(() => null); }));
+                const pts = {};
+                weeks.forEach(w => { (per[w] || []).forEach(en => { if (en && en.roster_id != null && typeof en.points === "number") (pts[String(en.roster_id)] = pts[String(en.roster_id)] || {})[w] = en.points; }); });
+                window.__ffMatchPts = { key, pts, weeks };
+                if (typeof ffComputeTwoRankings === "function") ffComputeTwoRankings();
+              } catch (e) {}
+              finally { ffMatchBusy = false; }
+            })();
+          } else if (C.platform === "espn") {
+            const key = "espn:" + C.leagueId;
+            const cached = window.__ffMatchPts;
+            if (cached && cached.key === key) return;
+            let raw = null;
+            try { if (typeof espnState !== "undefined" && espnState && espnState.leagueId === C.leagueId) raw = espnState.raw; } catch (e) {}
+            if (!raw || !Array.isArray(raw.schedule)) return;
+            const pts = {}, periodSet = {};
+            raw.schedule.forEach(m => {
+              if (!m || !m.home || !m.away) return;
+              const hp = m.home.totalPoints, ap2 = m.away.totalPoints;
+              if (typeof hp !== "number" || typeof ap2 !== "number") return;
+              if (!(m.winner === "HOME" || m.winner === "AWAY") && !(hp > 0 || ap2 > 0)) return;
+              const p = m.matchupPeriodId;
+              periodSet[p] = true;
+              (pts[String(m.home.teamId)] = pts[String(m.home.teamId)] || {})[p] = hp;
+              (pts[String(m.away.teamId)] = pts[String(m.away.teamId)] || {})[p] = ap2;
+            });
+            const weeks = Object.keys(periodSet).map(Number).sort((a, b) => a - b).filter(w => w <= completed);
+            window.__ffMatchPts = { key, pts, weeks };
+            if (typeof ffComputeTwoRankings === "function") ffComputeTwoRankings();
+          }
+        } catch (e) {}
+      };
+      /* Readiness for the verification harness: every team has a Current
+         Power score and a Stance band, and (Sleeper) the weekly-points
+         cache for this league has landed so the all-play/form terms are
+         real, not median placeholders. */
+      window.ffTwoRankingsReady = function () {
+        try {
+          const teams = (typeof DATA !== "undefined" && DATA.teams) || [];
+          if (!teams.length) return false;
+          if (!teams.every(t => t.cpScore != null)) return false;
+          if (!teams.every(t => t.stanceBand != null)) return false;
+          const C = window.CONN_LEAGUE;
+          if (C && C.platform === "sleeper") {
+            const mp = window.__ffMatchPts;
+            if (!mp || mp.key !== ("sleeper:" + C.leagueId) || !mp.weeks || !mp.weeks.length) return false;
+          }
+          return true;
+        } catch (e) { return false; }
+      };
       function renderScoringChips() {
         const s = SETTINGS;
         const chips = [
@@ -12433,6 +12826,26 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         if (t.powerRank > third) return "crossroads";
         return ca && ca.delta < 0 ? "dynasty" : "win-now";
       }
+      /* Franchise tag (Phase 1 re-base): slpArch's exact shape, but
+         thirds of FRANCHISE rank instead of blended-power rank; the
+         top third still splits on the core-age delta (young core →
+         dynasty, older core → win-now). Dynasty only — redraft has no
+         Franchise fields, so it returns null there (and when the
+         Franchise rank hasn't been computed yet). slpArch is untouched:
+         the old tag keeps computing off the old power rank until the
+         phase-3 display sweep retires it. */
+      function slpFrTag(t, all) {
+        if ((typeof VALMODE !== "undefined" && VALMODE === "redraft") || t.frRank == null) return null;
+        const n = all.length;
+        const third = Math.max(1, Math.ceil(n / 3));
+        const ca = slpCoreAge(t);
+        t.coreAge = ca ? Math.round(ca.coreAge * 10) / 10 : null;
+        t.corePeak = ca ? Math.round(ca.corePeak * 10) / 10 : null;
+        t.coreAgeDelta = ca ? Math.round(ca.delta * 100) / 100 : null;
+        if (t.frRank > n - third) return "rebuilder";
+        if (t.frRank > third) return "crossroads";
+        return ca && ca.delta < 0 ? "dynasty" : "win-now";
+      }
       function slpExpl(t, arch, user) {
         const recM = /(\d+)-(\d+)/.exec(t.record || "");
         const recW = recM ? +recM[1] : 0, recL = recM ? +recM[2] : 0;
@@ -12631,6 +13044,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           if (!rebuilt || rebuilt.schedKey !== want) return;
           window.SIM_BY_LEAGUE.conn = rebuilt;
           window.SeasonSim = rebuilt;
+          try { if (typeof window.ffComputeTwoRankings === "function") window.ffComputeTwoRankings(); } catch (e) {}
           restampPickTiers();
           rebuilt.renderSeason();
           renderPower();
@@ -12668,7 +13082,13 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         applyLeagueProjections("conn");
         window.OPP6 = C.opp6 || null;
         recomputeValues();
-        DATA.teams.forEach(t => { t.arch = slpArch(t, DATA.teams); t.expl = slpExpl(t, t.arch); });
+        /* Phase 1 assignment point (S7/S8): the franchise tag is
+           assigned here beside the old arch — demo/guest leagues flow
+           through this same connect path, so their teams get stance +
+           both ranks at runtime too. The weekly-points fetch for the
+           engine's all-play/form terms kicks off here as well. */
+        DATA.teams.forEach(t => { t.arch = slpArch(t, DATA.teams); t.expl = slpExpl(t, t.arch); if (typeof slpFrTag === "function") { try { t.frTag = slpFrTag(t, DATA.teams); } catch (e) {} } });
+        try { if (typeof window.ffKickMatchupPts === "function") window.ffKickMatchupPts(); } catch (e) {}
         const simKey = "conn:" + (C.league.id || C.league.name);
         if (window.SIM_BY_LEAGUE && window.SIM_BY_LEAGUE._key !== simKey) {
           delete window.SIM_BY_LEAGUE.conn;
@@ -12691,6 +13111,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         } catch (e) {}
         if (window.SIM_BY_LEAGUE.conn) {
           window.SeasonSim = window.SIM_BY_LEAGUE.conn;
+          try { if (typeof window.ffComputeTwoRankings === "function") window.ffComputeTwoRankings(); } catch (e) {}
           restampPickTiers();
           window.SeasonSim.renderSeason();
           if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
@@ -12708,6 +13129,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
                 if (!window.SIM_BY_LEAGUE.conn) window.SIM_BY_LEAGUE.conn = window.buildSeasonSim();
                 if (window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE) return;
                 window.SeasonSim = window.SIM_BY_LEAGUE.conn;
+                try { if (typeof window.ffComputeTwoRankings === "function") window.ffComputeTwoRankings(); } catch (e) {}
                 restampPickTiers();
                 window.SeasonSim.renderSeason();
                 renderPower();
@@ -12878,7 +13300,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           if (!slpState.season) {
             try {
               const st = await slpGet("/state/nfl");
-              if (st && st.season) { slpState.season = Number(st.season); slpState.week = st.display_week || st.week || null; }
+              if (st && st.season) { slpState.season = Number(st.season); slpState.week = st.display_week || st.week || null; slpState.seasonType = st.season_type || null; }
             } catch (e) { /* fall through to defaults */ }
             if (!slpState.season) slpState.season = 2026;
           }
@@ -16860,6 +17282,10 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           fetch("https://api.sleeper.app/v1/state/nfl")
             .then(function (r) { return r.json(); })
             .then(function (st) {
+              /* Stash the live NFL state for the two-rankings phase
+                 gate (ffPhaseState): season vs league season is the
+                 projections-flip signal. */
+              try { if (st) window.__ffNflState = st; } catch (e) {}
               if (st && st.season_type === "pre") document.body.classList.add("offseason");
             })
             .catch(function () {});
@@ -24190,7 +24616,15 @@ window.MS_FROZEN_ROS = {"10226":{"rec":1.615,"rec_td":0.133,"rec_yds":20.135,"ru
       const n = teams.length;
       const rd = o.format === "redraft";
       const subs = {}, active = {};
-      if (me.powerRank != null) { subs.roster = msPctFromRank(me.powerRank, n); active.roster = true; }
+      /* Roster factor re-based (Phase 1, audit S53/Q1 answer: Current
+         Power rank — the projection-based strength the factor intends;
+         it exists in both formats, and the redraft frozen-rank
+         override below keeps working on top of it). Falls back to the
+         old powerRank only when Current Power hasn't been computed
+         (e.g. guest mode), so Manager Score never changes meaning
+         silently. */
+      const cpRankForMs = (me.cpRank != null) ? me.cpRank : me.powerRank;
+      if (cpRankForMs != null) { subs.roster = msPctFromRank(cpRankForMs, n); active.roster = true; }
       if (rd) {
         const fr = msFrozenRank(teams, me);
         if (fr != null) { subs.roster = msPctFromRank(fr, n); active.roster = true; }
