@@ -5601,14 +5601,15 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          A literal "0%" is reserved for a true zero: a team the sim has
          mathematically eliminated (its result object carries elim:true
          and a stored probability of exactly 0).
-         The ceiling mirrors the floor: no percentage ever reads "100%".
-         A sim can run a team through all 3,000 finishes without a
-         miss and still not be certain — injuries and chaos aren't in
-         the model — so anything that would round to 100 displays as
-         "99%". The only label stronger than 99% is "Clinched", and
-         that comes from the standings math, never from the sim count;
+         The ceiling mirrors the floor: a percentage reads "100%" only
+         for a mathematical clinch. A sim can run a team through all
+         3,000 finishes without a miss and still not be certain —
+         injuries and chaos aren't in the model — so anything that
+         would round to 100 displays as "99%" unless the standings
+         math has locked the berth up (the engine's clinched flag;
          see playoffLabel below and the clinch test in the season
-         engine. Title odds use this same ceiling: a championship is
+         engine). A sim sweep alone never earns the 100. Title odds
+         keep the 99% ceiling unconditionally: a championship is
          never clinched before it's won. */
       function oddsPct(x) {
         if (x == null || isNaN(x)) return "—";
@@ -5617,12 +5618,17 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         const v = Math.round(x * 100);
         return (v >= 100 ? 99 : v) + "%";
       }
-      /* Playoff-odds label for a sim result object: "Clinched" when
-         the result carries the engine's mathematical-clinch flag,
-         the capped percentage otherwise. */
+      /* Playoff-odds label for a sim result object (Eric, 2026-11-10):
+         the real extremes show as numbers — "100%" when the result
+         carries the engine's mathematical-clinch flag, "0%" when it
+         carries the mathematical-elimination flag; the capped
+         percentage otherwise. Both flags come from the standings
+         math in the season engine, never from the sim count. */
       function playoffLabel(res) {
         if (!res) return "—";
-        return res.clinched ? "Clinched" : oddsPct(res.playoff);
+        if (res.clinched) return "100%";
+        if (res.elim) return "0%";
+        return oddsPct(res.playoff);
       }
       /* Conditional title odds — the headline title number everywhere.
          The engine decomposes title odds as P(playoffs) × P(win the
@@ -8471,7 +8477,7 @@ ${rdP ? "" : `
         el.innerHTML = `<div class="strip-card">
           <div class="strip-main">
             <div class="strip-title">Your team — ${esc(t.name)}</div>
-            <div class="strip-sub">Power rank <strong>#${t.powerRank} of ${DATA.teams.length}</strong>${rdStrip ? "" : ` · ${archTag(t.arch)}`} · ${esc(t.record)} · Roster value <strong>${fmt(rdStrip ? totDispS : t.totalVal)}</strong> (#${valRank} in the league) · Starters <strong>${fmt(rdStrip ? stDispS : t.starterVal)}</strong>${rdStrip ? "" : ` · Pick capital <strong>${fmt(t.picksVal)}</strong>`}${ss ? ` · This season: <strong>${oddsPct(ss.playoff)}</strong> playoffs · <strong>${oddsPct(ss.champ)}</strong> title` : ""}</div>
+            <div class="strip-sub">Power rank <strong>#${t.powerRank} of ${DATA.teams.length}</strong>${rdStrip ? "" : ` · ${archTag(t.arch)}`} · ${esc(t.record)} · Roster value <strong>${fmt(rdStrip ? totDispS : t.totalVal)}</strong> (#${valRank} in the league) · Starters <strong>${fmt(rdStrip ? stDispS : t.starterVal)}</strong>${rdStrip ? "" : ` · Pick capital <strong>${fmt(t.picksVal)}</strong>`}${ss ? ` · This season: <strong>${playoffLabel(ss)}</strong> playoffs · <strong>${oddsPct(ss.champ)}</strong> title` : ""}</div>
           </div>
           <button class="strip-btn" id="strip-go" type="button">See your team vs the league →</button>
         </div>`;
@@ -9087,7 +9093,7 @@ ${rdP ? "" : `
              random pairings: if fewer than FIELD rivals can reach w wins
              at all, no combination of remaining results can push team
              i out of the playoff field. Only a team passing this test may
-             display "Clinched"; a perfect 3,000-for-3,000 sim run
+             display "100%"; a perfect 3,000-for-3,000 sim run
              alone earns only the display layer's 99% cap. */
           const clinched = baseW.map((w, i) =>
             baseW.filter((ow, j) => j !== i && ow + WEEKS_LEFT >= w).length < FIELD);
@@ -9462,7 +9468,7 @@ ${rdP ? "" : `
             <li><strong>Availability &amp; role.</strong> The projection accounts for expected availability — a player set to miss time projects for fewer games — and leans toward his role where role and production disagree: when a projection and the prior disagree wildly, usage leads points. Players who haven’t appeared in a game yet are discounted heavily: a backup’s projection is mostly the chance he plays.</li>
             <li><strong>Team projection.</strong> Each week, a team fields its optimal lineup under this league’s own starter slots, by rest-of-season PPG. That sum is the team’s projected score — typically a little above its actual scoring pace, because real managers don’t set a perfect lineup every week.</li>
             <li><strong>The simulation.</strong> 3,000 simulated finishes. For a connected league, each remaining week (${DATA.league.week}–14) plays the league's actual remaining schedule — the same opponents in every finish, with each score drawn around the team's projection with a realistic week-to-week spread. Where a league's real schedule isn't available to read, that league's pairings are drawn at random instead, so its odds carry a little more noise. The first of those weeks is priced from this week’s actual weekly projections — the same ESPN/Rotowire numbers behind the Lineup tab, bye weeks and all — while every later week uses the rest-of-season projection; if a week’s projections aren’t published yet, that week falls back to the rest-of-season number. That spread is measured from this league’s actual weekly scores, not guessed. Standings seed by wins, then total points; the top ${FIELD} make the playoffs (Weeks 15–17${FIELD === 6 ? ", top two seeds bye" : ""}, bracket reseeds).</li>
-            <li><strong>Title odds.</strong> Title odds are never counted directly from the sims — a longshot's true chance sits far below what 3,000 finishes can resolve by counting, so counting manufactures zeros. Instead they decompose: title odds = playoff odds × the probability of winning the bracket once in. That bracket term is priced from team strength — the single-game win probability against the likely playoff field under the same scoring model, ${FIELD === 6 ? "over the two wins a bye team needs or the three everyone else needs (the bye share itself comes from the sims' top-2 finishes, a common event the sims estimate well)" : "over the wins a plain single-elimination bracket of this size requires"}. The product is coherent by construction: never above the playoff odds, and never zero while the playoff odds aren't. On screen the headline title number is the bracket term itself — the chance of winning it all if the team makes the playoffs — with the overall product shown as the secondary figure; the 99% display ceiling applies to both terms. A team is shown 0% only when it is mathematically eliminated — at least ${FIELD} rivals already own more wins than it can reach by winning out, with every other result and tiebreak breaking its way. Short of elimination, a sub-1% chance displays as &lt;1%. The mirror test runs at the top: a team has clinched when, even if it loses out and loses every points tiebreak, fewer than ${FIELD} rivals can still reach its win total — that team displays “Clinched” rather than a percentage. Nothing else displays above 99%, for playoff or title odds alike: a team that survives all 3,000 simulated finishes without being mathematically locked in is capped at 99%, because the sim prices games, not injuries or chaos.</li>
+            <li><strong>Title odds.</strong> Title odds are never counted directly from the sims — a longshot's true chance sits far below what 3,000 finishes can resolve by counting, so counting manufactures zeros. Instead they decompose: title odds = playoff odds × the probability of winning the bracket once in. That bracket term is priced from team strength — the single-game win probability against the likely playoff field under the same scoring model, ${FIELD === 6 ? "over the two wins a bye team needs or the three everyone else needs (the bye share itself comes from the sims' top-2 finishes, a common event the sims estimate well)" : "over the wins a plain single-elimination bracket of this size requires"}. The product is coherent by construction: never above the playoff odds, and never zero while the playoff odds aren't. On screen the headline title number is the bracket term itself — the chance of winning it all if the team makes the playoffs — with the overall product shown as the secondary figure; the 99% display ceiling applies to both terms. A team is shown 0% only when it is mathematically eliminated — at least ${FIELD} rivals already own more wins than it can reach by winning out, with every other result and tiebreak breaking its way. Short of elimination, a sub-1% chance displays as &lt;1%. The mirror test runs at the top: a team has clinched when, even if it loses out and loses every points tiebreak, fewer than ${FIELD} rivals can still reach its win total — that team displays 100%. Nothing else displays above 99%: title odds never pass 99% at all, and a team that survives all 3,000 simulated finishes without being mathematically locked in is capped at 99%, because the sim prices games, not injuries or chaos.</li>
             <li><strong>Playoff schedule difficulty (Weeks 15–17).</strong> The fantasy bracket isn't set yet, but the NFL half of every playoff matchup already is. Each defense is graded by the fantasy points it has allowed per game to each position (this season's results, in the snapshot's scoring, from Sleeper's actual weekly stats against each player's real opponent that week — the same points-allowed computation behind the strength-of-schedule factors). Every team's projected starters are then matched against the defenses they'll face in Weeks 15, 16 and 17 of the real NFL schedule, and the rating is the mean softness of those starter-weeks (one per starter, Weeks 15–17; rank 1 = softest defense, 32 = stingiest). It grades the schedule, not the bracket: who you draw in the fantasy playoffs still depends on seeding, but the defenses your players run into don't.</li>
             <li><strong>Trade impact.</strong> Title-odds swings on Player Targets and in the calculator come from paired simulations run before and after the deal under identical conditions, so the delta reflects the trade, not simulation noise — though the absolute odds still carry roughly ±2pp of sampling noise at 3,000 runs, so small title-odds moves should be read as ties. Draft picks don’t change 2026 odds — they change future seasons, which is the dynasty engine’s department.</li>
           </ul>`; }
@@ -14882,7 +14888,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         const pct = x => oddsPct(x);
         const me = s.me;
         const odds = s.playoff != null
-          ? `<button type="button" class="mt-stat" data-mt-go="${lg.id}:season"><span class="mt-lbl">Playoff odds</span><span class="mt-big">${s.clinched ? "Clinched" : pct(s.playoff)}</span><span class="mt-sub2">Title if in ${s.titleIfIn} · ${pct(s.champ)} overall · ${s.expWins.toFixed(1)} exp. wins</span></button>`
+          ? `<button type="button" class="mt-stat" data-mt-go="${lg.id}:season"><span class="mt-lbl">Playoff odds</span><span class="mt-big">${s.clinched ? "100%" : pct(s.playoff)}</span><span class="mt-sub2">Title if in ${s.titleIfIn} · ${pct(s.champ)} overall · ${s.expWins.toFixed(1)} exp. wins</span></button>`
           : s.simPending
             ? `<div class="mt-stat"><span class="mt-lbl">Playoff odds</span><span class="mt-big mt-pending">Simulating…</span><span class="mt-sub2">The 3,000-sim outlook is running for this league</span></div>`
             : `<div class="mt-stat"><span class="mt-lbl">Playoff odds</span><span class="mt-big">—</span><span class="mt-sub2">${s.simNA === "size" ? `The sim is calibrated for 12-team leagues — this one has ${s.total}` : "The sim couldn't be built for this league"}</span></div>`;
@@ -20272,7 +20278,7 @@ window.drDraft = {
         const frac = d.odds == null ? 0 : Math.max(0, Math.min(1, d.odds));
         const col = frac >= 0.65 ? "#C6FF00" : frac >= 0.35 ? "#00E5FF" : "#FF2E88";
         const C = 2 * Math.PI * 54;
-        const label = d.odds == null ? "—" : playoffLabel({ playoff: d.odds, clinched: d.clinched });
+        const label = d.odds == null ? "—" : playoffLabel({ playoff: d.odds, clinched: d.clinched, elim: d.elim });
         return `<div class="cc-ring"><svg width="132" height="132" viewBox="0 0 132 132" role="img" aria-label="Playoff odds ${esc(label)}"><circle cx="66" cy="66" r="54" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="10"/><circle cx="66" cy="66" r="54" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(frac * C).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 66 66)"/></svg><div class="cc-ring-c"><div class="cc-ring-num${label.length > 4 ? " sm" : ""}">${esc(label)}</div><div class="cc-ring-lab">Playoff odds</div></div></div>`;
       }
 
@@ -20323,7 +20329,7 @@ window.drDraft = {
         const tiles = [];
         const frac = d.odds == null ? 0 : Math.max(0, Math.min(1, d.odds));
         const col = frac >= 0.65 ? "#C6FF00" : frac >= 0.35 ? "#00E5FF" : "#FF2E88";
-        const oddsLabel = d.clinched ? "Clinched" : (d.odds == null ? "—" : oddsPct(d.odds));
+        const oddsLabel = d.clinched ? "100%" : (d.odds == null ? "—" : oddsPct(d.odds));
         const oddsSub = d.elim ? "Eliminated from the playoffs" : d.clinched ? "Playoff spot locked up" : (d.odds == null ? "Odds unavailable for this format" : "Chance at the playoffs");
         let magicLine = "";
         if (d.magic && !d.magic.locked && !d.magic.capped) magicLine = `<div class="cc-tile-sub">Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"} (${oddsPct(d.magic.pct)} playoff odds)</div>`;
@@ -20868,7 +20874,7 @@ window.drDraft = {
           if (!s) return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}"><div class="cc-rail-top"><span class="cc-rail-team cc-loading">Loading…</span></div><div class="cc-rail-lg">${esc(ff4CCLgLabel(lg.name, ff4CCPlatform(lg)))}</div></button>`;
           if (s.failed) return `<button type="button" class="cc-rail-it" data-cc-open="${i}"><div class="cc-rail-top"><span class="cc-rail-team">Couldn't load</span></div><div class="cc-rail-lg">${esc(ff4CCLgLabel(s.leagueName, s.platform))} — tap to open it in full</div></button>`;
           return `<button type="button" class="cc-rail-it${on ? " on" : ""}" data-cc-focus="${i}" aria-pressed="${on}">
-            <div class="cc-rail-top"><span class="cc-rail-team">${esc(s.teamName || "Your team")}</span><span class="cc-rail-odds">${s.odds == null ? "—" : s.clinched ? "Clinched" : oddsPct(s.odds)}</span></div>
+            <div class="cc-rail-top"><span class="cc-rail-team">${esc(s.teamName || "Your team")}</span><span class="cc-rail-odds">${s.odds == null ? "—" : s.clinched ? "100%" : oddsPct(s.odds)}</span></div>
             <div class="cc-rail-sub">${esc(s.record || "")} · Power #${s.powerRank} of ${s.total || 12}</div>
             <div class="cc-rail-lg">${esc(ff4CCLgLabel(s.leagueName, s.platform))}</div>
             <div class="cc-chips">${(s.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
