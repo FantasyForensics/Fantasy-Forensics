@@ -10297,7 +10297,9 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
          Eric's rule: play/no-play calls should use the freshest
          weekly projections, not a Tuesday bake. When a Sleeper
          connect completes or a saved session restores (both funnel
-         through slpLoadLeague, which calls ffLiveProjEnsure), and
+         through slpLoadLeague, which calls ffLiveProjEnsure), when
+         an ESPN connect completes (espnConnect fires the same
+         pool-keyed pull), and
          again on Command Center Refresh (forced), pull the current
          week's projections from Sleeper's projections API — the same
          Rotowire feed the SLEEPER_STATS bake comes from, days
@@ -13025,7 +13027,49 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           throw new Error("espn " + r.status);
         }
         if (!body || !Array.isArray(body.teams) || !body.teams.length) throw new Error("notfound");
+        /* Transactions ride along on the payload (see
+           espnGetTransactions): every consumer of this fetch —
+           the builder, League Activity, the Wire — reads them
+           off the league it already holds. */
+        body.transactions = await espnGetTransactions(leagueId, season, Number(body.scoringPeriodId) || 0);
         return body;
+      }
+
+      /* Completed transactions (Nov 2026): ESPN serves them only
+         through its second transactions view — one scoring period
+         per call, type-filtered by header. (The plain
+         mTransactions view named in older docs returns nothing
+         to anyone; verified live against an in-season public
+         league, Nov 10, 2026: mTransactions2 + scoringPeriodId +
+         the filter header returns real executed moves, no login.)
+         The last three periods are fetched — enough for the
+         two-week activity window; history beyond that stays
+         ESPN-side, which is fine: the feed shows what exists.
+         Best-effort throughout: any failure leaves the list
+         empty and the league itself loads exactly as before. */
+      async function espnGetTransactions(leagueId, season, curPeriod) {
+        const out = [];
+        try {
+          const filter = JSON.stringify({ transactions: { filterType: { value: ["FREEAGENT", "WAIVER", "TRADE_ACCEPT"] } } });
+          const last = Math.max(1, curPeriod || 1);
+          const periods = [];
+          for (let p = last; p >= Math.max(1, last - 2); p--) periods.push(p);
+          const pages = await Promise.all(periods.map(async p => {
+            try {
+              const r = await fetch(`${ESPN_API}/seasons/${season}/segments/0/leagues/${leagueId}?view=mTransactions2&scoringPeriodId=${p}`, { headers: { "x-fantasy-filter": filter } });
+              if (!r.ok) return [];
+              const b = await r.json();
+              return (b && Array.isArray(b.transactions)) ? b.transactions : [];
+            } catch (e) { return []; }
+          }));
+          const seen = new Set();
+          pages.forEach(pg => pg.forEach(tx => {
+            const id = tx && tx.id != null ? String(tx.id) : null;
+            if (id) { if (seen.has(id)) return; seen.add(id); }
+            out.push(tx);
+          }));
+        } catch (e) { /* transactions are best-effort */ }
+        return out;
       }
 
       /* ESPN scoring statIds -> points (the spike's verified core set):
@@ -13188,6 +13232,108 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         return Object.keys(out).length ? out : null;
       }
 
+      /* ---- Transactions: names, normalization, the Wire ----
+         A transaction's items reference players by ESPN id only,
+         so names resolve against the league payload itself: every
+         rostered player, plus the player page the league response
+         carries (recent movers who are free agents now). The
+         crosswalk runs once per player here, so consumers get the
+         pool id alongside the name. */
+      function espnTxNameMap(raw) {
+        const map = new Map();
+        const put = pl => {
+          if (!pl || pl.id == null) return;
+          const k = String(pl.id);
+          if (!map.has(k)) map.set(k, { name: pl.fullName || null, sid: espnMapPlayer(pl) });
+        };
+        ((raw && raw.teams) || []).forEach(t => {
+          ((t.roster && t.roster.entries) || []).forEach(e => put(e.playerPoolEntry && e.playerPoolEntry.player));
+        });
+        ((raw && raw.players) || []).forEach(en => put(en && en.player));
+        return map;
+      }
+
+      /* Executed waiver / free-agent / trade rows, normalized to
+         {id, type, created, teamId, bid, adds[], drops[], moves[],
+         teams} with each item carrying its resolved name + pool
+         id. Anything malformed is skipped, never thrown — one bad
+         transaction must not break a league load. */
+      function espnTxList(raw) {
+        const names = espnTxNameMap(raw);
+        const teamName = {};
+        ((raw && raw.teams) || []).forEach(t => { teamName[t.id] = t.name || ("Team " + t.id); });
+        const out = [];
+        ((raw && raw.transactions) || []).forEach(tx => {
+          try {
+            if (!tx || tx.status !== "EXECUTED") return;
+            if (tx.type !== "WAIVER" && tx.type !== "FREEAGENT" && tx.type !== "TRADE_ACCEPT" && tx.type !== "TRADE") return;
+            const created = [tx.processDate, tx.acceptedDate, tx.proposedDate]
+              .map(Number).find(v => isFinite(v) && v > 0) || 0;
+            const rec = {
+              id: String(tx.id || ""), type: tx.type, created,
+              teamId: tx.teamId != null ? Number(tx.teamId) : null,
+              bid: Number(tx.bidAmount) > 0 ? Number(tx.bidAmount) : null,
+              adds: [], drops: [], moves: [], teams: teamName,
+            };
+            (tx.items || []).forEach(it => {
+              if (!it || it.playerId == null) return;
+              const info = names.get(String(it.playerId)) || {};
+              const r = {
+                espnId: String(it.playerId), name: info.name || null, sid: info.sid || null,
+                from: it.fromTeamId != null ? Number(it.fromTeamId) : null,
+                to: it.toTeamId != null ? Number(it.toTeamId) : null,
+              };
+              if (it.type === "ADD") rec.adds.push(r);
+              else if (it.type === "DROP") rec.drops.push(r);
+              else if (it.type !== "LINEUP") rec.moves.push(r);
+            });
+            if (rec.adds.length || rec.drops.length || rec.moves.length) out.push(rec);
+          } catch (e) { /* one bad transaction never breaks the feed */ }
+        });
+        return out;
+      }
+
+      /* The Wire's league items for an ESPN league — the same
+         {cat, head, when} shape slpWireItems makes for Sleeper,
+         in the same voice: waiver claims (with FAAB and the drop)
+         and trades; plain free-agent signings stay off the wire,
+         exactly as Sleeper free_agent moves do. */
+      function espnWireItems(raw, week) {
+        const whenOf = ts => {
+          if (!ts) return "Week " + week;
+          const d = Math.floor((Date.now() - ts) / 86400000);
+          return d <= 0 ? "today" : d === 1 ? "1d ago" : d + "d ago";
+        };
+        const items = [];
+        espnTxList(raw).sort((a, b2) => (b2.created || 0) - (a.created || 0)).forEach(tx => {
+          try {
+            const teamOf = rid => (tx.teams && tx.teams[rid]) || "A team";
+            if (tx.type === "WAIVER") {
+              if (!tx.adds.length) return;
+              const a0 = tx.adds[0];
+              items.push({
+                cat: "WAIVER",
+                head: `${teamOf(tx.teamId)} claims ${a0.name || "a player"} off waivers${tx.bid ? " — $" + tx.bid + " FAAB" : ""}${tx.drops.length ? ", drops " + (tx.drops[0].name || "a player") : ""}`,
+                when: whenOf(tx.created),
+              });
+            } else if (tx.type === "TRADE_ACCEPT" || tx.type === "TRADE") {
+              const legs = [...tx.moves, ...tx.adds].filter(r => r.to != null && r.to !== 0 && r.from != null && r.from !== 0);
+              if (!legs.length) return;
+              const rids = [...new Set(legs.map(r => r.to))];
+              if (rids.length < 2) return;
+              const got = rid => legs.filter(r => r.to === rid).map(r => r.name || "a player");
+              const a = got(rids[0]), b2 = got(rids[1]);
+              items.push({
+                cat: "TRADE",
+                head: `${teamOf(rids[1])} acquires ${b2.join(", ") || "assets"} from ${teamOf(rids[0])} for ${a.join(", ") || "assets"}`,
+                when: whenOf(tx.created),
+              });
+            }
+          } catch (e) { /* one bad transaction never breaks the wire */ }
+        });
+        return items.slice(0, 8);
+      }
+
       /* Shape the combined ESPN response into the {league, teams}
          contract setLeague consumes — same shape buildConnLeague makes
          for Sleeper, plus platform/leagueId/proj for the ESPN branches. */
@@ -13334,9 +13480,9 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         };
         return {
           league: meta, teams, opp6: espnOppMap(raw, week), espnFuturePairs: espnFuturePairs(raw, week), format: fmt,
-          wireItems: [], username: null, today,
+          wireItems: espnWireItems(raw, week), username: null, today,
           platform: "espn", leagueId: String(leagueId), proj, leagueType: espnLeagueType(settings), stubs: espnStubs,
-          degraded: ["transactions", "picks"],
+          degraded: ["picks"],
         };
       }
 
@@ -13466,7 +13612,21 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           setConnectedLeague();
           slpClose();
           ffTrackConnect("espn");
-          try { window.__ffSavedRecord({ platform: "espn", leagueId: String(espnState.leagueId), name: espnState.name || null, season: espnState.season || null }); } catch (e) { /* saved leagues are best-effort */ }
+          /* Live-projections parity (Nov 2026): Sleeper sessions
+             pull fresh weekly projections at connect; ESPN
+             connects fire the same pool-keyed pull (it keys off
+             the shared player pool, not the platform), so an ESPN
+             session no longer runs on the Tuesday bake until a
+             manual refresh. Silent on failure — the baked
+             projections stay the fallback — and it never touches
+             dynasty values. */
+          try { ffLiveProjEnsure(false); } catch (e) { /* projections are best-effort */ }
+          /* The saved record carries yourRid — the visitor's ESPN
+             team id (a team ID, not a credential) — the way Sleeper
+             records carry the username, so the league can silently
+             reconnect on the next visit and the Manager Score
+             light pass can score it. Browse connects save null. */
+          try { window.__ffSavedRecord({ platform: "espn", leagueId: String(espnState.leagueId), name: espnState.name || null, season: espnState.season || null, yourRid: espnState.yourRid != null ? Number(espnState.yourRid) : null }); } catch (e) { /* saved leagues are best-effort */ }
           /* Landing (Eric, 2026-10-27): a fresh ESPN entry from the
              dialog's pick-your-team step (landCommand) lands on
              Command Center, same as a fresh Sleeper entry. Stored
@@ -13477,12 +13637,18 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             activateNav("command");
             window.scrollTo({ top: 0 });
           }
+          return true;
         } catch (e) {
           if (staged) { try { slpDisconnect(); } catch (e2) { /* best effort */ } }
+          /* Quiet connects (the saved-league silent restore) fail
+             silently: no dialog, no error — the entry stays one
+             click away in the menu. */
+          if (opts && opts.quiet) return false;
           const ov = slpEl("slp-overlay");
           if (ov && ov.hidden) { ov.hidden = false; document.body.style.overflow = "hidden"; }
           slpShowStep("espn");
           slpError("That league loaded but couldn't be read — try again; if it keeps failing, this league's format may not be supported yet.");
+          return false;
         }
       }
 
@@ -13600,6 +13766,35 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         } catch (e) { return false; }
       };
 
+      /* Silent ESPN restore (Nov 2026): a saved ESPN entry carries
+         the visitor's team id (yourRid — a team ID, not a login),
+         so a return visit reconnects with zero clicks, exactly
+         like Sleeper's quiet path: fetch the league, apply it as
+         that team, never open the dialog. Any failure resolves
+         false and the entry stays one click away in the menu, on
+         the pick-your-team step as before. */
+      window.__ffReconnectEspnSilent = async function (entry) {
+        try {
+          if (!entry || entry.yourRid == null) return false;
+          const lid = String(entry.leagueId || "");
+          if (!lid) return false;
+          let raw = null;
+          const seasons = [];
+          [entry.season, 2026, 2025].forEach(s => { if (s != null && !seasons.includes(Number(s))) seasons.push(Number(s)); });
+          for (const season of seasons) {
+            try { raw = await espnGetLeague(lid, season); break; }
+            catch (e) { if (e.message !== "notfound") return false; }
+          }
+          if (!raw) return false;
+          espnState.raw = raw;
+          espnState.leagueId = lid;
+          espnState.yourRid = null;
+          espnState.name = null;
+          espnState.connected = false;
+          return espnConnect(Number(entry.yourRid), { quiet: true }) === true;
+        } catch (e) { return false; }
+      };
+
       /* ---- Profile-menu data hooks (identity-first menu, 2026-10-24) --
          The saved-leagues layer renders the header profile menu; it
          reads the connected league's key (for the "Connected" mark)
@@ -13695,6 +13890,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           };
           if (!c.platform || !c.leagueId) return null;
           if (c.platform === "sleeper") c.username = e.username ? String(e.username).trim() : null;
+          /* ESPN's counterpart to the Sleeper username: the
+             visitor's team id in the league (a team ID, never a
+             credential), persisted so the league can silently
+             reconnect and be scored between visits. */
+          if (c.platform === "espn") c.yourRid = (e.yourRid != null && e.yourRid !== "" && isFinite(Number(e.yourRid))) ? Number(e.yourRid) : null;
           return c;
         }
         function cleanList(raw) {
@@ -13711,6 +13911,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             if (!keep.name) keep.name = other.name;
             if (keep.season == null) keep.season = other.season;
             if (keep.platform === "sleeper" && !keep.username) keep.username = other.username;
+            if (keep.platform === "espn" && keep.yourRid == null && other.yourRid != null) keep.yourRid = other.yourRid;
             byKey[k] = keep;
           });
           return order.map(function (k) { return byKey[k]; });
@@ -13823,6 +14024,18 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
              The successful load records itself, after its landing
              (slpLoadLeague) or after its apply (espnConnect). */
           if (entry.platform === "espn") {
+            if (!manual) {
+              /* Auto restore runs quiet, like Sleeper's: an entry
+                 carrying its team id reconnects silently; one
+                 without stays un-restored (never an uninvited
+                 dialog) and remains one click away in the menu. */
+              if (entry.yourRid != null && window.__ffReconnectEspnSilent) {
+                return window.__ffReconnectEspnSilent(entry)
+                  .then(function (ok) { return !!ok; })
+                  .catch(function () { return false; });
+              }
+              return Promise.resolve(false);
+            }
             if (window.__ffReconnectEspn) window.__ffReconnectEspn(entry.leagueId);
             return Promise.resolve(true);
           }
@@ -14214,12 +14427,17 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            its second chance from the top of the list. */
         var autoTriedKeys = {};
         /* Auto-connectable = the quiet path can land it with zero
-           clicks: a Sleeper entry carrying its username. ESPN
-           entries end at a pick-your-team step and entries saved
-           without a username cannot resolve — both stay one click
-           away in the menu, they just no longer veto the restore. */
+           clicks: a Sleeper entry carrying its username, or an
+           ESPN entry carrying its team id (yourRid, saved at
+           connect — a team ID, not a login). Entries saved
+           without one cannot resolve silently — both stay one
+           click away in the menu, they just no longer veto the
+           restore. */
         function autoConnectable(e) {
-          return !!e && e.platform === "sleeper" && !!e.username;
+          if (!e) return false;
+          if (e.platform === "sleeper") return !!e.username;
+          if (e.platform === "espn") return e.yourRid != null;
+          return false;
         }
         /* The restore candidate: the league this device last had
            selected (ff_last_league, written by record() on every
@@ -21236,12 +21454,15 @@ window.drDraft = {
          (the Trade Board UI and Needs You First category 7) and
          this feed — built from data the public API actually
          publishes — took the slot. Completed trades are NOT part
-         of this feed: Eric picked adds & drops. ESPN provides no
-         transactions feed to outside tools, so the feed covers
-         Sleeper leagues and degrades silently without them. The
-         pass mirrors the Command Center's light pass: per league,
-         fetch rosters/users plus the transaction buckets, build
-         the feed, sort newest first. */
+         of this feed: Eric picked adds & drops. ESPN leagues ride
+         the same pass (Nov 2026): their transactions come attached
+         to the league payload at fetch time (ESPN's second
+         transactions view, recent scoring periods only — a
+         thinner history than Sleeper's, shown as far back as it
+         goes), normalized through the same parser the Wire uses.
+         The pass mirrors the Command Center's light pass: per
+         league, fetch rosters/users plus the transaction buckets,
+         build the feed, sort newest first. */
       function ff4LAState() {
         if (!ff4.la) ff4.la = { loading: false, loaded: false, sig: "", items: [], failed: 0, checkedAt: null };
         return ff4.la;
@@ -21257,13 +21478,46 @@ window.drDraft = {
         const d = Math.floor(h / 24);
         return d === 1 ? "1d ago" : d + "d ago";
       }
+      /* The ESPN leagues this feed covers: the session's connected
+         ESPN league first, then every saved ESPN entry (its
+         transactions ride along on the fetch, so a saved league
+         contributes even before it is reconnected). Deduped by
+         league id, shaped like the Command Center's ESPN entry. */
+      function ff4LAEspnEntries() {
+        const out = [];
+        const seen = new Set();
+        const push = e => {
+          if (!e || e.leagueId == null) return;
+          const id = String(e.leagueId);
+          if (!id || seen.has(id)) return;
+          seen.add(id);
+          out.push({
+            kind: "espn", leagueId: id,
+            yourRid: e.yourRid != null ? e.yourRid : null,
+            name: e.name || null,
+            season: e.season != null && e.season !== "" ? Number(e.season) : null,
+          });
+        };
+        try { push(ff4CCEspnEntry()); } catch (e) { /* no ESPN session */ }
+        try {
+          const saved = (window.__ffSaved && window.__ffSaved.list) ? window.__ffSaved.list() : [];
+          saved.forEach(e => { if (e && e.platform === "espn") push(e); });
+        } catch (e) { /* saved layer is best-effort */ }
+        return out;
+      }
+      function ff4LAHasSources() {
+        const slp = (typeof slpState !== "undefined") ? slpState : null;
+        if (slp && slp.user && Array.isArray(slp.leagues) && slp.leagues.length) return true;
+        return ff4LAEspnEntries().length > 0;
+      }
       function ff4LAEnsure(force) {
         const la = ff4LAState();
         const slp = (typeof slpState !== "undefined") ? slpState : null;
         const user = slp && slp.user ? slp.user : null;
-        const leagues = slp && Array.isArray(slp.leagues) ? slp.leagues : [];
-        if (!user || !leagues.length) { ff4RenderLA(); ff4RenderCCLA(); return; }
-        const sig = user.user_id + "|" + leagues.map(l => l.league_id).join(",");
+        const leagues = (user && slp && Array.isArray(slp.leagues)) ? slp.leagues : [];
+        const espns = ff4LAEspnEntries();
+        if (!leagues.length && !espns.length) { ff4RenderLA(); ff4RenderCCLA(); return; }
+        const sig = (user ? user.user_id : "espnonly") + "|" + leagues.map(l => l.league_id).join(",") + "|E:" + espns.map(e => e.leagueId).join(",");
         if (!force && (la.loading || (la.loaded && la.sig === sig))) { ff4RenderLA(); ff4RenderCCLA(); return; }
         /* The loading flag flips BEFORE any render: the renderers
            call back into ff4LAEnsure when they find the feed
@@ -21275,6 +21529,10 @@ window.drDraft = {
           let failed = 0;
           for (let i = 0; i < leagues.length; i++) {
             try { items.push(...await ff4LALeague(leagues[i])); }
+            catch (e) { failed++; }
+          }
+          for (let i = 0; i < espns.length; i++) {
+            try { items.push(...await ff4LALeagueEspn(espns[i])); }
             catch (e) { failed++; }
           }
           items.sort((a, b) => (b.created || 0) - (a.created || 0));
@@ -21320,12 +21578,59 @@ window.drDraft = {
             if (seen.has(key)) return;
             seen.add(key);
             out.push({
-              leagueId: String(lg.league_id), leagueName: lg.name || "League",
+              platform: "sleeper", leagueId: String(lg.league_id), leagueName: lg.name || "League",
               kind, pid: String(pid), team: teamOf[rid] || ("Team " + rid), created: tx.created
             });
           };
           Object.entries(tx.adds || {}).forEach(([pid, rid]) => push(pid, rid, "add"));
           Object.entries(tx.drops || {}).forEach(([pid, rid]) => push(pid, rid, "drop"));
+        });
+        return out;
+      }
+
+      /* One saved/session ESPN league's adds & drops: the raw
+         payload comes from the session when it is this league
+         (never through the Command Center's raw helper — that one
+         writes the session state as a side effect), otherwise a
+         fresh fetch. Transactions arrive attached to the payload
+         and normalize through the shared ESPN parser; the window
+         and the row shape match the Sleeper side exactly. A moved
+         player the payload can't name keeps the name the parser
+         resolved (pname) when the pid is an ESPN stub id. */
+      async function ff4LAEspnRaw(entry) {
+        const es = (typeof espnState !== "undefined") ? espnState : null;
+        if (es && es.raw && String(es.leagueId) === String(entry.leagueId)) return es.raw;
+        const seasons = [];
+        [entry.season, 2026, 2025].forEach(s => { if (s != null && !seasons.includes(Number(s))) seasons.push(Number(s)); });
+        let lastErr = null;
+        for (const season of seasons) {
+          try { return await espnGetLeague(entry.leagueId, season); }
+          catch (e) { lastErr = e; if (e.message !== "notfound") throw e; }
+        }
+        throw lastErr || new Error("notfound");
+      }
+      async function ff4LALeagueEspn(entry) {
+        const raw = await ff4LAEspnRaw(entry);
+        const leagueName = (raw.settings && raw.settings.name) || entry.name || "ESPN league";
+        const cutoff = Date.now() - 14 * 86400000;
+        const seen = new Set();
+        const out = [];
+        espnTxList(raw).forEach(tx => {
+          if (tx.type !== "WAIVER" && tx.type !== "FREEAGENT") return;
+          if (!tx.created || tx.created < cutoff) return;
+          const team = (tx.teams && tx.teams[tx.teamId]) || ("Team " + tx.teamId);
+          const push = (rec, kind) => {
+            const key = tx.id + ":" + kind + ":" + rec.espnId;
+            if (seen.has(key)) return;
+            seen.add(key);
+            out.push({
+              platform: "espn", leagueId: String(entry.leagueId), leagueName,
+              kind, pid: rec.sid || ("espn-" + rec.espnId), pname: rec.name || null,
+              team, created: tx.created
+            });
+          };
+          tx.adds.forEach(r => push(r, "add"));
+          tx.drops.forEach(r => push(r, "drop"));
         });
         return out;
       }
@@ -21336,21 +21641,16 @@ window.drDraft = {
         return window.ffStubPlayerName ? window.ffStubPlayerName(pid) : "Player " + pid;
       }
       function ff4LARowHtml(it) {
-        const nm = ff4LAPlayerName(it.pid);
+        const nm = (it.pname && String(it.pid).indexOf("espn-") === 0) ? it.pname : ff4LAPlayerName(it.pid);
         return `<div class="la-row"><span class="la-kind ${it.kind}">${it.kind === "add" ? "Added" : "Dropped"}</span><span class="la-main"><span class="la-player" title="${esc(nm)}">${esc(nm)}</span><span class="la-meta" title="${esc(it.team)} · ${esc(it.leagueName)}">${esc(it.team)} · ${esc(it.leagueName)}</span></span><span class="la-when">${esc(ff4LAWhen(it.created))}</span></div>`;
       }
 
       function ff4RenderLA() {
         const out = document.getElementById("la-out");
         if (!out) return;
-        const slp = (typeof slpState !== "undefined") ? slpState : null;
-        const user = slp && slp.user ? slp.user : null;
         const la = ff4LAState();
-        if (!user) {
-          const espn = ff4CCEspnEntry();
-          out.innerHTML = `<div class="tb-empty"><p>${espn
-            ? "League Activity reads the adds & drops in your Sleeper leagues — ESPN doesn't provide a transactions feed to outside tools."
-            : "Connect with your Sleeper username and the latest adds & drops from every league you play in land here, most recent first."}</p><button type="button" class="locked-cta" id="la-connect">Connect your league</button></div>`;
+        if (!ff4LAHasSources()) {
+          out.innerHTML = `<div class="tb-empty"><p>Connect your league and the latest adds & drops from every league you play in land here, most recent first.</p><button type="button" class="locked-cta" id="la-connect">Connect your league</button></div>`;
           const b = document.getElementById("la-connect");
           if (b) b.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
           return;
@@ -21376,18 +21676,18 @@ window.drDraft = {
       function ff4RenderCCLA() {
         const el = document.getElementById("cc-la");
         if (!el) return;
-        const slp = (typeof slpState !== "undefined") ? slpState : null;
-        const user = slp && slp.user ? slp.user : null;
-        if (!user) { el.innerHTML = ""; return; }
+        if (!ff4LAHasSources()) { el.innerHTML = ""; return; }
         const la = ff4LAState();
         if (la.loading || !la.loaded) {
           el.innerHTML = `<p class="cc-queue-note cc-loading"><span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Checking your leagues' latest moves…</p>`;
           return;
         }
         /* Hidden leagues never show their moves here (the pass still
-           fetches them; this render is the choke point). */
+           fetches them; this render is the choke point). The
+           account-hide half of the check is Sleeper-only — an
+           ESPN league hides by its own key alone. */
         const sessU = ff4CCSessionUsername();
-        const items = la.items.filter(it => !ff4CCIsHiddenKey("sleeper:" + String(it.leagueId), sessU));
+        const items = la.items.filter(it => !ff4CCIsHiddenKey((it.platform || "sleeper") + ":" + String(it.leagueId), it.platform === "espn" ? null : sessU));
         let body;
         if (!items.length) {
           const when = la.checkedAt ? new Date(la.checkedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
@@ -23147,10 +23447,11 @@ window.MS_FROZEN_ROS = {"10212":{"rec":0.054,"rec_yds":0.45},"10220":{"rec":0.15
      (Command Center detail pass, or the live league on the Power
      Rankings view), the Command Center load pass over the session's
      leagues, and an idle-time light pass over the account's other
-     saved Sleeper leagues (public API, priced off the board already
+     saved leagues (public API, priced off the board already
      in the page; no sim there, so the outlook part stays out and the
-     rest carries the score). ESPN leagues score only from a live
-     in-session context — nothing about an ESPN login is ever stored.
+     rest carries the score). ESPN leagues ride the same light pass
+     off their saved team id — a team ID, not a login; nothing about
+     an ESPN login is ever stored.
      Luck and injury burden are context only, never scored. One
      exception to "live values": in redraft leagues an Out/IR/PUP
      player's value inside this score is frozen at his pre-injury
@@ -23848,7 +24149,7 @@ window.MS_FROZEN_ROS = {"10212":{"rec":0.054,"rec_yds":0.45},"10220":{"rec":0.15
       }
     });
 
-    /* ---- background light pass (saved Sleeper leagues) ----
+    /* ---- background light pass (saved leagues) ----
        For a signed-in account: any saved Sleeper league the live
        passes haven't covered gets scored off the public API —
        league, rosters, users, traded picks, then matchup history
@@ -24000,6 +24301,94 @@ window.MS_FROZEN_ROS = {"10212":{"rec":0.054,"rec_yds":0.45},"10220":{"rec":0.15
       msSaveLight();
       if (mine.games > 0 && !MS.ap[key]) msKickAp(key, lid, mine.rid, mine.games);
     }
+    /* The light pass for a saved ESPN league: same snapshot
+       contract as msLightLeague, off the ESPN builder instead of
+       Sleeper fetches. The entry carries its team id (yourRid — a
+       team ID, not a login), so the league rebuilds directly.
+       ESPN all-play comes from the schedule payload through the
+       same helper the live context uses, and folds into the
+       entry through msApplyAp exactly like a Sleeper AP pass. */
+    async function msLightEspnLeague(e) {
+      const lid = String(e.leagueId);
+      const key = "espn:" + lid;
+      if (e.yourRid == null) return;
+      if (typeof espnGetLeague !== "function" || typeof buildEspnLeague !== "function") return;
+      let raw = null;
+      const seasons = [];
+      [e.season, 2026, 2025].forEach(s2 => { if (s2 != null && !seasons.includes(Number(s2))) seasons.push(Number(s2)); });
+      for (const season of seasons) {
+        try { raw = await espnGetLeague(lid, season); break; }
+        catch (err) { if (!err || err.message !== "notfound") return; }
+      }
+      if (!raw) return;
+      let built = null;
+      try { built = buildEspnLeague(raw, lid, Number(e.yourRid)); } catch (err) { return; }
+      if (!built || !Array.isArray(built.teams)) return;
+      const mine0 = built.teams.find(t2 => t2.isUser);
+      if (!mine0) return;
+      const format = built.leagueType || "redraft";
+      const rd = format === "redraft";
+      const board = id => (typeof PBY !== "undefined" && PBY[id]) ? PBY[id] : null;
+      const price = p => {
+        if (!rd) return p.value || 0;
+        const fz = msFrzRate(p);
+        return fz != null ? fz : (p.ros || 0);
+      };
+      const positions = (built.league && built.league.slots) || [];
+      const teamsL = built.teams.map(t2 => {
+        const players = (t2.playerIds || []).map(board).filter(Boolean);
+        const rec = msParseRecord(t2.record);
+        return {
+          rid: t2.rid, players, fill: msSlotFill(players, positions, price),
+          w: rec.w, games: rec.games, winPct: rec.winPct, pf: t2.pf || 0, picksVal: t2.picksVal || 0,
+        };
+      });
+      const mine = teamsL.find(t2 => t2.rid === mine0.rid);
+      if (!mine) return;
+      msEspnAp(key, raw, mine.rid);
+      const subs = {}, active = {};
+      subs.roster = msPctFromValues(teamsL.map(t2 => t2.fill.total), mine.fill.total);
+      active.roster = subs.roster != null;
+      if (!rd) {
+        const rosterVal = t2 => t2.players.reduce((s2, p) => s2 + (p.value || 0), 0);
+        subs.assets = msPctFromValues(teamsL.map(t2 => rosterVal(t2) + (t2.picksVal || 0)), rosterVal(mine) + (mine.picksVal || 0));
+        active.assets = subs.assets != null;
+        subs.future = msPctFromValues(teamsL.map(t2 => msCoreNeg(t2.fill.starters)), msCoreNeg(mine.fill.starters));
+        active.future = subs.future != null;
+      } else {
+        const benchOf = t2 => {
+          const st = new Set(t2.fill.starters.map(p => p.id));
+          return t2.players.filter(p => !st.has(p.id)).reduce((s2, p) => s2 + price(p), 0);
+        };
+        subs.depth = msPctFromValues(teamsL.map(benchOf), benchOf(mine));
+        active.depth = subs.depth != null;
+      }
+      const parts = {
+        pfPct: msPctFromValues(teamsL.map(t2 => t2.pf), mine.pf),
+        recPct: msPctFromValues(teamsL.map(t2 => t2.winPct), mine.winPct),
+      };
+      if (mine.games > 0) {
+        subs.results = msBlendResults(parts, null);
+        active.results = subs.results != null;
+      }
+      let tot = 0, out = 0;
+      mine.players.forEach(p => {
+        const v = p.value || 0;
+        tot += v;
+        if (p.inj && OUT_INJ[p.inj]) out += v;
+      });
+      const entry = {
+        key, platform: "espn", leagueId: lid, name: (built.league && built.league.name) || e.name || "League", format,
+        score: msComposite(format, subs, active), subs: msRoundSubs(subs), active, parts,
+        luck: null, injury: tot > 0 ? Math.round(out / tot * 1000) / 10 : 0,
+        weeks: mine.games, wins: mine.w, teams: built.teams.length, week: Number(built.league && built.league.week) || 0,
+        provisional: mine.games < 3, rid: mine.rid,
+      };
+      if (entry.score == null) return;
+      msStore(entry, "light");
+      if (MS.ap[key]) msApplyAp(entry);
+      msSaveLight();
+    }
     function msCacheKey() {
       try {
         if (typeof DATA_D74 !== "undefined" && DATA_D74.league)
@@ -24035,15 +24424,18 @@ window.MS_FROZEN_ROS = {"10212":{"rec":0.054,"rec_yds":0.45},"10220":{"rec":0.15
       let saved = [];
       try { saved = (window.__ffSaved && window.__ffSaved.list) ? window.__ffSaved.list() : []; } catch (e) {}
       const todo = saved
-        .filter(e => e && e.platform === "sleeper" && e.leagueId && e.username)
-        .filter(e => { const cur = MS.leagues["sleeper:" + e.leagueId]; return !cur || (!cur.full && !cur.cc); });
+        .filter(e => e && e.leagueId && ((e.platform === "sleeper" && e.username) || (e.platform === "espn" && e.yourRid != null)))
+        .filter(e => { const cur = MS.leagues[e.platform + ":" + e.leagueId]; return !cur || (!cur.full && !cur.cc); });
       if (!todo.length) { MS.lightState = 2; return; }
       MS.lightState = 1;
       const run = async () => {
         for (const e of todo) {
-          const cur = MS.leagues["sleeper:" + e.leagueId];
+          const cur = MS.leagues[e.platform + ":" + e.leagueId];
           if (cur && (cur.full || cur.cc)) continue;
-          try { await msLightLeague(e); } catch (err) { /* one league never blocks the rest */ }
+          try {
+            if (e.platform === "espn") await msLightEspnLeague(e);
+            else await msLightLeague(e);
+          } catch (err) { /* one league never blocks the rest */ }
           await new Promise(r => setTimeout(r, 500));
         }
         MS.lightState = 2;
