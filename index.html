@@ -2247,6 +2247,14 @@
     border-radius:12px; padding:10px 14px; font-size:13px;
   }
 #tab-draft .boardwrap{overflow-x:auto; border:1px solid var(--line); border-radius:var(--r); background:rgba(255,255,255,.02)}
+#tab-draft .dr-leaguebar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:18px 0 4px}
+#tab-draft .dr-leaguebar select{flex:1; min-width:220px}
+#tab-draft .dr-gate{margin-top:18px; padding:22px}
+#tab-draft .dr-gate h2{margin:0 0 8px; font-size:clamp(24px,4vw,32px)}
+#tab-draft .dr-gate .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:12px}
+#tab-draft .dr-gate input[type=text]{flex:1; min-width:200px}
+#tab-draft .dr-leaguelist{display:flex; flex-direction:column; gap:8px; margin-top:12px}
+#tab-draft .pickrow td{background:rgba(198,255,0,.045)}
 #tab-draft .board{display:grid; gap:6px; padding:12px; min-width:1020px}
 #tab-draft .bcell{
     background:var(--card); border:1px solid var(--line); border-radius:10px; padding:7px 9px; min-height:62px;
@@ -4018,7 +4026,9 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
             <button data-pos="WR" aria-pressed="false">WR</button>
             <button data-pos="TE" aria-pressed="false">TE</button>
             <button data-pos="FLEX" aria-pressed="false">FLEX</button>
+            <button data-pos="PICKS" aria-pressed="false">Picks</button>
           </div>
+          <button type="button" class="inj-toggle" id="picks-toggle" aria-pressed="true" hidden>Hide picks</button>
           <button type="button" class="inj-toggle" id="inj-filter" aria-pressed="false">Injured</button>
           <select id="board-sort" aria-label="Sort players">
             <option value="value">Sort: Value</option>
@@ -4496,7 +4506,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div class="tools-group">
           <h3 class="tools-group-h">Draft</h3>
           <div class="tools-pills">
-            <button type="button" class="tools-pill" style="--tile-accent:#FF2E88" data-tools-draft="1"><span class="tools-pill-t">Draft Room</span><span class="tools-pill-s">Dynasty + redraft values, mocks &amp; sheet</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FF2E88" data-tools-draft="1"><span class="tools-pill-t">Draft Room</span><span class="tools-pill-s">Your league's board, mocks &amp; sheet</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#00E5FF" data-tools-pill="switchteams" data-tools-group="myteam"><span class="tools-pill-t">Switch Teams</span><span class="tools-pill-s">All your teams — tap one to open it</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#69F0AE" data-tools-draft="sheet"><span class="tools-pill-t">Draft Sheet</span><span class="tools-pill-s">Printable board, draft order &amp; CSV</span></button>
           </div>
@@ -4659,16 +4669,32 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
             <section class="tab" id="tab-draft" role="tabpanel">
 <div class="wrap" id="top">
-  <div class="formattabs" role="tablist" aria-label="Draft format">
-    <button class="ftab on" data-roomfmt="dynasty" role="tab" aria-selected="true">Dynasty</button>
-    <button class="ftab cy" data-roomfmt="redraft" role="tab" aria-selected="false">Redraft</button>
+  <div class="dr-leaguebar" id="drLeagueBar" hidden>
+    <label class="sub" for="drLeaguePick">Draft league</label>
+    <select id="drLeaguePick" aria-label="Draft league"></select>
+    <span class="note" id="drLeagueState"></span>
+    <button type="button" class="btn ghost" id="drLeagueChange">Connect a league</button>
+  </div>
+  <div id="drGate" class="card glow dr-gate" hidden>
+    <h2>A league is required to open the Draft Room</h2>
+    <p class="sec-sub" style="margin-bottom:0">The Draft Room builds its board from one of <b>your</b> leagues — its scoring, its format, its draft. Pick a league below and the board, the mock drafts, the sheet and the live room all follow it. Nothing here runs on a demo board.</p>
+    <div class="row">
+      <input type="text" id="drGateUser" placeholder="Your Sleeper username" aria-label="Your Sleeper username" autocomplete="off" autocapitalize="none" spellcheck="false" />
+      <button type="button" class="btn solid" id="drGateFind">Find my leagues</button>
+    </div>
+    <div class="row">
+      <input type="text" id="drGateEspn" placeholder="ESPN league URL or league ID" aria-label="ESPN league URL or league ID" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" />
+      <button type="button" class="btn cy" id="drGateEspnGo">Load ESPN league</button>
+    </div>
+    <p class="note" id="drGateNote" style="margin-top:12px"></p>
+    <div class="dr-leaguelist" id="drGateLeagues"></div>
+    <p class="note" style="margin-top:12px">Public ESPN leagues only for now — private leagues need a different setup, coming soon.</p>
   </div>
 
   <!-- Quick-access row (Round 2, Eric 2026-11-08): one tap per tool,
        each tool on its own view — the landing stays short. -->
   <div class="drquick" id="drQuickDyn" role="navigation" aria-label="Dynasty draft tools">
-    <button type="button" class="drq on" data-drview="picks">Picks &amp; veteran equivalents</button>
-    <button type="button" class="drq" data-drview="pool">Player pool</button>
+    <button type="button" class="drq on" data-drview="pool">Player pool</button>
     <button type="button" class="drq" data-drview="sheet">Draft Sheet</button>
     <button type="button" class="drq" data-drview="mock">Mock draft</button>
     <button type="button" class="drq" data-drview="analyzer">Draft analyzer</button>
@@ -4702,12 +4728,13 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
   <!-- ============ 2. ROOKIE POOL ============ -->
   <section id="pool">
     <div class="sec-head"><span class="tag">02 · The Pool</span><h2>Player pool &amp; rookies</h2></div>
-    <p class="sec-sub">The full value board, with a <b>Rookies</b> filter that isolates the rookie-eligible class and shows each player's <b>draft-capital prior</b> — where the NFL actually took them, the single best predictor for young players with thin stat lines. Values are our proprietary player values.</p>
+    <p class="sec-sub">One board, in value order: every player in the pool with your <b>draft picks sitting at their value spot</b> — a 2027 1st is worth the veteran beside it. The <b>Rookies</b> filter isolates the 2026 class and shows each player's <b>draft-capital prior</b> — where the NFL actually took them, the single best predictor for young players with thin stat lines. Values are our proprietary player values.</p>
     <div class="toolbar">
       <input type="search" id="poolSearch" placeholder="Search players…" style="flex:1; min-width:170px" />
       <div class="chips" id="poolChips">
         <button class="fchip on" data-f="ALL">All players</button>
         <button class="fchip cy" data-f="ROOK">Rookies only</button>
+        <button class="fchip" data-f="PICKS">Picks</button>
         <button class="fchip" data-f="QB">QB</button>
         <button class="fchip" data-f="RB">RB</button>
         <button class="fchip" data-f="WR">WR</button>
@@ -4718,13 +4745,13 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       <table>
         <thead><tr>
           <th style="width:5%" class="r">Rank</th><th>Player</th><th style="width:7%">Pos</th><th style="width:6%">Team</th>
-          <th style="width:6%" class="r">Age</th><th style="width:11%" class="r">Value</th><th style="width:6%" class="r">ADP</th><th style="width:9%" class="r">SF $</th><th style="width:19%">Draft capital / status</th>
+          <th style="width:6%" class="r">Age</th><th style="width:11%" class="r">Value</th><th style="width:6%" class="r">ADP</th><th style="width:9%">Tier</th><th style="width:19%">Draft capital / status</th>
         </tr></thead>
         <tbody id="poolBody"></tbody>
       </table>
     </div>
     <p class="note" id="poolCount" style="margin-top:10px"></p>
-    <p class="note" style="margin-top:4px">Market overlay (ADP snapshot Oct 20, 2026): <b style="color:var(--ink)">ADP</b> is the player's average dynasty-draft position, <b style="color:var(--ink)">SF $</b> is his SUPERFLEX auction value. A dash means no published figure for that player.</p>
+    <p class="note" style="margin-top:4px">Market overlay (ADP snapshot Oct 20, 2026): <b style="color:var(--ink)">ADP</b> is the player's average dynasty-draft position — reference only, it never orders this board. A dash means no published figure for that player.</p>
     <div class="honest">The rookie class below is the <strong>2026 class</strong> — already drafted, already priced by the algorithm. Looking ahead? The <strong>2027 Rookie Class</strong> board in the Draft Room ranks the upcoming class and prices what your 2027 picks are worth.</div>
   </section>
 
@@ -4810,7 +4837,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
   <!-- ============ S1. REDRAFT BOARD ============ -->
   <section id="sboard">
     <div class="sec-head"><span class="tag" style="color:var(--cyan)">01 · The Board</span><h2>Redraft value board</h2></div>
-    <p class="sec-sub">The full player pool re-priced for redraft: <b>rest-of-season value</b>, on the same scale as the site's Redraft mode. The muted column is each player's dynasty price, so you can see exactly what the format change does to him.</p>
+    <p class="sec-sub">The full player pool re-priced for redraft: <b>rest-of-season value</b>, ordered by that value — which traces to each player's projected points at this league's scoring (see Proj pts).</p>
 
     <div class="stats">
       
@@ -4837,13 +4864,13 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       <table>
         <thead><tr>
           <th style="width:5%" class="r">Rank</th><th>Player</th><th style="width:6%">Pos</th><th style="width:5%">Team</th>
-          <th style="width:5%" class="r">Age</th><th style="width:11%" class="r">Redraft value</th><th style="width:6%" class="r">ADP</th><th style="width:8%" class="r">SF $</th><th style="width:12%" class="r">Dynasty price</th><th style="width:9%">Tier</th>
+          <th style="width:5%" class="r">Age</th><th style="width:11%" class="r">Redraft value</th><th style="width:9%" class="r">Proj pts</th><th style="width:6%" class="r">ADP</th><th style="width:9%">Tier</th>
         </tr></thead>
         <tbody id="snakeBody"></tbody>
       </table>
     </div>
     <p class="note" id="snakeCount" style="margin-top:10px"></p>
-    <p class="note" style="margin-top:4px">Market overlay (ADP updated October 27, 2026): <b style="color:var(--ink)">ADP</b> is the player's redraft average draft position (PPR, half-PPR and non-PPR figures), pulled October 27, 2026; switch PPR / half-PPR / non-PPR with the toggle above — players with no published ADP show an estimated ADP (Est.) derived from our redraft values. <b style="color:var(--ink)">SF $</b> is his SUPERFLEX auction value. <b style="color:var(--ink)">Own</b> is the share of leagues rostering him, banded into tiers: Core 90%+, Rostered 60–90%, Streamer 25–60%, Deep under 25%. A dash means no published figure for that player.</p>
+    <p class="note" style="margin-top:4px">Market overlay (ADP updated October 27, 2026): <b style="color:var(--ink)">ADP</b> is the player's redraft average draft position (PPR, half-PPR and non-PPR figures), pulled October 27, 2026; switch PPR / half-PPR / non-PPR with the toggle above — players with no published ADP show an estimated ADP (Est.) derived from our redraft values. ADP is reference only — it never orders this board. A dash means no published figure for that player.</p>
   </section>
 
   <!-- ============ S2. SNAKE ROOM ============ -->
@@ -10181,7 +10208,7 @@ ${rdP ? "" : `
       renderFinder();
 
       /* ================= Player values board ================= */
-      const boardState = { pos: "ALL", q: "", sort: "value", owner: "ALL", shown: 60, injOnly: false };
+      const boardState = { pos: "ALL", q: "", sort: "value", owner: "ALL", shown: 60, injOnly: false, showPicks: true };
       const boardOwnerSel = document.getElementById("board-owner");
       DATA.teams.forEach(t => {
         const o = document.createElement("option");
@@ -10193,9 +10220,27 @@ ${rdP ? "" : `
            (unpriced:true) live in DATA.players for the calculator,
            waivers and lineup, but carry no dynasty price to rank by. */
         let list = [...DATA.players].filter(p => !p.unpriced).sort((a, b) => dispVal(b) - dispVal(a));
+        /* Picks tab (Eric, 2026-11-12): the pick ladder merged into the
+           value-ordered list at each pick's value spot — the 2027 early
+           1st sits beside the veteran it buys. Dynasty only: picks carry
+           no redraft price. showPicks hides them back to players only. */
+        if (boardState.pos === "PICKS" && VALMODE !== "redraft" && boardState.showPicks) {
+          let merged = list.slice();
+          if (boardState.q) merged = merged.filter(p => p.name.toLowerCase().includes(boardState.q));
+          /* The pick ladder lives in the Draft Room's own DATA (IIFE scope,
+             line ~19419) — the site-wide DATA this function sees has no
+             ladder key, so read it through the drDraft accessor. */
+          const ladder = (typeof window !== "undefined" && window.drDraft && typeof window.drDraft.ladder === "function") ? window.drDraft.ladder() : [];
+          ladder.forEach(l => {
+            if (boardState.q && !l.label.toLowerCase().includes(boardState.q)) return;
+            merged.push({ isPick: true, id: "pick:" + l.label, name: l.label, pos: "PK", team: "", age: null, value: l.value, vet: l.vet, tier: "", posRank: null, trnd: 0, ros: 0 });
+          });
+          merged.sort((a, b) => (b.value || 0) - (a.value || 0));
+          return merged;
+        }
         if (boardState.injOnly) list = list.filter(p => p.inj);
         if (boardState.pos === "FLEX") list = list.filter(p => ["RB", "WR", "TE"].includes(p.pos));
-        else if (boardState.pos !== "ALL") list = list.filter(p => p.pos === boardState.pos);
+        else if (boardState.pos !== "ALL" && boardState.pos !== "PICKS") list = list.filter(p => p.pos === boardState.pos);
         if (boardState.owner === "FA") list = list.filter(p => !p.owner);
         else if (boardState.owner !== "ALL") list = list.filter(p => p.owner === Number(boardState.owner));
         if (boardState.q) list = list.filter(p => p.name.toLowerCase().includes(boardState.q));
@@ -10327,6 +10372,17 @@ ${rdP ? "" : `
         });
       }
       function renderBoard() {
+        /* Picks are a dynasty asset: in redraft mode the tab hides and
+           an open Picks tab falls back to All. */
+        if (VALMODE === "redraft" && boardState.pos === "PICKS") {
+          boardState.pos = "ALL";
+          document.querySelectorAll("#pos-filter button").forEach(b => b.setAttribute("aria-pressed", b.dataset.pos === "ALL" ? "true" : "false"));
+        }
+        const inPicks = boardState.pos === "PICKS";
+        const pickBtn = document.querySelector('#pos-filter button[data-pos="PICKS"]');
+        if (pickBtn) pickBtn.style.display = (VALMODE === "redraft") ? "none" : "";
+        const picksTgl = document.getElementById("picks-toggle");
+        if (picksTgl) picksTgl.hidden = !(boardState.pos === "PICKS" && VALMODE !== "redraft");
         const list = boardList();
         const body = document.getElementById("board-body");
         const rows = list.slice(0, boardState.shown);
@@ -10336,6 +10392,22 @@ ${rdP ? "" : `
         if (VALMODE === "redraft") ["QB", "RB", "WR", "TE"].forEach(pos => { DATA.players.filter(p => p.pos === pos && p.rdValue != null && !p.unpriced).sort((a, b) => (b.rdValue || 0) - (a.rdValue || 0)).forEach((p, ix) => { rdPosMapB[p.id] = ix + 1; }); });
         const SIG = { buy: ["buy", "Buy low"], sell: ["sell", "Sell high"], rise: ["rise", "Form rising"], fall: ["fall", "Form falling"] };
         body.innerHTML = rows.map((p, i) => {
+          if (p.isPick) {
+            const pkCls = /Early/.test(p.name) ? "e" : /Mid/.test(p.name) ? "m" : "l";
+            const pkTier = /Early/.test(p.name) ? "Early" : /Mid/.test(p.name) ? "Mid" : "Late";
+            return `
+          <tr class="pickrow">
+            <td class="num">${i + 1}</td>
+            <td><span class="p-name">${esc(p.name)}</span> <span class="pk-tier ${pkCls}">${pkTier}</span>
+              <div class="p-sub">Worth ${esc(p.vet.name)} · ${esc(p.vet.pos)} · ${esc(p.vet.team)} · vet ${fmt(p.vet.value)}</div></td>
+            <td><span class="p-sub" style="font-weight:700">PICK</span></td>
+            <td class="num hide-sm">—</td>
+            <td class="hide-sm">—</td>
+            <td class="num"><span class="val-big">${fmt(p.value)}</span></td>
+            <td class="num trend-col"><span class="trnd">—</span></td>
+            <td></td>
+          </tr>`;
+          }
           const tr = p.trnd ?? 0;
           const trCls = tr >= 1 ? "up" : tr <= -1 ? "dn" : "flat";
           const trArrow = tr >= 1 ? "↗" : tr <= -1 ? "↘" : "";
@@ -10346,7 +10418,7 @@ ${rdP ? "" : `
             : `<span class="trnd ${trCls}">${trArrow ? trArrow + " " : ""}${tr > 0 ? "+" : ""}${tr}%</span>`;
           return `
           <tr>
-            <td class="num">${rankMapB[p.id] != null ? rankMapB[p.id] : i + 1}</td>
+            <td class="num">${inPicks ? (i + 1) : (rankMapB[p.id] != null ? rankMapB[p.id] : i + 1)}</td>
             <td>${hsImg(p)}<span class="p-name">${esc(p.name)}</span>${injChip(p)}${typeof radarChip === "function" ? radarChip(p) : ""}${p.flag ? ` <span class="sig ${SIG[p.flag][0]}"${p.flag === "rise" || p.flag === "fall" ? ` title="Role and production trend over his last 3 games"` : ""}>${SIG[p.flag][1]}</span>` : ""}${(boardState.owner !== "ALL" && boardState.owner !== "FA" && VALMODE !== "redraft" && !p.unpriced && dispVal(p) < 1000) ? ` <span class="sig fall" title="Value under 1,000 — low risk to drop">safely droppable</span>` : ""}${p.trendDir === "up" ? ` <span class="sig lead">Leads algorithm</span>` : p.trendDir === "dn" ? ` <span class="sig lag">Lags algorithm</span>` : ""}
               <div class="p-sub">${esc(ownerLabel(p))} · ${esc(p.tier)}</div></td>
             <td><span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${rd && rdPosMapB[p.id] != null ? rdPosMapB[p.id] : p.posRank}</span></td>
@@ -10397,6 +10469,13 @@ ${rdP ? "" : `
         boardState.injOnly = !boardState.injOnly;
         injBtn.setAttribute("aria-pressed", boardState.injOnly ? "true" : "false");
         document.getElementById("inj-note").hidden = !boardState.injOnly;
+        boardState.shown = 60; renderBoard();
+      });
+      const picksTglBtn = document.getElementById("picks-toggle");
+      if (picksTglBtn) picksTglBtn.addEventListener("click", () => {
+        boardState.showPicks = !boardState.showPicks;
+        picksTglBtn.textContent = boardState.showPicks ? "Hide picks" : "Show picks";
+        picksTglBtn.setAttribute("aria-pressed", boardState.showPicks ? "true" : "false");
         boardState.shown = 60; renderBoard();
       });
       /* FLEX is a member of the position group above (Eric, 2026-10-23):
@@ -19404,7 +19483,6 @@ function dxSub(p, withOwn){
   const d = dxOf(p); if(!d) return "";
   const bits = [];
   if(d[0] != null) bits.push("ADP " + dxAdp(p));
-  if(d[1] != null) bits.push("SF $" + d[1]);
     if(withOwn && d[3] != null) bits.push("Own " + d[3].toFixed(1) + "% " + ownTier(d[3])[0]);
   return bits.join(" · ");
 }
@@ -19433,7 +19511,7 @@ const RDADP = {"8134":[153.37,null,161.38],"9480":[141.69,null,141.57],"10219":[
 let RDADP_FMT = 0; // 0 = PPR, 1 = half-PPR, 2 = non-PPR
 function rdEstVal(p){ const e = RDEST[p.id]; return e ? e[RDADP_FMT] : null; } function rdAdpVal(p){ const d = RDADP[p.id]; const v = d ? d[RDADP_FMT] : null; return v != null ? v : rdEstVal(p); } function rdAdpIsEst(p){ const d = RDADP[p.id]; return (d ? d[RDADP_FMT] : null) == null && rdEstVal(p) != null; }
 function rdAdp(p){ const v = rdAdpVal(p); if (v == null) return "—"; const s = Number.isInteger(v) ? String(v) : v.toFixed(1); return rdAdpIsEst(p) ? "Est. " + s : s; }
-function rdSub(p){ const bits = []; const a = rdAdp(p); if(a !== "—") bits.push("ADP " + a); const d = dxOf(p); if(d && d[1] != null) bits.push("SF $" + d[1]); return bits.join(" · "); }
+function rdSub(p){ const bits = []; const a = rdAdp(p); if(a !== "—") bits.push("ADP " + a); return bits.join(" · "); }
 function rdRec(p){ const bits = []; const a = rdAdp(p); if(a !== "—") bits.push("ADP " + a); const d = dxOf(p); return bits.length ? " · " + bits.join(" · ") : ""; }
 
 /* ---------- shared model ---------- */
@@ -19449,6 +19527,15 @@ function drSyncPool(){
   if (typeof RDRAFT !== "undefined") Object.keys(RDRAFT).forEach(id => { const s = byId[id]; if (s && s.rdValue != null) RDRAFT[id] = s.rdValue; });
 }
 drSyncPool();
+/* Draft Room reboot (Eric, 2026-11-12): keeper set for pre-draft keeper
+   leagues. Declared here — before the board renders — because the
+   renders read it at load. Filled by drUpdateKeepers() once a league
+   is picked; empty for every in-season league. */
+var DR_KEEPERS = new Set();
+var drLeagueMeta = {};
+var drLastLeagueKey = null;
+function drIsKeeper(id){ return DR_KEEPERS.has(String(id)); }
+function drKeeperCount(){ return DR_KEEPERS.size; }
 const TEAMS = DATA.teams, TEAMNAME = {}; TEAMS.forEach(t=>TEAMNAME[t.id]=t.name);
 const ROOKIES = DATA.rookies;                       // sorted by value desc
 const RBYIDX = {}; ROOKIES.forEach((r,i)=>RBYIDX[r.id]=i);
@@ -19525,22 +19612,50 @@ function snakeSeq(order){
      only because the row builder computes it inline. */
 })();
 
-/* ---------- 2. rookie pool ---------- */
+/* ---------- 2. master list (Eric, 2026-11-12) ----------
+   ONE value-ordered board per league: the player pool with the draft
+   picks sitting at their value spot. Picks are dynasty assets, so they
+   only appear on a dynasty board. Tiers use the Draft Sheet rule (a new
+   tier when value drops below 85% of the tier's top value). Only priced
+   players appear — a rookie class with no price yet never enters this
+   list. Kept players (pre-draft keeper leagues) are out of the pool,
+   via DR_KEEPERS. ADP is reference only. */
+function drMasterRows(){
+  const rows = DATA.pool.filter(p => p && p.value != null && p.value > 0 && !drIsKeeper(p.id))
+    .map(p => ({ kind: "player", id: p.id, name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, exp: p.exp, college: p.college, value: p.value }));
+  if (roomFmt() === "dynasty") DATA.ladder.forEach(l => rows.push({ kind: "pick", id: "pick:" + l.label, name: l.label, pos: "PK", team: "", age: null, inj: null, exp: null, college: null, value: l.value, vet: l.vet }));
+  rows.sort((a, b) => b.value - a.value);
+  let tier = 1, top = rows.length ? rows[0].value : 0;
+  rows.forEach((r, i) => { r.rank = i + 1; if (i > 0 && r.value < top * 0.85) { tier++; top = r.value; } r.tier = tier; });
+  return rows;
+}
 (function(){
   let filter = "ALL", q = "";
   function render(){
-    const rows = DATA.pool.filter(p =>
-      (filter==="ALL" || (filter==="ROOK" ? p.exp===0 : p.pos===filter)) &&
-      (!q || p.name.toLowerCase().includes(q)));
-    $("#poolBody").innerHTML = rows.slice(0, 120).map(p=>{
+    const rows = drMasterRows().filter(r =>
+      (filter==="ALL" || (filter==="PICKS" ? r.kind==="pick" : filter==="ROOK" ? (r.kind==="player" && r.exp===0) : (r.kind==="player" && r.pos===filter))) &&
+      (!q || r.name.toLowerCase().includes(q)));
+    $("#poolBody").innerHTML = rows.slice(0, 120).map(r=>{
+      if (r.kind === "pick") {
+        const v = r.vet || {};
+        return "<tr class='pickrow'><td class='r num sub'>"+r.rank+"</td>"
+          + "<td><b>"+esc(r.name)+"</b> <span class='chip tier'>Pick</span><span class='msub'>worth "+esc(v.name||"—")+(v.pos? " · "+esc(v.pos):"")+(v.team? " · "+esc(v.team):"")+(v.value? " · vet "+fmt(v.value):"")+"</span></td>"
+          + "<td><span class='chip'>PK</span></td>"
+          + "<td class='sub'>—</td>"
+          + "<td class='r num'>—</td>"
+          + "<td class='r num' style='font-weight:700; color:var(--lime)'>"+fmt(r.value)+"</td>"
+          + "<td class='r num dx'>—</td>"
+          + "<td><span class='chip tier'>Tier "+r.tier+"</span></td>"
+          + "<td><span class='sub'>Rookie pick · the veteran it buys is "+esc(v.name||"—")+"</span></td></tr>";
+      }
+      const p = r;
       const dc = p.exp===0 ? dcText(p) : null;
       let status = "";
       if(dc) status = "<span class='chip dc'>"+esc(dc.label)+"</span> <span class='sub'>"+esc(dc.part)+"</span>";
       else if(p.exp===0) status = "<span class='sub'>Draft capital outside the consensus top 400</span>";
       if(p.inj) status += (status? " " : "") + "<span class='chip inj'>"+esc(p.inj)+"</span>";
-      if(p.exp===0) status += (status? " " : "") + "<span class='chip tier'>Tier "+p_tier(p)+"</span>";
       const dxs = dxSub(p, false);
-      return "<tr><td class='r num sub'>"+(p.vrank||"—")+"</td>"
+      return "<tr><td class='r num sub'>"+p.rank+"</td>"
         + "<td><b>"+esc(p.name)+"</b>"+(p.college? " <span class='sub'>· "+esc(p.college)+"</span>":"")
         + "<span class='msub'>"+esc(p.team||"FA")+(p.age? " · age "+p.age : "")+(dxs? " · "+esc(dxs) : "")+"</span></td>"
         + "<td><span class='pospill pos-"+p.pos+"'>"+p.pos+"</span></td>"
@@ -19548,13 +19663,13 @@ function snakeSeq(order){
         + "<td class='r num'>"+(p.age||"—")+"</td>"
         + "<td class='r num' style='font-weight:700; color:var(--lime)'>"+fmt(p.value)+"</td>"
         + "<td class='r num dx'>"+dxAdp(p)+"</td>"
-        + "<td class='r num dx'>"+dxSf(p)+"</td>"
-                + "<td>"+status+"</td></tr>";
-    }).join("") || "<tr><td colspan='10' class='sub'>No players match.</td></tr>";
+        + "<td><span class='chip tier'>Tier "+p.tier+"</span></td>"
+        + "<td>"+status+"</td></tr>";
+    }).join("") || "<tr><td colspan='9' class='sub'>No players match.</td></tr>";
+    const keeperNote = drKeeperCount() ? " · " + drKeeperCount() + " keepers out of the pool" : "";
     $("#poolCount").textContent = "Showing " + Math.min(rows.length,120) + " of " + rows.length + " matching players · " +
-      DATA.rookies.length + " rookies in the 2026 class · values as of " + (DATA.league && DATA.league.snapshot ? DATA.league.snapshot : "the current snapshot");
+      DATA.rookies.length + " rookies in the 2026 class · " + DATA.ladder.length + " picks in the list at their value spot" + keeperNote + " · values as of " + (DATA.league && DATA.league.snapshot ? DATA.league.snapshot : "the current snapshot");
   }
-  function p_tier(p){ const r = ROOKIES[RBYIDX[p.id]]; return r ? r.tier : "—"; }
   $("#poolChips").addEventListener("click", e=>{
     const b = e.target.closest("button.fchip"); if(!b) return;
     drRoot.querySelectorAll("#poolChips .fchip").forEach(x=>x.classList.remove("on"));
@@ -19562,6 +19677,7 @@ function snakeSeq(order){
   });
   $("#poolSearch").addEventListener("input", e=>{ q = e.target.value.trim().toLowerCase(); render(); });
   render();
+  window.__drRenderPool = render;
 })();
 
 /* ---------- order picker (shared) ---------- */
@@ -19811,7 +19927,7 @@ $("#sleeperBtnR").addEventListener("click", ()=>{ liveBind("r", true); });
 function roomSeq(){ if (liveActive("r") && LIVE.seq) return LIVE.seq; return snakeSeq(R.order); }
 function currentIdx(){ return R.picks.findIndex(p=>!p); }
 function takenSet(){ return new Set(R.picks.filter(Boolean)); }
-function availRookies(){ const t = takenSet(); return ROOKIES.filter(r=>!t.has(r.id)); }
+function availRookies(){ const t = takenSet(); return ROOKIES.filter(r=>!t.has(r.id) && !drIsKeeper(r.id)); }
 
 function renderRoom(){
   const seq = roomSeq(), cur = currentIdx();
@@ -19840,6 +19956,7 @@ function renderRoom(){
       + '<h3 style="margin:2px 0; font-size:21px">'+esc(liveTeamName(s.teamId))+(s.teamId===R.mine ? ' <span class="chip tier">YOUR PICK</span>' : "")+"</h3>"
       + '<div class="sub">What this slot returns in this class: <b style="color:var(--ink)">'+fmt(expectedAt(s.round, s.slot))+'</b> (the grading baseline)'
       + (untilMine>0 ? ' · your next pick is '+slotLabel(seq[untilMine].round, seq[untilMine].slot)+' ('+(untilMine-cur)+' picks away)' : (s.teamId===R.mine ? "" : ' · you have no picks left')) + "</div>";
+    if (drIsAuction()) $("#clockBox").innerHTML = '<h3 style="margin:0; font-size:19px">Auction draft</h3><p class="sub" style="margin:4px 0 0">No draft order — nominate and bid. Best available is priced in dollars from the board.</p>';
     const myPos = {}; R.picks.forEach((pid, i)=>{ if(pid && seq[i].teamId===R.mine){ const rr = roomPl(pid); if(rr) myPos[rr.pos]=(myPos[rr.pos]||0)+1; } });
     $("#recList").innerHTML = avail.slice(0, 7).map((r, i)=>{
       const cliffs = avail.filter(x=>x.pos===r.pos && x.tier===r.tier).length;
@@ -19847,7 +19964,7 @@ function renderRoom(){
       if(cliffs===1) why += " · LAST of his tier at "+r.pos;
       if(s.teamId===R.mine && (myPos[r.pos]||0)===0) why += " · fills an empty "+r.pos+" room";
       const dc = dcText(r); if(dc) why += " · "+dc.label;
-      return '<button class="recrow" data-pick="'+r.id+'"><span class="rk">'+(i+1)+'</span><span class="who"><b>'+esc(r.name)+' <span class="pospill pos-'+r.pos+'">'+r.pos+'</span></b><span>'+esc(why)+'</span></span><span class="vv num">'+fmt(r.value)+"</span></button>";
+      return '<button class="recrow" data-pick="'+r.id+'"><span class="rk">'+(i+1)+'</span><span class="who"><b>'+esc(r.name)+' <span class="pospill pos-'+r.pos+'">'+r.pos+'</span></b><span>'+esc(why)+'</span></span><span class="vv num">'+(drIsAuction() ? "$"+drAuctionDollar(r.value, ROOKIES) : fmt(r.value))+"</span></button>";
     }).join("");
     drRoot.querySelectorAll("[data-pick]").forEach(b=> b.addEventListener("click", ()=>{ if(!R.follow) makePick(b.dataset.pick); }));
   }
@@ -19982,34 +20099,47 @@ function snakeSeqN(order, rounds){
   return seq;
 }
 
-/* ----- redraft value board ----- */
+/* ----- redraft value board (Eric, 2026-11-12) -----
+   Ordered by rest-of-season value — the projection-derived price at
+   this league's scoring — never by ADP. One value column. Proj pts is
+   the total rest-of-season projected points the value traces to. */
+function drRosTotal(p){
+  const s = (typeof PBY !== "undefined" && PBY[p.id]) || null;
+  const ros = s ? (s.ros || 0) : 0;
+  if (!ros) return null;
+  const g = (typeof window !== "undefined" && window.ROS_STATS && window.ROS_STATS[p.id] && Number(window.ROS_STATS[p.id].g) > 0) ? Number(window.ROS_STATS[p.id].g) : null;
+  const weeks = g != null ? g : Math.max(1, 15 - ((DATA.league && DATA.league.week) ? DATA.league.week : 8));
+  return ros * weeks;
+}
 (function(){
   let filter = "ALL", q = "";
   function render(){
-    const rows = SNAKE.filter(p => (filter==="ALL" || p.pos===filter) && (!q || p.name.toLowerCase().includes(q)));
-        rows.sort((a,b)=>{ const av = rdAdpVal(a), bv = rdAdpVal(b); if(av==null && bv==null) return b.value-a.value; if(av==null) return 1; if(bv==null) return -1; return av-bv; });
-$("#snakeBody").innerHTML = rows.slice(0, 120).map((p,ri)=>{
-      const pct = Math.round((p.value/p.dyn - 1)*100);
-      const dHtml = fmt(p.dyn) + ' <span style="font-weight:700; color:'+(pct>2?"var(--cyan)":pct<-2?"#ff7aa8":"var(--dim)")+'">'+(pct>0?"+":"")+(pct===0?"±":pct)+'%</span>';
+    const rows = SNAKE.filter(p => (filter==="ALL" || p.pos===filter) && (!q || p.name.toLowerCase().includes(q)) && !drIsKeeper(p.id));
+    /* SNAKE is already value-ordered (drSyncSnake keeps it so). No
+       re-sort here — ADP never orders this board. */
+    $("#snakeBody").innerHTML = rows.slice(0, 120).map((p,ri)=>{
       const dxs = rdSub(p);
-      return "<tr><td class='r num sub'>"+(ri+1)+"</td>"
+      const tot = drRosTotal(p);
+      const rank = (typeof SBYIDX !== "undefined" && SBYIDX[p.id] != null) ? SBYIDX[p.id] + 1 : ri + 1;
+      return "<tr><td class='r num sub'>"+rank+"</td>"
         + "<td><b>"+esc(p.name)+"</b><span class='msub'>"+esc(p.team||"FA")+(p.age? " · age "+p.age : "")+" · Tier "+p.tier+(dxs? " · "+esc(dxs) : "")+"</span></td>"
         + "<td><span class='pospill pos-"+p.pos+"'>"+p.pos+"</span></td>"
         + "<td class='sub'>"+esc(p.team||"FA")+"</td>"
         + "<td class='r num'>"+(p.age||"—")+"</td>"
         + "<td class='r num' style='font-weight:700; color:var(--cyan)'>"+fmt(p.value)+"</td>"
+        + "<td class='r num'>"+(tot != null ? tot.toFixed(1) : "—")+"</td>"
         + "<td class='r num dx'>"+rdAdp(p)+"</td>"
-        + "<td class='r num dx'>"+dxSf(p)+"</td>"
-                + "<td class='r num sub'>"+dHtml+"</td>"
         + "<td><span class='chip tier' style='color:var(--cyan); border-color:rgba(0,229,255,.4); background:rgba(0,229,255,.06)'>Tier "+p.tier+"</span>"+(p.inj? " <span class='chip inj'>"+esc(p.inj)+"</span>":"")+"</td></tr>";
-    }).join("") || "<tr><td colspan='11' class='sub'>No players match.</td></tr>";
+    }).join("") || "<tr><td colspan='9' class='sub'>No players match.</td></tr>";
     $("#snakeCount").textContent = "Showing " + Math.min(rows.length,120) + " of " + rows.length + " matching players · " +
-      SNAKE.length + " players in the redraft pool · prices match Redraft mode · ordered by ADP";
+      SNAKE.length + " players in the redraft pool · ordered by rest-of-season value · Proj pts = total rest-of-season projected points at this league's scoring" +
+      (drKeeperCount() ? " · " + drKeeperCount() + " keepers out of the pool" : "");
   }
   $("#snakeChips").addEventListener("click", e=>{
     const b = e.target.closest("button.fchip"); if(!b) return;
     drRoot.querySelectorAll("#snakeChips .fchip").forEach(x=>x.classList.remove("on"));
     b.classList.add("on"); filter = b.dataset.f; render();
+  });
   $("#snakeAdpChips").addEventListener("click", e=>{
     const b = e.target.closest("button.fchip"); if(!b) return;
     drRoot.querySelectorAll("#snakeAdpChips .fchip").forEach(x=>x.classList.remove("on"));
@@ -20018,9 +20148,9 @@ $("#snakeBody").innerHTML = rows.slice(0, 120).map((p,ri)=>{
     RDADP_FMT = (b.dataset.f in map) ? map[b.dataset.f] : 0;
     render();
   });
-  });
   $("#snakeSearch").addEventListener("input", e=>{ q = e.target.value.trim().toLowerCase(); render(); });
   render();
+  window.__drRenderSnake = render;
 })();
 
 /* ----- snake live room ----- */
@@ -20035,7 +20165,7 @@ $("#sleeperBtnS").addEventListener("click", ()=>{ liveBind("s", true); });
 
 function sSeq(){ if (liveActive("s") && LIVE.seq) return LIVE.seq; return snakeSeqN(S.order, SROUNDS); }
 function sCurrentIdx(){ return S.picks.findIndex(p=>!p); }
-function sAvail(){ const t = new Set(S.picks.filter(Boolean)); return SNAKE.filter(p=>!t.has(p.id)); }
+function sAvail(){ const t = new Set(S.picks.filter(Boolean)); return SNAKE.filter(p=>!t.has(p.id) && !drIsKeeper(p.id)); }
 const STARTERS = { QB:1, RB:2, WR:2, TE:1 };
 function mySnakePos(seq){
   const c = { QB:0, RB:0, WR:0, TE:0 };
@@ -20076,6 +20206,7 @@ function renderSnakeRoom(){
       + '<h3 style="margin:2px 0; font-size:21px">'+esc(liveTeamName(s.teamId))+(s.teamId===S.mine ? ' <span class="chip tier">YOUR PICK</span>' : "")+"</h3>"
       + '<div class="sub">Pre-draft value curve at this slot: <b style="color:var(--ink)">'+fmt(SNAKE[Math.min(cur, SNAKE.length-1)].value)+'</b>'
       + (myNext.length ? ' · your next pick'+(myNext.length>1?"s are ":" is ")+myNext.map(o=>slotLabel(o.x.round, o.x.slot)+" ("+(o.i-cur)+' away)').join(" and ") : (s.teamId===S.mine ? "" : ' · you have no picks left')) + "</div>";
+    if (drIsAuction()) $("#clockBoxS").innerHTML = '<h3 style="margin:0; font-size:19px">Auction draft</h3><p class="sub" style="margin:4px 0 0">No draft order — nominate and bid. Best available is priced in dollars from the board.</p>';
     const myPos = mySnakePos(seq);
     $("#recListS").innerHTML = avail.slice(0, 8).map((p, i)=>{
       const inTier = avail.filter(x=>x.pos===p.pos && x.tier===p.tier).length;
@@ -20084,7 +20215,7 @@ function renderSnakeRoom(){
       if(s.teamId===S.mine){ const sn = slotNoteS(p, myPos); if(sn) why += " · "+sn; }
       if(p.inj) why += " · "+p.inj;
       why += rdRec(p);
-      return '<button class="recrow" data-spick="'+p.id+'"><span class="rk">'+(i+1)+'</span><span class="who"><b>'+esc(p.name)+' <span class="pospill pos-'+p.pos+'">'+p.pos+'</span></b><span>'+esc(why)+'</span></span><span class="vv num" style="color:var(--cyan)">'+fmt(p.value)+"</span></button>";
+      return '<button class="recrow" data-spick="'+p.id+'"><span class="rk">'+(i+1)+'</span><span class="who"><b>'+esc(p.name)+' <span class="pospill pos-'+p.pos+'">'+p.pos+'</span></b><span>'+esc(why)+'</span></span><span class="vv num" style="color:var(--cyan)">'+(drIsAuction() ? "$"+drAuctionDollar(p.value, SNAKE) : fmt(p.value))+"</span></button>";
     }).join("");
     drRoot.querySelectorAll("[data-spick]").forEach(b=> b.addEventListener("click", ()=>{ if(!S.follow) makeSnakePick(b.dataset.spick); }));
     renderDraftSearchS();
@@ -20097,7 +20228,7 @@ function renderDraftSearchS(){
   if(!q){ box.innerHTML = '<p class="note" style="margin:0">Type a name to draft anyone left in the pool — not just the top of the board.</p>'; return; }
   const matches = sAvail().filter(p=>p.name.toLowerCase().includes(q)).slice(0, 6);
   box.innerHTML = matches.length ? matches.map(p=>
-    '<button class="recrow" data-sdraft="'+p.id+'"><span class="who"><b>'+esc(p.name)+' <span class="pospill pos-'+p.pos+'">'+p.pos+'</span></b><span>Tier '+p.tier+" · "+p.pos+p.posRank+' overall'+rdRec(p)+'</span></span><span class="vv num" style="color:var(--cyan)">'+fmt(p.value)+"</span></button>"
+    '<button class="recrow" data-sdraft="'+p.id+'"><span class="who"><b>'+esc(p.name)+' <span class="pospill pos-'+p.pos+'">'+p.pos+'</span></b><span>Tier '+p.tier+" · "+p.pos+p.posRank+' overall'+rdRec(p)+'</span></span><span class="vv num" style="color:var(--cyan)">'+(drIsAuction() ? "$"+drAuctionDollar(p.value, SNAKE) : fmt(p.value))+"</span></button>"
   ).join("") : '<p class="note" style="margin:0">No available player matches.</p>';
   drRoot.querySelectorAll("[data-sdraft]").forEach(b=> b.addEventListener("click", ()=>{ if(!S.follow) makeSnakePick(b.dataset.sdraft); }));
 }
@@ -20226,19 +20357,19 @@ function buildStartupPool(){
   const byId = {};
   DATA.pool.forEach(p => { byId[p.id] = p; });
   ROOKIES.forEach(p => { if (!byId[p.id]) byId[p.id] = p; });
-  const list = Object.keys(byId).map(id => { const p = byId[id]; return { id: p.id, name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, value: p.value }; });
+  const list = Object.keys(byId).map(id => { const p = byId[id]; return { id: p.id, name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, value: p.value }; }).filter(p => !drIsKeeper(p.id));
   list.sort((a, b) => b.value - a.value);
   const c = {}; list.forEach(p => { c[p.pos] = (c[p.pos] || 0) + 1; p.posRank = c[p.pos]; });
   return retierList(list);
 }
 function buildRedraftPool(s){
-  const list = SNAKE.map(p => ({ id: p.id, name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, value: mockRdValue(p, s), dyn: p.dyn }));
+  const list = SNAKE.map(p => ({ id: p.id, name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, value: mockRdValue(p, s), dyn: p.dyn })).filter(p => !drIsKeeper(p.id));
   list.sort((a, b) => b.value - a.value);
   const c = {}; list.forEach(p => { c[p.pos] = (c[p.pos] || 0) + 1; p.posRank = c[p.pos]; });
   return retierList(list);
 }
 function buildMockPool(s){
-  if (M.fmt === "rookie") return ROOKIES;
+  if (M.fmt === "rookie") return ROOKIES.filter(r => !drIsKeeper(r.id));
   if (M.fmt === "startup") return buildStartupPool();
   return buildRedraftPool(s);
 }
@@ -20679,16 +20810,24 @@ function applyMockShare(pl){
   }
 })();
 
-/* ---------- format-first layout (Eric, 2026-11-08) ----------
-   The room opens on a Dynasty / Redraft choice. The format follows
-   the site's VALMODE (the same source of truth as the global toggle);
-   a shared-link hash can pin the opening format via window.__draftPin
-   until the user picks a tab. Each format shows its own values list,
-   its mock draft(s), the Draft Sheet for that format, and its live
-   room — never the other format's content. */
+/* ---------- league-first layout (Eric, 2026-11-12) ----------
+   The league determines the board: a connected league's detected type
+   (slpLeagueType / espnLeagueType) picks dynasty or redraft, and its
+   scoring re-prices the board through the normal connect path. There is
+   no format toggle in the room anymore — flipping it used to re-price
+   the whole site. A shared link (mock / room / report code) can still
+   pin the opening format via window.__draftPin until the user picks a
+   view. Each format shows its own values list, its mock draft(s), the
+   Draft Sheet for that format, and its live room — never the other
+   format's content. */
 var ROOM_BUILT = false;
 function roomFmt(){
-  return window.__draftPin || ((typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "redraft" : "dynasty");
+  if (window.__draftPin) return window.__draftPin;
+  if (typeof window !== "undefined" && !window.GUEST_MODE && window.CURRENT_LEAGUE === "conn" && window.CONN_LEAGUE) {
+    const t = window.CONN_LEAGUE.leagueType || "dynasty";
+    return t === "redraft" ? "redraft" : "dynasty";
+  }
+  return ((typeof VALMODE !== "undefined" && VALMODE === "redraft") ? "redraft" : "dynasty");
 }
 function pinRoomFmt(f){
   window.__draftPin = f;
@@ -20724,16 +20863,20 @@ function applyRoomFormat(){
   const fmt = roomFmt();
   const dyn = fmt === "dynasty";
   document.body.classList.add("ff-sheet-mode");
-  if (!dyn) { if (M.fmt !== "snake") M.fmt = "snake"; }
-  else if (M.fmt === "snake") M.fmt = "startup";
+  if (!(M.started && !M.done)) {
+    if (!dyn) { if (M.fmt !== "snake") M.fmt = "snake"; }
+    else if (M.fmt === "snake") M.fmt = "startup";
+  }
   renderMockSetup();
   renderSheet();
   if (!dyn) renderSnakeRoom();
   drApplyView();
 }
 function drSetFormat(fmt){
-  window.__draftPin = null;
-  if (typeof setValMode === "function") setValMode(fmt);
+  /* The Draft Room has no format toggle (Eric, 2026-11-12): this only
+     pins the room for a shared link. It never touches the site's value
+     mode — flipping the room used to re-price the whole site. */
+  window.__draftPin = fmt;
   endMockView();
   DR_VIEW = DR_DEFAULT_VIEW[fmt];
   DR_VIEW_MEM[fmt] = DR_DEFAULT_VIEW[fmt];
@@ -20751,8 +20894,8 @@ drRoot.querySelectorAll("[data-roomfmt]").forEach(b=> b.addEventListener("click"
    deep-linkable and the browser's back/forward moves between them.
    The other formats' containers keep Round 1's shape — this layer
    only decides which single tool is on stage. */
-const DR_VIEWS = { dynasty: ["picks", "pool", "sheet", "mock", "analyzer", "room"], redraft: ["pool", "sheet", "mock", "room"] };
-const DR_DEFAULT_VIEW = { dynasty: "picks", redraft: "pool" };
+const DR_VIEWS = { dynasty: ["pool", "sheet", "mock", "analyzer", "room"], redraft: ["pool", "sheet", "mock", "room"] };
+const DR_DEFAULT_VIEW = { dynasty: "pool", redraft: "pool" };
 let DR_VIEW = null;
 const DR_VIEW_MEM = {};
 function drViewFor(fmt){
@@ -20767,7 +20910,23 @@ function drApplyView(){
   const view = drViewFor(fmt);
   DR_VIEW = view; DR_VIEW_MEM[fmt] = view;
   const show = (el, on) => { if (el) el.hidden = !on; };
-  show($("#fmtDynasty"), dyn && (view === "picks" || view === "pool"));
+  /* League gate (Eric, 2026-11-12): no league, no board. The gate panel
+     and the league bar are the only things on stage until a league is
+     picked. Live polling dies with the room either way. */
+  const gated = drIsGated();
+  const gateEl = document.getElementById("drGate"), barEl = document.getElementById("drLeagueBar");
+  if (gateEl) gateEl.hidden = !gated;
+  if (barEl) barEl.hidden = gated ? !drHasKnownLeagues() : false;
+  if (gated) {
+    show($("#fmtDynasty"), false); show($("#liveDynasty"), false);
+    show($("#fmtRedraft"), false); show($("#liveRedraft"), false);
+    show($("#modeMock"), false); show($("#modeSheet"), false);
+    show($("#drQuickDyn"), false); show($("#drQuickRd"), false);
+    liveStop();
+    return;
+  }
+  drRenderPicker();
+  show($("#fmtDynasty"), dyn && view === "pool");
   show($("#liveDynasty"), dyn && (view === "analyzer" || view === "room"));
   show($("#fmtRedraft"), !dyn && view === "pool");
   show($("#liveRedraft"), !dyn && view === "room");
@@ -20810,13 +20969,15 @@ drRoot.addEventListener("click", e=>{
   if (b) drShowView(b.dataset.drview);
 });
 function drParseRoute(){
-  const m = /^#\/draft\/(dynasty|redraft)\/(picks|pool|sheet|mock|analyzer|room)\/?$/.exec(location.hash || "");
+  const m = /^#\/draft\/(dynasty|redraft)\/(pool|sheet|mock|analyzer|room)\/?$/.exec(location.hash || "");
   return m ? { fmt: m[1], view: m[2] } : null;
 }
 function drApplyRoute(rt, opts){
   if (!rt) return;
   opts = opts || {};
-  if (rt.fmt !== roomFmt()) drSetFormat(rt.fmt);
+  /* The league determines the board — a hash can only pin the format
+     while no league is connected (guest opening a shared link). */
+  if (drIsGated() && rt.fmt !== roomFmt()) drSetFormat(rt.fmt);
   drShowView(rt.view, { push: false, scroll: opts.scroll });
 }
 window.addEventListener("popstate", ()=>{ const rt = drParseRoute(); if (rt) drApplyRoute(rt, { scroll: false }); });
@@ -20859,7 +21020,7 @@ function liveStatusFor(room){
   const C = sheetConn();
   if (LIVE.bound && LIVE.room === room) {
     if (LIVE.status === "complete") return "Draft complete · <b style='color:var(--ink)'>" + esc(LIVE.name) + "</b> — the final board, straight from the draft feed.";
-    return "<span class='live-dot'>● LIVE</span> · <b style='color:var(--ink)'>" + esc(LIVE.name) + "</b> — this room follows the real draft; new picks land on their own. Updated " + liveAgo() + ".";
+    return "<span class='live-dot'>● LIVE</span> · <b style='color:var(--ink)'>" + esc(LIVE.name) + "</b> — this room follows the real draft; new picks land on their own. Updated " + liveAgo() + "." + (LIVE.type === "auction" ? " Auction draft — dollar values, not a ranking." : "");
   }
   if (C && C.platform === "espn") return "Demo league — live draft sync follows Sleeper drafts, and this league is on ESPN, so the room runs on the built-in demo. Picks are manual here.";
   if (C) return "Demo league for now — this room follows your league's draft live while it's running. Until then it runs on the built-in demo, picks manual.";
@@ -21034,7 +21195,7 @@ async function liveBind(room, force){
    rule (the snake board's retier): a new tier starts when a value
    falls under 85% of the current tier's top value. */
 let SHEET_ROWS = [];
-function sheetIsRedraft(){ return (typeof VALMODE !== "undefined" && VALMODE === "redraft"); }
+function sheetIsRedraft(){ return roomFmt() === "redraft"; }
 function sheetTier(list){
   let tier = 1, top = list.length ? list[0].value : 0;
   list.forEach((p, i) => { if (i > 0 && p.value < top * 0.85) { tier++; top = p.value; } p.tier = tier; });
@@ -21325,6 +21486,227 @@ $("#sheetCsv").addEventListener("click", () => {
   ["ladder","pool","analyzer","room","sboard","sroom","mocksetup","mockroomsec","mockresults"].forEach(id=>{ const el=document.getElementById(id); if(el) obs.observe(el); });
 })();
 
+/* ---------- Draft Room reboot: league-first gate + picker (Eric, 2026-11-12) ----------
+   The room is league-first. No league, no board: a guest sees the gate
+   and nothing else. The league determines the board — its detected type
+   picks dynasty or redraft, its scoring re-prices the board through the
+   normal connect path, and the live room follows its draft. Switching
+   leagues here loads that league site-wide, exactly like picking it in
+   the connect dialog. */
+function drConnKey(){
+  if (typeof window === "undefined" || !window.CONN_LEAGUE || window.CURRENT_LEAGUE !== "conn" || window.CONN_LEAGUE.leagueId == null) return null;
+  return String(window.CONN_LEAGUE.platform || "sleeper").toLowerCase() + ":" + String(window.CONN_LEAGUE.leagueId);
+}
+function drIsGated(){ return !drConnKey(); }
+function drStatusLabel(s){ return ({ in_season: "Active", complete: "Draft complete", pre_draft: "About to draft", drafting: "Live draft" }[s] || s || ""); }
+function drLeagueTypeOf(lg){
+  try { if (typeof slpLeagueType === "function") return slpLeagueType(lg); } catch (e) {}
+  return "dynasty";
+}
+function drUpdateKeepers(){
+  DR_KEEPERS.clear();
+  const C = window.CONN_LEAGUE;
+  if (!C || window.CURRENT_LEAGUE !== "conn") return;
+  let st = (C.league && C.league.status) || null;
+  if (!st && typeof slpState !== "undefined" && slpState && Array.isArray(slpState.leagues)) {
+    const hit = slpState.leagues.find(l => String(l.league_id) === String(C.leagueId));
+    if (hit) st = hit.status || null;
+  }
+  /* Keepers only matter before the draft: rosters are empty pre-draft
+     except for declared keepers. In-season, rosters are full teams. */
+  if (st !== "pre_draft") return;
+  (C.teams || []).forEach(t => (t.playerIds || []).forEach(id => DR_KEEPERS.add(String(id))));
+}
+function drKnownLeagues(){
+  const byKey = {};
+  const add = (e) => {
+    if (!e || e.leagueId == null || !e.platform) return;
+    const k = String(e.platform).toLowerCase() + ":" + String(e.leagueId);
+    if (!byKey[k]) byKey[k] = e;
+    else { const o = byKey[k]; if (!o.name && e.name) o.name = e.name; if (o.season == null && e.season != null) o.season = e.season; if (!o.username && e.username) o.username = e.username; if (o.lastUsed == null && e.lastUsed != null) o.lastUsed = e.lastUsed; }
+  };
+  try { if (window.__ffSaved && typeof window.__ffSaved.list === "function") window.__ffSaved.list().forEach(e => add({ platform: e.platform, leagueId: e.leagueId, name: e.name, season: e.season, username: e.username, yourRid: e.yourRid, lastUsed: e.lastUsed })); } catch (e) {}
+  try { if (typeof slpState !== "undefined" && slpState && Array.isArray(slpState.leagues)) slpState.leagues.forEach(l => add({ platform: "sleeper", leagueId: String(l.league_id), name: l.name, season: Number(l.season) || null, username: slpState.user ? slpState.user.username : null, raw: l })); } catch (e) {}
+  if (window.CONN_LEAGUE && window.CONN_LEAGUE.leagueId != null) add({ platform: window.CONN_LEAGUE.platform || "sleeper", leagueId: String(window.CONN_LEAGUE.leagueId), name: (window.CONN_LEAGUE.league && window.CONN_LEAGUE.league.name) || null, season: (window.CONN_LEAGUE.league && window.CONN_LEAGUE.league.season) || null, username: window.CONN_LEAGUE.username || null, yourRid: window.CONN_LEAGUE.yourRid != null ? window.CONN_LEAGUE.yourRid : null });
+  const list = Object.keys(byKey).map(k => byKey[k]);
+  list.sort((a, b) => ((b.lastUsed || 0) - (a.lastUsed || 0)));
+  return list;
+}
+function drHasKnownLeagues(){ return drKnownLeagues().length > 0; }
+function drEntryLabel(e){
+  const meta = drLeagueMeta[String(e.platform).toLowerCase() + ":" + String(e.leagueId)];
+  const type = meta && meta.type ? meta.type : (e.raw ? drLeagueTypeOf(e.raw) : null);
+  const state = meta && meta.state ? meta.state : (e.raw && e.raw.status ? drStatusLabel(e.raw.status) : null);
+  const bits = [e.name || ("League " + e.leagueId)];
+  if (e.season) bits.push(String(e.season));
+  if (type) bits.push(type === "dynasty" ? "Dynasty" : "Redraft");
+  if (state) bits.push(state);
+  return bits.join(" · ");
+}
+function drRenderPicker(){
+  const sel = document.getElementById("drLeaguePick");
+  const stateEl = document.getElementById("drLeagueState");
+  if (!sel) return;
+  const entries = drKnownLeagues();
+  const cur = drConnKey();
+  sel.innerHTML = entries.map(e => {
+    const k = String(e.platform).toLowerCase() + ":" + String(e.leagueId);
+    return '<option value="' + esc(k) + '"' + (k === cur ? " selected" : "") + '>' + esc(drEntryLabel(e)) + '</option>';
+  }).join("") || '<option value="">No leagues yet — connect one below</option>';
+  const C = window.CONN_LEAGUE;
+  if (stateEl) {
+    if (C && window.CURRENT_LEAGUE === "conn") {
+      const meta = (cur && drLeagueMeta[cur]) || {};
+      const st = (C.league && C.league.status) || meta.status || "";
+      stateEl.textContent = (st ? drStatusLabel(st) + " · " : "") + ((C.leagueType || "dynasty") === "redraft" ? "Redraft" : "Dynasty") + (C.format ? " · " + (C.format.sf ? "Superflex" : "1 QB") + " · " + (C.format.ppr === 1 ? "PPR" : C.format.ppr === 0.5 ? "Half PPR" : "0 PPR") : "");
+    } else stateEl.textContent = "";
+  }
+  /* Lazy state fetch for Sleeper entries known only by id: one public
+     league read each, cached — the option label gains its state when the
+     read lands. Pre-draft leagues get one drafts read too, so a league
+     with no draft object yet reads "Needs to draft" instead of
+     "About to draft". */
+  entries.forEach(e => {
+    if (String(e.platform).toLowerCase() !== "sleeper") return;
+    const k = String(e.platform).toLowerCase() + ":" + String(e.leagueId);
+    if (drLeagueMeta[k] && drLeagueMeta[k].state) return;
+    if (typeof slpGet !== "function") return;
+    slpGet("/league/" + encodeURIComponent(e.leagueId)).then(lg => {
+      if (!lg) return;
+      const type = drLeagueTypeOf(lg);
+      const st = lg.status || "";
+      drLeagueMeta[k] = { status: st, type: type, state: drStatusLabel(st) };
+      if (st === "pre_draft") {
+        slpGet("/league/" + encodeURIComponent(e.leagueId) + "/drafts").then(ds => {
+          if (!Array.isArray(ds) || !ds.length) drLeagueMeta[k].state = "Needs to draft";
+          drRenderPicker();
+        }).catch(() => {});
+      }
+      drRenderPicker();
+    }).catch(() => {});
+  });
+}
+async function drLoadEntry(e){
+  if (!e) return false;
+  try {
+    if (String(e.platform).toLowerCase() === "espn") {
+      if (typeof window.__ffReconnectEspn === "function") { window.__ffReconnectEspn(e.leagueId); return true; }
+      return false;
+    }
+    if (typeof window.__ffReconnectSleeper === "function") {
+      const ok = await window.__ffReconnectSleeper(e.username || (typeof slpState !== "undefined" && slpState.user ? slpState.user.username : null), e.leagueId, e.season || null, {});
+      if (ok) drAfterLeagueChange();
+      return !!ok;
+    }
+    return false;
+  } catch (err) { return false; }
+}
+function drAfterLeagueChange(){
+  /* A league was picked: it determines the board from here on, so a
+     shared link's format pin stops overriding it. */
+  window.__draftPin = null;
+  drUpdateKeepers();
+  if (typeof window.__syncDraftData === "function") window.__syncDraftData();
+  if (typeof window.__drRenderPool === "function") window.__drRenderPool();
+  if (typeof window.__drRenderSnake === "function") window.__drRenderSnake();
+  if (typeof renderSheet === "function") renderSheet();
+  drRenderPicker();
+  if (typeof applyRoomFormat === "function") applyRoomFormat();
+}
+function drRefreshGate(){
+  const key = drConnKey();
+  const changed = key !== drLastLeagueKey;
+  drLastLeagueKey = key;
+  if (changed) drAfterLeagueChange();
+  else drRenderPicker();
+  return !key;
+}
+async function drGateFindLeagues(){
+  const inp = document.getElementById("drGateUser");
+  const note = document.getElementById("drGateNote");
+  const listEl = document.getElementById("drGateLeagues");
+  const name = inp ? (inp.value || "").trim() : "";
+  const setNote = (t) => { if (note) note.textContent = t; };
+  if (listEl) listEl.innerHTML = "";
+  if (!name) { setNote("Enter your Sleeper username."); return; }
+  setNote("Finding your leagues…");
+  try {
+    if (typeof slpGet !== "function") throw new Error("no api");
+    const user = await slpGet("/user/" + encodeURIComponent(name));
+    if (!user || !user.user_id) { setNote("Couldn't find that Sleeper username — check the spelling and try again."); return; }
+    let season = (typeof slpState !== "undefined" && slpState.season) || null;
+    if (!season) {
+      try { const st = await slpGet("/state/nfl"); if (st && st.season) season = Number(st.season); } catch (e) {}
+      if (!season) season = 2026;
+    }
+    let leagues = await slpGet(`/user/${user.user_id}/leagues/nfl/${season}`);
+    if (!leagues || !leagues.length) leagues = await slpGet(`/user/${user.user_id}/leagues/nfl/${season - 1}`);
+    if (!leagues || !leagues.length) { setNote("No fantasy leagues on this account for the " + season + " or " + (season - 1) + " season."); return; }
+    if (typeof slpState !== "undefined" && slpState) { slpState.user = user; slpState.leagues = leagues; }
+    setNote("Found " + leagues.length + " league" + (leagues.length === 1 ? "" : "s") + " — pick yours:");
+    if (listEl) {
+      listEl.innerHTML = leagues.map((lg, i) =>
+        '<button type="button" class="slp-league" data-dr-gate-league="' + i + '"><span class="slp-league-name">' + esc(lg.name) + '</span><span class="slp-league-meta">' + esc(String(lg.season)) + ' season · ' + esc(String(lg.total_rosters)) + ' teams · ' + esc(drStatusLabel(lg.status)) + ' · ' + (drLeagueTypeOf(lg) === "dynasty" ? "Dynasty" : "Redraft") + '</span></button>').join("");
+      listEl.querySelectorAll("[data-dr-gate-league]").forEach(btn => btn.addEventListener("click", async () => {
+        const lg = leagues[Number(btn.dataset.drGateLeague)];
+        setNote("Loading " + lg.name + "…");
+        btn.disabled = true;
+        try {
+          if (typeof slpLoadLeague === "function") await slpLoadLeague(lg, { landCommand: true });
+          drAfterLeagueChange();
+        } catch (e) { setNote("That league didn't load — try again in a minute."); btn.disabled = false; }
+      }));
+    }
+  } catch (e) { setNote("Sleeper isn't responding — try again in a minute."); }
+}
+function drIsAuction(){ return !!(typeof LIVE !== "undefined" && LIVE.bound && LIVE.type === "auction"); }
+function drAuctionDollar(v, pool){
+  if (!(v > 0) || !pool || !pool.length) return 1;
+  let teams = 12, rounds = 15;
+  try { if (LIVE.seq) teams = LIVE.seq.filter(s => s.round === 1).length || 12; if (LIVE.rounds) rounds = LIVE.rounds; } catch (e) {}
+  const n = Math.min(pool.length, teams * rounds);
+  const sum = pool.slice(0, n).reduce((s, p) => s + (p.value || 0), 0);
+  if (!sum) return 1;
+  return Math.max(1, Math.round(v / sum * teams * 200));
+}
+(function drWireGate(){
+  const find = document.getElementById("drGateFind");
+  if (find) find.addEventListener("click", drGateFindLeagues);
+  const userInp = document.getElementById("drGateUser");
+  if (userInp) userInp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); drGateFindLeagues(); } });
+  const espnBtn = document.getElementById("drGateEspnGo");
+  if (espnBtn) espnBtn.addEventListener("click", () => {
+    const inp = document.getElementById("drGateEspn");
+    const v = inp ? (inp.value || "").trim() : "";
+    const note = document.getElementById("drGateNote");
+    if (!v) { if (note) note.textContent = "Paste your ESPN league URL or league ID first."; return; }
+    if (typeof window.__ffReconnectEspn === "function") { window.__ffReconnectEspn(v); return; }
+    if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
+  });
+  const chg = document.getElementById("drLeagueChange");
+  if (chg) chg.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
+  const sel = document.getElementById("drLeaguePick");
+  if (sel) sel.addEventListener("change", async () => {
+    const k = sel.value;
+    if (!k) return;
+    const e = drKnownLeagues().find(x => (String(x.platform).toLowerCase() + ":" + String(x.leagueId)) === k);
+    if (!e) return;
+    sel.disabled = true;
+    const ok = await drLoadEntry(e);
+    sel.disabled = false;
+    if (!ok && typeof window.openSleeperConnect === "function") window.openSleeperConnect();
+    else drRenderPicker();
+  });
+  /* A league connected anywhere else (header, dialog, auto-reconnect)
+     re-prices the room through the same path as opening it. */
+  window.addEventListener("modechange", () => {
+    try {
+      const tab = document.getElementById("tab-draft");
+      if (tab && tab.classList.contains("active")) drRefreshGate();
+    } catch (e) {}
+  });
+})();
+
 buildRoomLayout();
 if (!window.__draftPin && (M.started || M.done)) window.__draftPin = M.fmt === "snake" ? "redraft" : "dynasty";
 applyRoomFormat();
@@ -21351,7 +21733,15 @@ window.drDraft = {
     if (m === "rookie") { pinRoomFmt("dynasty"); return; }
     if (m === "mock") { drShowView("mock"); }
   },
-  mode: ()=> roomFmt()
+  mode: ()=> roomFmt(),
+  masterList: ()=> (typeof drMasterRows === "function" ? drMasterRows() : []),
+  /* Pick ladder (baked vet equivalents included) for surfaces outside
+     this IIFE — the main Player Values board's Picks tab reads it here
+     because the site-wide DATA has no ladder key. */
+  ladder: ()=> (DATA.ladder || []).slice(),
+  keeperCount: ()=> drKeeperCount(),
+  gated: ()=> drIsGated(),
+  league: ()=> (window.CONN_LEAGUE && window.CURRENT_LEAGUE === "conn" ? { platform: window.CONN_LEAGUE.platform, leagueId: window.CONN_LEAGUE.leagueId, name: (window.CONN_LEAGUE.league && window.CONN_LEAGUE.league.name) || null, type: window.CONN_LEAGUE.leagueType || "dynasty" } : null)
 };
 })();
 </script>
@@ -21362,6 +21752,7 @@ window.drDraft = {
   var hashDriven = /(^#|[#&])(report|room|snake|mock)=/.test(location.hash || "") || /^#\/draft\//.test(location.hash || "");
   window.drOpenDraft = function () {
     if (typeof window.__syncDraftData === "function") window.__syncDraftData();
+    if (typeof drRefreshGate === "function") drRefreshGate();
     if (!window.drDraft) return;
     if (hashDriven && lastDraftMode === null) { lastDraftMode = "hash"; return; }   /* a shared link pinned the format itself */
     if (window.drDraft.mockBusy && window.drDraft.mockBusy()) return;   /* never re-render mid-mock */
