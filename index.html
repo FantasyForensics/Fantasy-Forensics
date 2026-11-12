@@ -1699,6 +1699,12 @@
       body.guest .nav-lock { display: inline-block; }
       body.guest #team-strip, body.guest #board-owner { display: none; }
       body.guest #tab-league > *:not(.locked-state),
+      body.guest #tab-spotlight > *:not(.locked-state),
+      body.guest #tab-power > *:not(.locked-state),
+      body.guest #tab-rosters > *:not(.locked-state),
+      body.guest #tab-outlook > *:not(.locked-state),
+      body.guest #tab-storylines > *:not(.locked-state),
+      body.guest #tab-mscore > *:not(.locked-state),
       body.guest #tab-lineup > *:not(.locked-state),
       body.guest #tab-bye > *:not(.locked-state),
       body.guest .finder-part, body.guest .waiver-part { display: none; }
@@ -3165,6 +3171,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         </div>
         <button role="tab" type="button" data-pnav="league" aria-selected="false">League<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 4.5h8V9a4 4 0 0 1-8 0z"/><path d="M8 5.5H5a3 3 0 0 0 3.2 3M16 5.5h3a3 3 0 0 1-3.2 3"/><path d="M12 13v3"/><path d="M9.5 19.5l.7-3.5h3.6l.7 3.5"/><path d="M8.5 19.5h7"/></svg></span></button>
         <div class="sb-subgroup" data-subgroup="league" hidden>
+          <button type="button" role="tab" data-pnav-sub="spotlight" data-group="league" aria-selected="false">Your Team</button>
           <button type="button" role="tab" data-pnav-sub="power" data-group="league" aria-selected="false">Power Rankings</button>
           <button type="button" role="tab" data-pnav-sub="mscore" data-group="league" aria-selected="false">Manager Score</button>
           <button type="button" role="tab" data-pnav-sub="rosters" data-group="league" aria-selected="false">Rosters</button>
@@ -3948,7 +3955,28 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div class="locked-state" data-locked="league">
           <div class="locked-body">
             <h2>Your league, analyzed</h2>
-            <p id="league-gate-text">Connect a league and this page opens with <strong>your team</strong> — Current Power rank, playoff odds, this week's matchup, and top waiver targets — followed by <strong>Current Power and Franchise Value rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨. You're browsing as a guest, so there's no league to show yet.</p>
+            <p id="league-gate-text">Connect a league to see <strong>playoff odds</strong> for every team — who's in, who's on the bubble, and what each remaining game swings. You're browsing as a guest, so there's no league to show yet.</p>
+            <div class="locked-actions">
+              <button type="button" class="locked-cta">Connect your league</button>
+            </div>
+            <p class="locked-note" hidden>Connect your league and this page loads it instead — your rosters, your standings, your matchups, priced by the same algorithm.</p>
+          </div>
+        </div>
+        <div class="subnav-mount subnav-inview" data-subnav-mount="league"></div>
+        <div id="lg-odds" data-subview="odds">
+        <div id="lifeline-panel"></div>
+        <div id="odds-panel"></div>
+        <div id="pp-explorer"></div>
+        <div id="po-sched"></div>
+        <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
+      </div>
+      </section>
+
+      <section class="tab" id="tab-spotlight" role="tabpanel">
+        <div class="locked-state" data-locked="spotlight">
+          <div class="locked-body">
+            <h2>Your Team</h2>
+            <p>Connect a league and this page opens with <strong>your team</strong> — Current Power rank, playoff odds, this week's matchup, and top waiver targets. You're browsing as a guest, so there's no league to show yet.</p>
             <div class="locked-actions">
               <button type="button" class="locked-cta">Connect your league</button>
             </div>
@@ -3960,8 +3988,21 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div id="myteams-out"></div>
         </div>
           <div id="tp-promo"></div>
-        <div class="subnav-mount subnav-inview" data-subnav-mount="league"></div>
-        <div id="lg-power" data-subview="power">
+        <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
+      </section>
+
+      <section class="tab" id="tab-power" role="tabpanel">
+        <div class="locked-state" data-locked="power">
+          <div class="locked-body">
+            <h2>Power Rankings</h2>
+            <p>Connect a league and this page shows <strong>Current Power and Franchise Value rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨. You're browsing as a guest, so there's no league to show yet.</p>
+            <div class="locked-actions">
+              <button type="button" class="locked-cta">Connect your league</button>
+            </div>
+            <p class="locked-note" hidden>Connect your league and this page loads it instead — your rosters, your standings, your matchups, priced by the same algorithm.</p>
+          </div>
+        </div>
+        <div id="lg-power">
         <div id="wtw-wrap" hidden>
           <h2 class="block-title" id="wtw-title">Results</h2>
           <div id="wtw-out"></div>
@@ -3971,16 +4012,42 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div id="power-list"></div>
         <details class="how-box">
           <summary>How this works</summary>
-          <p class="tab-intro" id="teams-intro">Your team first, then the whole league. The spotlight card up top carries your <strong>Current Power rank</strong>, <strong>playoff odds</strong> from the 3,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong> — tap any number and that league opens in the matching tool. Below it, every roster is ranked two ways: <strong>Current Power</strong> — this season's strength, from optimal starters' rest-of-season projections, recent form, and bench depth (draft picks count for nothing here) — and <strong>Franchise Value</strong> — total roster value, with players and draft-pick capital shown as separate subtotals, never blended. Each team also carries its franchise tag — Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨 — from its Franchise rank and core age, and its trade stance — Buyer, Holding, Seller, or Maximal Seller — from its playoff odds. Tap a team to see its full roster and picks, and exactly where yours stacks up.</p>
+          <p class="tab-intro" id="teams-intro">The Your Team view carries your <strong>Current Power rank</strong>, <strong>playoff odds</strong> from the 3,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong> — tap any number and that league opens in the matching tool. Below it, every roster is ranked two ways: <strong>Current Power</strong> — this season's strength, from optimal starters' rest-of-season projections, recent form, and bench depth (draft picks count for nothing here) — and <strong>Franchise Value</strong> — total roster value, with players and draft-pick capital shown as separate subtotals, never blended. Each team also carries its franchise tag — Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨 — from its Franchise rank and core age, and its trade stance — Buyer, Holding, Seller, or Maximal Seller — from its playoff odds. Tap a team to see its full roster and picks, and exactly where yours stacks up.</p>
         </details>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
-        <div id="lg-rosters" data-subview="rosters">
+      </section>
+
+      <section class="tab" id="tab-rosters" role="tabpanel">
+        <div class="locked-state" data-locked="rosters">
+          <div class="locked-body">
+            <h2>Rosters</h2>
+            <p>Connect a league to see <strong>every roster in it</strong> — starters, bench, and draft picks for every team, each player priced for your league's scoring. You're browsing as a guest, so there's no league to show yet.</p>
+            <div class="locked-actions">
+              <button type="button" class="locked-cta">Connect your league</button>
+            </div>
+            <p class="locked-note" hidden>Connect your league and this page loads it instead — your rosters, your standings, your matchups, priced by the same algorithm.</p>
+          </div>
+        </div>
+        <div id="lg-rosters">
         <h2 class="block-title">Rosters</h2>
         <div id="roster-list"></div>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
-        <div id="lg-outlook" data-subview="outlook">
+      </section>
+
+      <section class="tab" id="tab-outlook" role="tabpanel">
+        <div class="locked-state" data-locked="outlook">
+          <div class="locked-body">
+            <h2>Season Outlook</h2>
+            <p>Connect a league and the rest of its season is <strong>simulated 3,000 times</strong> — projected records, playoff odds, and title odds for every team. You're browsing as a guest, so there's no league to show yet.</p>
+            <div class="locked-actions">
+              <button type="button" class="locked-cta">Connect your league</button>
+            </div>
+            <p class="locked-note" hidden>Connect your league and this page loads it instead — your rosters, your standings, your matchups, priced by the same algorithm.</p>
+          </div>
+        </div>
+        <div id="lg-outlook">
         <div id="season-out"></div>
         <details class="how-box inseason">
           <summary>How this works</summary>
@@ -3988,24 +4055,44 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         </details>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
-        <div id="lg-odds" data-subview="odds">
-        <div id="lifeline-panel"></div>
-        <div id="odds-panel"></div>
-        <div id="pp-explorer"></div>
-        <div id="po-sched"></div>
-        <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
-      </div>
-        <div id="lg-story" data-subview="storylines">
+      </section>
+
+      <section class="tab" id="tab-storylines" role="tabpanel">
+        <div class="locked-state" data-locked="storylines">
+          <div class="locked-body">
+            <h2>League Storylines</h2>
+            <p>Connect a league and this page writes up its <strong>storylines</strong> — the contenders, the collapses, and the races still to be decided. You're browsing as a guest, so there's no league to show yet.</p>
+            <div class="locked-actions">
+              <button type="button" class="locked-cta">Connect your league</button>
+            </div>
+            <p class="locked-note" hidden>Connect your league and this page loads it instead — your rosters, your standings, your matchups, priced by the same algorithm.</p>
+          </div>
+        </div>
+        <div id="lg-story">
         <h2 class="block-title">League Storylines</h2>
         <div id="story-out"><p class="tab-intro">Your league's storylines load here.</p></div>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
-        <div id="lg-mscore" data-subview="mscore">
+      </section>
+
+      <section class="tab" id="tab-mscore" role="tabpanel">
+        <div class="locked-state" data-locked="mscore">
+          <div class="locked-body">
+            <h2>Manager Score</h2>
+            <p>Connect a league and your <strong>Manager Score</strong> grades how you're running it — roster, assets, results, playoff outlook and future, each scored against the other teams in the league. You're browsing as a guest, so there's no score yet.</p>
+            <div class="locked-actions">
+              <button type="button" class="locked-cta">Connect your league</button>
+            </div>
+            <p class="locked-note" hidden>Connect your league and this page loads it instead — your rosters, your standings, your matchups, priced by the same algorithm.</p>
+          </div>
+        </div>
+        <div id="lg-mscore">
         <h2 class="block-title">Manager Score</h2>
         <div id="ms-view"></div>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
       </section>
+
 
       <section class="tab" id="tab-lineup" role="tabpanel">
         <div class="locked-state" data-locked="lineup">
@@ -4239,6 +4326,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           <h3 class="tools-group-h">League</h3>
           <div class="tools-pills">
             <button type="button" class="tools-pill" style="--tile-accent:#00E5FF" data-tools-pill="power" data-tools-group="league"><span class="tools-pill-t">Power Rankings</span><span class="tools-pill-s">Every team in your league, ranked</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FFC400" data-tools-pill="rosters" data-tools-group="league"><span class="tools-pill-t">Rosters</span><span class="tools-pill-s">Every roster in the league, priced</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#C6FF00" data-tools-pill="odds" data-tools-group="league"><span class="tools-pill-t">Playoff Odds</span><span class="tools-pill-s">Who's in, who's on the bubble</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#448AFF" data-tools-pill="ppath" data-tools-group="league"><span class="tools-pill-t">Playoff Path</span><span class="tools-pill-s">Your road to the playoffs</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#B388FF" data-tools-pill="outlook" data-tools-group="league"><span class="tools-pill-t">Season Outlook</span><span class="tools-pill-s">Records and title odds, projected</span></button>
@@ -6425,8 +6513,12 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         "Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot. Injury designations refresh daily after it; the values themselves re-price with each new snapshot.";
 
       /* ---------- tabs ---------- */
-      const NAVMAP = { values: "tab-values", risers: "tab-risers", insights: "tab-insights", league: "tab-league", trades: "tab-trades", targets: "tab-targets", upgrades: "tab-upgrades", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", moves: "tab-moves", roster: "tab-roster", ineff: "tab-ineff", tools: "tab-tools" };
+      const NAVMAP = { values: "tab-values", risers: "tab-risers", insights: "tab-insights", league: "tab-league", spotlight: "tab-spotlight", power: "tab-power", rosters: "tab-rosters", outlook: "tab-outlook", storylines: "tab-storylines", mscore: "tab-mscore", trades: "tab-trades", targets: "tab-targets", upgrades: "tab-upgrades", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", moves: "tab-moves", roster: "tab-roster", ineff: "tab-ineff", tools: "tab-tools" };
       const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, tradeboard: 1, teamport: 1, command: 1, radar: 1, format: 1, how: 1 };
+      /* Phase 5 Piece 2: every League view — the #tab-league section
+         itself plus the six promoted sections — keeps the League
+         chrome (body.on-league shows the desktop subnav head row). */
+      const FF_LEAGUE_KEYS = { league: 1, spotlight: 1, power: 1, rosters: 1, outlook: 1, storylines: 1, mscore: 1 };
       function activateNav(key, arg) {
         const viewKey = key === "risk" ? "lineup" : key;
         document.querySelectorAll("nav.mainnav > button, nav.mainnav .tools-btn").forEach(b => {
@@ -6434,19 +6526,46 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           b.setAttribute("aria-selected", (k === viewKey || (k === "tools" && !!TOOLKEYS[key])) ? "true" : "false");
         });
         document.querySelectorAll("section.tab").forEach(s => s.classList.toggle("active", s.id === NAVMAP[viewKey]));
-        document.body.classList.toggle("on-league", key === "league");
+        document.body.classList.toggle("on-league", !!FF_LEAGUE_KEYS[key]);
         if (key === "draft" && typeof window.drOpenDraft === "function") window.drOpenDraft();
         if (key === "league" && typeof window.showSubNav === "function") {
           const wantL = (window.__subnavNext && window.__subnavNext.league) || (window.__subnavState && window.__subnavState.league) || "power";
           if (window.__subnavNext) delete window.__subnavNext.league;
           window.showSubNav("league", wantL);
         }
-        /* Every route onto the League Analyzer funnels through here —
-           nav clicks, the connect flow's landing, the Values-tab team
-           strip — so the Your Team spotlight re-renders on activation
-           itself, not only on the nav button's own click listener.
-           (Guarded: the spotlight script loads after this one.) */
-        if (key === "league" && typeof window.renderSpotlight === "function") window.renderSpotlight();
+        /* Phase 5 Piece 2: each League view is its own section, and
+           every entry path (sidebar pill, Tools pill, CC cell,
+           goSub, goLeagueSub, subnav strip) funnels through here —
+           so render-on-landing lives in this one place, not in the
+           callers. (Guarded: the render scripts load after this one.) */
+        /* Phase 5 Piece 2: the promoted League views keep the shared
+           subnav state (and the foot strips' selection) honest on every
+           entry path — sidebar/Tools pills bypass showSubNav now, and
+           msAfterUpdate + the strip highlights read this state. */
+        if (FF_LEAGUE_KEYS[key] && key !== "league" && window.__subnavState) {
+          window.__subnavState.league = key;
+          if (typeof renderSubnavs === "function") renderSubnavs("league");
+        }
+        if (key === "spotlight" && typeof window.renderSpotlight === "function") window.renderSpotlight();
+        if (key === "power") {
+          /* CC Power/Franchise deep link, consumed once (moved from
+             showSubNav): a pending cp/fr request wins once, then the
+             seasonal default resumes. Re-render only when the resolved
+             view differs from what's on screen, so roster expansions
+             survive tab switches. */
+          try {
+            if (!window.__ffPowerViewDeep) window.__ffPowerView = null;
+            window.__ffPowerViewDeep = false;
+            if (typeof renderPower === "function" && window.__ffPowerRendered) {
+              const want = (typeof ffPowerViewResolve === "function") ? ffPowerViewResolve() : null;
+              if (want && want !== window.__ffPowerRendered) renderPower();
+            }
+          } catch (e) { /* Power view resolution is best-effort */ }
+        }
+        if (key === "rosters" && typeof window.renderRosterView === "function") { try { window.renderRosterView(); } catch (e) {} }
+        if (key === "outlook" && window.SeasonSim && typeof window.SeasonSim.renderSeason === "function") { try { window.SeasonSim.renderSeason(); } catch (e) {} }
+        if (key === "storylines" && typeof window.renderStorylines === "function") window.renderStorylines();
+        if (key === "mscore" && typeof window.ffMSRenderView === "function") { try { window.ffMSRenderView(); } catch (e) {} }
         if (key === "bye" && typeof window.renderByeView === "function") window.renderByeView();
         /* Header title (Batch 2, Nov 10, 2026): the persistent header
            names the CURRENT view. It used to sit on the guest landing
@@ -6455,7 +6574,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            resolve through the subnav state (already updated above for
            this switch); in-view subnav switches re-title through the
            showSubNav wrapper in the nav script. */
-        const FF_VIEW_TITLES = { command: "Command Center", values: "Fantasy Player Values", risers: "Risers & Fallers", insights: "Insights", trades: "Trade Calculator", targets: "Player Targets", upgrades: "Upgrade Finder", realtrades: "Real Trades", tradeboard: "League Activity", roster: "Roster", lineup: "Lineup Analyzer", waivers: "Waiver Targets", bye: "Bye Week Planner", teamport: "Team Portfolio", moves: "Next Moves", radar: "Opportunity Radar", ineff: "Inefficiency Board", tools: "Tools", draft: "Draft Room", format: "League Format", how: "How It Works" };
+        const FF_VIEW_TITLES = { command: "Command Center", values: "Fantasy Player Values", risers: "Risers & Fallers", insights: "Insights", trades: "Trade Calculator", targets: "Player Targets", upgrades: "Upgrade Finder", realtrades: "Real Trades", tradeboard: "League Activity", roster: "Roster", lineup: "Lineup Analyzer", waivers: "Waiver Targets", bye: "Bye Week Planner", teamport: "Team Portfolio", moves: "Next Moves", radar: "Opportunity Radar", ineff: "Inefficiency Board", spotlight: "Your Team", power: "Power Rankings", rosters: "Rosters", outlook: "Season Outlook", storylines: "Storylines", mscore: "Manager Score", tools: "Tools", draft: "Draft Room", format: "League Format", how: "How It Works" };
         const FF_LEAGUE_TITLES = { power: "Power Rankings", mscore: "Manager Score", rosters: "Rosters", outlook: "Season Outlook", odds: "Playoff Odds", ppath: "Playoff Path", psched: "Schedule Difficulty", results: "League Results", storylines: "Storylines" };
         window.__ffLeagueTitles = FF_LEAGUE_TITLES;
         let ffViewTitle = key === "risk" ? "Starters at Risk" : FF_VIEW_TITLES[key];
@@ -6551,14 +6670,14 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          each section describes itself instead of every subtab
          showing the same paragraph. */
       const LEAGUE_GATE_TEXT = {
-        power: `Connect a league and this page opens with <strong>your team</strong> — Current Power rank, playoff odds, this week's matchup, and top waiver targets — followed by <strong>Current Power and Franchise Value rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨. You're browsing as a guest, so there's no league to show yet.`,
+        power: `Connect a league and this page shows <strong>Current Power and Franchise Value rankings for every roster</strong>, each graded on starting-lineup strength, total roster value, draft-pick capital, and points scored, and tagged Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨. You're browsing as a guest, so there's no league to show yet.`,
         mscore: `Connect a league and your <strong>Manager Score</strong> grades how you're running it — roster, assets, results, playoff outlook and future, each scored against the other teams in the league. You're browsing as a guest, so there's no score yet.`,
         rosters: `Connect a league to see <strong>every roster in it</strong> — starters, bench, and draft picks for every team, each player priced for your league's scoring. You're browsing as a guest, so there's no league to show yet.`,
         outlook: `Connect a league and the rest of its season is <strong>simulated 3,000 times</strong> — projected records, playoff odds, and title odds for every team. You're browsing as a guest, so there's no league to show yet.`,
         odds: `Connect a league to see <strong>playoff odds</strong> for every team — who's in, who's on the bubble, and what each remaining game swings. You're browsing as a guest, so there's no league to show yet.`,
         storylines: `Connect a league and this page writes up its <strong>storylines</strong> — the contenders, the collapses, and the races still to be decided. You're browsing as a guest, so there's no league to show yet.`
       };
-      window.__subnavState = { league: "power" };
+      window.__subnavState = { league: "odds" };
       window.__subnavNext = {};
       function renderSubnavs(tab) {
         document.querySelectorAll('[data-subnav-mount="' + tab + '"]').forEach(m => {
@@ -6567,48 +6686,58 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
               `<button type="button" role="tab" data-subnav-btn="${tab}:${k}" aria-selected="${window.__subnavState[tab] === k}">${label}</button>`).join("") + "</div>";
         });
       }
+      /* Phase 5 Piece 2: the promoted League views (spotlight, power,
+         rosters, outlook, storylines, mscore) are their own sections —
+         they never live in SUBNAV_DEFS. */
+      const FF_PROMOTED_LEAGUE = { spotlight: 1, power: 1, rosters: 1, outlook: 1, storylines: 1, mscore: 1 };
       window.showSubNav = function (tab, sub) {
         if (!SUBNAV_DEFS[tab]) return;
+        if (tab === "league" && FF_PROMOTED_LEAGUE[sub]) {
+          /* A switch to a promoted view routes to its own section —
+             the landing triggers (Power deep-link consume, Manager
+             Score / Rosters / Outlook / Storylines renders) live in
+             activateNav, the one choke point. Only "odds" still swaps
+             inside #tab-league. */
+          window.__subnavState[tab] = sub;
+          renderSubnavs(tab);
+          activateNav(sub);
+          return;
+        }
         if (!SUBNAV_DEFS[tab].some(([k]) => k === sub)) sub = SUBNAV_DEFS[tab][0][0];
         window.__subnavState[tab] = sub;
-        if (tab === "league" && sub === "power") {
-          /* Phase 3 piece 1: the Power page opens on the strip's
-             deep-link request when one is pending, otherwise on the
-             seasonal default (in-season Current Power; offseason
-             Franchise in dynasty). The request is consumed once — a
-             plain tab entry never inherits a stale deep link.
-             Re-render only when the resolved view differs from
-             what's on screen, so roster expansions survive tab
-             switches. */
-          try {
-            if (!window.__ffPowerViewDeep) window.__ffPowerView = null;
-            window.__ffPowerViewDeep = false;
-            if (typeof renderPower === "function" && window.__ffPowerRendered) {
-              const want = (typeof ffPowerViewResolve === "function") ? ffPowerViewResolve() : null;
-              if (want && want !== window.__ffPowerRendered) renderPower();
-            }
-          } catch (e) { /* Power view resolution is best-effort */ }
-        }
         if (tab === "league") {
           const gateP = document.getElementById("league-gate-text");
           if (gateP && LEAGUE_GATE_TEXT[sub]) gateP.innerHTML = LEAGUE_GATE_TEXT[sub];
-          if (sub === "mscore" && typeof window.ffMSRenderView === "function") { try { window.ffMSRenderView(); } catch (e) {} }
         }
         const sec = document.getElementById("tab-" + tab);
         if (sec) sec.querySelectorAll("[data-subview]").forEach(v => { v.style.display = v.dataset.subview === sub ? "" : "none"; });
         renderSubnavs(tab);
       };
       window.goLeagueSub = function (sub) {
-        window.__subnavNext.league = sub;
-        activateNav("league");
+        /* Phase 5 Piece 2: promoted League views navigate directly;
+           only "odds" still lives in #tab-league (Piece 3 splits it).
+           State is kept so the foot strips, the header title, and the
+           Manager Score refresh hook (msAfterUpdate) still read the
+           current League view. */
+        if (FF_PROMOTED_LEAGUE[sub]) {
+          window.__subnavState.league = sub;
+          renderSubnavs("league");
+          activateNav(sub);
+        } else {
+          window.__subnavNext.league = sub;
+          activateNav("league");
+        }
         window.scrollTo({ top: 0 });
       };
       document.querySelectorAll("[data-subnav-mount]").forEach(m => renderSubnavs(m.dataset.subnavMount));
-      window.showSubNav("league", "power");
+      window.showSubNav("league", "odds");
       document.addEventListener("click", e => {
         const b = e.target && e.target.closest ? e.target.closest("[data-subnav-btn]") : null;
         if (!b) return;
         const parts = b.dataset.subnavBtn.split(":");
+        /* Phase 5 Piece 2: League strips route through goLeagueSub so
+           a promoted view lands on its own section, not on #tab-league. */
+        if (parts[0] === "league") { window.goLeagueSub(parts[1]); return; }
         activateNav(parts[0]);
         window.showSubNav(parts[0], parts[1]);
         window.scrollTo({ top: 0 });
@@ -6623,6 +6752,86 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
       /* ---------- power rankings ---------- */
       function gradeClass(g) { if (!g) return ""; return (g.startsWith("A") || g === "B+") ? "good" : (g.startsWith("D") || g === "F") ? "bad" : ""; }
+    </script>
+    <script>
+      "use strict";
+      /* ---------- rosters (League sub-view) ----------
+         Every team's full roster in power order — the same roster
+         table the power cards expand to, rendered for all teams at
+         once. Re-rendered wherever renderPower runs.
+         Phase 5 Piece 2: promoted to its own section (#tab-rosters)
+         with its own landing render (activateNav("rosters")) and a
+         window.renderRosterView export. The renderPower() calls below
+         STAY (decision (b)): they are the cross-view refresh that keeps
+         Rosters fresh on data changes while the view is open, at no
+         extra cost — renderPower already runs on every refreshAll.
+         Phase 3 piece 3 (S12): order + rank numbers follow Current
+         Power in-season (and preseason, as a forecast). In a dynasty
+         offseason Franchise leads — order + rank numbers follow the
+         Franchise rank, never a stale Current Power number. A redraft
+         offseason has nothing live, so the page says so outright
+         (the Power page's quiet-state pattern) instead of showing a
+         stale ranking. */
+      function renderRosterView() {
+        const el = document.getElementById("roster-list");
+        if (!el) return;
+        const rdP = typeof VALMODE !== "undefined" && VALMODE === "redraft";
+        const pv = p => rdP ? dispVal(p) : p.value;
+        let ph = { phase: "in-season" };
+        try { if (typeof ffPhaseState === "function") ph = ffPhaseState(); } catch (e) {}
+        const isOffseason = ph.phase === "offseason";
+        if (rdP && isOffseason) {
+          el.innerHTML = `<div class="ff-power-empty"><h3>Rosters</h3><p>Rosters return when the new season's projections publish. There is no current-season ranking in the offseason.</p></div>`;
+          return;
+        }
+        const rankOf = t => (!rdP && isOffseason) ? t.frRank : t.cpRank;
+        const teamsSorted = DATA.teams.slice().sort((a, b) => {
+          const ra = rankOf(a), rb = rankOf(b);
+          return ((ra == null ? 999 : ra) - (rb == null ? 999 : rb)) || ((a.powerRank || 999) - (b.powerRank || 999));
+        });
+        el.innerHTML = teamsSorted.map(t => {
+          const bbLineup = t.bestLineup ? t.bestLineup.map(l => ({ id: l.p.id, slot: l.slot })) : t.lineup;
+          const lineupIds = new Set(bbLineup.map(l => l.id));
+          const slotOf = {};
+          bbLineup.forEach(l => { slotOf[l.id] = l.slot; });
+          const rows = t.playerIds.map(id => PBY[id]).filter(Boolean)
+            .sort((a, b) => pv(b) - pv(a))
+            .map(p => {
+              const wp = (typeof wkProj === "function") ? wkProj(p) : null;
+              const wkCell = !wp ? '<span class="p-sub">—</span>'
+                : wp.unpriced ? '<span class="p-sub">Unpriced</span>'
+                : (Math.round(wp.pts * 10) / 10).toFixed(1) + (wp.tag ? ` <span class="sig ${wp.cls}">${esc(wp.tag)}</span>` : "");
+              return `<tr>
+              <td>${hsImg(p, "phs-sm")}<span class="p-name">${esc(p.name)}</span>${lineupIds.has(p.id) ? ` <span class="slot-tag">${slotOf[p.id]}</span>` : ""}<div class="p-sub">${logoImg(p.team)}${esc(p.team)}${p.inj ? " · " + esc(p.inj) : ""}</div></td>
+              <td>${p.pos}${(typeof VALMODE !== "undefined" && VALMODE === "redraft" && typeof window.rdPosRank === "function" && window.rdPosRank(p) != null) ? window.rdPosRank(p) : p.posRank}</td>
+              <td class="num wk-proj">${wkCell}</td>
+              <td class="num">${p.unpriced ? '<span class="p-sub">Unpriced</span>' : fmt(pv(p))}</td></tr>`;
+            }).join("");
+          const dispRank = rankOf(t);
+          return `<article class="team-card${t.isUser ? " mine" : ""}">
+            <div class="team-head">
+              <div class="rank-num">${dispRank == null ? "—" : dispRank}</div>
+              <div class="team-main">
+                <div class="team-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div>
+                <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div>
+              </div>
+            </div>
+            <table class="mini"><thead><tr><th>Player</th><th>Pos rank</th><th class="num">This week</th><th class="num">Value</th></tr></thead>
+            <tbody>${rows}</tbody></table>
+            <button class="expand-btn tp-card-btn" data-tp-team="${t.rid}">Team Portfolio →</button>
+          </article>`;
+        }).join("");
+      }
+      window.renderRosterView = renderRosterView;
+    </script>
+    <script>
+      "use strict";
+      /* ================= Power Rankings (League view) =================
+         Phase 5 Piece 2: promoted from #tab-league to its own section
+         (#tab-power), Results block (#wtw-wrap) included. The
+         CP/Franchise toggle, the __ffPowerView* state, and the share
+         wiring move with it; the consume-once CC deep link now lands
+         in activateNav("power"). */
       /* Phase 3 piece 1 — which Power Rankings list the page shows.
          Dynasty has two lists (Current Power, Franchise Value);
          redraft has one (Current Power). A strip deep link
@@ -6811,69 +7020,318 @@ ${rdP ? "" : `
         });
         renderRosterView();
       }
+      renderPower();
+    </script>
+    <script>
+      "use strict";
+      /* ================= Your Team spotlight (League view) =================
+         Phase 5 Piece 2: its own section (#tab-spotlight) under the
+         League group — no longer the header of every League subview.
+         One card per league the page can currently run: the connected
+         Sleeper / ESPN league while one is connected this session. Every number is produced by the
+         existing engines, scoped per league — power rank from the Teams
+         engine (recomputeValues), playoff / title odds from the
+         3,000-sim Season Outlook (buildSeasonSim, cached per league in
+         SIM_BY_LEAGUE exactly as league switching caches it), the week's
+         matchup from the same opponent tables the Lineup tab reads, and
+         the top waiver targets from the waiver engine's own ranking
+         (wvOptimal / wvBar / wvIsStash, same tier order the
+         More tab renders: must-adds, stashes, best of the rest). No new
+         math — the dashboard temporarily points the shared engine state
+         (DATA / TBY / owners / projections / format) at each league,
+         reads its numbers, then restores the active league and
+         re-renders, so the rest of the page never sees the swaps. */
+      const mtOut = document.getElementById("myteams-out");
+      const mtSimQueue = [];
+      const mtSimFailed = new Set();
+      let mtBuilding = false;
 
-      /* ---------- rosters (League sub-view) ----------
-         Every team's full roster in power order — the same roster
-         table the power cards expand to, rendered for all teams at
-         once. Re-rendered wherever renderPower runs.
-         Phase 3 piece 3 (S12): order + rank numbers follow Current
-         Power in-season (and preseason, as a forecast). In a dynasty
-         offseason Franchise leads — order + rank numbers follow the
-         Franchise rank, never a stale Current Power number. A redraft
-         offseason has nothing live, so the page says so outright
-         (the Power page's quiet-state pattern) instead of showing a
-         stale ranking. */
-      function renderRosterView() {
-        const el = document.getElementById("roster-list");
-        if (!el) return;
-        const rdP = typeof VALMODE !== "undefined" && VALMODE === "redraft";
-        const pv = p => rdP ? dispVal(p) : p.value;
-        let ph = { phase: "in-season" };
-        try { if (typeof ffPhaseState === "function") ph = ffPhaseState(); } catch (e) {}
-        const isOffseason = ph.phase === "offseason";
-        if (rdP && isOffseason) {
-          el.innerHTML = `<div class="ff-power-empty"><h3>Rosters</h3><p>Rosters return when the new season's projections publish. There is no current-season ranking in the offseason.</p></div>`;
+      function mtActiveId() { return window.GUEST_MODE ? "d74" : (window.CURRENT_LEAGUE || "d74"); }
+
+      function mtLeagues() {
+        const list = [];
+        const C = window.CONN_LEAGUE;
+        if (C) {
+          const espn = C.platform === "espn";
+          list.push({ id: "conn", name: C.league.name, badge: espn ? "ESPN" : "Sleeper", badgeCls: espn ? "espn" : "sleeper" });
+        }
+        return list;
+      }
+
+      function mtDataFor(id) {
+        if (id === "conn") { const C = window.CONN_LEAGUE; return { league: C.league, players: DATA_D74.players, teams: C.teams, algorithm: DATA_D74.algorithm }; }
+        return DATA_D74;
+      }
+      function mtFormatFor(id) {
+        if (id === "conn") return window.CONN_LEAGUE ? window.CONN_LEAGUE.format : null;
+        return LEAGUE_FORMATS[id] || null;
+      }
+      /* Point the shared engines at league `id` — the same context
+         setLeague / setConnectedLeague establish — without touching any
+         chrome (no selects, headers, or tab renders). */
+      function mtSwapTo(id) {
+        /* Item 8 (Nov 11): same swap-context key as ff4CCSwap — the
+           engine keys its matchup-points read off this while DATA
+           points at the swapped league; fail-closed to null when the
+           league has no cached entry. mtRestoreActive re-points at
+           the active league through this same function. */
+        try {
+          window.__ffSwapKey = (id === "conn" && window.CONN_LEAGUE && window.CONN_LEAGUE.leagueId != null)
+            ? (String(window.CONN_LEAGUE.platform || "sleeper").toLowerCase() + ":" + String(window.CONN_LEAGUE.leagueId)) : null;
+          const bk = window.__ffMatchPtsByKey || {};
+          window.__ffMatchPts = (window.__ffSwapKey && bk[window.__ffSwapKey]) ? bk[window.__ffSwapKey] : null;
+        } catch (e) {}
+        DATA = mtDataFor(id);
+        const om = {};
+        DATA.teams.forEach(t => t.playerIds.forEach(pid => { om[pid] = t.rid; }));
+        DATA.players.forEach(p => { p.owner = om[p.id] != null ? om[p.id] : null; });
+        Object.keys(TBY).forEach(k => delete TBY[k]);
+        DATA.teams.forEach(t => { TBY[t.rid] = t; });
+        applyLeagueProjections(id);
+        if (id === "conn" && window.CONN_LEAGUE) window.OPP6 = window.CONN_LEAGUE.opp6 || null;
+        const f = mtFormatFor(id);
+        if (f) Object.assign(SETTINGS, f);
+        recomputeValues();
+      }
+      function mtCapture() {
+        const so = document.getElementById("season-out");
+        return { settings: { ...SETTINGS }, seasonHtml: so ? so.innerHTML : null };
+      }
+      /* Restore the league the visitor is actually browsing and put
+         every visible tab back exactly as it was. */
+      function mtRestoreActive(cap) {
+        const activeId = mtActiveId();
+        mtSwapTo(activeId);
+        if (cap) Object.assign(SETTINGS, cap.settings);
+        recomputeValues();
+        const sim = window.SIM_BY_LEAGUE ? window.SIM_BY_LEAGUE[activeId] : null;
+        if (sim) window.SeasonSim = sim;
+        refreshAll();
+        if (typeof renderLineup === "function") renderLineup();
+        if (sim) sim.renderSeason();
+        else if (cap && cap.seasonHtml != null) {
+          const so = document.getElementById("season-out");
+          if (so) so.innerHTML = cap.seasonHtml;
+        }
+        if (typeof window.renderWire === "function") window.renderWire();
+      }
+
+      /* The waiver engine's ranking for one team, top 2 — identical
+         math and tier order to renderWaivers in the More tab. */
+      function mtWaivers(team) {
+        const opt = wvOptimal(team.playerIds);
+        const bars = {};
+        ["QB", "RB", "WR", "TE"].forEach(pos => { bars[pos] = wvBar(opt.lineup, pos); });
+        const baseTotal = opt.total;
+        const pool = DATA.players.filter(p => !p.owner).map(p => {
+          const bar = bars[p.pos];
+          const addPos = (Math.round((p.ros || 0) * 10) - Math.round((bar ? (bar.p.ros || 0) : 0) * 10)) / 10;
+          const add = wvOptimal(team.playerIds.concat([p.id])).total - baseTotal;
+          const score = (p.ros || 0) * (1 + Math.max(0, add) / 10);
+          return { p, bar, add, addPos, score };
+        });
+        const byScore = (a, b) => b.score - a.score || dispVal(b.p) - dispVal(a.p);
+        const startable = pool.filter(m => m.add > 0).sort(byScore);
+        const stash = (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? [] : pool.filter(m => m.add <= 0 && wvIsStash(m.p)).sort((a, b) => dispVal(b.p) - dispVal(a.p));
+        const stashIds = new Set(stash.map(m => m.p.id));
+        const rest = pool.filter(m => m.add <= 0 && !stashIds.has(m.p.id)).sort(byScore);
+        const tag = (m, kind) => ({ p: m.p, bar: m.bar, add: m.add, addPos: m.addPos, kind });
+        return [
+          ...startable.map(m => tag(m, "Must-add")),
+          ...stash.map(m => tag(m, "Stash")),
+          ...rest.map(m => tag(m, "Top of the wire")),
+        ].slice(0, 2);
+      }
+
+      /* Read one league's card numbers. Assumes the engine context is
+         already pointed at this league (active league, or via mtSwapTo). */
+      function mtSnapshot(id) {
+        const teams = DATA.teams;
+        const me = teams.find(t => t.isUser) || teams[0];
+        const sim = window.SIM_BY_LEAGUE ? window.SIM_BY_LEAGUE[id] : null;
+        const sr = sim ? sim.results[me.rid] : null;
+        const oppMap = window.CONN_LEAGUE ? window.CONN_LEAGUE.opp6 : null;
+        const oppRid = oppMap ? oppMap[String(me.rid)] : null;
+        const opp = oppRid != null ? teams.find(t => t.rid === oppRid) : null;
+        return {
+          me, total: teams.length,
+          /* Phase 3 piece 2 (S49): the card stat is the Current Power
+             rank + score; the sub-line tag is the Stance label
+             (dynasty only — mtCard gates it on format, as before). */
+          powerRank: (me.cpRank != null) ? me.cpRank : null, power: (me.cpScore != null) ? me.cpScore : null, stance: (me.stanceLabel != null) ? me.stanceLabel : null, record: me.record,
+          playoff: sr ? sr.playoff : null, champ: sr ? sr.champ : null, expWins: sr ? sr.expWins : null,
+          clinched: sr ? !!sr.clinched : false, titleIfIn: sr ? titlePct(sr) : null,
+          simPending: !sr && teams.length === 12 && !mtSimFailed.has(id),
+          simNA: !sr && teams.length !== 12 ? "size" : (!sr && mtSimFailed.has(id) ? "failed" : null),
+          week: DATA.league.week,
+          opp: opp ? { name: opp.name, record: opp.record } : null,
+          waivers: mtWaivers(me),
+        };
+      }
+
+      function mtCollect() {
+        const cap = mtCapture();
+        const activeId = mtActiveId();
+        const snaps = {};
+        try {
+          if (mtLeagues().some(l => l.id === activeId)) snaps[activeId] = mtSnapshot(activeId);
+          for (const lg of mtLeagues()) {
+            if (lg.id === activeId) continue;
+            mtSwapTo(lg.id);
+            snaps[lg.id] = mtSnapshot(lg.id);
+          }
+        } finally {
+          mtRestoreActive(cap);
+        }
+        return snaps;
+      }
+
+      function mtQueueSims(snaps) {
+        mtLeagues().forEach(lg => {
+          const s = snaps[lg.id];
+          if (s && s.simPending && !mtSimQueue.includes(lg.id)) mtSimQueue.push(lg.id);
+        });
+        mtDrainSims();
+      }
+      function mtDrainSims() {
+        if (mtBuilding) return;
+        const id = mtSimQueue.shift();
+        if (!id) return;
+        mtBuilding = true;
+        setTimeout(() => {
+          const cap = mtCapture();
+          try {
+            if (typeof window.buildSeasonSim === "function") {
+              mtSwapTo(id);
+              const cur = window.SIM_BY_LEAGUE[id];
+              /* Rebuild when the stored sim's inputs no longer
+                 match this league's current week / records /
+                 points / rosters (audit FF-06) — a cached sim from
+                 older inputs is not served as current. */
+              if (!cur || (typeof ff4SimFp === "function" && cur.ffp !== ff4SimFp())) window.SIM_BY_LEAGUE[id] = window.buildSeasonSim();
+            }
+            if (!window.SIM_BY_LEAGUE[id]) mtSimFailed.add(id);
+          } catch (e) {
+            mtSimFailed.add(id);
+          }
+          try { mtRestoreActive(cap); } catch (e) { /* restore is best-effort; the page's own renders follow the active league */ }
+          mtBuilding = false;
+          const sec = document.getElementById("tab-spotlight");
+          if (sec && sec.classList.contains("active")) mtRender();
+          mtDrainSims();
+        }, 30);
+      }
+
+      function mtCard(lg, s) {
+        if (!s) return "";
+        const pct = x => oddsPct(x);
+        const me = s.me;
+        const odds = s.playoff != null
+          ? `<button type="button" class="mt-stat" data-mt-go="${lg.id}:season"><span class="mt-lbl">Playoff odds</span><span class="mt-big">${s.clinched ? "100%" : pct(s.playoff)}</span><span class="mt-sub2">Title if in ${s.titleIfIn} · ${pct(s.champ)} overall · ${s.expWins.toFixed(1)} exp. wins</span></button>`
+          : s.simPending
+            ? `<div class="mt-stat"><span class="mt-lbl">Playoff odds</span><span class="mt-big mt-pending">Simulating…</span><span class="mt-sub2">The 3,000-sim outlook is running for this league</span></div>`
+            : `<div class="mt-stat"><span class="mt-lbl">Playoff odds</span><span class="mt-big">—</span><span class="mt-sub2">${s.simNA === "size" ? `The sim is calibrated for 12-team leagues — this one has ${s.total}` : "The sim couldn't be built for this league"}</span></div>`;
+        const match = s.opp
+          ? `<button type="button" class="mt-stat mt-wide" data-mt-go="${lg.id}:lineup"><span class="mt-lbl">Week ${s.week} matchup</span><span class="mt-big" style="font-size:19px">vs ${esc(s.opp.name)}</span><span class="mt-sub2">They're ${esc(s.opp.record)} — matchup preview &amp; optimal lineup →</span></button>`
+          : `<div class="mt-stat mt-wide"><span class="mt-lbl">Week ${s.week} matchup</span><span class="mt-big" style="font-size:19px">—</span><span class="mt-sub2">No opponent pairing is published for this league this week</span></div>`;
+        const wv = s.waivers.length
+          ? s.waivers.map(w => {
+              const p = w.p;
+              const gap = !w.bar
+                ? `<div class="mt-wv-gap up">No starter to beat — he'd walk into the lineup</div>`
+                : w.add > 0
+                  ? `<div class="mt-wv-gap up">+${w.add.toFixed(1)} pts/wk to your optimal lineup total</div>`
+                  : w.addPos > 0
+                    ? `<div class="mt-wv-gap">Beats the last ${p.pos} in your optimal ROS lineup but doesn't lift your optimal total</div>`
+                    : `<div class="mt-wv-gap">${Math.abs(w.addPos).toFixed(1)} pts/wk behind the last ${p.pos} in your optimal ROS lineup (${esc(w.bar.p.name)})</div>`;
+              const kindCls = w.kind === "Stash" ? "stash" : w.kind === "Top of the wire" ? "wire" : "";
+              return `<div class="mt-wv-row">
+                <div class="mt-wv-main">
+                  ${(typeof window.hsImg === "function") ? window.hsImg(p, "phs-sm") : ""}<span class="mt-wv-name">${esc(p.name)}</span><span class="mt-wv-kind ${kindCls}">${w.kind}</span>
+                  <div class="mt-wv-meta">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team)} · ${p.pos}${p.posRank} · Age ${p.age != null ? p.age : "—"}</div>
+                  ${gap}
+                </div>
+                <div class="mt-wv-nums"><div class="mt-wv-ros">${(p.ros || 0).toFixed(1)}<small>ROS pts/wk</small></div></div>
+              </div>`;
+            }).join("")
+          : `<p class="mt-empty">Nobody's on the wire in this league — every tracked player is rostered.</p>`;
+        return `<article class="mt-card${!window.GUEST_MODE && lg.id === mtActiveId() ? " mine-league" : ""}">
+          <div class="mt-head">
+            <div class="mt-head-main">
+              <div class="mt-league">${esc(lg.name)}<span class="mt-badge ${lg.badgeCls}">${lg.badge}</span></div>
+              <div class="mt-team"><strong>${esc(me.name)}</strong><span class="you-tag">Your team</span></div>
+              <div class="mt-meta">${esc(s.record)}${me.owner ? ` · ${esc(me.owner)}` : ""} · NFL Week ${s.week} · ${s.total} teams</div>
+            </div>
+            <button type="button" class="mt-open" data-mt-go="${lg.id}:teams">Open league →</button>
+          </div>
+          <div class="mt-stats">
+            <button type="button" class="mt-stat" data-mt-go="${lg.id}:teams"><span class="mt-lbl">Current Power</span><span class="mt-big">${s.powerRank == null ? "—" : `#${s.powerRank} <small>of ${s.total}</small>`}</span><span class="mt-sub2">${s.power == null ? "Current Power score —" : `${s.power} Current Power score`}${s.stance && !(typeof VALMODE !== "undefined" && VALMODE === "redraft") ? ` · ${esc(s.stance)}` : ""}</span></button>
+            ${odds}
+            ${match}
+          </div>
+          <div class="mt-waivers">
+            <div class="mt-wv-head"><h3>Top waiver targets</h3><button type="button" class="mt-wv-all" data-mt-go="${lg.id}:more">All targets →</button></div>
+            ${wv}
+          </div>
+        </article>`;
+      }
+
+      function mtRender() {
+        if (!mtOut) return;
+        if (!window.CONN_LEAGUE || !DATA.teams || !DATA.teams.length) {
+          /* No league connected: the Teams tab's locked state is the
+             single guest empty state for this tab — render nothing here.
+             The empty-teams case is the league loader's mid-swap moment
+             (CONN_LEAGUE set, rosters not yet applied): skip this pass —
+             setConnectedLeague re-renders the moment the data lands. */
+          mtOut.innerHTML = "";
           return;
         }
-        const rankOf = t => (!rdP && isOffseason) ? t.frRank : t.cpRank;
-        const teamsSorted = DATA.teams.slice().sort((a, b) => {
-          const ra = rankOf(a), rb = rankOf(b);
-          return ((ra == null ? 999 : ra) - (rb == null ? 999 : rb)) || ((a.powerRank || 999) - (b.powerRank || 999));
-        });
-        el.innerHTML = teamsSorted.map(t => {
-          const bbLineup = t.bestLineup ? t.bestLineup.map(l => ({ id: l.p.id, slot: l.slot })) : t.lineup;
-          const lineupIds = new Set(bbLineup.map(l => l.id));
-          const slotOf = {};
-          bbLineup.forEach(l => { slotOf[l.id] = l.slot; });
-          const rows = t.playerIds.map(id => PBY[id]).filter(Boolean)
-            .sort((a, b) => pv(b) - pv(a))
-            .map(p => {
-              const wp = (typeof wkProj === "function") ? wkProj(p) : null;
-              const wkCell = !wp ? '<span class="p-sub">—</span>'
-                : wp.unpriced ? '<span class="p-sub">Unpriced</span>'
-                : (Math.round(wp.pts * 10) / 10).toFixed(1) + (wp.tag ? ` <span class="sig ${wp.cls}">${esc(wp.tag)}</span>` : "");
-              return `<tr>
-              <td>${hsImg(p, "phs-sm")}<span class="p-name">${esc(p.name)}</span>${lineupIds.has(p.id) ? ` <span class="slot-tag">${slotOf[p.id]}</span>` : ""}<div class="p-sub">${logoImg(p.team)}${esc(p.team)}${p.inj ? " · " + esc(p.inj) : ""}</div></td>
-              <td>${p.pos}${(typeof VALMODE !== "undefined" && VALMODE === "redraft" && typeof window.rdPosRank === "function" && window.rdPosRank(p) != null) ? window.rdPosRank(p) : p.posRank}</td>
-              <td class="num wk-proj">${wkCell}</td>
-              <td class="num">${p.unpriced ? '<span class="p-sub">Unpriced</span>' : fmt(pv(p))}</td></tr>`;
-            }).join("");
-          const dispRank = rankOf(t);
-          return `<article class="team-card${t.isUser ? " mine" : ""}">
-            <div class="team-head">
-              <div class="rank-num">${dispRank == null ? "—" : dispRank}</div>
-              <div class="team-main">
-                <div class="team-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div>
-                <div class="team-meta">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div>
-              </div>
-            </div>
-            <table class="mini"><thead><tr><th>Player</th><th>Pos rank</th><th class="num">This week</th><th class="num">Value</th></tr></thead>
-            <tbody>${rows}</tbody></table>
-            <button class="expand-btn tp-card-btn" data-tp-team="${t.rid}">Team Portfolio →</button>
-          </article>`;
-        }).join("");
+        const leagues = mtLeagues();
+        const snaps = mtCollect();
+        let html = "";
+        html += leagues.map(lg => mtCard(lg, snaps[lg.id])).join("");
+        mtOut.innerHTML = html;
+        mtQueueSims(snaps);
       }
-      renderPower();
+      /* Published for the two data/activation choke points that live
+         in earlier scripts: setConnectedLeague calls this the moment a
+         league's data is fully applied, and activateNav calls it on
+         every landing on the Teams tab — together they replace the old
+         nav-button-only click listener, which left the card empty on
+         the connect flow's first paint. */
+      window.renderSpotlight = mtRender;
+
+      function mtGo(id, tab) {
+        const activeId = mtActiveId();
+        if (id === "conn") {
+          if (window.CONN_LEAGUE && (window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE)) routeMode("conn");
+        } else if (id !== activeId || window.GUEST_MODE) {
+          routeMode("guest");
+        }
+        if (tab === "season") { if (window.goLeagueSub) window.goLeagueSub("outlook"); else activateNav("outlook"); }
+        else if (tab === "teams") { if (window.goLeagueSub) window.goLeagueSub("power"); else activateNav("power"); }
+        else if (tab === "more") activateNav("waivers");
+        else activateNav(tab);
+        window.scrollTo({ top: 0 });
+      }
+
+      if (mtOut) {
+        mtOut.addEventListener("click", e => {
+          const go = e.target.closest("[data-mt-go]");
+          if (go) {
+            const parts = go.dataset.mtGo.split(":");
+            mtGo(parts[0], parts[1]);
+            return;
+          }
+        });
+        /* No nav-button listener here on purpose: activateNav renders
+           the spotlight on every spotlight-view landing (see above). */
+        window.addEventListener("modechange", () => {
+          const sec = document.getElementById("tab-spotlight");
+          if (sec && sec.classList.contains("active")) mtRender();
+        });
+      }
     </script>
     <script>
       "use strict";
@@ -9458,7 +9916,7 @@ ${rdP ? "" : `
           <button class="strip-btn" id="strip-go" type="button">See your team vs the league →</button>
         </div>`;
         document.getElementById("strip-go").addEventListener("click", () => {
-          if (window.goLeagueSub) window.goLeagueSub("power"); else { activateNav("league"); window.scrollTo({ top: 0 }); }
+          if (window.goLeagueSub) window.goLeagueSub("power"); else { activateNav("power"); window.scrollTo({ top: 0 }); }
         });
       }
       function renderBoard() {
@@ -10606,7 +11064,7 @@ ${rdP ? "" : `
           if (!leagueId) return;
           var mount = seasonOutEl
             ? seasonOutEl.querySelector("[data-pb-root]")
-            : document.querySelector("#tab-league [data-pb-root]");
+            : document.querySelector("#tab-outlook [data-pb-root]");
           if (!mount) return;
           var cached = pbCache[leagueId];
           if (cached && (Date.now() - cached.at) < PB_TTL) { pbRenderInto(mount, cached); return; }
@@ -16369,316 +16827,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           })();
     </script>
 
-    <script>
-      "use strict";
-      /* ================= Teams tab — your-team spotlight =================
-         Renders at the top of the Teams tab, above the power rankings.
-         One card per league the page can currently run: the connected
-         Sleeper / ESPN league while one is connected this session. Every number is produced by the
-         existing engines, scoped per league — power rank from the Teams
-         engine (recomputeValues), playoff / title odds from the
-         3,000-sim Season Outlook (buildSeasonSim, cached per league in
-         SIM_BY_LEAGUE exactly as league switching caches it), the week's
-         matchup from the same opponent tables the Lineup tab reads, and
-         the top waiver targets from the waiver engine's own ranking
-         (wvOptimal / wvBar / wvIsStash, same tier order the
-         More tab renders: must-adds, stashes, best of the rest). No new
-         math — the dashboard temporarily points the shared engine state
-         (DATA / TBY / owners / projections / format) at each league,
-         reads its numbers, then restores the active league and
-         re-renders, so the rest of the page never sees the swaps. */
-      const mtOut = document.getElementById("myteams-out");
-      const mtSimQueue = [];
-      const mtSimFailed = new Set();
-      let mtBuilding = false;
 
-      function mtActiveId() { return window.GUEST_MODE ? "d74" : (window.CURRENT_LEAGUE || "d74"); }
-
-      function mtLeagues() {
-        const list = [];
-        const C = window.CONN_LEAGUE;
-        if (C) {
-          const espn = C.platform === "espn";
-          list.push({ id: "conn", name: C.league.name, badge: espn ? "ESPN" : "Sleeper", badgeCls: espn ? "espn" : "sleeper" });
-        }
-        return list;
-      }
-
-      function mtDataFor(id) {
-        if (id === "conn") { const C = window.CONN_LEAGUE; return { league: C.league, players: DATA_D74.players, teams: C.teams, algorithm: DATA_D74.algorithm }; }
-        return DATA_D74;
-      }
-      function mtFormatFor(id) {
-        if (id === "conn") return window.CONN_LEAGUE ? window.CONN_LEAGUE.format : null;
-        return LEAGUE_FORMATS[id] || null;
-      }
-      /* Point the shared engines at league `id` — the same context
-         setLeague / setConnectedLeague establish — without touching any
-         chrome (no selects, headers, or tab renders). */
-      function mtSwapTo(id) {
-        /* Item 8 (Nov 11): same swap-context key as ff4CCSwap — the
-           engine keys its matchup-points read off this while DATA
-           points at the swapped league; fail-closed to null when the
-           league has no cached entry. mtRestoreActive re-points at
-           the active league through this same function. */
-        try {
-          window.__ffSwapKey = (id === "conn" && window.CONN_LEAGUE && window.CONN_LEAGUE.leagueId != null)
-            ? (String(window.CONN_LEAGUE.platform || "sleeper").toLowerCase() + ":" + String(window.CONN_LEAGUE.leagueId)) : null;
-          const bk = window.__ffMatchPtsByKey || {};
-          window.__ffMatchPts = (window.__ffSwapKey && bk[window.__ffSwapKey]) ? bk[window.__ffSwapKey] : null;
-        } catch (e) {}
-        DATA = mtDataFor(id);
-        const om = {};
-        DATA.teams.forEach(t => t.playerIds.forEach(pid => { om[pid] = t.rid; }));
-        DATA.players.forEach(p => { p.owner = om[p.id] != null ? om[p.id] : null; });
-        Object.keys(TBY).forEach(k => delete TBY[k]);
-        DATA.teams.forEach(t => { TBY[t.rid] = t; });
-        applyLeagueProjections(id);
-        if (id === "conn" && window.CONN_LEAGUE) window.OPP6 = window.CONN_LEAGUE.opp6 || null;
-        const f = mtFormatFor(id);
-        if (f) Object.assign(SETTINGS, f);
-        recomputeValues();
-      }
-      function mtCapture() {
-        const so = document.getElementById("season-out");
-        return { settings: { ...SETTINGS }, seasonHtml: so ? so.innerHTML : null };
-      }
-      /* Restore the league the visitor is actually browsing and put
-         every visible tab back exactly as it was. */
-      function mtRestoreActive(cap) {
-        const activeId = mtActiveId();
-        mtSwapTo(activeId);
-        if (cap) Object.assign(SETTINGS, cap.settings);
-        recomputeValues();
-        const sim = window.SIM_BY_LEAGUE ? window.SIM_BY_LEAGUE[activeId] : null;
-        if (sim) window.SeasonSim = sim;
-        refreshAll();
-        if (typeof renderLineup === "function") renderLineup();
-        if (sim) sim.renderSeason();
-        else if (cap && cap.seasonHtml != null) {
-          const so = document.getElementById("season-out");
-          if (so) so.innerHTML = cap.seasonHtml;
-        }
-        if (typeof window.renderWire === "function") window.renderWire();
-      }
-
-      /* The waiver engine's ranking for one team, top 2 — identical
-         math and tier order to renderWaivers in the More tab. */
-      function mtWaivers(team) {
-        const opt = wvOptimal(team.playerIds);
-        const bars = {};
-        ["QB", "RB", "WR", "TE"].forEach(pos => { bars[pos] = wvBar(opt.lineup, pos); });
-        const baseTotal = opt.total;
-        const pool = DATA.players.filter(p => !p.owner).map(p => {
-          const bar = bars[p.pos];
-          const addPos = (Math.round((p.ros || 0) * 10) - Math.round((bar ? (bar.p.ros || 0) : 0) * 10)) / 10;
-          const add = wvOptimal(team.playerIds.concat([p.id])).total - baseTotal;
-          const score = (p.ros || 0) * (1 + Math.max(0, add) / 10);
-          return { p, bar, add, addPos, score };
-        });
-        const byScore = (a, b) => b.score - a.score || dispVal(b.p) - dispVal(a.p);
-        const startable = pool.filter(m => m.add > 0).sort(byScore);
-        const stash = (typeof VALMODE !== "undefined" && VALMODE === "redraft") ? [] : pool.filter(m => m.add <= 0 && wvIsStash(m.p)).sort((a, b) => dispVal(b.p) - dispVal(a.p));
-        const stashIds = new Set(stash.map(m => m.p.id));
-        const rest = pool.filter(m => m.add <= 0 && !stashIds.has(m.p.id)).sort(byScore);
-        const tag = (m, kind) => ({ p: m.p, bar: m.bar, add: m.add, addPos: m.addPos, kind });
-        return [
-          ...startable.map(m => tag(m, "Must-add")),
-          ...stash.map(m => tag(m, "Stash")),
-          ...rest.map(m => tag(m, "Top of the wire")),
-        ].slice(0, 2);
-      }
-
-      /* Read one league's card numbers. Assumes the engine context is
-         already pointed at this league (active league, or via mtSwapTo). */
-      function mtSnapshot(id) {
-        const teams = DATA.teams;
-        const me = teams.find(t => t.isUser) || teams[0];
-        const sim = window.SIM_BY_LEAGUE ? window.SIM_BY_LEAGUE[id] : null;
-        const sr = sim ? sim.results[me.rid] : null;
-        const oppMap = window.CONN_LEAGUE ? window.CONN_LEAGUE.opp6 : null;
-        const oppRid = oppMap ? oppMap[String(me.rid)] : null;
-        const opp = oppRid != null ? teams.find(t => t.rid === oppRid) : null;
-        return {
-          me, total: teams.length,
-          /* Phase 3 piece 2 (S49): the card stat is the Current Power
-             rank + score; the sub-line tag is the Stance label
-             (dynasty only — mtCard gates it on format, as before). */
-          powerRank: (me.cpRank != null) ? me.cpRank : null, power: (me.cpScore != null) ? me.cpScore : null, stance: (me.stanceLabel != null) ? me.stanceLabel : null, record: me.record,
-          playoff: sr ? sr.playoff : null, champ: sr ? sr.champ : null, expWins: sr ? sr.expWins : null,
-          clinched: sr ? !!sr.clinched : false, titleIfIn: sr ? titlePct(sr) : null,
-          simPending: !sr && teams.length === 12 && !mtSimFailed.has(id),
-          simNA: !sr && teams.length !== 12 ? "size" : (!sr && mtSimFailed.has(id) ? "failed" : null),
-          week: DATA.league.week,
-          opp: opp ? { name: opp.name, record: opp.record } : null,
-          waivers: mtWaivers(me),
-        };
-      }
-
-      function mtCollect() {
-        const cap = mtCapture();
-        const activeId = mtActiveId();
-        const snaps = {};
-        try {
-          if (mtLeagues().some(l => l.id === activeId)) snaps[activeId] = mtSnapshot(activeId);
-          for (const lg of mtLeagues()) {
-            if (lg.id === activeId) continue;
-            mtSwapTo(lg.id);
-            snaps[lg.id] = mtSnapshot(lg.id);
-          }
-        } finally {
-          mtRestoreActive(cap);
-        }
-        return snaps;
-      }
-
-      function mtQueueSims(snaps) {
-        mtLeagues().forEach(lg => {
-          const s = snaps[lg.id];
-          if (s && s.simPending && !mtSimQueue.includes(lg.id)) mtSimQueue.push(lg.id);
-        });
-        mtDrainSims();
-      }
-      function mtDrainSims() {
-        if (mtBuilding) return;
-        const id = mtSimQueue.shift();
-        if (!id) return;
-        mtBuilding = true;
-        setTimeout(() => {
-          const cap = mtCapture();
-          try {
-            if (typeof window.buildSeasonSim === "function") {
-              mtSwapTo(id);
-              const cur = window.SIM_BY_LEAGUE[id];
-              /* Rebuild when the stored sim's inputs no longer
-                 match this league's current week / records /
-                 points / rosters (audit FF-06) — a cached sim from
-                 older inputs is not served as current. */
-              if (!cur || (typeof ff4SimFp === "function" && cur.ffp !== ff4SimFp())) window.SIM_BY_LEAGUE[id] = window.buildSeasonSim();
-            }
-            if (!window.SIM_BY_LEAGUE[id]) mtSimFailed.add(id);
-          } catch (e) {
-            mtSimFailed.add(id);
-          }
-          try { mtRestoreActive(cap); } catch (e) { /* restore is best-effort; the page's own renders follow the active league */ }
-          mtBuilding = false;
-          const sec = document.getElementById("tab-league");
-          if (sec && sec.classList.contains("active")) mtRender();
-          mtDrainSims();
-        }, 30);
-      }
-
-      function mtCard(lg, s) {
-        if (!s) return "";
-        const pct = x => oddsPct(x);
-        const me = s.me;
-        const odds = s.playoff != null
-          ? `<button type="button" class="mt-stat" data-mt-go="${lg.id}:season"><span class="mt-lbl">Playoff odds</span><span class="mt-big">${s.clinched ? "100%" : pct(s.playoff)}</span><span class="mt-sub2">Title if in ${s.titleIfIn} · ${pct(s.champ)} overall · ${s.expWins.toFixed(1)} exp. wins</span></button>`
-          : s.simPending
-            ? `<div class="mt-stat"><span class="mt-lbl">Playoff odds</span><span class="mt-big mt-pending">Simulating…</span><span class="mt-sub2">The 3,000-sim outlook is running for this league</span></div>`
-            : `<div class="mt-stat"><span class="mt-lbl">Playoff odds</span><span class="mt-big">—</span><span class="mt-sub2">${s.simNA === "size" ? `The sim is calibrated for 12-team leagues — this one has ${s.total}` : "The sim couldn't be built for this league"}</span></div>`;
-        const match = s.opp
-          ? `<button type="button" class="mt-stat mt-wide" data-mt-go="${lg.id}:lineup"><span class="mt-lbl">Week ${s.week} matchup</span><span class="mt-big" style="font-size:19px">vs ${esc(s.opp.name)}</span><span class="mt-sub2">They're ${esc(s.opp.record)} — matchup preview &amp; optimal lineup →</span></button>`
-          : `<div class="mt-stat mt-wide"><span class="mt-lbl">Week ${s.week} matchup</span><span class="mt-big" style="font-size:19px">—</span><span class="mt-sub2">No opponent pairing is published for this league this week</span></div>`;
-        const wv = s.waivers.length
-          ? s.waivers.map(w => {
-              const p = w.p;
-              const gap = !w.bar
-                ? `<div class="mt-wv-gap up">No starter to beat — he'd walk into the lineup</div>`
-                : w.add > 0
-                  ? `<div class="mt-wv-gap up">+${w.add.toFixed(1)} pts/wk to your optimal lineup total</div>`
-                  : w.addPos > 0
-                    ? `<div class="mt-wv-gap">Beats the last ${p.pos} in your optimal ROS lineup but doesn't lift your optimal total</div>`
-                    : `<div class="mt-wv-gap">${Math.abs(w.addPos).toFixed(1)} pts/wk behind the last ${p.pos} in your optimal ROS lineup (${esc(w.bar.p.name)})</div>`;
-              const kindCls = w.kind === "Stash" ? "stash" : w.kind === "Top of the wire" ? "wire" : "";
-              return `<div class="mt-wv-row">
-                <div class="mt-wv-main">
-                  ${(typeof window.hsImg === "function") ? window.hsImg(p, "phs-sm") : ""}<span class="mt-wv-name">${esc(p.name)}</span><span class="mt-wv-kind ${kindCls}">${w.kind}</span>
-                  <div class="mt-wv-meta">${(typeof window.logoImg === "function") ? window.logoImg(p.team) : ""}${esc(p.team)} · ${p.pos}${p.posRank} · Age ${p.age != null ? p.age : "—"}</div>
-                  ${gap}
-                </div>
-                <div class="mt-wv-nums"><div class="mt-wv-ros">${(p.ros || 0).toFixed(1)}<small>ROS pts/wk</small></div></div>
-              </div>`;
-            }).join("")
-          : `<p class="mt-empty">Nobody's on the wire in this league — every tracked player is rostered.</p>`;
-        return `<article class="mt-card${!window.GUEST_MODE && lg.id === mtActiveId() ? " mine-league" : ""}">
-          <div class="mt-head">
-            <div class="mt-head-main">
-              <div class="mt-league">${esc(lg.name)}<span class="mt-badge ${lg.badgeCls}">${lg.badge}</span></div>
-              <div class="mt-team"><strong>${esc(me.name)}</strong><span class="you-tag">Your team</span></div>
-              <div class="mt-meta">${esc(s.record)}${me.owner ? ` · ${esc(me.owner)}` : ""} · NFL Week ${s.week} · ${s.total} teams</div>
-            </div>
-            <button type="button" class="mt-open" data-mt-go="${lg.id}:teams">Open league →</button>
-          </div>
-          <div class="mt-stats">
-            <button type="button" class="mt-stat" data-mt-go="${lg.id}:teams"><span class="mt-lbl">Current Power</span><span class="mt-big">${s.powerRank == null ? "—" : `#${s.powerRank} <small>of ${s.total}</small>`}</span><span class="mt-sub2">${s.power == null ? "Current Power score —" : `${s.power} Current Power score`}${s.stance && !(typeof VALMODE !== "undefined" && VALMODE === "redraft") ? ` · ${esc(s.stance)}` : ""}</span></button>
-            ${odds}
-            ${match}
-          </div>
-          <div class="mt-waivers">
-            <div class="mt-wv-head"><h3>Top waiver targets</h3><button type="button" class="mt-wv-all" data-mt-go="${lg.id}:more">All targets →</button></div>
-            ${wv}
-          </div>
-        </article>`;
-      }
-
-      function mtRender() {
-        if (!mtOut) return;
-        if (!window.CONN_LEAGUE || !DATA.teams || !DATA.teams.length) {
-          /* No league connected: the Teams tab's locked state is the
-             single guest empty state for this tab — render nothing here.
-             The empty-teams case is the league loader's mid-swap moment
-             (CONN_LEAGUE set, rosters not yet applied): skip this pass —
-             setConnectedLeague re-renders the moment the data lands. */
-          mtOut.innerHTML = "";
-          return;
-        }
-        const leagues = mtLeagues();
-        const snaps = mtCollect();
-        let html = "";
-        html += leagues.map(lg => mtCard(lg, snaps[lg.id])).join("");
-        mtOut.innerHTML = html;
-        mtQueueSims(snaps);
-      }
-      /* Published for the two data/activation choke points that live
-         in earlier scripts: setConnectedLeague calls this the moment a
-         league's data is fully applied, and activateNav calls it on
-         every landing on the Teams tab — together they replace the old
-         nav-button-only click listener, which left the card empty on
-         the connect flow's first paint. */
-      window.renderSpotlight = mtRender;
-
-      function mtGo(id, tab) {
-        const activeId = mtActiveId();
-        if (id === "conn") {
-          if (window.CONN_LEAGUE && (window.CURRENT_LEAGUE !== "conn" || window.GUEST_MODE)) routeMode("conn");
-        } else if (id !== activeId || window.GUEST_MODE) {
-          routeMode("guest");
-        }
-        if (tab === "season") { if (window.goLeagueSub) window.goLeagueSub("outlook"); else activateNav("league", "#lg-outlook"); }
-        else if (tab === "teams") { if (window.goLeagueSub) window.goLeagueSub("power"); else activateNav("league", "#lg-power"); }
-        else if (tab === "more") activateNav("waivers");
-        else activateNav(tab);
-        window.scrollTo({ top: 0 });
-      }
-
-      if (mtOut) {
-        mtOut.addEventListener("click", e => {
-          const go = e.target.closest("[data-mt-go]");
-          if (go) {
-            const parts = go.dataset.mtGo.split(":");
-            mtGo(parts[0], parts[1]);
-            return;
-          }
-        });
-        /* No nav-button listener here on purpose: activateNav renders
-           the spotlight on every Teams-tab landing (see above). */
-        window.addEventListener("modechange", () => {
-          const sec = document.getElementById("tab-league");
-          if (sec && sec.classList.contains("active")) mtRender();
-        });
-      }
-    </script>
     <script>
       /* ============ REAL TRADES DATASET — window.REAL_TRADES ============
          REAL completed trades from public Sleeper leagues (Sleeper public
@@ -24306,7 +24455,7 @@ window.__lifeline = (function () {
       var mainBtns = document.querySelectorAll("#site-main [data-pnav]");
       var subBar = document.getElementById("site-sub");
       var subBtns = document.querySelectorAll("[data-pnav-sub]");
-      var MAIN_FOR = { values: "players", risers: "players", insights: "players", radar: "players", ineff: "players", roster: "myteam", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", upgrades: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "command" };
+      var MAIN_FOR = { values: "players", risers: "players", insights: "players", radar: "players", ineff: "players", roster: "myteam", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", upgrades: "trades", realtrades: "trades", tradeboard: "trades", spotlight: "league", power: "league", rosters: "league", outlook: "league", storylines: "league", mscore: "league", league: "league", command: "command" };
       var GROUP_FOR = { players: "players", myteam: "myteam", trades: "trades", league: "league" };
       function setMainSel(key) {
         mainBtns.forEach(function (b) { b.setAttribute("aria-selected", b.dataset.pnav === key ? "true" : "false"); });
@@ -24448,9 +24597,14 @@ window.__lifeline = (function () {
         if (key === "roster") {
           if (typeof window.renderMyRoster === "function") window.renderMyRoster();
           window.activateNav("roster");
-        } else if (key === "power" || key === "mscore" || key === "rosters" || key === "outlook" || key === "odds" || key === "storylines") {
+        } else if (key === "spotlight" || key === "power" || key === "mscore" || key === "rosters" || key === "outlook" || key === "storylines") {
+          /* Phase 5 Piece 2: each is its own section now — navigate
+             directly. (odds still lives in #tab-league; its branch
+             below keeps the __subnavNext + activateNav("league") path.) */
+          window.activateNav(key);
+        } else if (key === "odds") {
           window.__subnavNext = window.__subnavNext || {};
-          window.__subnavNext.league = key;
+          window.__subnavNext.league = "odds";
           window.activateNav("league");
         } else if (key === "ppath" || key === "psched") {
           if (key === "ppath" && typeof window.ff4RenderPP === "function") window.ff4RenderPP();
@@ -24478,9 +24632,9 @@ window.__lifeline = (function () {
           if (typeof window.renderUpgradeFinderTrades === "function") window.renderUpgradeFinderTrades();
           window.activateNav("upgrades");
         } else if (key === "results") {
-          window.__subnavNext = window.__subnavNext || {};
-          window.__subnavNext.league = "power";
-          window.activateNav("league");
+          /* Phase 5 Piece 2: Results still lives inside Power — land
+             on the Power view, then scroll to the block as before. */
+          window.activateNav("power");
           setTimeout(function () { var el = document.getElementById("wtw-wrap"); if (el && !el.hidden) el.scrollIntoView({ block: "start" }); }, 250);
         } else {
           if (key === "trades") window.__counterMode = false;
@@ -24830,14 +24984,10 @@ window.__lifeline = (function () {
         }
       };
       (function () {
-        const orig = window.showSubNav;
-        if (typeof orig === "function") {
-          window.showSubNav = function (tab, sub) {
-            const r = orig(tab, sub);
-            if (tab === "league" && sub === "storylines") window.renderStorylines();
-            return r;
-          };
-        }
+        /* Phase 5 Piece 2: the old showSubNav wrapper that triggered
+           renderStorylines moved to the activateNav("storylines")
+           landing hook — Storylines is its own section now. Only the
+           modechange cache-clear stays here. */
         window.addEventListener("modechange", () => { window.__storyCache = null; });
       })();
     </script>
@@ -24925,7 +25075,7 @@ window.__lifeline = (function () {
         if (op) op.addEventListener("click", () => {
           close();
           if (typeof window.goLeagueSub === "function") window.goLeagueSub("storylines");
-          else if (typeof window.activateNav === "function") window.activateNav("league");
+          else if (typeof window.activateNav === "function") window.activateNav("storylines");
         });
       })();
     </script>
@@ -24997,11 +25147,13 @@ window.__lifeline = (function () {
     section.tab#tab-bye { --ta: #00E5FF; --ta-rgb: 0,229,255; }
     section.tab#tab-waivers { --ta: #448AFF; --ta-rgb: 68,138,255; }
     section.tab#tab-draft { --ta: #FF2E88; --ta-rgb: 255,46,136; }
-    section.tab#tab-league { --ta: #00E5FF; --ta-rgb: 0,229,255; }
-    #tab-league #lg-odds { --ta: #C6FF00; --ta-rgb: 198,255,0; }
-    #tab-league #lg-outlook { --ta: #B388FF; --ta-rgb: 179,136,255; }
-    #tab-league #lg-rosters { --ta: #FFC400; --ta-rgb: 255,196,0; }
-    #tab-league [data-subview="storylines"] { --ta: #FF4081; --ta-rgb: 255,64,129; }
+    section.tab#tab-league { --ta: #C6FF00; --ta-rgb: 198,255,0; }
+    section.tab#tab-spotlight { --ta: #00E5FF; --ta-rgb: 0,229,255; }
+    section.tab#tab-power { --ta: #00E5FF; --ta-rgb: 0,229,255; }
+    section.tab#tab-rosters { --ta: #FFC400; --ta-rgb: 255,196,0; }
+    section.tab#tab-outlook { --ta: #B388FF; --ta-rgb: 179,136,255; }
+    section.tab#tab-storylines { --ta: #FF4081; --ta-rgb: 255,64,129; }
+    section.tab#tab-mscore { --ta: #00E5FF; --ta-rgb: 0,229,255; }
 
     /* section headings: CC weight + a thin accent bar under the title */
     section.tab:not(#tab-command) .block-title {
@@ -25042,7 +25194,8 @@ window.__lifeline = (function () {
       box-shadow: 0 12px 32px rgba(0,0,0,.38);
     }
     /* the "your team" power card keeps its lime highlight */
-    section.tab#tab-league .team-card.mine {
+    section.tab#tab-power .team-card.mine,
+    section.tab#tab-rosters .team-card.mine {
       border-color: rgba(198,255,0,.55);
       box-shadow: 0 0 0 1px rgba(198,255,0,.22), 0 0 30px rgba(198,255,0,.13);
     }
@@ -25067,7 +25220,7 @@ window.__lifeline = (function () {
     /* phone card-layout boards stay borderless, exactly as designed */
     @media (max-width: 640px) {
       section.tab#tab-values .board,
-      section.tab#tab-league #final-standings .board {
+      section.tab#tab-outlook #final-standings .board {
         background: transparent; background-image: none;
         border-color: transparent; box-shadow: none;
       }
