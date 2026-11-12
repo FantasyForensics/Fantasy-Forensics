@@ -3038,23 +3038,38 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .wl-msg { flex: 1 1 100%; font-size: 13px; color: var(--ink-2); min-height: 1em; }
       .wl-msg.ok { color: var(--accent); font-weight: 600; }
       .wl-msg.err { color: #FF7A9E; }
-      .radar-meta { color: var(--ink-3); font-size: 13px; margin: -4px 0 14px; }
-      .radar-filters { margin: 4px 0 16px; }
-      .rd-strip-h { font-family: "Space Grotesk", sans-serif; font-size: 17px; margin: 20px 0 10px; color: var(--ink); }
+      .radar-meta { color: var(--ink-3); font-size: 13px; margin: -4px 0 8px; }
+      .radar-filters { margin: 4px 0 8px; }
+      .rd-strip-h { font-family: "Space Grotesk", sans-serif; font-size: 16px; margin: 8px 0 6px; color: var(--ink); }
       .rd-strip-h .rd-sub { font-family: "Inter", sans-serif; font-size: 12.5px; color: var(--ink-3); font-weight: 400; margin-left: 8px; }
-      .rd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
-      .rd-card { border: 1px solid rgba(255,255,255,.13); border-radius: 14px; padding: 14px 16px; background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); }
-      .rd-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-      .rd-top .phs { width: 44px; height: 44px; }
-      .rd-name { font-family: "Space Grotesk", sans-serif; font-size: 17px; font-weight: 700; color: var(--ink); line-height: 1.15; }
-      .rd-meta { font-size: 12.5px; color: var(--ink-3); }
+      /* Radar card redesign (Eric, Nov 12, 2026): the repeated headline
+         line is gone from every card, so the grid is denser (2 columns
+         at iPad widths) and the type tighter — the whole board fits
+         far closer to one opening screen. Stats line + "Why he's
+         flagged" track record stay; only the wording is tightened,
+         no number changes. */
+      .rd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 8px; }
+      .rd-card { border: 1px solid rgba(255,255,255,.13); border-radius: 12px; padding: 7px 12px; background: linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,.012)); }
+      .rd-card.rd-mine { border-color: rgba(198,255,0,.65); background: linear-gradient(160deg, rgba(198,255,0,.13), rgba(198,255,0,.03)); }
+      /* The tab accent wash below (section.tab:not(#tab-command)
+         .rd-card, specificity (1,2,1)) would otherwise beat the
+         plain .rd-mine rule and paint roster cards rose like the
+         rest — this same-weight-plus-one rule keeps them lime. */
+      section.tab#tab-radar .rd-card.rd-mine { border-color: rgba(198,255,0,.65); background-image: linear-gradient(160deg, rgba(198,255,0,.13), rgba(198,255,0,.03)); box-shadow: 0 0 0 1px rgba(198,255,0,.22), 0 0 30px rgba(198,255,0,.13); }
+      .rd-card.rd-mine .rd-name { color: var(--accent); }
+      .rd-mine-tag { display: inline-block; vertical-align: middle; margin-left: 6px; font-family: "Space Grotesk", sans-serif; font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #0A0A1A; background: var(--accent); border-radius: 999px; padding: 2px 6px; white-space: nowrap; }
+      .cc-radar-row.rd-mine .t-name { color: var(--accent); }
+      .cc-radar-row .rd-mine-tag { margin-left: 0; align-self: flex-start; }
+      .rd-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+      .rd-top > div { min-width: 0; }
+      .rd-top .phs { width: 36px; height: 36px; }
+      .rd-name { font-family: "Space Grotesk", sans-serif; font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.15; }
+      .rd-meta { font-size: 12px; color: var(--ink-3); }
       .rd-wks { margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: .05em; color: var(--cyan); border: 1px solid rgba(0,229,255,.4); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
-      .rd-ev { font-size: 14px; line-height: 1.5; color: var(--ink); margin: 0 0 8px; }
+      .rd-ev { font-size: 12px; line-height: 1.45; color: var(--ink); margin: 0 0 4px; }
       .rd-ev b { color: var(--accent); font-weight: 700; }
-      .rd-head { font-family: "Space Grotesk", sans-serif; font-size: 18px; font-weight: 700; line-height: 1.3; color: var(--ink); margin: 2px 0 8px; }
-      .rd-track { font-size: 11.5px; line-height: 1.55; color: var(--ink-3); border-top: 1px solid rgba(255,255,255,.08); padding-top: 8px; margin: 10px 0 0; }
+      .rd-track { font-size: 11px; line-height: 1.5; color: var(--ink-3); border-top: 1px solid rgba(255,255,255,.08); padding-top: 4px; margin: 4px 0 0; }
       .rd-track b { color: var(--ink-2); }
-      .rd-why .rd-head { font-size: 15px; margin: 0 0 6px; }
       .rd-why .rd-track { border-top-color: rgba(0,229,255,.18); margin-bottom: 8px; }
       .radar-sub { font-size: 16.5px; font-weight: 600; color: var(--ink); line-height: 1.4; margin: 2px 0 8px; }
       .rd-empty { color: var(--ink-2); font-size: 15px; border: 1px dashed rgba(255,255,255,.2); border-radius: 14px; padding: 18px; }
@@ -21964,7 +21979,7 @@ window.drDraft = {
             const fas = live.filter(f => PBY[f.player_id]);
             const vv = f => { const p = PBY[f.player_id]; return (p && !p.unpriced && typeof dispVal === "function") ? (dispVal(p) || 0) : 0; };
             fas.sort((a, b) => vv(b) - vv(a));
-            d.radarWatch = fas.slice(0, 8).map(f => ({ id: f.player_id, name: f.name, pos: f.position, team: f.team, head: (typeof rdHeadline === "function") ? rdHeadline(f) : "" }));
+            d.radarWatch = fas.slice(0, 8).map(f => ({ id: f.player_id, name: f.name, pos: f.position, team: f.team, mine: (me.playerIds || []).map(String).includes(String(f.player_id)) }));
           } else d.radarWatch = null;
         } catch (e) { d.radarWatch = null; }
         try { if (typeof window.ffMSNoteDetail === "function") window.ffMSNoteDetail({ idx, d, sim, me }); } catch (e) { /* Manager Score never breaks the detail */ }
@@ -22266,10 +22281,14 @@ window.drDraft = {
              know these players) — final Radar tile stack: headshot +
              full player name, nothing else. (The opportunity reason
              sentence was never part of this tile; it lives on the
-             Radar tab's cards.) Data and ranking untouched. */
+             Radar tab's cards.) Radar redesign (Eric, Nov 12, 2026):
+             a flag on the user's own roster keeps the same stack
+             plus a lime name and an "On your roster" tag, so it
+             stands out in the Command Center tile as well as on the
+             board card. Data and ranking untouched. */
           watchBody = `<div class="cc-tile-rows">` + d.radarWatch.map(w => {
             const face = (typeof window.hsImg === "function") ? window.hsImg({ id: w.id }, "cc-wv-face") : "";
-            return `<div class="cc-radar-row cc-wv-row">${face}<span class="cc-wv-main"><span class="t-name">${esc(w.name)}</span></span></div>`;
+            return `<div class="cc-radar-row cc-wv-row${w.mine ? " rd-mine" : ""}">${face}<span class="cc-wv-main"><span class="t-name">${esc(w.name)}</span>${w.mine ? `<span class="rd-mine-tag">On your roster</span>` : ""}</span></div>`;
           }).join("") + `</div>`;
         } else {
           watchBody = `<p class="cc-tile-sub">No Radar flags on the wire this week.</p>`;
@@ -24143,23 +24162,36 @@ window.__lifeline = (function () {
         return "Weeks " + w.join(", ");
       }
       function rdEvidence(f) {
-        return `<b>${f.opp_per_game.toFixed(1)} opportunities/game</b> over his last 3 (${rdOrd(f.workload_pct)} percentile of ${f.position}s) but just <b>${f.pts_per_touch.toFixed(2)} points per touch</b> (${rdOrd(f.pts_per_touch_pct)} percentile) — ${f.recent_ppg.toFixed(1)} pts/game in that span.`;
+        return `<b>${f.opp_per_game.toFixed(1)} opportunities/game</b> · <b>${f.pts_per_touch.toFixed(2)} points per touch</b> · <b>${f.recent_ppg.toFixed(1)} pts/game</b> (${rdOrd(f.workload_pct)} %ile workload, ${rdOrd(f.pts_per_touch_pct)} %ile scoring).`;
       }
-      function rdHeadline(f) {
-        const work = f.workload_pct >= 0.9 ? "star-level" : "starter-level";
-        const score = f.pts_per_touch_pct <= 0.15 ? "Scoring like a backup" : "Scoring well below his role";
-        return `Getting ${work} work. ${score}. That gap usually closes.`;
-      }
+      /* Radar redesign (Eric, Nov 12, 2026): the repeated headline
+         sentence that used to sit on every card is gone — it said
+         the same thing on all of them. The stats line and the
+         "Why he's flagged" track record stay; both are only worded
+         tighter, no number changes. */
       function rdTrackRecord(f) {
         const b = f.base_rate || {};
-        const posNoun = { RB: "running backs", WR: "wide receivers", TE: "tight ends" }[f.position] || "players";
-        return `Why he's flagged: of ${b.n_flags_graded || 0} ${posNoun} flagged like this in 2024–25 — seasons this signal was never tuned on — the group averaged <b>+${(b.median_ppg_lift || 0).toFixed(1)} pts/game</b> more than similar players over their next 3 games, and <b>${rdPct(b.flag_top24_rate || 0)}</b> of them finished top-24 at the position vs ${rdPct(b.control_top24_rate || 0)} of similar unflagged players. Top-12 finishes: ${rdPct(b.flag_top12_rate || 0)} of flags vs ${rdPct(b.control_top12_rate || 0)}; top-36: ${rdPct(b.flag_top36_rate || 0)} vs ${rdPct(b.control_top36_rate || 0)}.`;
+        const posNoun = { RB: "RBs", WR: "WRs", TE: "TEs" }[f.position] || "players";
+        return `Why he's flagged: ${b.n_flags_graded || 0} ${posNoun} flagged like this in 2024–25 averaged <b>+${(b.median_ppg_lift || 0).toFixed(1)} pts/game</b> next 3 · top-24 <b>${rdPct(b.flag_top24_rate || 0)}</b> vs ${rdPct(b.control_top24_rate || 0)} unflagged · top-12 ${rdPct(b.flag_top12_rate || 0)} vs ${rdPct(b.control_top12_rate || 0)} · top-36 ${rdPct(b.flag_top36_rate || 0)} vs ${rdPct(b.control_top36_rate || 0)}.`;
+      }
+      /* On the user's own roster? (Radar redesign, Eric, Nov 12, 2026.)
+         Authoritative in the connected context: the user team's
+         playerIds; PBY.owner is the fallback. Guest mode never marks. */
+      function rdIsMine(f) {
+        try {
+          if (window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn") return false;
+          const me = (DATA.teams || []).find(t => t.isUser);
+          if (!me) return false;
+          if ((me.playerIds || []).map(String).includes(String(f.player_id))) return true;
+          const p = PBY[f.player_id];
+          return !!(p && p.owner != null && String(p.owner) === String(me.rid));
+        } catch (e) { return false; }
       }
       function rdCard(f) {
         const p = PBY[f.player_id];
-        return `<div class="rd-card">
-          <div class="rd-top">${hsImg(p || { id: f.player_id })}<div><div class="rd-name">${esc(f.name)}</div><div class="rd-meta">${f.position} · ${logoImg(f.team)}${esc(f.team)}</div></div><span class="rd-wks">${rdWks(f)}</span></div>
-          <p class="rd-head">${rdHeadline(f)}</p>
+        const mine = rdIsMine(f);
+        return `<div class="rd-card${mine ? " rd-mine" : ""}">
+          <div class="rd-top">${hsImg(p || { id: f.player_id })}<div><div class="rd-name">${esc(f.name)}${mine ? ` <span class="rd-mine-tag">★ On your roster</span>` : ""}</div><div class="rd-meta">${f.position} · ${logoImg(f.team)}${esc(f.team)}</div></div><span class="rd-wks">${rdWks(f)}</span></div>
           <p class="rd-ev">${rdEvidence(f)}</p>
           <div class="rd-track">${rdTrackRecord(f)}</div>
           ${f.injury_risk ? `<div class="rd-risk"><span class="inj-chip sev-mid">${esc(f.injury_risk)}</span></div>` : ""}
@@ -24175,7 +24207,7 @@ window.__lifeline = (function () {
         if (!p) return "";
         const f = rdLiveFlags().find(x => String(x.player_id) === String(p.id));
         if (!f) return "";
-        return `<div class="rd-why"><div class="rd-why-h">📡 On the Opportunity Radar this week</div><p class="rd-head">${rdHeadline(f)}</p><p>${rdEvidence(f)}</p><p class="rd-track">${rdTrackRecord(f)}</p><button type="button" class="rd-goto" data-radar-go>See the full Radar board →</button></div>`;
+        return `<div class="rd-why"><div class="rd-why-h">📡 On the Opportunity Radar this week</div><p>${rdEvidence(f)}</p><p class="rd-track">${rdTrackRecord(f)}</p><button type="button" class="rd-goto" data-radar-go>See the full Radar board →</button></div>`;
       }
       window.radarWhy = radarWhy;
       function renderRadar() {
