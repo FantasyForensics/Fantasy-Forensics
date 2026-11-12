@@ -4280,7 +4280,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div id="power-list"></div>
         <details class="how-box">
           <summary>How this works</summary>
-          <p class="tab-intro" id="teams-intro">The Your Team view carries your <strong>Current Power rank</strong>, <strong>playoff odds</strong> from the 3,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong> — tap any number and that league opens in the matching tool. Below it, every roster is ranked two ways: <strong>Current Power</strong> — this season's strength, from optimal starters' rest-of-season projections, recent form, and bench depth (draft picks count for nothing here) — and <strong>Franchise Value</strong> — total roster value, with players and draft-pick capital shown as separate subtotals, never blended. Each team also carries its franchise tag — Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨 — from its Franchise rank and core age, and its trade stance — Buyer, Holding, Seller, or Maximal Seller — from its playoff odds. Tap a team to see its full roster and picks, and exactly where yours stacks up.</p>
+          <p class="tab-intro" id="teams-intro">The Your Team view carries your <strong>Current Power rank</strong>, <strong>playoff odds</strong> from the 3,000-sim Season Outlook, the current <strong>matchup</strong>, and your <strong>top waiver targets</strong> — tap any number and that league opens in the matching tool. Below it, every roster is ranked two ways: <strong>Current Power</strong> — this season's title odds, from the 3,000-sim Season Outlook (draft picks count for nothing here) — and <strong>Franchise Value</strong> — total roster value, with players and draft-pick capital shown as separate subtotals, never blended. Each team also carries its franchise tag — Win-Now ⏳, Dynasty 👑, Crossroads 🔀, or Rebuilder 🔨 — from its Franchise rank and core age, and its trade stance — Buyer, Holding, Seller, or Maximal Seller — from its playoff odds. Tap a team to see its full roster and picks, and exactly where yours stacks up.</p>
         </details>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
@@ -4319,7 +4319,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div id="season-out"></div>
         <details class="how-box inseason">
           <summary>How this works</summary>
-          <p class="tab-intro">A <strong>separate engine</strong> that answers a different question: not what your players are worth, but what your team does <strong>this season</strong>. Every player is re-priced as a <strong>rest-of-season projection</strong> — a redraft lens: this year’s remaining points. Each team’s best lineup is projected, then the rest of the season is <strong>simulated 3,000 times</strong> (the remaining regular-season weeks, plus the playoffs). Nothing here feeds the dynasty values, Current Power, or the trade calculator’s verdict — those stay exactly as they were. What it does feed is <strong>trade advice</strong>: Player Targets and the calculator show each deal’s title-odds swing next to its dynasty math, because a deal can be fair on value and still wrong for your window. Projections use <strong>this league’s actual scoring</strong> and do not move with the League format explorer.</p>
+          <p class="tab-intro">A <strong>separate engine</strong> that answers a different question: not what your players are worth, but what your team does <strong>this season</strong>. Every player is re-priced as a <strong>rest-of-season projection</strong> — a redraft lens: this year’s remaining points. Each team’s best lineup is projected, then the rest of the season is <strong>simulated 3,000 times</strong> (the remaining regular-season weeks, plus the playoffs). Nothing here feeds the dynasty values or the trade calculator’s verdict — those stay exactly as they were. Current Power is this engine’s title odds: the ranking on the Power page is the same title chance this tab prints. What it does feed is <strong>trade advice</strong>: Player Targets and the calculator show each deal’s title-odds swing next to its dynasty math, because a deal can be fair on value and still wrong for your window. Projections use <strong>this league’s actual scoring</strong> and do not move with the League format explorer.</p>
         </details>
         <div class="subnav-mount subnav-foot" data-subnav-mount="league"></div>
       </div>
@@ -6149,26 +6149,31 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            alongside the old power above; nothing displays them yet. */
         try { if (typeof ffComputeTwoRankings === "function") ffComputeTwoRankings(); } catch (e) {}
         /* Phase 3 piece 3 (S1 sort flip): once Current Power is
-           computed, DATA.teams is ordered by Current Power score and
-           powerRank IS the Current Power rank — both formats, picks
-           counting zero in CP (the engine's recipe). When CP is quiet
-           (offseason / guest / no rosters) the blended order + rank
-           stand untouched, so no surface can show a stale CP number;
-           the offseason surfaces order explicitly off Franchise rank
-           instead (S12 Rosters, Power page). t.power itself keeps
-           computing exactly as before (dual-run). */
+           computed, DATA.teams is ordered by Current Power rank and
+           powerRank IS the Current Power rank — both formats.
+           Current Power is the sim's title odds (Eric, Nov 12,
+           2026), so the flip sorts on cpRank — the exact-champ
+           order the engine assigned — never the 1-decimal rounded
+           score, which could tie. When CP is quiet (offseason /
+           guest / no rosters / bake still settling) the blended
+           order + rank stand untouched, so no surface can show a
+           stale CP number; the offseason surfaces order explicitly
+           off Franchise rank instead (S12 Rosters, Power page).
+           t.power itself keeps computing exactly as before
+           (dual-run). */
         try {
           const cpReady = DATA.teams.length > 0 && DATA.teams.every(t => t.cpScore != null && t.cpRank != null);
           if (cpReady) {
-            DATA.teams.sort((a, b) => (b.cpScore - a.cpScore) || (b.rosOpt - a.rosOpt) || (b.starterVal - a.starterVal) || (b.pf - a.pf));
+            DATA.teams.sort((a, b) => (a.cpRank - b.cpRank) || (b.rosOpt - a.rosOpt) || (b.starterVal - a.starterVal) || (b.pf - a.pf));
             DATA.teams.forEach(t => { t.powerRank = t.cpRank; });
           }
         } catch (e) { /* the flip is best-effort; the blended order stands */ }
       }
 
       /* ================= Two-rankings engine (Phase 1, dual-run) =================
-         Computes Current Power (Recipe A), Franchise Value, the re-based
-         franchise tag and Trade Stance ALONGSIDE the old power/arch.
+         Computes Current Power (100% title odds — Eric, Nov 12, 2026),
+         Franchise Value, the re-based franchise tag and Trade Stance
+         ALONGSIDE the old power/arch.
          Nothing displays these fields yet (phase 3) and nothing old is
          retired: t.power / t.powerRank / t.arch / slpExpl keep computing
          exactly as before; the new fields live beside them on each team:
@@ -6326,9 +6331,8 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
              the lock's week ≤ ~6) the all-play/form terms shrink
              toward the median with n/(n+3); with 0 completed weeks
              both sit at the median. Past the early season (n > 6)
-             the terms run unshrunk — the D74 acceptance table was
-             built unshrunk, and the brief scopes the shrinkage to
-             the early season. */
+             the terms run unshrunk. (Since Nov 12 these terms feed
+             Stance's luck/lean only — Current Power is sim-only.) */
           const shrink = completed <= 6 ? completed / (completed + 3) : 1;
           /* ---- Franchise Value (dynasty only; redraft: no fields) ---- */
           teams.forEach(t => {
@@ -6380,15 +6384,16 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           });
           /* ---- Session bake pending: CP + FR + Stance quiet ----
              While the active league's entry pull is still settling,
-             the all-play/form terms (median until the matchup-points
-             fetch lands), the sim odds (random pairings until the
-             schedule lands) and the pick values (default until the
-             sim restamps them) are all intermediate — showing them
-             would print ranks that flip when the bake lands. Keep
-             them null so the strip / Power list show their loading
-             states instead; the bake landing recomputes. Sellable
-             inventory + buyer capacity above are value + age only,
-             so they stay live. */
+             the sim odds (random pairings until the schedule lands —
+             and Current Power IS the sim's title odds, so it waits
+             too), the stance luck terms (median until the
+             matchup-points fetch lands) and the pick values (default
+             until the sim restamps them) are all intermediate —
+             showing them would print ranks that flip when the bake
+             lands. Keep them null so the strip / Power list show
+             their loading states instead; the bake landing
+             recomputes. Sellable inventory + buyer capacity above
+             are value + age only, so they stay live. */
           if ((typeof ffBakePendingForCurrent === "function") && ffBakePendingForCurrent()) {
             teams.forEach(t => {
               t.cpScore = null; t.cpRank = null; t.cpForecast = null; ffNullStance(t);
@@ -6404,54 +6409,27 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
             });
             return;
           }
-          /* ---- Current Power, Recipe A (approved): 50% optimal-lineup
-             ROS projection + 25% all-play win% + 15% last-3 scoring +
-             10% bench depth, all as site percentiles (ties full weight),
-             roundPower rounding, 0–100. Picks count zero; odds are NOT
-             inputs. All-play/form terms shrink toward the median with
-             n/(n+3), n = completed weeks (0 weeks → both sit at 50).
-             Matchup data comes from the cached weekly-points fetch
-             (ffKickMatchupPts); until it lands both terms sit at the
-             median and the next recompute corrects them. Item 8
-             (Nov 11): the points are per-league — read them only
-             through ffMatchPtsForCurrent, keyed to the league
-             currently in DATA. A foreign cache entry (the active
-             league's points during a swap) now yields median terms,
-             never another league's points. ---- */
-          const mp = (typeof ffMatchPtsForCurrent === "function") ? ffMatchPtsForCurrent() : window.__ffMatchPts;
-          let apWin = null, apExp = null, formAvg = null;
-          if (mp && mp.pts && mp.weeks && mp.weeks.length) {
-            const ap = ffApFromPts(mp.pts, mp.weeks);
-            apWin = ap.winPct; apExp = ap.expWins; formAvg = ap.formAvg;
-          }
-          const rosVals = teams.map(t => t.rosOpt || 0);
-          const depthVals = teams.map(t => ffBenchDepth(t));
-          teams.forEach((t, i) => { t._ffDepth = depthVals[i]; });
-          const apVals = teams.map(t => (apWin && apWin[String(t.rid)] != null) ? apWin[String(t.rid)] : 50);
-          const formValsRaw = teams.map(t => (formAvg && formAvg[String(t.rid)] != null) ? formAvg[String(t.rid)] : null);
-          const formMedian = (() => { const vs = formValsRaw.filter(v => v != null).sort((a, b) => a - b); return vs.length ? vs[Math.floor(vs.length / 2)] : 0; })();
-          const formVals = formValsRaw.map(v => v == null ? formMedian : v);
-          teams.forEach(t => {
-            const pRos = ffPctile(rosVals, t.rosOpt || 0);
-            const pAp = ffPctile(apVals, (apWin && apWin[String(t.rid)] != null) ? apWin[String(t.rid)] : 50);
-            const pForm = ffPctile(formVals, (formAvg && formAvg[String(t.rid)] != null) ? formAvg[String(t.rid)] : formMedian);
-            const pDepth = ffPctile(depthVals, t._ffDepth);
-            const eAp = 50 + (pAp - 50) * shrink;
-            const eForm = 50 + (pForm - 50) * shrink;
-            t.cpScore = roundPower(0.50 * pRos + 0.25 * eAp + 0.15 * eForm + 0.10 * pDepth);
-            t.cpForecast = !!ph.cpForecast;
-            delete t._ffDepth;
-          });
-          [...teams].sort((a, b) => (b.cpScore - a.cpScore) || ((b.rosOpt || 0) - (a.rosOpt || 0)) || ((b.starterVal || 0) - (a.starterVal || 0)) || ((b.pf || 0) - (a.pf || 0)))
-            .forEach((t, i) => { t.cpRank = i + 1; });
-          /* ---- Stance: three separate fields, never blended ----
-             (Sellable inventory + buyer capacity were already
-             computed above, before the quiet return — the stance
-             loop only reads them now; no formula change.) */
-          /* Sim odds — the ONE shared run, gated by the same freshness
-             fingerprint the old formula uses; degenerate in the
-             offseason (phase gate), so a finished season's final
-             standings can never classify anyone. */
+          /* ---- Current Power = 100% title odds (Eric, Nov 12, 2026 —
+             supersedes Recipe A): the ranking IS the sim's title-
+             probability ordering. The four Recipe A components
+             (ROS percentile 50%, all-play 25%, last-3 form 15%,
+             bench depth 10%) are gone — title odds already bake in
+             playoff odds, ROS projections, and the real remaining
+             schedule, so a separate strength blend is redundant.
+             cpScore is the RAW champ probability from the one shared
+             sim (playoff × bracket — buildSeasonSim's champ field),
+             ×100, shown to 1 decimal. The sort uses the EXACT champ
+             value, never the rounded score, so rounding can never
+             tie or flip the order. The 99% cap / <1% floor are
+             display-only for odds surfaces (oddsPct) and never feed
+             CP. Tiebreaks unchanged: rosOpt → starterVal → PF.
+             No sim yet (bake still settling) ⇒ CP stays null and the
+             legacy blended order stands. ---- */
+          /* The sim, fetched ONCE here — Current Power reads it
+             first, Stance below reuses the same run. Gated by the
+             same freshness fingerprint the old formula uses;
+             degenerate in the offseason (phase gate), so a finished
+             season's final standings can never classify anyone. */
           let simRes = null;
           if (!ph.simDegenerate) {
             try {
@@ -6461,6 +6439,37 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
               if (s && s.results) simRes = s.results;
             } catch (e) { simRes = null; }
           }
+          /* Weekly matchup points (all-play win% + expected wins)
+             still load here — Stance's luck/lean below reads them —
+             but they no longer feed Current Power. Item 8 (Nov 11):
+             the points are per-league — read them only through
+             ffMatchPtsForCurrent, keyed to the league currently in
+             DATA. A foreign cache entry (the active league's points
+             during a swap) now yields median terms, never another
+             league's points. */
+          const mp = (typeof ffMatchPtsForCurrent === "function") ? ffMatchPtsForCurrent() : window.__ffMatchPts;
+          let apWin = null, apExp = null, formAvg = null;
+          if (mp && mp.pts && mp.weeks && mp.weeks.length) {
+            const ap = ffApFromPts(mp.pts, mp.weeks);
+            apWin = ap.winPct; apExp = ap.expWins; formAvg = ap.formAvg;
+          }
+          const haveChamp = !!simRes && teams.every(t => { const r = simRes[t.rid]; return r && isFinite(r.champ); });
+          if (haveChamp) {
+            teams.forEach(t => {
+              t.cpScore = Math.round(simRes[t.rid].champ * 1000) / 10;
+              t.cpForecast = !!ph.cpForecast;
+            });
+            [...teams].sort((a, b) => ((simRes[b.rid].champ - simRes[a.rid].champ) || ((b.rosOpt || 0) - (a.rosOpt || 0)) || ((b.starterVal || 0) - (a.starterVal || 0)) || ((b.pf || 0) - (a.pf || 0))))
+              .forEach((t, i) => { t.cpRank = i + 1; });
+          } else {
+            teams.forEach(t => { t.cpScore = null; t.cpRank = null; t.cpForecast = null; });
+          }
+          /* ---- Stance: three separate fields, never blended ----
+             (Sellable inventory + buyer capacity were already
+             computed above, before the quiet return — the stance
+             loop only reads them now; no formula change.) */
+          /* Sim odds — the ONE shared run, fetched above (Current
+             Power reads it first); Stance reuses the same simRes. */
           const haveSim = !!simRes && teams.every(t => { const r = simRes[t.rid]; return r && isFinite(r.playoff); });
           const pfVals = teams.map(t => t.pf || 0);
           let actWeek = ph.effWeek || 99;
@@ -6485,7 +6494,8 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
             t.stanceOdds = odds; t.stanceClinched = clinched;
             /* Bubble resolution: PF/all-play trajectory + luck gap.
                Luck = all-play expected wins − actual wins. Inputs
-               shrink n/(n+3) early (same pattern as Current Power).
+               shrink n/(n+3) early (the same early-season shrink
+               pattern the old Current Power recipe used).
                Seller's-trap override: strongly-negative luck
                (≤ −1.5 wins) on a top-half PF scorer ⇒ lean Buyer. */
             const pfPct = ffPctile(pfVals, t.pf || 0);
@@ -6529,9 +6539,9 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          the all-play/form terms sit at the median (honest, not
          fabricated). */
       window.__ffMatchPts = null;
-      /* Item 8 (Nov 11): per-league matchup-points cache. The engine's
-         all-play/form terms are 40% of Current Power and the points
-         are per-league, so one shared slot bleeds the active league's
+      /* Item 8 (Nov 11): per-league matchup-points cache. Stance's
+         all-play luck term reads these points, and the points are
+         per-league, so one shared slot bleeds the active league's
          points into every swapped league. `__ffMatchPtsByKey` holds
          one entry per "platform:leagueId" (ffKickMatchupPts and the
          swap installer both write it); `__ffMatchPts` stays the
@@ -6623,12 +6633,12 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         } catch (e) {}
       };
       /* Item 8 (Nov 11): per-league matchup-points installer for the
-         Command Center swap paths. The engine's all-play/form terms
-         need the SWAPPED league's own weekly points, not the active
+         Command Center swap paths. Stance's all-play luck term needs
+         the SWAPPED league's own weekly points, not the active
          league's — and the engine now only reads points through the
          expected key (ffMatchPtsForCurrent), so installing the
          league's own entry before ff4CCSwap is what makes a swapped
-         league's Current Power true instead of median. Cached entries
+         league's Stance luck true instead of median. Cached entries
          are reused across swaps; a failed fetch leaves the cache
          empty (fail-closed to median terms), never a foreign league's
          points. Callers await this BEFORE ff4CCSwap, so the recompute
@@ -6685,8 +6695,9 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       };
       /* Readiness for the verification harness: every team has a Current
          Power score and a Stance band, and (Sleeper) the weekly-points
-         cache for this league has landed so the all-play/form terms are
-         real, not median placeholders. */
+         cache for this league has landed so Stance's all-play luck
+         term is real, not a median placeholder. (Current Power itself
+         is sim-only since Nov 12 — the cache no longer feeds it.) */
       window.ffTwoRankingsReady = function () {
         try {
           const teams = (typeof DATA !== "undefined" && DATA.teams) || [];
@@ -7431,7 +7442,7 @@ ${rdP ? "" : `
               <div><span>Pick capital</span><b>${fmt(t.frPicks || 0)}</b></div>
             </div>` : `<div class="power-row">
               <div class="power-bar"><div class="power-fill" style="width:${t.cpScore == null ? 0 : t.cpScore}%"></div></div>
-              <div class="power-num">${t.cpScore == null ? "—" : t.cpScore} <small>CURRENT POWER${t.cpForecast ? " · FORECAST" : ""}${rdP ? " · REDRAFT" : ""}</small></div>
+              <div class="power-num">${t.cpScore == null ? "—" : t.cpScore + "%"} <small>CURRENT POWER${t.cpForecast ? " · FORECAST" : ""}${rdP ? " · REDRAFT" : ""}</small></div>
             </div>`}
             <p class="expl">${esc(explTxt)}</p>
             <div class="stat-row">
@@ -7728,7 +7739,7 @@ ${rdP ? "" : `
             <button type="button" class="mt-open" data-mt-go="${lg.id}:teams">Open league →</button>
           </div>
           <div class="mt-stats">
-            <button type="button" class="mt-stat" data-mt-go="${lg.id}:teams"><span class="mt-lbl">Current Power</span><span class="mt-big">${s.powerRank == null ? "—" : `#${s.powerRank} <small>of ${s.total}</small>`}</span><span class="mt-sub2">${s.power == null ? "Current Power score —" : `${s.power} Current Power score`}${s.stance && !(typeof VALMODE !== "undefined" && VALMODE === "redraft") ? ` · ${esc(s.stance)}` : ""}</span></button>
+            <button type="button" class="mt-stat" data-mt-go="${lg.id}:teams"><span class="mt-lbl">Current Power</span><span class="mt-big">${s.powerRank == null ? "—" : `#${s.powerRank} <small>of ${s.total}</small>`}</span><span class="mt-sub2">${s.power == null ? "Current Power —" : `${s.power}% title odds`}${s.stance && !(typeof VALMODE !== "undefined" && VALMODE === "redraft") ? ` · ${esc(s.stance)}` : ""}</span></button>
             ${odds}
             ${match}
           </div>
@@ -10747,7 +10758,7 @@ ${rdP ? "" : `
         <h2>The injury feed — what it shows, and what it won't</h2>
         <p>The Sleeper feed carries the detail behind each designation: the body part and, about a third of the time, a note (a sprain, a surgery, a fracture). Every designated player wears it on the board as a chip — <em>Out · Calf (Strain)</em>, <em>IR · Ankle</em> — and the board's <strong>Injured</strong> filter gathers all of them into one value-sorted view. For the “why, and when is he back” part, each injured player's expanded row links out to his <strong>ESPN player page</strong> (league-wide: ESPN's NFL injuries page) — free, no key, and where the reporting actually lives. The board shows the designation and the detail it can verify and never an invented return timeline; the news link is the return source. Where Sleeper's feed carries no detail for a player, the chip shows the designation alone.</p>
         <h2>Power rankings &amp; the team tags</h2>
-        <p>Every roster is ranked two ways, and the two rankings answer different questions. <strong>Current Power</strong> asks how strong a team is to win now: its optimal starters' rest-of-season projections, recent form, and bench depth — players only, draft picks count for nothing here. <strong>Franchise Value</strong> asks what a team is worth in total: every player on the roster plus its draft-pick capital, shown as separate subtotals for players and picks, not a single combined number. An injured star still counts at full value in Franchise Value — a great roster having a hurt month is still a great roster. In redraft there is no next year to price, so there is only Current Power; redraft values are rest-of-season values, so a player done for the season adds nothing to his team's total, exactly as he should.</p> Each team also carries two labels. The franchise tag reads Franchise rank together with the age of the team's starting core. The top third splits by core age: a veteran core is tagged <strong>Win-Now ⏳</strong> — its window is this season — and a young core <strong>Dynasty 👑</strong>, built to contend now and for years. The middle third is <strong>Crossroads 🔀</strong>: close enough to contend, one decision from either direction. The bottom third is <strong>Rebuilder 🔨</strong>, playing for next year. The trade stance reads the season simulation instead: a team's <strong>playoff odds</strong> make it a <strong>Buyer</strong>, <strong>Holding</strong>, <strong>Seller</strong>, or <strong>Maximal Seller</strong>. The tags drive Player Targets: buyers see buys, sellers see sells, and Crossroads teams pick a path.</p>
+        <p>Every roster is ranked two ways, and the two rankings answer different questions. <strong>Current Power</strong> asks who is most likely to win the championship: it is the sim's title odds — the chance of winning it all from the 3,000-sim Season Outlook (playoff odds × the chance of winning the bracket once in), shown as a percentage. A contender shows in the 20s–50s, not the 90s, because only one team can win it. Title odds already bake in roster strength, rest-of-season projections, and the real remaining schedule, so there is no separate strength score behind the number — and draft picks count for nothing here. <strong>Franchise Value</strong> asks what a team is worth in total: every player on the roster plus its draft-pick capital, shown as separate subtotals for players and picks, not a single combined number. An injured star still counts at full value in Franchise Value — a great roster having a hurt month is still a great roster. In redraft there is no next year to price, so there is only Current Power; redraft values are rest-of-season values, so a player done for the season adds nothing to his team's total, exactly as he should.</p> Each team also carries two labels. The franchise tag reads Franchise rank together with the age of the team's starting core. The top third splits by core age: a veteran core is tagged <strong>Win-Now ⏳</strong> — its window is this season — and a young core <strong>Dynasty 👑</strong>, built to contend now and for years. The middle third is <strong>Crossroads 🔀</strong>: close enough to contend, one decision from either direction. The bottom third is <strong>Rebuilder 🔨</strong>, playing for next year. The trade stance reads the season simulation instead: a team's <strong>playoff odds</strong> make it a <strong>Buyer</strong>, <strong>Holding</strong>, <strong>Seller</strong>, or <strong>Maximal Seller</strong>. The tags drive Player Targets: buyers see buys, sellers see sells, and Crossroads teams pick a path.</p>
         <h2>Honest limits</h2>
         <ul>
           <li><strong>It's a snapshot.</strong> Rosters, standings, algorithm prices, and ranks are as of ${DATA.league.snapshot} (NFL Week ${DATA.league.week}). Later news is not priced in.</li>
@@ -19333,7 +19344,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             ctx.fillStyle = "rgba(255,255,255,.10)"; ctx.beginPath(); ctx.roundRect(bx, y + 26, bw, 16, 8); ctx.fill();
             ctx.fillStyle = t.isUser ? SH.lime : SH.cyan; ctx.beginPath(); ctx.roundRect(bx, y + 26, Math.max(16, bw * (sc == null ? 0 : sc) / 100), 16, 8); ctx.fill();
             ctx.fillStyle = SH.ink; ctx.font = shFont(700, 34); ctx.textAlign = "right";
-            ctx.fillText(sc == null ? "—" : String(sc), W - 62, y + 46); ctx.textAlign = "left";
+            ctx.fillText(sc == null ? "—" : String(sc) + "%", W - 62, y + 46); ctx.textAlign = "left";
             rows.push({ name: t.name, rank: rank == null ? null : rank, score: sc == null ? null : sc });
           }
         });
@@ -23164,16 +23175,16 @@ window.drDraft = {
           const cap = ff4CCCapture();
           /* Item 8 (Nov 11): install this league's own matchup points
              before the swap, so the recompute inside it prices true
-             Current Power instead of the active league's points. */
+             Stance luck instead of the active league's points. */
           try { if (typeof ff4CCInstallMatchPts === "function") await ff4CCInstallMatchPts("sleeper", lg.league_id, built, null); } catch (e) {}
           try {
             ff4CCSwap(built);
             const me = DATA.teams.find(t => t.isUser) || DATA.teams.find(t => t.rid === myRoster.roster_id);
             if (!me) throw new Error("user team not found");
             /* Phase 3 piece 2 (S42): the stored snapshot rank takes
-               Current Power meaning — CP is sim-independent, so the
-               light-pass fingerprint mismatch (see piece-2 log item 8)
-               cannot move it. */
+               Current Power meaning — it is stamped from the settled
+               sim's title odds, so it is only as fresh as the bake
+               that produced it. */
             snap.teamName = me.name; snap.record = me.record; snap.powerRank = (me.cpRank != null) ? me.cpRank : null; snap.total = DATA.teams.length;
             /* Phase 7 (B3): a completed league's settled results are
                not live odds — skip the light sim entirely and leave
@@ -23285,7 +23296,7 @@ window.drDraft = {
           const cap = ff4CCCapture();
           /* Item 8 (Nov 11): install this league's own matchup points
              before the swap, so the recompute inside it prices true
-             Current Power instead of the active league's points. */
+             Stance luck instead of the active league's points. */
           try { if (typeof ff4CCInstallMatchPts === "function") await ff4CCInstallMatchPts("espn", entry.leagueId, built, raw); } catch (e) {}
           try {
             ff4CCSwap(built);
@@ -27652,15 +27663,18 @@ window.MS_FROZEN_ROS = {"10226":{"rec":1.615,"rec_td":0.133,"rec_yds":20.135,"ru
       const n = teams.length;
       const rd = o.format === "redraft";
       const subs = {}, active = {};
-      /* Roster factor re-based (Phase 1, audit S53/Q1 answer: Current
-         Power rank — the projection-based strength the factor intends;
-         it exists in both formats, and the redraft frozen-rank
-         override below keeps working on top of it). Falls back to the
-         old powerRank only when Current Power hasn't been computed
-         (e.g. guest mode), so Manager Score never changes meaning
-         silently. */
-      const cpRankForMs = (me.cpRank != null) ? me.cpRank : me.powerRank;
-      if (cpRankForMs != null) { subs.roster = msPctFromRank(cpRankForMs, n); active.roster = true; }
+      /* Roster factor re-based (Nov 12, 2026): Current Power is now
+         the sim's title odds, NOT a roster-strength measure — reading
+         cpRank here would silently change what Manager Score measures
+         (a kind schedule would read as a strong roster). The factor
+         keeps its original meaning — projection-based roster
+         strength — via the optimal-lineup ROS percentile (rosOpt,
+         the old Recipe A 50% leg): the share of the league your best
+         lineup out-projects. It exists in both formats, and the
+         redraft frozen-rank override below keeps working on top
+         of it. */
+      const rosPctForMs = msPctFromValues(teams.map(t => t.rosOpt || 0), me.rosOpt || 0);
+      if (rosPctForMs != null) { subs.roster = rosPctForMs; active.roster = true; }
       if (rd) {
         const fr = msFrozenRank(teams, me);
         if (fr != null) { subs.roster = msPctFromRank(fr, n); active.roster = true; }
