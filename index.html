@@ -23764,11 +23764,11 @@ window.drDraft = {
         const frac = d.odds == null ? 0 : Math.max(0, Math.min(1, d.odds));
         const col = frac >= 0.65 ? "#C6FF00" : frac >= 0.35 ? "#00E5FF" : "#FF2E88";
         const oddsLabel = d.clinched ? "100%" : (d.odds == null ? "—" : oddsPct(d.odds));
-        const oddsSub = d.elim ? "Eliminated from the playoffs" : d.clinched ? "Playoff spot locked up" : (d.odds == null ? "Odds unavailable for this format" : "Chance at the playoffs");
+        const oddsSub = d.elim ? "Eliminated from the playoffs" : d.clinched ? "Playoff spot locked up" : (d.odds == null ? "Odds unavailable for this format" : "");
         let magicLine = "";
-        if (d.magic && !d.magic.locked && !d.magic.capped) magicLine = `<div class="cc-tile-sub">Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"} (${oddsPct(d.magic.pct)} playoff odds)</div>`;
+        if (d.magic && !d.magic.locked && !d.magic.capped) magicLine = `<div class="cc-tile-sub">${d.magic.n} more win${d.magic.n === 1 ? "" : "s"} puts you at ~${oddsPct(d.magic.pct)} playoff odds</div>`;
         else if (d.magic && d.magic.capped) magicLine = `<div class="cc-tile-sub">No win total reaches 90% playoff odds</div>`;
-        tiles.push(`<div class="cc-tile" data-cc-tile-nav="odds" style="--tile-accent:#C6FF00"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div><div class="cc-tile-sub">${esc(oddsSub)}</div>${magicLine}</div></div>`);
+        tiles.push(`<div class="cc-tile" data-cc-tile-nav="odds" style="--tile-accent:#C6FF00"><div class="cc-tile-h">Playoff Odds</div><div class="cc-tile-body"><div class="cc-tile-big">${esc(oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(frac * 100)}%;background:${col}"></div></div>${oddsSub ? `<div class="cc-tile-sub">${esc(oddsSub)}</div>` : ""}${magicLine}</div></div>`);
         const powerBig = d.powerRank == null ? "—" : `#${d.powerRank} of ${d.total}`;
         /* Phase 3 piece 1: the strip reads these — Current Power rank
            for the Power cell, Franchise rank for the Franchise cell
@@ -23914,7 +23914,7 @@ window.drDraft = {
         else if (!d.portfolio.length) stockNote = "No players on this roster.";
         else stockNote = "Value history needs more snapshots.";
         const magicParts = [];
-        if (d.magic && !d.magic.locked && !d.magic.capped) magicParts.push(`Magic number: ${d.magic.n} more win${d.magic.n === 1 ? "" : "s"} (${oddsPct(d.magic.pct)} playoff odds)`);
+        if (d.magic && !d.magic.locked && !d.magic.capped) magicParts.push(`${d.magic.n} more win${d.magic.n === 1 ? "" : "s"} puts you at ~${oddsPct(d.magic.pct)} playoff odds`);
         else if (d.magic && d.magic.capped) magicParts.push("No win total reaches 90% playoff odds");
         if (d.elim) magicParts.push("Eliminated from the playoffs");
         else if (d.clinched) magicParts.push("Playoff spot locked up");
@@ -24038,7 +24038,7 @@ window.drDraft = {
             <div class="cc-chips">${(d.chips || []).map(c => `<span class="chip">${esc(c)}</span>`).join("")}</div>
           </div><div class="cc-spot-actions"><button type="button" class="cc-manage cc-refresh" id="cc-refresh" data-cc-refresh="1"${ff4.ccRefreshing ? " disabled" : ""}>${ff4.ccRefreshing ? `<span class="cc-spin cc-spin-sm" aria-hidden="true"></span> Refreshing…` : "↻ Refresh"}</button></div></div>
           <div class="cc3-strip" id="cc3-strip">
-            <div class="cc3-ss cc3-ss-odds" data-cc-grid-tool="odds" role="button" tabindex="0"><div class="cc3-ss-k">Playoff Odds</div><div class="cc3-ss-v" style="color:${P.oddsCol}">${esc(P.oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(P.oddsFrac * 100)}%;background:${P.oddsCol}"></div></div><div class="cc3-ss-sub">${esc(P.oddsSub)}</div></div>
+            <div class="cc3-ss cc3-ss-odds" data-cc-grid-tool="odds" role="button" tabindex="0"><div class="cc3-ss-k">Playoff Odds</div><div class="cc3-ss-v" style="color:${P.oddsCol}">${esc(P.oddsLabel)}</div><div class="cc-tile-bar"><div style="width:${Math.round(P.oddsFrac * 100)}%;background:${P.oddsCol}"></div></div>${P.oddsSub ? `<div class="cc3-ss-sub">${esc(P.oddsSub)}</div>` : ""}</div>
             <div class="cc3-ss cc3-ss-pow" data-cc-grid-tool="power" data-cc-power-view="cp" role="button" tabindex="0"><div class="cc3-ss-k">Power Rank</div><div class="cc3-ss-v">${esc(P.cpBig)}</div></div>
             ${P.isRedraft ? "" : `<div class="cc3-ss cc3-ss-fr" data-cc-grid-tool="power" data-cc-power-view="fr" role="button" tabindex="0"><div class="cc3-ss-k">Franchise</div><div class="cc3-ss-v">${esc(P.frBig)}</div></div>`}
             ${P.gradesCell ? `<div class="cc3-ss cc3-ss-grd" data-cc-grid-tool="power" role="button" tabindex="0"><div class="cc3-ss-k">Grades</div><div class="cc3-ss-v cc3-grades">${P.gradesCell}</div></div>` : ""}
@@ -24795,8 +24795,8 @@ window.drDraft = {
           const subj = selT && selT.isUser ? "you" : (selT ? esc(selT.name) : "them");
           const rows = scenTable.filter(r => r.n >= 20 && r.poRate != null);
           const hit = rows.find(r => r.poRate >= 0.90);
-          if (hit) magicHtml = `<div class="pp-magic"><span>Magic number</span><b>${hit.addWins} more win${hit.addWins === 1 ? "" : "s"} puts ${subj} at ~${oddsPct(hit.poRate)}</b></div>`;
-          else if (rows.length) { const mx = rows[rows.length - 1]; magicHtml = `<div class="pp-magic"><span>Magic number</span><b>No win total gets ${subj} to 90% — winning out (${mx.addWins} more) tops out at ~${oddsPct(mx.poRate)}</b></div>`; }
+          if (hit) magicHtml = `<div class="pp-magic"><b>${hit.addWins} more win${hit.addWins === 1 ? "" : "s"} puts ${subj} at ~${oddsPct(hit.poRate)}</b></div>`;
+          else if (rows.length) { const mx = rows[rows.length - 1]; magicHtml = `<div class="pp-magic"><b>No win total gets ${subj} to 90% — winning out (${mx.addWins} more) tops out at ~${oddsPct(mx.poRate)}</b></div>`; }
         }
         const fmtBits = [`${fmt.teams} playoff teams`, `starts Week ${fmt.start}`, fmt.byes > 0 ? `top ${fmt.byes} seed${fmt.byes === 1 ? "" : "s"} get a bye` : "no byes", fmt.avgMatch ? "median game on" : "median game off", fmt.divisions ? `${fmt.divisions} divisions` : "no divisions"];
         mount.innerHTML = `<div class="pp-box">
@@ -24810,7 +24810,7 @@ window.drDraft = {
           </div>
           ${magicHtml}
           ${pairs.length ? `<h4 class="pp-h">This week — pick a winner in each game</h4>
-          <div class="pp-pairs">${pairs.map((pr, i) => `<div class="pp-pair">${pr.map(r => `<button type="button" class="pp-win ${ff4.ppWin[i] === r ? "on" : ""}" data-pp-pair="${i}" data-pp-win="${r}" aria-pressed="${ff4.ppWin[i] === r}">${esc(ff4Team(r) ? ff4Team(r).name : "Team " + r)}</button>`).join("")}<span class="pp-vs">vs</span></div>`).join("")}</div>` : `<p class="pp-note">No matchup pairings are published for this league this week, so there's no scenario to set — the magic number above still runs off the full simulation.</p>`}
+          <div class="pp-pairs">${pairs.map((pr, i) => `<div class="pp-pair">${pr.map(r => `<button type="button" class="pp-win ${ff4.ppWin[i] === r ? "on" : ""}" data-pp-pair="${i}" data-pp-win="${r}" aria-pressed="${ff4.ppWin[i] === r}">${esc(ff4Team(r) ? ff4Team(r).name : "Team " + r)}</button>`).join("")}<span class="pp-vs">vs</span></div>`).join("")}</div>` : `<p class="pp-note">No matchup pairings are published for this league this week, so there's no scenario to set — the sim read above still runs off the full simulation.</p>`}
           <div id="pp-swing">${ff4.ppSwing && ff4.ppSwingKey === ff4.ppSwingSig(fixed, rid) ? ff4.ppSwing : `<p class="pp-note">Computing the biggest swing games…</p>`}</div>
         </div>`;
         const sel = document.getElementById("pp-team");
@@ -25807,27 +25807,13 @@ window.__lifeline = (function () {
         const d = rdData();
         const live = rdLiveFlags();
         const meta = (d && d.meta) || {};
-        const conn = !window.GUEST_MODE && window.CURRENT_LEAGUE === "conn";
-        let strip = "";
-        if (conn && live.length) {
-          const me = (DATA.teams || []).find(t => t.isUser);
-          const mine = me ? live.filter(f => (me.playerIds || []).map(String).includes(String(f.player_id))) : [];
-          const fas = live.filter(f => { const p = PBY[f.player_id]; return p && !p.owner; });
-          if (mine.length || fas.length) {
-            strip = (mine.length ? `<h3 class="rd-strip-h">On your roster<span class="rd-sub">flagged players on ${esc(me.name)}</span></h3><div class="rd-grid">${mine.slice(0, 8).map(rdCard).join("")}</div>` : "")
-              + (fas.length ? `<h3 class="rd-strip-h">Available in your league<span class="rd-sub">flagged and on the waiver wire</span></h3><div class="rd-grid">${fas.slice(0, 8).map(rdCard).join("")}</div>` : "")
-              + `<h3 class="rd-strip-h">The full board</h3>`;
-          }
-        }
         /* Render cap (Eric, Nov 10, 2026): the page glitches when
            more than 8 flags render — stop at 8, first by the board's
-           existing order; the ranking itself is untouched. The two
-           connected strips above are capped the same way. */
+           existing order; the ranking itself is untouched. */
         const shown = (rdState.pos === "ALL" ? live : live.filter(f => f.position === rdState.pos)).slice(0, 8);
         const posBtn = (k, lbl) => `<button data-rdpos="${k}" aria-pressed="${rdState.pos === k}">${lbl}</button>`;
         out.innerHTML = `
           <p class="radar-meta">Flags through NFL Week ${meta.through_week != null ? meta.through_week : "—"} · each flag reads his last 3 games played</p>
-          ${strip}
           <div class="pos-filter radar-filters" role="group" aria-label="Filter Radar flags by position">${posBtn("ALL", "All")}${posBtn("RB", "RB")}${posBtn("WR", "WR")}${posBtn("TE", "TE")}</div>
           ${shown.length ? `<div class="rd-grid">${shown.map(rdCard).join("")}</div>` : `<p class="rd-empty">No players met the bar this week — the screen only flags a player when his workload and his scoring disagree by a wide, measured margin.</p>`}`;
         out.querySelectorAll("[data-rdpos]").forEach(btn => btn.addEventListener("click", () => { rdState.pos = btn.dataset.rdpos; renderRadar(); }));
