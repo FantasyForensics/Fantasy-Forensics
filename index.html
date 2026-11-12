@@ -7442,7 +7442,7 @@ ${rdP ? "" : `
               <div><span>Pick capital</span><b>${fmt(t.frPicks || 0)}</b></div>
             </div>` : `<div class="power-row">
               <div class="power-bar"><div class="power-fill" style="width:${t.cpScore == null ? 0 : t.cpScore}%"></div></div>
-              <div class="power-num">${t.cpScore == null ? "—" : t.cpScore + "%"} <small>CURRENT POWER${t.cpForecast ? " · FORECAST" : ""}${rdP ? " · REDRAFT" : ""}</small></div>
+              <div class="power-num">${t.cpScore == null ? "—" : t.cpScore.toFixed(1) + "%"} <small>CURRENT POWER${t.cpForecast ? " · FORECAST" : ""}${rdP ? " · REDRAFT" : ""}</small></div>
             </div>`}
             <p class="expl">${esc(explTxt)}</p>
             <div class="stat-row">
@@ -7739,7 +7739,7 @@ ${rdP ? "" : `
             <button type="button" class="mt-open" data-mt-go="${lg.id}:teams">Open league →</button>
           </div>
           <div class="mt-stats">
-            <button type="button" class="mt-stat" data-mt-go="${lg.id}:teams"><span class="mt-lbl">Current Power</span><span class="mt-big">${s.powerRank == null ? "—" : `#${s.powerRank} <small>of ${s.total}</small>`}</span><span class="mt-sub2">${s.power == null ? "Current Power —" : `${s.power}% title odds`}${s.stance && !(typeof VALMODE !== "undefined" && VALMODE === "redraft") ? ` · ${esc(s.stance)}` : ""}</span></button>
+            <button type="button" class="mt-stat" data-mt-go="${lg.id}:teams"><span class="mt-lbl">Current Power</span><span class="mt-big">${s.powerRank == null ? "—" : `#${s.powerRank} <small>of ${s.total}</small>`}</span><span class="mt-sub2">${s.power == null ? "Current Power —" : `${Number(s.power).toFixed(1)}% title odds`}${s.stance && !(typeof VALMODE !== "undefined" && VALMODE === "redraft") ? ` · ${esc(s.stance)}` : ""}</span></button>
             ${odds}
             ${match}
           </div>
@@ -19344,7 +19344,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             ctx.fillStyle = "rgba(255,255,255,.10)"; ctx.beginPath(); ctx.roundRect(bx, y + 26, bw, 16, 8); ctx.fill();
             ctx.fillStyle = t.isUser ? SH.lime : SH.cyan; ctx.beginPath(); ctx.roundRect(bx, y + 26, Math.max(16, bw * (sc == null ? 0 : sc) / 100), 16, 8); ctx.fill();
             ctx.fillStyle = SH.ink; ctx.font = shFont(700, 34); ctx.textAlign = "right";
-            ctx.fillText(sc == null ? "—" : String(sc) + "%", W - 62, y + 46); ctx.textAlign = "left";
+            ctx.fillText(sc == null ? "—" : sc.toFixed(1) + "%", W - 62, y + 46); ctx.textAlign = "left";
             rows.push({ name: t.name, rank: rank == null ? null : rank, score: sc == null ? null : sc });
           }
         });
