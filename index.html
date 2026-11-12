@@ -3159,6 +3159,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         <div class="sb-subgroup" data-subgroup="players">
           <button type="button" role="tab" data-pnav-sub="values" data-group="players" aria-selected="true">Player Values</button>
           <button type="button" role="tab" data-pnav-sub="risers" data-group="players" aria-selected="false">Risers &amp; Fallers</button>
+          <button type="button" role="tab" data-pnav-sub="insights" data-group="players" aria-selected="false">Insights</button>
           <button type="button" role="tab" data-pnav-sub="radar" data-group="players" aria-selected="false">Opportunity Radar</button>
           <button type="button" role="tab" data-pnav-sub="ineff" data-group="players" aria-selected="false">Inefficiency Board</button>
         </div>
@@ -3914,6 +3915,8 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           <p class="tab-intro below" id="board-intro">Every price on this board is computed by our <strong>proprietary algorithm</strong>, built from deep analytics. It weighs production, role and usage, age, and availability into a single value for every player, priced for <strong>this league’s scoring</strong> — the format is set in the <strong>League Format</strong> tool. Where a player’s recent form runs ahead of his price — or behind it — he is flagged <em>Leads algorithm</em> / <em>Lags algorithm</em>. Tap “Why?” on any player for his season line, his usage, and his value history.</p>
         </details>
 <div id="trending-strip" class="trending-strip" hidden></div>
+      </section>
+      <section class="tab" id="tab-risers" role="tabpanel">
 <div id="movers-block">
         <h2 class="block-title">Risers &amp; Fallers</h2>
         <div id="movers-out"></div>
@@ -3922,6 +3925,9 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           <p class="tab-intro">Every completed week is stored per player, so movement is a first-class signal, not an afterthought. A player’s <strong>role</strong> — his snap share and opportunities — often moves 1–2 weeks before his points do; where role and production disagree, the board flags a <strong>buy low</strong> (role rising, production lagging) or a <strong>sell high</strong> (production spiking on a flat role). Moves above are the latest weekly step at the format set in the League Format tool.</p>
         </details>
         </div>
+      </section>
+
+      <section class="tab" id="tab-insights" role="tabpanel">
 <h2 class="block-title">Insights</h2>
         <div class="ins-feed" id="ins-feed" role="feed" aria-label="Insights articles, newest first"></div>
         <div id="ins-article" hidden></div>
@@ -4217,6 +4223,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           <div class="tools-pills">
             <button type="button" class="tools-pill" style="--tile-accent:#C6FF00" data-tools-pill="values" data-tools-group="players"><span class="tools-pill-t">Player Values</span><span class="tools-pill-s">Every player, priced</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#FF6B35" data-tools-pill="risers" data-tools-group="players"><span class="tools-pill-t">Risers &amp; Fallers</span><span class="tools-pill-s">The week's biggest movers</span></button>
+            <button type="button" class="tools-pill" style="--tile-accent:#FFD54F" data-tools-pill="insights" data-tools-group="players"><span class="tools-pill-t">Insights</span><span class="tools-pill-s">Data-first dynasty breakdowns</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#FF4081" data-tools-pill="radar" data-tools-group="players"><span class="tools-pill-t">Opportunity Radar</span><span class="tools-pill-s">Roles bigger than the scoring</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#69F0AE" data-tools-pill="ineff" data-tools-group="players"><span class="tools-pill-t">Inefficiency Board</span><span class="tools-pill-s">Where stats and price disagree</span></button>
           </div>
@@ -4351,6 +4358,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           </div>
         </div>
         <p class="fp-factors" id="fp-factors"></p>
+        <button type="button" class="fmt-link" id="ms-all">See all Risers &amp; Fallers at this format →</button>
       </section>
       </section>
 
@@ -6410,7 +6418,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         "Snapshot: " + DATA.league.snapshot + ", NFL Week " + DATA.league.week + ". Player values reflect the moment of the snapshot. Injury designations refresh daily after it; the values themselves re-price with each new snapshot.";
 
       /* ---------- tabs ---------- */
-      const NAVMAP = { values: "tab-values", league: "tab-league", trades: "tab-trades", targets: "tab-targets", upgrades: "tab-upgrades", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", moves: "tab-moves", roster: "tab-roster", ineff: "tab-ineff", tools: "tab-tools" };
+      const NAVMAP = { values: "tab-values", risers: "tab-risers", insights: "tab-insights", league: "tab-league", trades: "tab-trades", targets: "tab-targets", upgrades: "tab-upgrades", draft: "tab-draft", lineup: "tab-lineup", bye: "tab-bye", waivers: "tab-waivers", realtrades: "tab-realtrades", tradeboard: "tab-tradeboard", teamport: "tab-teamport", command: "tab-command", radar: "tab-radar", format: "tab-format", how: "tab-how", moves: "tab-moves", roster: "tab-roster", ineff: "tab-ineff", tools: "tab-tools" };
       const TOOLKEYS = { lineup: 1, risk: 1, bye: 1, waivers: 1, realtrades: 1, tradeboard: 1, teamport: 1, command: 1, radar: 1, format: 1, how: 1 };
       function activateNav(key, arg) {
         const viewKey = key === "risk" ? "lineup" : key;
@@ -6440,7 +6448,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            resolve through the subnav state (already updated above for
            this switch); in-view subnav switches re-title through the
            showSubNav wrapper in the nav script. */
-        const FF_VIEW_TITLES = { command: "Command Center", values: "Fantasy Player Values", trades: "Trade Calculator", targets: "Player Targets", upgrades: "Upgrade Finder", realtrades: "Real Trades", tradeboard: "League Activity", roster: "Roster", lineup: "Lineup Analyzer", waivers: "Waiver Targets", bye: "Bye Week Planner", teamport: "Team Portfolio", moves: "Next Moves", radar: "Opportunity Radar", ineff: "Inefficiency Board", tools: "Tools", draft: "Draft Room", format: "League Format", how: "How It Works" };
+        const FF_VIEW_TITLES = { command: "Command Center", values: "Fantasy Player Values", risers: "Risers & Fallers", insights: "Insights", trades: "Trade Calculator", targets: "Player Targets", upgrades: "Upgrade Finder", realtrades: "Real Trades", tradeboard: "League Activity", roster: "Roster", lineup: "Lineup Analyzer", waivers: "Waiver Targets", bye: "Bye Week Planner", teamport: "Team Portfolio", moves: "Next Moves", radar: "Opportunity Radar", ineff: "Inefficiency Board", tools: "Tools", draft: "Draft Room", format: "League Format", how: "How It Works" };
         const FF_LEAGUE_TITLES = { power: "Power Rankings", mscore: "Manager Score", rosters: "Rosters", outlook: "Season Outlook", odds: "Playoff Odds", ppath: "Playoff Path", psched: "Schedule Difficulty", results: "League Results", storylines: "Storylines" };
         window.__ffLeagueTitles = FF_LEAGUE_TITLES;
         let ffViewTitle = key === "risk" ? "Starters at Risk" : FF_VIEW_TITLES[key];
@@ -9528,59 +9536,6 @@ ${rdP ? "" : `
       renderTeamStrip();
 
       /* ================= Risers & fallers (Value Engine v2) ================= */
-      function renderMovers() {
-        const el = document.getElementById("movers-out");
-        const mBlock = document.getElementById("movers-block");
-        if (typeof window.snapshotStale === "function" && window.snapshotStale()) { if (mBlock) mBlock.hidden = true; el.innerHTML = ""; const sEl2 = document.getElementById("movers-strip"); if (sEl2) sEl2.hidden = true; return; }
-        if (mBlock) mBlock.hidden = false;
-        const wk = p => { // this-week move rescaled to the format set above
-          const f = factorRatio(p.pos);
-          const prev = Math.round(p.hist[p.hist.length - 2] * f);
-          const cur = Math.round(p.hist[p.hist.length - 1] * f);
-          return { d: cur - prev, pct: prev ? (cur - prev) / prev * 100 : 0, cur };
-        };
-        const pool = DATA.players.filter(p => dispVal(p) >= MOVER_MIN && p.hist && p.hist.length >= 2);
-        const risers = [...pool].sort((a, b) => wk(b).pct - wk(a).pct).filter(p => wk(p).pct > 0).slice(0, 8);
-        const fallers = [...pool].sort((a, b) => wk(a).pct - wk(b).pct).filter(p => wk(p).pct < 0).slice(0, 8);
-        /* Signal gates (owner fix, 2026-11-02): the baked flag alone
-           let the sections contradict their own headings — Buy Low
-           listed players whose production had already risen, and
-           Sell High listed players whose roles had collapsed. A
-           buy-low needs production flat-or-down; a sell-high needs
-           a role that has not fallen sharply. */
-        const buys = DATA.players.filter(p => p.flag === "buy" && dispVal(p) >= MOVER_MIN && (p.ptrend == null || p.ptrend <= 0)).sort((a, b) => dispVal(b) - dispVal(a));
-        const sells = DATA.players.filter(p => p.flag === "sell" && dispVal(p) >= MOVER_MIN && (p.rtrend == null || p.rtrend > -10)).sort((a, b) => dispVal(b) - dispVal(a));
-        const rdMv = VALMODE === "redraft";
-        const rdRankMv = {};
-        if (rdMv) ["QB", "RB", "WR", "TE"].forEach(pos => { DATA.players.filter(p => p.pos === pos && p.rdValue != null && !p.unpriced).sort((a, b) => (b.rdValue || 0) - (a.rdValue || 0)).forEach((p, ix) => { rdRankMv[p.id] = ix + 1; }); });
-        const mvRank = p => rdMv && rdRankMv[p.id] != null ? rdRankMv[p.id] : p.posRank;
-        const mvRow = p => {
-          const w = wk(p);
-          const cls = w.d >= 0 ? "up" : "dn";
-          return `<div class="mv-row">
-            <span>${hsImg(p, "phs-sm")}<span class="who">${esc(p.name)}</span> <span class="sub">${p.pos}${mvRank(p)} · ${logoImg(p.team)}${esc(p.team)} · ${esc(ownerLabel(p))}</span></span>
-            <span class="delta"><span class="trnd ${cls}">${Math.abs(w.pct) >= 1000 ? `${w.d >= 0 ? "+" : "−"}${fmt(Math.abs(w.d))} — from a low base` : `${w.d >= 0 ? "+" : "−"}${fmt(Math.abs(w.d))} (${w.pct >= 0 ? "+" : "−"}${Math.abs(w.pct).toFixed(1)}%)`}</span><br><span class="sub">now ${fmt(dispVal(p))}</span></span>
-          </div>`;
-        };
-        const sigRow = p => `<div class="mv-row">
-            <span>${hsImg(p, "phs-sm")}<span class="who">${esc(p.name)}</span> <span class="sub">${p.pos}${mvRank(p)} · ${logoImg(p.team)}${esc(p.team)} · ${esc(ownerLabel(p))}</span>
-            <div class="mv-note">${p.snap != null ? `${p.snap}% snaps · ${p.opp} opportunities/game · ` : ""}role ${p.rtrend >= 0 ? "+" : "−"}${Math.abs(p.rtrend)}% and production ${p.ptrend >= 0 ? "+" : "−"}${Math.abs(p.ptrend)}% over his last 3 games</div></span>
-            <span class="delta">${fmt(dispVal(p))}</span>
-          </div>`;
-        el.innerHTML = `
-          ${rdMv ? "" : `<div class="mv-grid">
-            <div class="mv-card"><h3>Biggest risers this week</h3><p class="mv-sub">Largest value gains in this week's update (players worth ${MOVER_MIN}+).</p>${risers.map(mvRow).join("")}</div>
-            <div class="mv-card"><h3>Biggest fallers this week</h3><p class="mv-sub">Largest value drops in this week's update (players worth ${MOVER_MIN}+).</p>${fallers.map(mvRow).join("")}</div>
-          </div>`}
-          <div class="mv-grid">
-            <div class="mv-card"><h3>Buy low <span class="sig buy">Role ↑ · Points lagging</span></h3><p class="mv-sub">Usage is expanding faster than production — the points usually follow the snaps. ${buys.length} flagged.</p>${buys.length ? buys.map(sigRow).join("") : '<p class="mv-note">No buy-low signals this week.</p>'}</div>
-            <div class="mv-card"><h3>Sell high <span class="sig sell">Points ↑ · Role flat</span></h3><p class="mv-sub">Production is outrunning the role underneath it — a touchdown-heavy profile that usually regresses. ${sells.length} flagged.</p>${sells.length ? sells.map(sigRow).join("") : '<p class="mv-note">No sell-high signals this week.</p>'}</div>
-          </div>
-          <p class="mv-note">Week-over-week steps mix player movement with model updates — judge extreme percentages by the absolute change, not the percent.</p>`;
-        /* Movers strip removed (owner fix, 2026-11-02) — see the
-           note where the strip used to sit under the board. */
-      }
-      renderMovers();
 
       /* ================= This week's movers — homepage strip =================
          Top 5 risers and fallers under the hero, from the same pool and
@@ -10931,6 +10886,71 @@ ${rdP ? "" : `
           btn.setAttribute("aria-pressed", match ? "true" : "false");
         });
       }
+      /* ================= Risers & Fallers view (Phase 5 Piece 1, 2026-11-11) ================
+         Moved here with the #movers-block markup: same function, same load call,
+         same refreshAll call — only its home changed. It lives in this block,
+         NOT in the SeasonSim script block: the gate's sim harness extracts
+         that whole block (banner → SIM_BY_LEAGUE) and executes it without
+         VALMODE, so a load-time renderMovers() call inside it fails the
+         harness. renderMoversStrip() stays where it was (dead code; never
+         called, mounts do not exist). */
+      /* ================= Risers & Fallers view (Phase 5 Piece 1, 2026-11-11) ================
+         Moved here with the #movers-block markup: same function, same load call,
+         same refreshAll call — only its home changed. renderMoversStrip() stays
+         where it was (dead code; never called, mounts do not exist). */
+      function renderMovers() {
+        const el = document.getElementById("movers-out");
+        const mBlock = document.getElementById("movers-block");
+        if (typeof window.snapshotStale === "function" && window.snapshotStale()) { if (mBlock) mBlock.hidden = true; el.innerHTML = ""; const sEl2 = document.getElementById("movers-strip"); if (sEl2) sEl2.hidden = true; return; }
+        if (mBlock) mBlock.hidden = false;
+        const wk = p => { // this-week move rescaled to the format set above
+          const f = factorRatio(p.pos);
+          const prev = Math.round(p.hist[p.hist.length - 2] * f);
+          const cur = Math.round(p.hist[p.hist.length - 1] * f);
+          return { d: cur - prev, pct: prev ? (cur - prev) / prev * 100 : 0, cur };
+        };
+        const pool = DATA.players.filter(p => dispVal(p) >= MOVER_MIN && p.hist && p.hist.length >= 2);
+        const risers = [...pool].sort((a, b) => wk(b).pct - wk(a).pct).filter(p => wk(p).pct > 0).slice(0, 8);
+        const fallers = [...pool].sort((a, b) => wk(a).pct - wk(b).pct).filter(p => wk(p).pct < 0).slice(0, 8);
+        /* Signal gates (owner fix, 2026-11-02): the baked flag alone
+           let the sections contradict their own headings — Buy Low
+           listed players whose production had already risen, and
+           Sell High listed players whose roles had collapsed. A
+           buy-low needs production flat-or-down; a sell-high needs
+           a role that has not fallen sharply. */
+        const buys = DATA.players.filter(p => p.flag === "buy" && dispVal(p) >= MOVER_MIN && (p.ptrend == null || p.ptrend <= 0)).sort((a, b) => dispVal(b) - dispVal(a));
+        const sells = DATA.players.filter(p => p.flag === "sell" && dispVal(p) >= MOVER_MIN && (p.rtrend == null || p.rtrend > -10)).sort((a, b) => dispVal(b) - dispVal(a));
+        const rdMv = VALMODE === "redraft";
+        const rdRankMv = {};
+        if (rdMv) ["QB", "RB", "WR", "TE"].forEach(pos => { DATA.players.filter(p => p.pos === pos && p.rdValue != null && !p.unpriced).sort((a, b) => (b.rdValue || 0) - (a.rdValue || 0)).forEach((p, ix) => { rdRankMv[p.id] = ix + 1; }); });
+        const mvRank = p => rdMv && rdRankMv[p.id] != null ? rdRankMv[p.id] : p.posRank;
+        const mvRow = p => {
+          const w = wk(p);
+          const cls = w.d >= 0 ? "up" : "dn";
+          return `<div class="mv-row">
+            <span>${hsImg(p, "phs-sm")}<span class="who">${esc(p.name)}</span> <span class="sub">${p.pos}${mvRank(p)} · ${logoImg(p.team)}${esc(p.team)} · ${esc(ownerLabel(p))}</span></span>
+            <span class="delta"><span class="trnd ${cls}">${Math.abs(w.pct) >= 1000 ? `${w.d >= 0 ? "+" : "−"}${fmt(Math.abs(w.d))} — from a low base` : `${w.d >= 0 ? "+" : "−"}${fmt(Math.abs(w.d))} (${w.pct >= 0 ? "+" : "−"}${Math.abs(w.pct).toFixed(1)}%)`}</span><br><span class="sub">now ${fmt(dispVal(p))}</span></span>
+          </div>`;
+        };
+        const sigRow = p => `<div class="mv-row">
+            <span>${hsImg(p, "phs-sm")}<span class="who">${esc(p.name)}</span> <span class="sub">${p.pos}${mvRank(p)} · ${logoImg(p.team)}${esc(p.team)} · ${esc(ownerLabel(p))}</span>
+            <div class="mv-note">${p.snap != null ? `${p.snap}% snaps · ${p.opp} opportunities/game · ` : ""}role ${p.rtrend >= 0 ? "+" : "−"}${Math.abs(p.rtrend)}% and production ${p.ptrend >= 0 ? "+" : "−"}${Math.abs(p.ptrend)}% over his last 3 games</div></span>
+            <span class="delta">${fmt(dispVal(p))}</span>
+          </div>`;
+        el.innerHTML = `
+          ${rdMv ? "" : `<div class="mv-grid">
+            <div class="mv-card"><h3>Biggest risers this week</h3><p class="mv-sub">Largest value gains in this week's update (players worth ${MOVER_MIN}+).</p>${risers.map(mvRow).join("")}</div>
+            <div class="mv-card"><h3>Biggest fallers this week</h3><p class="mv-sub">Largest value drops in this week's update (players worth ${MOVER_MIN}+).</p>${fallers.map(mvRow).join("")}</div>
+          </div>`}
+          <div class="mv-grid">
+            <div class="mv-card"><h3>Buy low <span class="sig buy">Role ↑ · Points lagging</span></h3><p class="mv-sub">Usage is expanding faster than production — the points usually follow the snaps. ${buys.length} flagged.</p>${buys.length ? buys.map(sigRow).join("") : '<p class="mv-note">No buy-low signals this week.</p>'}</div>
+            <div class="mv-card"><h3>Sell high <span class="sig sell">Points ↑ · Role flat</span></h3><p class="mv-sub">Production is outrunning the role underneath it — a touchdown-heavy profile that usually regresses. ${sells.length} flagged.</p>${sells.length ? sells.map(sigRow).join("") : '<p class="mv-note">No sell-high signals this week.</p>'}</div>
+          </div>
+          <p class="mv-note">Week-over-week steps mix player movement with model updates — judge extreme percentages by the absolute change, not the percent.</p>`;
+        /* Movers strip removed (owner fix, 2026-11-02) — see the
+           note where the strip used to sit under the board. */
+      }
+      renderMovers();
       function refreshAll() {
         recomputeValues();
         renderScoringChips();
@@ -10960,6 +10980,381 @@ ${rdP ? "" : `
       document.getElementById("ctl-tep").addEventListener("input", e => { SETTINGS.tep = Number(e.target.value); refreshAll(); });
       document.getElementById("ctl-ptd").addEventListener("input", e => { SETTINGS.ptd = Number(e.target.value); refreshAll(); });
       refreshAll();
+    </script>
+    <script>
+      "use strict";
+      /* =====================================================================
+         INSIGHTS — the editorial engine
+         ---------------------------------------------------------------------
+         Articles are structured data (the ARTICLES array below), rendered
+         into the Insights view as a card feed (newest first) plus a semantic
+         <article> view per piece. Each article has a clean slug routed as
+         #/insights/<slug>, its own document title and meta description
+         while open, and a matching entry in the JSON-LD block in <head>.
+
+         TEMPLATE SPEC — for the Tuesday refresh pipeline.
+         Three reusable article types. On each refresh, regenerate the types
+         marked [weekly] from the NEW snapshot and prepend them to ARTICLES
+         (newest first), keeping the evergreen explainers. Update the
+         JSON-LD blogPost list to match (headline, datePublished, url,
+         description) and set each date to the refresh date. Rules for every
+         type: 300–500 words of prose (tables excluded); every number must
+         come from the fresh snapshot — never carried over, never invented;
+         no competitor names; describe the model only as our proprietary
+         algorithm, built on deep analytics and consensus —
+         no recipes, no ratios, no internal weights. EMITTED-COPY BAN
+         (articles AND per-player why strings alike): stats only — never
+         the words "clock" or "tilt", never factors, weights, caps, blend
+         ratios, base derivations, or any account of how a price was
+         constructed. A why string is exactly what the player's expanded
+         row shows: preseason draft rank as a plain fact, the season
+         pts/g line, and the usage line (snap share, opportunities,
+         usage rank, role trend) — regenerate them with
+         research_notes/dynasty-mvp/why_strings.py and prove the rebuilt
+         file clean with research_notes/dynasty-mvp/copy_lint.py before
+         it ships; a lint failure blocks the push.
+
+         1. weekly-risers-recap  [weekly]  slug: week-<N>-risers-fallers
+            Data: DATA.players — dwk (Week N-1 → N price step), hist,
+            pos/posRank/team, snap, rtrend/ptrend, why (pts/g line).
+            Structure: intro with the count of players repriced (risers vs
+            fallers split) → "The risers": 2 paragraphs naming the top 5–6
+            gainers by dwk (skip sub-300-value backup repricing noise) with
+            the production/role reason for each → risers table (Player ·
+            Was · Now · Move) → "The fallers": mirror copy + table →
+            one-line takeaway + jumps to Values and Trades.
+
+         2. trade-market-movers  [weekly]  slug: trade-market-movers-week-<N>
+            Data: top 8 by |dwk| among players valued ≥ 2,500 (p.hist for
+            last-week price), plus REAL_TRADES lookups for 1–2 top assets
+            (count of trades + most recent completed deal, priced on the
+            current board). Structure: intro (movement = asking-price
+            movement) → movers table (Player · Last week · Now · Change) →
+            "Falling prices aren't all buy windows" (separate price falls
+            from role falls using snap/rtrend) → "What studs actually cost"
+            (real-trades anchor) → close with jumps to Real Trades + Trades.
+
+         3. pick-ladder-update  [on ladder change]  slug: <YYYY>-rookie-pick-ladder
+            Data: the pick ladder (GUEST_PICKS values for 2027–2029) and
+            player equivalents from DATA.players (nearest value to each key
+            slot). Structure: intro → full ladder table (Round · Early ·
+            Mid · Late) → "Read it in players, not points" (equivalents,
+            early-vs-late 1st spread, 1st→2nd round step) → year-out
+            discount paragraph (next two classes' mid 1sts as % of the
+            current class) → jump to Trades.
+
+         Evergreen explainers (value-adjustment explainer, dynasty-vs-redraft)
+         are NOT regenerated weekly; rewrite one only when its worked
+         example goes stale (the featured player's price moves > 10% or
+         the calculator's adjustment changes), recomputing every figure
+         from the live board and the calculator's own value-adjustment math.
+         ===================================================================== */
+      const ARTICLES = [
+        {
+          slug: "week-7-risers-fallers",
+          type: "Weekly Recap",
+          title: "Week 7 Risers & Fallers: Likely and Achane Surge, Hurts Slides",
+          meta: "The Week 7 dynasty value update repriced 386 of 401 players. Isaiah Likely (+1,075) and De'Von Achane (+987) headline the risers; Jalen Hurts (−255) leads a very short fallers list.",
+          dek: "The Week 7 update repriced 386 of 401 players — and nearly all of them upward. 373 risers against 13 fallers, with the median player up about 22%: this was a board-wide lift, not a stock-picker's week.",
+          dateISO: "2026-10-24",
+          dateLabel: "Saturday, October 24, 2026",
+          dataNote: "October 21, 2026 snapshot · NFL Week 7 — figures as published",
+          body: [
+            { p: "The Week 7 value update is the broadest repricing of the season so far. Of the 401 players on the board, <strong>386 changed price</strong> in the Week 6 → Week 7 step — 373 risers, 13 fallers — and the median player gained about 22%. Contrast Week 6, when fallers outnumbered risers: this week the tide lifted nearly every boat, so the names below are the ones that rode it highest, not the only ones that moved." },
+            { h: "The risers" },
+            { p: "<strong>Isaiah Likely</strong> posted the week's biggest gain among established players, <span class=\"up\">+1,075 (+24.4%)</span> to 5,477 (TE6). The production backs it: 23.1 points per game, a 73% snap share, 9.8 opportunities a game, with role +10.6% and production +26.9% over his last three games. <strong>De'Von Achane</strong> finished right behind him, <span class=\"up\">+987 (+24.1%)</span> to 5,086 while carrying an IR designation on the board — his price moved with the board-wide lift, not on playing status. <strong>Kenyon Sadiq</strong> (<span class=\"up\">+975, +26.9%</span>) rounds out the top three at 4,604, on 8.7 points per game." },
+            { p: "<strong>Matthew Golden</strong> (<span class=\"up\">+876, +19.7%</span>), <strong>Jordyn Tyson</strong> (<span class=\"up\">+870, +24.6%</span>) and <strong>Jadarian Price</strong> (<span class=\"up\">+827, +27.8%</span>) climbed into the top six — Matthew Golden on 16.8 points per game and an 83% snap share. Jordyn Tyson and Jadarian Price carry IR designations too, a reminder that this week's list is a board-wide lift first and individual breakouts second. Underneath the lift, the production-backed moves are real: <strong>Colston Loveland</strong> (+811): role +8.4% and production +57.2% over his last three games; <strong>Malik Nabers</strong> (+810): role +18.1% and production +57.8% over his last three games." },
+            { table: {
+              caption: "Week 7 risers — the Week 6 → Week 7 price step",
+              head: ["Player", "Was", "Now", "Move"],
+              numFrom: 1,
+              rows: [
+                ["Isaiah Likely · TE6, NYG", "4,402", "5,477", { t: "+1,075 (+24.4%)", c: "delta-up" }],
+                ["De'Von Achane · RB11, MIA", "4,099", "5,086", { t: "+987 (+24.1%)", c: "delta-up" }],
+                ["Kenyon Sadiq · TE9, NYJ", "3,629", "4,604", { t: "+975 (+26.9%)", c: "delta-up" }],
+                ["Matthew Golden · WR17, GB", "4,439", "5,315", { t: "+876 (+19.7%)", c: "delta-up" }],
+                ["Jordyn Tyson · WR25, NO", "3,541", "4,411", { t: "+870 (+24.6%)", c: "delta-up" }],
+                ["Jadarian Price · RB23, SEA", "2,970", "3,797", { t: "+827 (+27.8%)", c: "delta-up" }],
+              ]
+            } },
+            { h: "The fallers" },
+            { p: "<strong>Jalen Hurts</strong> took the week's biggest hit among established players, <span class=\"down\">−255 (−5.1%)</span> to 4,777 — a modest step for a quarterback still scoring 19.8 points per game, and he carries an IR designation on the board. <strong>Jahmyr Gibbs</strong> (<span class=\"down\">−252, −2.5%</span>) slipped to 9,733 but holds RB1 on 30.7 points per game; at that level a small week is noise, not a warning. <strong>Puka Nacua</strong> (<span class=\"down\">−62, −0.8%</span>) rounds out the only 3 notable fallers — every other top-25 player at his position either rose or stood still." },
+            { table: {
+              caption: "Week 7 fallers — the Week 6 → Week 7 price step",
+              head: ["Player", "Was", "Now", "Move"],
+              numFrom: 1,
+              rows: [
+                ["Jalen Hurts · QB20, PHI", "5,032", "4,777", { t: "−255 (−5.1%)", c: "delta-dn" }],
+                ["Jahmyr Gibbs · RB1, DET", "9,985", "9,733", { t: "−252 (−2.5%)", c: "delta-dn" }],
+                ["Puka Nacua · WR3, LAR", "7,937", "7,875", { t: "−62 (−0.8%)", c: "delta-dn" }],
+              ]
+            } },
+            { p: "The pattern this week is the lift itself: when 373 of 401 prices rise, the question isn't which players the update liked — it's how much of your roster's gain is the tide and how much is the player. The production-backed names underneath are the ones to trust most. Every price here is live on the Values board — sort by “This week's move” for the full 386 — and the next update lands with Tuesday's refresh." },
+            { jump: { label: "See the full board →", nav: "values" } },
+            { jump: { label: "Price a deal in the calculator →", nav: "trades" } }
+          ]
+        },
+        {
+          slug: "trade-market-movers-week-7",
+          type: "Trade Market",
+          title: "Trade Market Movers: What the Week 7 Repricing Did to Real Asking Prices",
+          meta: "Every point of value movement is a point on a real asking price. The Week 7 movers that changed acquisition costs — plus what the top of the market actually fetched in real completed trades.",
+          dek: "Value movement is trivia until you're the one sending the offer. These are the Week 7 moves that changed what players actually cost — and what the completed-trade record says about the top of the market.",
+          dateISO: "2026-10-24",
+          dateLabel: "Saturday, October 24, 2026",
+          dataNote: "October 21, 2026 snapshot · NFL Week 7 — figures as published",
+          body: [
+            { p: "Value changes are trivia until you're the one sending the offer. The Week 7 update repriced <strong>386 players</strong>, and nearly every one of them upward — which means the anchors in live negotiations moved almost across the board. A manager who offered for Isaiah Likely last week was bidding against a 4,402 price; this week the anchor is 5,477. These were the moves that mattered at the negotiating table." },
+            { table: {
+              caption: "Biggest asking-price changes — Week 7",
+              head: ["Player", "Last week", "Now", "Change"],
+              numFrom: 1,
+              rows: [
+                ["Isaiah Likely · TE6, NYG", "4,402", "5,477", { t: "+1,075", c: "delta-up" }],
+                ["De'Von Achane · RB11, MIA", "4,099", "5,086", { t: "+987", c: "delta-up" }],
+                ["Kenyon Sadiq · TE9, NYJ", "3,629", "4,604", { t: "+975", c: "delta-up" }],
+                ["Matthew Golden · WR17, GB", "4,439", "5,315", { t: "+876", c: "delta-up" }],
+                ["Jordyn Tyson · WR25, NO", "3,541", "4,411", { t: "+870", c: "delta-up" }],
+                ["Jadarian Price · RB23, SEA", "2,970", "3,797", { t: "+827", c: "delta-up" }],
+                ["Colston Loveland · TE4, CHI", "4,855", "5,666", { t: "+811", c: "delta-up" }],
+              ]
+            } },
+            { h: "Almost nobody got cheaper" },
+            { p: "In a week when nearly every price rose, the discount rack is nearly empty. <strong>Jalen Hurts</strong> at 4,777 is the biggest notable faller and it is only 255 points — 5.1% — on a quarterback scoring 19.8 points per game. <strong>Jahmyr Gibbs</strong> slipped 252 points to 9,733 and still holds RB1; that is not a buy window opening, it is a quiet week for an expensive player. When the whole board lifts, yesterday's offer is today's underpay — re-price before you send." },
+            { h: "What studs actually cost" },
+            { p: "At the top of the board, nobody got cheaper — and the completed-trade record shows what the top tier actually fetches. Our Real Trades database — <strong>2,581 completed deals</strong> from public leagues — has its most recent top-tier deal on October 18, when Bhayshul Tuten, Trevor Lawrence, Chris Olave and Jaylen Warren were sent for <strong>Drake Maye</strong> (7,983 on today's board), <strong>Omarion Hampton</strong> (4,317 on today's board), a 2027 1st, a 2027 2nd and a 2028 1st. Packages, not discounts. <strong>Jahmyr Gibbs</strong> still holds 9,733 (RB1); he has changed hands 19 times in the database, most recently on September 17, when he returned <strong>Caleb Douglas</strong> (2,768 on today's board), <strong>Puka Nacua</strong> (7,875 on today's board) and a 2028 2nd." },
+            { p: "The lesson of the week cuts one way: in a rising market, standing still is falling behind. Run any offer through the calculator before you send it — it prices both sides on today's numbers, value adjustment included — and check Real Trades for what your target actually fetched the last time he moved." },
+            { jump: { label: "Search real completed trades →", nav: "realtrades" } },
+            { jump: { label: "Price a deal in the calculator →", nav: "trades" } }
+          ]
+        },
+        {
+          slug: "2027-rookie-pick-ladder",
+          type: "Pick Ladder",
+          title: "The 2027 Rookie Pick Ladder: What Every Slot Is Actually Worth",
+          meta: "Every 2027 rookie pick slot priced on the same model as the player board — early 1st 5,916, mid 1st 4,448, late 1st 3,877 — translated into the players those prices actually buy.",
+          dek: "A rookie pick is the only dynasty asset everyone quotes and nobody can start on Sunday. Our ladder prices all twelve slots of the 2027 class — here's what those numbers buy in player terms.",
+          dateISO: "2026-10-15",
+          dateLabel: "Thursday, October 15, 2026",
+          dataNote: "Pick ladder as published October 15, 2026",
+          body: [
+            { p: "A rookie pick is the only asset in dynasty whose price everyone quotes and nobody can start on Sunday. Our ladder prices every slot of the <strong>2027 class</strong> — the class the market is pricing hottest — off the same proprietary model baseline as the player board, so a pick and a player can be compared in the same currency. Here is the full ladder, and what the numbers actually mean." },
+            { table: {
+              caption: "2027 rookie pick ladder — value by slot",
+              head: ["Round", "Early", "Mid", "Late"],
+              numFrom: 1,
+              rows: [
+                ["1st", "5,916", "4,448", "3,877"],
+                ["2nd", "3,075", "2,596", "2,364"],
+                ["3rd", "1,983", "1,867", "1,753"],
+                ["4th", "1,466", "1,398", "1,317"]
+              ]
+            } },
+            { h: "Read it in players, not points" },
+            { p: "Translated into player equivalents, the ladder stops being abstract. An <strong>early 2027 1st (5,916)</strong> prices like Malik Nabers (5,949). A <strong>mid 1st (4,448)</strong> is Jalen Hurts (4,462) money. A <strong>late 1st (3,877)</strong> sits just over Derrick Henry (3,849). An <strong>early 2nd (3,075)</strong> is roughly Jaylen Waddle (3,034); an <strong>early 3rd (1,983)</strong> is Keaton Mitchell (1,980). Two gaps matter most. The early-to-late spread inside the 1st round alone is <strong>2,039 points</strong> — more than an early 3rd is worth by itself — which is why “a 2027 1st” is not a price until you know whose 1st it is. And the famous cliff after the 1st round is shallower than folklore says: late 1st (3,877) to early 2nd (3,075) is a 21% step, not a halving. Even the late rounds carry real prices — a mid 3rd (1,867) is worth more than half the players on the board, 207 of 401 — which is why our calculator never treats one as a free throw-in." },
+            { h: "Future years discount gently" },
+            { p: "The year-out discount is shallower than production value alone would set, because the market keeps paying up for future picks. A <strong>mid 2028 1st (3,610)</strong> still holds 81% of the mid 2027 1st's price; a <strong>mid 2029 1st (3,264)</strong> holds 90% of the 2028. The practical read cuts against habit: contenders shouldn't treat a 2028 1st as a throw-in, and rebuilders collecting 2027 1sts are holding the most liquid asset in the format. Every slot on this ladder is live in the trade calculator, priced identically wherever it appears — no separate pick chart to argue about." },
+            { jump: { label: "Build a deal with picks →", nav: "trades" } },
+            { jump: { label: "Compare against the player board →", nav: "values" } }
+          ]
+        },
+        {
+          slug: "roster-bonus-explained",
+          type: "How It Works",
+          title: "Why 9,973 Doesn't Beat 9,985: The Value Adjustment, Explained",
+          meta: "Chase Brown plus Nico Collins sums to 9,973 — within 12 points of Jahmyr Gibbs alone. Our trade calculator still scores it for Gibbs: the value adjustment for taking back one player instead of two stretches the gap to 6,631. Here's why.",
+          dek: "Brown plus Collins sums to 9,973; Gibbs alone is 9,985. Raw math calls it a coin flip. Our calculator calls it for Gibbs by 6,631 points — this is the value adjustment doing that, with the math shown.",
+          dateISO: "2026-10-14",
+          dateLabel: "Wednesday, October 14, 2026",
+          dataNote: "Figures as published October 14, 2026",
+          body: [
+            { p: "Here is a trade that looks like a coin flip. One side gives <strong>Jahmyr Gibbs</strong>, priced 9,985 — the RB1 on our board. The other gives <strong>Chase Brown</strong> (4,611) and <strong>Nico Collins</strong> (5,362), which sum to 9,973. Raw totals: Gibbs by 12 points, a rounding error. Our calculator doesn't call it even. It scores the deal clearly for the Gibbs side — because of the <strong>value adjustment</strong>, the adjustment applied to every verdict the calculator renders." },
+            { table: {
+              caption: "The Gibbs test — raw sum vs. trade value",
+              head: ["Asset", "Raw", "Trade value"],
+              numFrom: 1,
+              rows: [
+                ["Jahmyr Gibbs (one side)", "9,985", "16,604"],
+                ["Chase Brown", "4,611", "4,611"],
+                ["Nico Collins", "5,362", "5,362"],
+                ["Brown + Collins (other side)", "9,973", "9,973"],
+                ["Gibbs-side advantage", { t: "+12", c: "delta-up" }, { t: "+6,631", c: "delta-up" }]
+              ]
+            } },
+            { h: "Roster spots are the currency" },
+            { p: "The logic is roster math. This league starts eleven players a week. Gibbs occupies one slot and produces like it: 30.7 points per game through Week 5, a 77% snap share, the No. 2 usage rank among all running backs, receivers and tight ends. Brown and Collins occupy two slots — and the second slot is never free, because Collins' points come <em>instead of</em> your next bench option's, not in addition to them. So the calculator adds a <strong>value adjustment</strong> to the side whose production is concentrated into fewer spots: the best player in a deal carries value beyond his raw price, and the adjustment credits that side the amount that balances that difference. Gibbs' side takes back one player instead of two, collects a 6,619-point value adjustment, and lands at 16,604. Brown and Collins collect none and stay at 9,973. The 6,631-point gap is what that concentration is actually worth in this deal." },
+            { h: "It tempers deals; it doesn't crown studs" },
+            { p: "The adjustment cuts both ways, deliberately. It follows concentration, not headcount — an even trade can earn one when one side is top-heavy — and a true 1-for-1 earns none at all — one player a side, there is no concentration to price, so the raw difference is the whole story. Nor does it hand the win to the single biggest name: two genuinely strong starters still beat one great player whenever their combined value clears his price plus the adjustment. Picks count as assets the same way, which is why four late 2nds don't add up to one early 1st in our calculator even when the raw sums insist they should. The raw totals never disappear, either: every verdict leads with the adjusted Trade value and prints the Raw sum right beneath it, with the value adjustment on its own line whenever one applies — never a hidden thumb on the scale." },
+            { jump: { label: "Try it in the calculator →", nav: "trades" } }
+          ]
+        },
+        {
+          slug: "dynasty-vs-redraft-henry-love",
+          type: "Strategy",
+          title: "Same Points, Opposite Prices: Why Dynasty and Redraft Values Diverge",
+          meta: "Derrick Henry and Jordan Love average nearly identical points (22.4 vs 22.6 per game), yet redraft prices Henry 54% higher and dynasty prices Love 39% higher. The two questions behind the flip.",
+          dek: "Through five weeks, Derrick Henry and Jordan Love are producing identical points. Redraft prices Henry 54% higher; dynasty prices Love 39% higher. Both are right — they're answering different questions.",
+          dateISO: "2026-10-13",
+          dateLabel: "Tuesday, October 13, 2026",
+          dataNote: "Figures as published October 13, 2026",
+          body: [
+            { p: "Derrick Henry and Jordan Love are, right now, effectively the same player. Through Week 5 in this league's scoring, Henry averaged <strong>22.4 points per game</strong>; Love averaged <strong>22.6</strong>. Our rest-of-season projections keep them level the rest of the way — 21.9 vs. 22.2 points per week. And yet the two formats on this site price them in opposite directions, by a lot. That flip is the entire difference between dynasty and redraft, contained in one pair of names." },
+            { table: {
+              caption: "Henry vs. Love — same production, two prices",
+              head: ["", "Derrick Henry", "Jordan Love"],
+              numFrom: 1,
+              rows: [
+                ["Positional rank", "RB17", "QB11"],
+                ["Points per game, Weeks 1–5", "22.4", "22.6"],
+                ["Rest-of-season projection (pts/wk)", "21.9", "22.2"],
+                ["Redraft value", "6,767", "4,392"],
+                ["Dynasty value", "3,994", "5,562"]
+              ]
+            } },
+            { h: "Redraft asks one question" },
+            { p: "Redraft asks a single question: who scores more between now and Week 17? By that measure Henry is the prize — a single-season value of <strong>6,767 against Love's 4,392, a 54% edge</strong>. He is a workhorse back producing RB1 points today, and in a format where next season doesn't exist, nothing else about him matters. The age curve is somebody else's problem." },
+            { h: "Dynasty asks a longer one" },
+            { p: "Dynasty asks what a player is worth across every season you'll own him, and the answer flips: <strong>Love 5,562 (QB11) against Henry 3,994 (RB17) — a 39% edge the other way</strong>. Two forces do it. The first is the age curve: Henry is 32, and in our measured curves running back value falls off a cliff in the late 20s — and keeps falling. That is why our algorithm's price on him sits where it does — it discounts his age more steeply than most managers do. The second force is time. Love is 27 at the position that holds value longest — quarterback prices barely move into the early 30s — and in superflex, a stable starting quarterback is the scarcest asset in the format. Love's price contains the better part of a decade of starter seasons. Henry's contains what's left of this one, and maybe the next." },
+            { p: "Neither price is wrong; they're answers to different questions — which is why all 401 players on this board carry both. Flip the Format switch at the top of the page from Dynasty to Redraft and every price re-renders through the single-season lens. Contending? Henry's profile is what you buy. Rebuilding? Love's is. Just know which question you're answering before you send the offer." },
+            { jump: { label: "See both prices on the board →", nav: "values" } }
+          ]
+        }
+      ];
+
+      const insFeed = document.getElementById("ins-feed");
+      const insArt = document.getElementById("ins-article");
+      const insHomeTitle = document.title;
+      const insMetaDesc = document.querySelector('meta[name="description"]');
+      const insHomeDesc = insMetaDesc ? insMetaDesc.getAttribute("content") : "";
+      const iEsc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const CYAN_TYPES = { "Trade Market": 1, "Pick Ladder": 1, "Strategy": 1 };
+      const readMins = a => {
+        const words = a.body.reduce((n, b) => n + (b.p ? b.p.replace(/<[^>]+>/g, " ").split(/\s+/).length : 0), 0);
+        return Math.max(2, Math.round(words / 190));
+      };
+      const bySlug = {};
+      ARTICLES.forEach(a => { bySlug[a.slug] = a; });
+
+      function renderFeed() {
+        insFeed.innerHTML = ARTICLES.map(a => `
+          <article class="ins-card" data-ins-open="${a.slug}" tabindex="0" role="link" aria-label="${iEsc(a.title)}">
+            <div class="ins-card-top">
+              <span class="ins-tag${CYAN_TYPES[a.type] ? " cyan" : ""}">${iEsc(a.type)}</span>
+              <time class="ins-date" datetime="${a.dateISO}">${iEsc(a.dateLabel.split(", ").slice(0, 2).join(", "))}</time>
+            </div>
+            <h3>${iEsc(a.title)}</h3>
+            <p class="ins-dek">${iEsc(a.dek)}</p>
+            <span class="ins-read">Read · ${readMins(a)} min →</span>
+          </article>`).join("");
+        insFeed.querySelectorAll("[data-ins-open]").forEach(card => {
+          const go = () => openArticle(card.dataset.insOpen, true);
+          card.addEventListener("click", go);
+          card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+        });
+      }
+
+      function blockHTML(b) {
+        if (b.h) return `<h2>${iEsc(b.h)}</h2>`;
+        if (b.p) return `<p>${b.p}</p>`;
+        if (b.callout) return `<div class="ins-callout">${b.callout}</div>`;
+        if (b.jump) return `<button type="button" class="ins-jump" data-ins-jump="${b.jump.nav}">${iEsc(b.jump.label)}</button>`;
+        if (b.table) {
+          const t = b.table;
+          const head = t.head.map((h, i) => `<th${i >= t.numFrom ? " class=\"num\"" : ""} scope="col">${iEsc(h)}</th>`).join("");
+          const rows = t.rows.map(r => "<tr>" + r.map((cell, i) => {
+            const isObj = cell && typeof cell === "object";
+            const txt = isObj ? cell.t : cell;
+            const cls = isObj && cell.c ? ` class="${cell.c}"` : (i >= t.numFrom ? " class=\"num\"" : "");
+            return `<td${cls}>${i === 0 ? `<span class="p-name">${iEsc(txt)}</span>` : iEsc(txt)}</td>`;
+          }).join("") + "</tr>").join("");
+          return `<div class="ins-table-wrap"><table class="ins-table"><caption>${iEsc(t.caption)}</caption><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
+        }
+        return "";
+      }
+
+      function showFeed(push) {
+        insArt.hidden = true;
+        insArt.innerHTML = "";
+        insFeed.hidden = false;
+        document.title = insHomeTitle;
+        if (insMetaDesc) insMetaDesc.setAttribute("content", insHomeDesc);
+        if (push && location.hash !== "#/insights") history.pushState(null, "", "#/insights");
+      }
+
+      function openArticle(slug, push) {
+        const a = bySlug[slug];
+        if (!a) { showFeed(push); return; }
+        const idx = ARTICLES.indexOf(a);
+        const more = ARTICLES.filter(x => x !== a).slice(0, 2);
+        insArt.innerHTML = `
+          <button type="button" class="ins-back" id="ins-back">← All Insights</button>
+          <article class="ins-article" itemscope itemtype="https://schema.org/BlogPosting">
+            <header>
+              <div class="ins-card-top">
+                <span class="ins-tag${CYAN_TYPES[a.type] ? " cyan" : ""}">${iEsc(a.type)}</span>
+                <span class="ins-date">Fantasy Forensics Insights</span>
+              </div>
+              <h1 itemprop="headline">${iEsc(a.title)}</h1>
+              <p class="ins-standfirst">${iEsc(a.dek)}</p>
+              <div class="ins-byline">
+                <span class="ins-author">By the Fantasy Forensics model desk</span>
+                <time datetime="${a.dateISO}" itemprop="datePublished">${iEsc(a.dateLabel)}</time>
+                <span>${readMins(a)} min read</span>
+                <span>Data: ${a.dataNote || (DATA.league.snapshot + " snapshot · NFL Week " + DATA.league.week)}</span>
+              </div>
+            </header>
+            <div class="ins-body" itemprop="articleBody">
+              ${a.body.map(blockHTML).join("")}
+            </div>
+          </article>
+          <div class="ins-more">
+            <h2>More Insights</h2>
+            <div class="ins-feed">${more.map(m => `
+              <article class="ins-card" data-ins-open="${m.slug}" tabindex="0" role="link" aria-label="${iEsc(m.title)}">
+                <div class="ins-card-top">
+                  <span class="ins-tag${CYAN_TYPES[m.type] ? " cyan" : ""}">${iEsc(m.type)}</span>
+                  <time class="ins-date" datetime="${m.dateISO}">${iEsc(m.dateLabel.split(", ").slice(0, 2).join(", "))}</time>
+                </div>
+                <h3>${iEsc(m.title)}</h3>
+                <p class="ins-dek">${iEsc(m.dek)}</p>
+                <span class="ins-read">Read · ${readMins(m)} min →</span>
+              </article>`).join("")}
+            </div>
+          </div>`;
+        insFeed.hidden = true;
+        insArt.hidden = false;
+        document.title = a.title + " · Fantasy Forensics";
+        if (insMetaDesc) insMetaDesc.setAttribute("content", a.meta);
+        if (push && location.hash !== "#/insights/" + slug) history.pushState(null, "", "#/insights/" + slug);
+        document.getElementById("ins-back").addEventListener("click", () => { showFeed(true); window.scrollTo({ top: 0 }); });
+        insArt.querySelectorAll("[data-ins-open]").forEach(card => {
+          const go = () => { openArticle(card.dataset.insOpen, true); window.scrollTo({ top: 0 }); };
+          card.addEventListener("click", go);
+          card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+        });
+        insArt.querySelectorAll("[data-ins-jump]").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const JUMP = { teams: ["league", "#lg-power"], season: ["league", "#lg-outlook"], insights: ["insights"], more: ["how"], lineup: ["lineup"], realtrades: ["realtrades"], trades: ["trades"], values: ["values"], targets: ["targets"] };
+            const j = JUMP[btn.dataset.insJump] || [btn.dataset.insJump];
+            const LG_SUB = { "#lg-power": "power", "#power-list": "rosters", "#lg-outlook": "outlook", "#odds-panel": "odds" };
+            if (j[0] === "league" && window.goLeagueSub) window.goLeagueSub(LG_SUB[j[1]] || "power");
+            else { activateNav(j[0], j[1]); window.scrollTo({ top: 0 }); }
+          });
+        });
+      }
+
+      function syncInsightsFromHash() {
+        const m = /^#\/insights(?:\/([a-z0-9-]+))?\/?$/.exec(location.hash || "");
+        if (!m) return;
+        activateNav("insights");
+        if (m[1] && bySlug[m[1]]) openArticle(m[1], false);
+        else showFeed(false);
+      }
+
+      renderFeed();
+      const _ffNavValuesBtn = document.querySelector('nav.mainnav button[data-nav="values"]'); if (_ffNavValuesBtn) _ffNavValuesBtn.addEventListener("click", () => { showFeed(false); if (location.hash.indexOf("#/insights") === 0) history.pushState(null, "", "#/insights"); });
+      window.addEventListener("hashchange", syncInsightsFromHash);
+      syncInsightsFromHash();
     </script>
     <script>
       /* Batch 3 baked data (Oct 17, 2026 build): bye weeks derived from Sleeper
@@ -12375,7 +12770,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
       });
       const msAll = document.getElementById("ms-all");
       if (msAll) msAll.addEventListener("click", () => {
-        activateNav("values", "#movers-out");
+        activateNav("risers");
         const m = document.getElementById("movers-out");
         if (m) m.scrollIntoView({ block: "start" });
       });
@@ -17167,381 +17562,6 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
     </script>
     <script>
       "use strict";
-      /* =====================================================================
-         INSIGHTS — the editorial engine
-         ---------------------------------------------------------------------
-         Articles are structured data (the ARTICLES array below), rendered
-         into the Insights section of Player Values as a card feed (newest first) plus a semantic
-         <article> view per piece. Each article has a clean slug routed as
-         #/insights/<slug>, its own document title and meta description
-         while open, and a matching entry in the JSON-LD block in <head>.
-
-         TEMPLATE SPEC — for the Tuesday refresh pipeline.
-         Three reusable article types. On each refresh, regenerate the types
-         marked [weekly] from the NEW snapshot and prepend them to ARTICLES
-         (newest first), keeping the evergreen explainers. Update the
-         JSON-LD blogPost list to match (headline, datePublished, url,
-         description) and set each date to the refresh date. Rules for every
-         type: 300–500 words of prose (tables excluded); every number must
-         come from the fresh snapshot — never carried over, never invented;
-         no competitor names; describe the model only as our proprietary
-         algorithm, built on deep analytics and consensus —
-         no recipes, no ratios, no internal weights. EMITTED-COPY BAN
-         (articles AND per-player why strings alike): stats only — never
-         the words "clock" or "tilt", never factors, weights, caps, blend
-         ratios, base derivations, or any account of how a price was
-         constructed. A why string is exactly what the player's expanded
-         row shows: preseason draft rank as a plain fact, the season
-         pts/g line, and the usage line (snap share, opportunities,
-         usage rank, role trend) — regenerate them with
-         research_notes/dynasty-mvp/why_strings.py and prove the rebuilt
-         file clean with research_notes/dynasty-mvp/copy_lint.py before
-         it ships; a lint failure blocks the push.
-
-         1. weekly-risers-recap  [weekly]  slug: week-<N>-risers-fallers
-            Data: DATA.players — dwk (Week N-1 → N price step), hist,
-            pos/posRank/team, snap, rtrend/ptrend, why (pts/g line).
-            Structure: intro with the count of players repriced (risers vs
-            fallers split) → "The risers": 2 paragraphs naming the top 5–6
-            gainers by dwk (skip sub-300-value backup repricing noise) with
-            the production/role reason for each → risers table (Player ·
-            Was · Now · Move) → "The fallers": mirror copy + table →
-            one-line takeaway + jumps to Values and Trades.
-
-         2. trade-market-movers  [weekly]  slug: trade-market-movers-week-<N>
-            Data: top 8 by |dwk| among players valued ≥ 2,500 (p.hist for
-            last-week price), plus REAL_TRADES lookups for 1–2 top assets
-            (count of trades + most recent completed deal, priced on the
-            current board). Structure: intro (movement = asking-price
-            movement) → movers table (Player · Last week · Now · Change) →
-            "Falling prices aren't all buy windows" (separate price falls
-            from role falls using snap/rtrend) → "What studs actually cost"
-            (real-trades anchor) → close with jumps to Real Trades + Trades.
-
-         3. pick-ladder-update  [on ladder change]  slug: <YYYY>-rookie-pick-ladder
-            Data: the pick ladder (GUEST_PICKS values for 2027–2029) and
-            player equivalents from DATA.players (nearest value to each key
-            slot). Structure: intro → full ladder table (Round · Early ·
-            Mid · Late) → "Read it in players, not points" (equivalents,
-            early-vs-late 1st spread, 1st→2nd round step) → year-out
-            discount paragraph (next two classes' mid 1sts as % of the
-            current class) → jump to Trades.
-
-         Evergreen explainers (value-adjustment explainer, dynasty-vs-redraft)
-         are NOT regenerated weekly; rewrite one only when its worked
-         example goes stale (the featured player's price moves > 10% or
-         the calculator's adjustment changes), recomputing every figure
-         from the live board and the calculator's own value-adjustment math.
-         ===================================================================== */
-      const ARTICLES = [
-        {
-          slug: "week-7-risers-fallers",
-          type: "Weekly Recap",
-          title: "Week 7 Risers & Fallers: Likely and Achane Surge, Hurts Slides",
-          meta: "The Week 7 dynasty value update repriced 386 of 401 players. Isaiah Likely (+1,075) and De'Von Achane (+987) headline the risers; Jalen Hurts (−255) leads a very short fallers list.",
-          dek: "The Week 7 update repriced 386 of 401 players — and nearly all of them upward. 373 risers against 13 fallers, with the median player up about 22%: this was a board-wide lift, not a stock-picker's week.",
-          dateISO: "2026-10-24",
-          dateLabel: "Saturday, October 24, 2026",
-          dataNote: "October 21, 2026 snapshot · NFL Week 7 — figures as published",
-          body: [
-            { p: "The Week 7 value update is the broadest repricing of the season so far. Of the 401 players on the board, <strong>386 changed price</strong> in the Week 6 → Week 7 step — 373 risers, 13 fallers — and the median player gained about 22%. Contrast Week 6, when fallers outnumbered risers: this week the tide lifted nearly every boat, so the names below are the ones that rode it highest, not the only ones that moved." },
-            { h: "The risers" },
-            { p: "<strong>Isaiah Likely</strong> posted the week's biggest gain among established players, <span class=\"up\">+1,075 (+24.4%)</span> to 5,477 (TE6). The production backs it: 23.1 points per game, a 73% snap share, 9.8 opportunities a game, with role +10.6% and production +26.9% over his last three games. <strong>De'Von Achane</strong> finished right behind him, <span class=\"up\">+987 (+24.1%)</span> to 5,086 while carrying an IR designation on the board — his price moved with the board-wide lift, not on playing status. <strong>Kenyon Sadiq</strong> (<span class=\"up\">+975, +26.9%</span>) rounds out the top three at 4,604, on 8.7 points per game." },
-            { p: "<strong>Matthew Golden</strong> (<span class=\"up\">+876, +19.7%</span>), <strong>Jordyn Tyson</strong> (<span class=\"up\">+870, +24.6%</span>) and <strong>Jadarian Price</strong> (<span class=\"up\">+827, +27.8%</span>) climbed into the top six — Matthew Golden on 16.8 points per game and an 83% snap share. Jordyn Tyson and Jadarian Price carry IR designations too, a reminder that this week's list is a board-wide lift first and individual breakouts second. Underneath the lift, the production-backed moves are real: <strong>Colston Loveland</strong> (+811): role +8.4% and production +57.2% over his last three games; <strong>Malik Nabers</strong> (+810): role +18.1% and production +57.8% over his last three games." },
-            { table: {
-              caption: "Week 7 risers — the Week 6 → Week 7 price step",
-              head: ["Player", "Was", "Now", "Move"],
-              numFrom: 1,
-              rows: [
-                ["Isaiah Likely · TE6, NYG", "4,402", "5,477", { t: "+1,075 (+24.4%)", c: "delta-up" }],
-                ["De'Von Achane · RB11, MIA", "4,099", "5,086", { t: "+987 (+24.1%)", c: "delta-up" }],
-                ["Kenyon Sadiq · TE9, NYJ", "3,629", "4,604", { t: "+975 (+26.9%)", c: "delta-up" }],
-                ["Matthew Golden · WR17, GB", "4,439", "5,315", { t: "+876 (+19.7%)", c: "delta-up" }],
-                ["Jordyn Tyson · WR25, NO", "3,541", "4,411", { t: "+870 (+24.6%)", c: "delta-up" }],
-                ["Jadarian Price · RB23, SEA", "2,970", "3,797", { t: "+827 (+27.8%)", c: "delta-up" }],
-              ]
-            } },
-            { h: "The fallers" },
-            { p: "<strong>Jalen Hurts</strong> took the week's biggest hit among established players, <span class=\"down\">−255 (−5.1%)</span> to 4,777 — a modest step for a quarterback still scoring 19.8 points per game, and he carries an IR designation on the board. <strong>Jahmyr Gibbs</strong> (<span class=\"down\">−252, −2.5%</span>) slipped to 9,733 but holds RB1 on 30.7 points per game; at that level a small week is noise, not a warning. <strong>Puka Nacua</strong> (<span class=\"down\">−62, −0.8%</span>) rounds out the only 3 notable fallers — every other top-25 player at his position either rose or stood still." },
-            { table: {
-              caption: "Week 7 fallers — the Week 6 → Week 7 price step",
-              head: ["Player", "Was", "Now", "Move"],
-              numFrom: 1,
-              rows: [
-                ["Jalen Hurts · QB20, PHI", "5,032", "4,777", { t: "−255 (−5.1%)", c: "delta-dn" }],
-                ["Jahmyr Gibbs · RB1, DET", "9,985", "9,733", { t: "−252 (−2.5%)", c: "delta-dn" }],
-                ["Puka Nacua · WR3, LAR", "7,937", "7,875", { t: "−62 (−0.8%)", c: "delta-dn" }],
-              ]
-            } },
-            { p: "The pattern this week is the lift itself: when 373 of 401 prices rise, the question isn't which players the update liked — it's how much of your roster's gain is the tide and how much is the player. The production-backed names underneath are the ones to trust most. Every price here is live on the Values board — sort by “This week's move” for the full 386 — and the next update lands with Tuesday's refresh." },
-            { jump: { label: "See the full board →", nav: "values" } },
-            { jump: { label: "Price a deal in the calculator →", nav: "trades" } }
-          ]
-        },
-        {
-          slug: "trade-market-movers-week-7",
-          type: "Trade Market",
-          title: "Trade Market Movers: What the Week 7 Repricing Did to Real Asking Prices",
-          meta: "Every point of value movement is a point on a real asking price. The Week 7 movers that changed acquisition costs — plus what the top of the market actually fetched in real completed trades.",
-          dek: "Value movement is trivia until you're the one sending the offer. These are the Week 7 moves that changed what players actually cost — and what the completed-trade record says about the top of the market.",
-          dateISO: "2026-10-24",
-          dateLabel: "Saturday, October 24, 2026",
-          dataNote: "October 21, 2026 snapshot · NFL Week 7 — figures as published",
-          body: [
-            { p: "Value changes are trivia until you're the one sending the offer. The Week 7 update repriced <strong>386 players</strong>, and nearly every one of them upward — which means the anchors in live negotiations moved almost across the board. A manager who offered for Isaiah Likely last week was bidding against a 4,402 price; this week the anchor is 5,477. These were the moves that mattered at the negotiating table." },
-            { table: {
-              caption: "Biggest asking-price changes — Week 7",
-              head: ["Player", "Last week", "Now", "Change"],
-              numFrom: 1,
-              rows: [
-                ["Isaiah Likely · TE6, NYG", "4,402", "5,477", { t: "+1,075", c: "delta-up" }],
-                ["De'Von Achane · RB11, MIA", "4,099", "5,086", { t: "+987", c: "delta-up" }],
-                ["Kenyon Sadiq · TE9, NYJ", "3,629", "4,604", { t: "+975", c: "delta-up" }],
-                ["Matthew Golden · WR17, GB", "4,439", "5,315", { t: "+876", c: "delta-up" }],
-                ["Jordyn Tyson · WR25, NO", "3,541", "4,411", { t: "+870", c: "delta-up" }],
-                ["Jadarian Price · RB23, SEA", "2,970", "3,797", { t: "+827", c: "delta-up" }],
-                ["Colston Loveland · TE4, CHI", "4,855", "5,666", { t: "+811", c: "delta-up" }],
-              ]
-            } },
-            { h: "Almost nobody got cheaper" },
-            { p: "In a week when nearly every price rose, the discount rack is nearly empty. <strong>Jalen Hurts</strong> at 4,777 is the biggest notable faller and it is only 255 points — 5.1% — on a quarterback scoring 19.8 points per game. <strong>Jahmyr Gibbs</strong> slipped 252 points to 9,733 and still holds RB1; that is not a buy window opening, it is a quiet week for an expensive player. When the whole board lifts, yesterday's offer is today's underpay — re-price before you send." },
-            { h: "What studs actually cost" },
-            { p: "At the top of the board, nobody got cheaper — and the completed-trade record shows what the top tier actually fetches. Our Real Trades database — <strong>2,581 completed deals</strong> from public leagues — has its most recent top-tier deal on October 18, when Bhayshul Tuten, Trevor Lawrence, Chris Olave and Jaylen Warren were sent for <strong>Drake Maye</strong> (7,983 on today's board), <strong>Omarion Hampton</strong> (4,317 on today's board), a 2027 1st, a 2027 2nd and a 2028 1st. Packages, not discounts. <strong>Jahmyr Gibbs</strong> still holds 9,733 (RB1); he has changed hands 19 times in the database, most recently on September 17, when he returned <strong>Caleb Douglas</strong> (2,768 on today's board), <strong>Puka Nacua</strong> (7,875 on today's board) and a 2028 2nd." },
-            { p: "The lesson of the week cuts one way: in a rising market, standing still is falling behind. Run any offer through the calculator before you send it — it prices both sides on today's numbers, value adjustment included — and check Real Trades for what your target actually fetched the last time he moved." },
-            { jump: { label: "Search real completed trades →", nav: "realtrades" } },
-            { jump: { label: "Price a deal in the calculator →", nav: "trades" } }
-          ]
-        },
-        {
-          slug: "2027-rookie-pick-ladder",
-          type: "Pick Ladder",
-          title: "The 2027 Rookie Pick Ladder: What Every Slot Is Actually Worth",
-          meta: "Every 2027 rookie pick slot priced on the same model as the player board — early 1st 5,916, mid 1st 4,448, late 1st 3,877 — translated into the players those prices actually buy.",
-          dek: "A rookie pick is the only dynasty asset everyone quotes and nobody can start on Sunday. Our ladder prices all twelve slots of the 2027 class — here's what those numbers buy in player terms.",
-          dateISO: "2026-10-15",
-          dateLabel: "Thursday, October 15, 2026",
-          dataNote: "Pick ladder as published October 15, 2026",
-          body: [
-            { p: "A rookie pick is the only asset in dynasty whose price everyone quotes and nobody can start on Sunday. Our ladder prices every slot of the <strong>2027 class</strong> — the class the market is pricing hottest — off the same proprietary model baseline as the player board, so a pick and a player can be compared in the same currency. Here is the full ladder, and what the numbers actually mean." },
-            { table: {
-              caption: "2027 rookie pick ladder — value by slot",
-              head: ["Round", "Early", "Mid", "Late"],
-              numFrom: 1,
-              rows: [
-                ["1st", "5,916", "4,448", "3,877"],
-                ["2nd", "3,075", "2,596", "2,364"],
-                ["3rd", "1,983", "1,867", "1,753"],
-                ["4th", "1,466", "1,398", "1,317"]
-              ]
-            } },
-            { h: "Read it in players, not points" },
-            { p: "Translated into player equivalents, the ladder stops being abstract. An <strong>early 2027 1st (5,916)</strong> prices like Malik Nabers (5,949). A <strong>mid 1st (4,448)</strong> is Jalen Hurts (4,462) money. A <strong>late 1st (3,877)</strong> sits just over Derrick Henry (3,849). An <strong>early 2nd (3,075)</strong> is roughly Jaylen Waddle (3,034); an <strong>early 3rd (1,983)</strong> is Keaton Mitchell (1,980). Two gaps matter most. The early-to-late spread inside the 1st round alone is <strong>2,039 points</strong> — more than an early 3rd is worth by itself — which is why “a 2027 1st” is not a price until you know whose 1st it is. And the famous cliff after the 1st round is shallower than folklore says: late 1st (3,877) to early 2nd (3,075) is a 21% step, not a halving. Even the late rounds carry real prices — a mid 3rd (1,867) is worth more than half the players on the board, 207 of 401 — which is why our calculator never treats one as a free throw-in." },
-            { h: "Future years discount gently" },
-            { p: "The year-out discount is shallower than production value alone would set, because the market keeps paying up for future picks. A <strong>mid 2028 1st (3,610)</strong> still holds 81% of the mid 2027 1st's price; a <strong>mid 2029 1st (3,264)</strong> holds 90% of the 2028. The practical read cuts against habit: contenders shouldn't treat a 2028 1st as a throw-in, and rebuilders collecting 2027 1sts are holding the most liquid asset in the format. Every slot on this ladder is live in the trade calculator, priced identically wherever it appears — no separate pick chart to argue about." },
-            { jump: { label: "Build a deal with picks →", nav: "trades" } },
-            { jump: { label: "Compare against the player board →", nav: "values" } }
-          ]
-        },
-        {
-          slug: "roster-bonus-explained",
-          type: "How It Works",
-          title: "Why 9,973 Doesn't Beat 9,985: The Value Adjustment, Explained",
-          meta: "Chase Brown plus Nico Collins sums to 9,973 — within 12 points of Jahmyr Gibbs alone. Our trade calculator still scores it for Gibbs: the value adjustment for taking back one player instead of two stretches the gap to 6,631. Here's why.",
-          dek: "Brown plus Collins sums to 9,973; Gibbs alone is 9,985. Raw math calls it a coin flip. Our calculator calls it for Gibbs by 6,631 points — this is the value adjustment doing that, with the math shown.",
-          dateISO: "2026-10-14",
-          dateLabel: "Wednesday, October 14, 2026",
-          dataNote: "Figures as published October 14, 2026",
-          body: [
-            { p: "Here is a trade that looks like a coin flip. One side gives <strong>Jahmyr Gibbs</strong>, priced 9,985 — the RB1 on our board. The other gives <strong>Chase Brown</strong> (4,611) and <strong>Nico Collins</strong> (5,362), which sum to 9,973. Raw totals: Gibbs by 12 points, a rounding error. Our calculator doesn't call it even. It scores the deal clearly for the Gibbs side — because of the <strong>value adjustment</strong>, the adjustment applied to every verdict the calculator renders." },
-            { table: {
-              caption: "The Gibbs test — raw sum vs. trade value",
-              head: ["Asset", "Raw", "Trade value"],
-              numFrom: 1,
-              rows: [
-                ["Jahmyr Gibbs (one side)", "9,985", "16,604"],
-                ["Chase Brown", "4,611", "4,611"],
-                ["Nico Collins", "5,362", "5,362"],
-                ["Brown + Collins (other side)", "9,973", "9,973"],
-                ["Gibbs-side advantage", { t: "+12", c: "delta-up" }, { t: "+6,631", c: "delta-up" }]
-              ]
-            } },
-            { h: "Roster spots are the currency" },
-            { p: "The logic is roster math. This league starts eleven players a week. Gibbs occupies one slot and produces like it: 30.7 points per game through Week 5, a 77% snap share, the No. 2 usage rank among all running backs, receivers and tight ends. Brown and Collins occupy two slots — and the second slot is never free, because Collins' points come <em>instead of</em> your next bench option's, not in addition to them. So the calculator adds a <strong>value adjustment</strong> to the side whose production is concentrated into fewer spots: the best player in a deal carries value beyond his raw price, and the adjustment credits that side the amount that balances that difference. Gibbs' side takes back one player instead of two, collects a 6,619-point value adjustment, and lands at 16,604. Brown and Collins collect none and stay at 9,973. The 6,631-point gap is what that concentration is actually worth in this deal." },
-            { h: "It tempers deals; it doesn't crown studs" },
-            { p: "The adjustment cuts both ways, deliberately. It follows concentration, not headcount — an even trade can earn one when one side is top-heavy — and a true 1-for-1 earns none at all — one player a side, there is no concentration to price, so the raw difference is the whole story. Nor does it hand the win to the single biggest name: two genuinely strong starters still beat one great player whenever their combined value clears his price plus the adjustment. Picks count as assets the same way, which is why four late 2nds don't add up to one early 1st in our calculator even when the raw sums insist they should. The raw totals never disappear, either: every verdict leads with the adjusted Trade value and prints the Raw sum right beneath it, with the value adjustment on its own line whenever one applies — never a hidden thumb on the scale." },
-            { jump: { label: "Try it in the calculator →", nav: "trades" } }
-          ]
-        },
-        {
-          slug: "dynasty-vs-redraft-henry-love",
-          type: "Strategy",
-          title: "Same Points, Opposite Prices: Why Dynasty and Redraft Values Diverge",
-          meta: "Derrick Henry and Jordan Love average nearly identical points (22.4 vs 22.6 per game), yet redraft prices Henry 54% higher and dynasty prices Love 39% higher. The two questions behind the flip.",
-          dek: "Through five weeks, Derrick Henry and Jordan Love are producing identical points. Redraft prices Henry 54% higher; dynasty prices Love 39% higher. Both are right — they're answering different questions.",
-          dateISO: "2026-10-13",
-          dateLabel: "Tuesday, October 13, 2026",
-          dataNote: "Figures as published October 13, 2026",
-          body: [
-            { p: "Derrick Henry and Jordan Love are, right now, effectively the same player. Through Week 5 in this league's scoring, Henry averaged <strong>22.4 points per game</strong>; Love averaged <strong>22.6</strong>. Our rest-of-season projections keep them level the rest of the way — 21.9 vs. 22.2 points per week. And yet the two formats on this site price them in opposite directions, by a lot. That flip is the entire difference between dynasty and redraft, contained in one pair of names." },
-            { table: {
-              caption: "Henry vs. Love — same production, two prices",
-              head: ["", "Derrick Henry", "Jordan Love"],
-              numFrom: 1,
-              rows: [
-                ["Positional rank", "RB17", "QB11"],
-                ["Points per game, Weeks 1–5", "22.4", "22.6"],
-                ["Rest-of-season projection (pts/wk)", "21.9", "22.2"],
-                ["Redraft value", "6,767", "4,392"],
-                ["Dynasty value", "3,994", "5,562"]
-              ]
-            } },
-            { h: "Redraft asks one question" },
-            { p: "Redraft asks a single question: who scores more between now and Week 17? By that measure Henry is the prize — a single-season value of <strong>6,767 against Love's 4,392, a 54% edge</strong>. He is a workhorse back producing RB1 points today, and in a format where next season doesn't exist, nothing else about him matters. The age curve is somebody else's problem." },
-            { h: "Dynasty asks a longer one" },
-            { p: "Dynasty asks what a player is worth across every season you'll own him, and the answer flips: <strong>Love 5,562 (QB11) against Henry 3,994 (RB17) — a 39% edge the other way</strong>. Two forces do it. The first is the age curve: Henry is 32, and in our measured curves running back value falls off a cliff in the late 20s — and keeps falling. That is why our algorithm's price on him sits where it does — it discounts his age more steeply than most managers do. The second force is time. Love is 27 at the position that holds value longest — quarterback prices barely move into the early 30s — and in superflex, a stable starting quarterback is the scarcest asset in the format. Love's price contains the better part of a decade of starter seasons. Henry's contains what's left of this one, and maybe the next." },
-            { p: "Neither price is wrong; they're answers to different questions — which is why all 401 players on this board carry both. Flip the Format switch at the top of the page from Dynasty to Redraft and every price re-renders through the single-season lens. Contending? Henry's profile is what you buy. Rebuilding? Love's is. Just know which question you're answering before you send the offer." },
-            { jump: { label: "See both prices on the board →", nav: "values" } }
-          ]
-        }
-      ];
-
-      const insFeed = document.getElementById("ins-feed");
-      const insArt = document.getElementById("ins-article");
-      const insHomeTitle = document.title;
-      const insMetaDesc = document.querySelector('meta[name="description"]');
-      const insHomeDesc = insMetaDesc ? insMetaDesc.getAttribute("content") : "";
-      const iEsc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const CYAN_TYPES = { "Trade Market": 1, "Pick Ladder": 1, "Strategy": 1 };
-      const readMins = a => {
-        const words = a.body.reduce((n, b) => n + (b.p ? b.p.replace(/<[^>]+>/g, " ").split(/\s+/).length : 0), 0);
-        return Math.max(2, Math.round(words / 190));
-      };
-      const bySlug = {};
-      ARTICLES.forEach(a => { bySlug[a.slug] = a; });
-
-      function renderFeed() {
-        insFeed.innerHTML = ARTICLES.map(a => `
-          <article class="ins-card" data-ins-open="${a.slug}" tabindex="0" role="link" aria-label="${iEsc(a.title)}">
-            <div class="ins-card-top">
-              <span class="ins-tag${CYAN_TYPES[a.type] ? " cyan" : ""}">${iEsc(a.type)}</span>
-              <time class="ins-date" datetime="${a.dateISO}">${iEsc(a.dateLabel.split(", ").slice(0, 2).join(", "))}</time>
-            </div>
-            <h3>${iEsc(a.title)}</h3>
-            <p class="ins-dek">${iEsc(a.dek)}</p>
-            <span class="ins-read">Read · ${readMins(a)} min →</span>
-          </article>`).join("");
-        insFeed.querySelectorAll("[data-ins-open]").forEach(card => {
-          const go = () => openArticle(card.dataset.insOpen, true);
-          card.addEventListener("click", go);
-          card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
-        });
-      }
-
-      function blockHTML(b) {
-        if (b.h) return `<h2>${iEsc(b.h)}</h2>`;
-        if (b.p) return `<p>${b.p}</p>`;
-        if (b.callout) return `<div class="ins-callout">${b.callout}</div>`;
-        if (b.jump) return `<button type="button" class="ins-jump" data-ins-jump="${b.jump.nav}">${iEsc(b.jump.label)}</button>`;
-        if (b.table) {
-          const t = b.table;
-          const head = t.head.map((h, i) => `<th${i >= t.numFrom ? " class=\"num\"" : ""} scope="col">${iEsc(h)}</th>`).join("");
-          const rows = t.rows.map(r => "<tr>" + r.map((cell, i) => {
-            const isObj = cell && typeof cell === "object";
-            const txt = isObj ? cell.t : cell;
-            const cls = isObj && cell.c ? ` class="${cell.c}"` : (i >= t.numFrom ? " class=\"num\"" : "");
-            return `<td${cls}>${i === 0 ? `<span class="p-name">${iEsc(txt)}</span>` : iEsc(txt)}</td>`;
-          }).join("") + "</tr>").join("");
-          return `<div class="ins-table-wrap"><table class="ins-table"><caption>${iEsc(t.caption)}</caption><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
-        }
-        return "";
-      }
-
-      function showFeed(push) {
-        insArt.hidden = true;
-        insArt.innerHTML = "";
-        insFeed.hidden = false;
-        document.title = insHomeTitle;
-        if (insMetaDesc) insMetaDesc.setAttribute("content", insHomeDesc);
-        if (push && location.hash !== "#/insights") history.pushState(null, "", "#/insights");
-      }
-
-      function openArticle(slug, push) {
-        const a = bySlug[slug];
-        if (!a) { showFeed(push); return; }
-        const idx = ARTICLES.indexOf(a);
-        const more = ARTICLES.filter(x => x !== a).slice(0, 2);
-        insArt.innerHTML = `
-          <button type="button" class="ins-back" id="ins-back">← All Insights</button>
-          <article class="ins-article" itemscope itemtype="https://schema.org/BlogPosting">
-            <header>
-              <div class="ins-card-top">
-                <span class="ins-tag${CYAN_TYPES[a.type] ? " cyan" : ""}">${iEsc(a.type)}</span>
-                <span class="ins-date">Fantasy Forensics Insights</span>
-              </div>
-              <h1 itemprop="headline">${iEsc(a.title)}</h1>
-              <p class="ins-standfirst">${iEsc(a.dek)}</p>
-              <div class="ins-byline">
-                <span class="ins-author">By the Fantasy Forensics model desk</span>
-                <time datetime="${a.dateISO}" itemprop="datePublished">${iEsc(a.dateLabel)}</time>
-                <span>${readMins(a)} min read</span>
-                <span>Data: ${a.dataNote || (DATA.league.snapshot + " snapshot · NFL Week " + DATA.league.week)}</span>
-              </div>
-            </header>
-            <div class="ins-body" itemprop="articleBody">
-              ${a.body.map(blockHTML).join("")}
-            </div>
-          </article>
-          <div class="ins-more">
-            <h2>More Insights</h2>
-            <div class="ins-feed">${more.map(m => `
-              <article class="ins-card" data-ins-open="${m.slug}" tabindex="0" role="link" aria-label="${iEsc(m.title)}">
-                <div class="ins-card-top">
-                  <span class="ins-tag${CYAN_TYPES[m.type] ? " cyan" : ""}">${iEsc(m.type)}</span>
-                  <time class="ins-date" datetime="${m.dateISO}">${iEsc(m.dateLabel.split(", ").slice(0, 2).join(", "))}</time>
-                </div>
-                <h3>${iEsc(m.title)}</h3>
-                <p class="ins-dek">${iEsc(m.dek)}</p>
-                <span class="ins-read">Read · ${readMins(m)} min →</span>
-              </article>`).join("")}
-            </div>
-          </div>`;
-        insFeed.hidden = true;
-        insArt.hidden = false;
-        document.title = a.title + " · Fantasy Forensics";
-        if (insMetaDesc) insMetaDesc.setAttribute("content", a.meta);
-        if (push && location.hash !== "#/insights/" + slug) history.pushState(null, "", "#/insights/" + slug);
-        document.getElementById("ins-back").addEventListener("click", () => { showFeed(true); window.scrollTo({ top: 0 }); });
-        insArt.querySelectorAll("[data-ins-open]").forEach(card => {
-          const go = () => { openArticle(card.dataset.insOpen, true); window.scrollTo({ top: 0 }); };
-          card.addEventListener("click", go);
-          card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
-        });
-        insArt.querySelectorAll("[data-ins-jump]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const JUMP = { teams: ["league", "#lg-power"], season: ["league", "#lg-outlook"], insights: ["values"], more: ["how"], lineup: ["lineup"], realtrades: ["realtrades"], trades: ["trades"], values: ["values"], targets: ["targets"] };
-            const j = JUMP[btn.dataset.insJump] || [btn.dataset.insJump];
-            const LG_SUB = { "#lg-power": "power", "#power-list": "rosters", "#lg-outlook": "outlook", "#odds-panel": "odds" };
-            if (j[0] === "league" && window.goLeagueSub) window.goLeagueSub(LG_SUB[j[1]] || "power");
-            else { activateNav(j[0], j[1]); window.scrollTo({ top: 0 }); }
-          });
-        });
-      }
-
-      function syncInsightsFromHash() {
-        const m = /^#\/insights(?:\/([a-z0-9-]+))?\/?$/.exec(location.hash || "");
-        if (!m) return;
-        activateNav("values");
-        if (m[1] && bySlug[m[1]]) openArticle(m[1], false);
-        else showFeed(false);
-      }
-
-      renderFeed();
-      const _ffNavValuesBtn = document.querySelector('nav.mainnav button[data-nav="values"]'); if (_ffNavValuesBtn) _ffNavValuesBtn.addEventListener("click", () => { showFeed(false); if (location.hash.indexOf("#/insights") === 0) history.pushState(null, "", "#/insights"); });
-      window.addEventListener("hashchange", syncInsightsFromHash);
-      syncInsightsFromHash();
-    </script>
-    <script>
-      "use strict";
       /* ================= League-type chrome + Improve Your Odds =================
          Everything the Dynasty/Redraft switch changes beyond the board
          and the calculator (which syncModeChrome owns): the detection
@@ -21832,7 +21852,7 @@ window.drDraft = {
             window.__subnavNext.league = "odds";
             activateNav("league", "#po-sched");
           }
-          else if (navKey === "risers") activateNav("values", "#movers-block");
+          else if (navKey === "risers") activateNav("risers");
           else if ((navKey === "odds" || navKey === "power") && typeof goLeagueSub === "function") goLeagueSub(navKey);
           else if (navKey === "moves") { if (typeof ff4RenderMoves === "function") ff4RenderMoves(idx); activateNav("moves"); }
           else activateNav(navKey);
@@ -24259,7 +24279,7 @@ window.__lifeline = (function () {
       var mainBtns = document.querySelectorAll("#site-main [data-pnav]");
       var subBar = document.getElementById("site-sub");
       var subBtns = document.querySelectorAll("[data-pnav-sub]");
-      var MAIN_FOR = { values: "players", radar: "players", ineff: "players", roster: "myteam", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", upgrades: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "command" };
+      var MAIN_FOR = { values: "players", risers: "players", insights: "players", radar: "players", ineff: "players", roster: "myteam", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", upgrades: "trades", realtrades: "trades", tradeboard: "trades", league: "league", command: "command" };
       var GROUP_FOR = { players: "players", myteam: "myteam", trades: "trades", league: "league" };
       function setMainSel(key) {
         mainBtns.forEach(function (b) { b.setAttribute("aria-selected", b.dataset.pnav === key ? "true" : "false"); });
@@ -24421,8 +24441,9 @@ window.__lifeline = (function () {
           if (typeof window.ff4Balancer === "function") window.ff4Balancer();
           setTimeout(function () { var el = document.getElementById("balancer"); if (el) el.scrollIntoView({ block: "start" }); }, 60);
         } else if (key === "risers") {
-          window.activateNav("values");
-          setTimeout(function () { var el = document.getElementById("movers-block"); if (el) el.scrollIntoView({ block: "start" }); }, 60);
+          window.activateNav("risers");
+        } else if (key === "insights") {
+          window.activateNav("insights");
         } else if (key === "moves") {
           if (typeof window.ff4RenderMovesCurrent === "function") window.ff4RenderMovesCurrent();
           window.activateNav("moves");
@@ -24489,7 +24510,7 @@ window.__lifeline = (function () {
       if (typeof origActivateNav === "function") {
         window.activateNav = function (key, arg) {
           var r = origActivateNav(key, arg);
-          if (key === "values") {
+          if (key === "insights") {
             if (typeof window.showFeed === "function") window.showFeed(false);
             if (location.hash.indexOf("#/insights") === 0) history.pushState(null, "", "#/insights");
           }
