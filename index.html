@@ -902,6 +902,18 @@
          line at phone width, making every asset row 57px tall
          instead of ~30px. Keep it on one line. */
       #tab-trades .asset > span:last-child { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex: none; }
+      /* Selected-row values OFF at phone + tablet widths (Eric,
+         Nov 12, 2026): the value number crowds long names out of
+         the narrow box (e.g. Brock Purdy 7736 cut the name off).
+         Scoped to #tab-trades .asset only — picker rows
+         (.results .val) and the pinned totals (.side-total .t)
+         keep their values at every width, and desktop (≥1024px,
+         the redesign's desktop breakpoint) keeps the selected-row
+         value too. 390px and 768px share the same compact
+         two-box layout, so both widths get the hide. */
+      @media (max-width: 1023px) {
+        #tab-trades .asset .val { display: none; }
+      }
       #tab-trades .calc-totals { margin-top: auto; }
       #tab-trades .side-total { margin-top: 6px; padding-top: 6px; }
       #tab-trades .side-total.adj { margin-top: 2px; }
@@ -929,6 +941,11 @@
         #tab-trades .assets { min-height: 34px; }
         #tab-trades .calc-team { font-size: 12px; }
         #tab-trades .side { padding: 8px; }
+        /* Selected-row names inherit 16px, and even with the value
+           hidden "Brock Purdy" still needs 93px in an 83px slot at
+           390px (measured). 13px gives it room to render in full;
+           768px+ already fits at 16px, so phone-only. */
+        #tab-trades .asset .calc-asset-name { font-size: 13px; }
       }
       @media (min-width: 1024px) {
         #tab-trades .calc-grid { gap: 12px; }
@@ -4799,10 +4816,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
   </div>
 
   <div id="modeRookie">
-  <!-- ============ 1. PICKS & VETERAN EQUIVALENTS ============ -->
+  <!-- ============ 1. PICKS, PRICED ON THE PLAYER SCALE ============ -->
   <section id="ladder">
-    <div class="sec-head"><span class="tag">Picks</span><h2>Picks &amp; veteran equivalents</h2></div>
-    <p class="sec-sub">Every pick priced on the same scale as the player board, matched to the <b>veteran it would take to buy it</b>. An early 1st isn't an abstraction: it's a low-end fantasy starter.</p>
+    <div class="sec-head"><span class="tag">Picks</span><h2>Picks, priced on the player scale</h2></div>
+    <p class="sec-sub">Every pick priced on the same scale as the player board. The overall rank shows where that pick's value lands among players, so an early 1st reads as roughly a low-end fantasy starter.</p>
 
     <div class="card" style="padding:6px 14px">
       <table>
