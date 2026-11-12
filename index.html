@@ -11567,10 +11567,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            stats for the CURRENT week only — the same source, days
            fresher. A player the live feed lists with NO projection
            (window.SLEEPER_PROJ_EMPTY) has his stale baked Rotowire
-           line suppressed rather than zeroed: the base falls through
-           to the usual no-data path (Out designations land on 0
-           there; healthy players land on the ROS estimate — never
-           a fake zero).
+           line suppressed, and the no-data path below zeroes him
+           (2026-11-11 Evans fix): the feed positively saying "not
+           projected this week" beats the ROS estimate — never
+           a fake zero, and never a season average in place of a
+           missing weekly line.
            The plan-ahead view never reads the live maps. */
         const rsLiveObj = !isNext && window.SLEEPER_STATS_LIVE ? window.SLEEPER_STATS_LIVE[p.id] : null;
         const rsSupp = !isNext && !rsLiveObj && !!(window.SLEEPER_PROJ_EMPTY && window.SLEEPER_PROJ_EMPTY[p.id]);
@@ -11615,9 +11616,19 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         /* No weekly data anywhere: an Out/IR/PUP/Suspended player falls
            back to nothing, never to the ROS estimate. */
         if (hardOut) return { pts: 0, tag: inj, cls: "out" };
-        if (inj === "Doubtful") return { pts: rosScore(p), tag: "Doubtful", cls: "out", sos, unpriced: !!p.unpriced };
-        if (inj === "Questionable") return { pts: rosScore(p), tag: "Questionable", cls: "q", sos, unpriced: !!p.unpriced };
-        return { pts: rosScore(p), tag: null, cls: "", sos, unpriced: !!p.unpriced };
+        /* Live-empty (2026-11-11 Evans fix): Sleeper lists this player
+           for the current week with NO projection (rsSupp — current-
+           week-only by construction, line ~11576). That is a signal,
+           not missing data: zero him instead of filling with his ROS
+           per-game average. Mike Evans, Week 10: Questionable, no
+           Week-10 line anywhere, ROS 18.31 — the old code priced him
+           at 18.31 and ffSwapPairs turned it into a false +10.8 NYF
+           alert over Dylan Sampson. The ROS fallback below now runs
+           ONLY for players absent from the live feed entirely. */
+        if (rsSupp) return { pts: 0, tag: inj || "No projection", cls: "out" };
+        if (inj === "Doubtful") return { pts: rosScore(p), tag: "Doubtful", cls: "out", sos, unpriced: !!p.unpriced, noProj: true };
+        if (inj === "Questionable") return { pts: rosScore(p), tag: "Questionable", cls: "q", sos, unpriced: !!p.unpriced, noProj: true };
+        return { pts: rosScore(p), tag: null, cls: "", sos, unpriced: !!p.unpriced, noProj: true };
       }
       function sosTxt(pr) {
         if (!pr) return "";
@@ -11702,10 +11713,12 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
                  with no stat signal and no points line is NOT a zero
                  projection — it is the source saying "not projected
                  this week", recorded in the empty map so wkProj can
-                 retire the player's stale baked Rotowire line
-                 without inventing a zero (see the rsSupp handling
-                 there). An explicit pts_ppr of 0, if one ever
-                 appears, is kept as a real zero. */
+                 retire the player's stale baked Rotowire line.
+                 (2026-11-11 Evans fix: when no line survives anywhere,
+                 wkProj's no-data path now zeroes a live-empty player
+                 instead of filling his ROS average.) An explicit
+                 pts_ppr of 0, if one ever appears, is kept as a
+                 real zero. */
               const signal = n.pass_yds + n.pass_td + n.rush_att + n.rush_yds + n.rush_td
                 + n.targets + n.rec + n.rec_yds + n.rec_td;
               if (signal > 0 || typeof st.pts_ppr === "number") {
@@ -20683,9 +20696,16 @@ window.drDraft = {
          is the point: one feed means the guard can no longer lean
          on a second opinion. wkProjLineup's blanket zeroing used to
          hide that whole class; this guard keeps it out of the swap
-         surfaces without touching wkProj itself. */
+         surfaces without touching wkProj itself.
+         Defense in depth (2026-11-11 Evans fix): a swap-in whose
+         number rests ONLY on the ROS fallback (pr.noProj — no weekly
+         line anywhere) while carrying a Questionable/Doubtful tag
+         is rejected outright. Being told to START a bench player
+         demands a real weekly line, not a season average for an
+         injured player the feed did not project. */
       function ffSwapInOK(p, pr) {
         if (!p || !pr) return false;
+        if (pr.noProj && (p.inj === "Questionable" || p.inj === "Doubtful")) return false;
         if (!pr.conflict && !(pr.pts > 40)) return true;
         let ros = 0;
         try { ros = (typeof rosScore === "function") ? rosScore(p) : 0; } catch (e) { ros = 0; }
