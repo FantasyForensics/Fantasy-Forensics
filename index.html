@@ -8824,7 +8824,73 @@ ${rdP ? "" : `
           : { give: [playerAsset(s.vet)], get: s.pkg };
       }
 
+      /* Finder memo (Nov 12, 2026 — strip-button perf): findTrades is
+         the ~2.4s buy/sell search behind Player Targets, and refreshAll
+         runs it on EVERY refresh — the connect bake, the spotlight
+         restore, the freshness landing, and once per league in the
+         Command Center cross-league pass — even though its inputs are
+         identical every time. The search is deterministic (no
+         randomness anywhere in this chain), so one bake per distinct
+         input state is exact: same fingerprint => same suggestions.
+         The fingerprint hashes everything the search reads — league,
+         team, mode, week, phase, want + partner selection, scoring
+         settings, the sim fingerprint, per-player name/value/redraft
+         value/ros/pos/age/team/unpriced/posRank, and per-team rosters,
+         picks (key/label/value/base/season/round), records, stance
+         fields, strengths and ranks. Designations (p.inj) are
+         deliberately NOT hashed: nothing in this chain reads them —
+         the weekly projection engine does, the search does not, and
+         redraft IR zeroing already flows through p.value/p.rdValue —
+         so a freshness designation change alone must not re-bake
+         the search. A miss recomputes; a hit returns the cached
+         result. Displayed numbers never change — the cache only
+         skips re-doing the same search. (Measured: 11 refreshAlls
+         after connect cost ~29s, ~2.5s each, ~all of it inside
+         findTrades; the strip took ~20s to appear and taps queued
+         behind ~2.5s tasks.) */
+      let ffFinderCache = null;
+      function ffFinderFingerprint(rid) {
+        let h = 2166136261 >>> 0;
+        const mix = s => { s = String(s); for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } h ^= 124; };
+        mix("FF1");
+        try { mix(tgLeagueKey()); } catch (e) {}
+        mix(rid);
+        try { mix(VALMODE); } catch (e) {}
+        try { mix(DATA.league.week); mix(DATA.league.snapshot); mix((DATA.league.slots || []).join(",")); mix(DATA.league.flex); } catch (e) {}
+        try { if (typeof ffPhaseState === "function") mix(ffPhaseState().phase); } catch (e) {}
+        try { mix(finderState.want || ""); mix(partnerPickSig()); } catch (e) {}
+        try { mix(JSON.stringify(SETTINGS)); } catch (e) {}
+        try { if (typeof ff4SimFp === "function") mix(ff4SimFp()); } catch (e) {}
+        const ps = (typeof DATA !== "undefined" && DATA.players) || [];
+        mix(ps.length);
+        for (let i = 0; i < ps.length; i++) {
+          const p = ps[i];
+          mix(p.id); mix(p.name); mix(p.value); mix(p.rdValue); mix(p.ros); mix(p.pos); mix(p.age); mix(p.team); mix(p.unpriced); mix(p.posRank);
+        }
+        const ts = (typeof DATA !== "undefined" && DATA.teams) || [];
+        for (let i = 0; i < ts.length; i++) {
+          const t = ts[i];
+          mix(t.rid); mix((t.playerIds || []).join(","));
+          mix((t.picks || []).map(pk => (pk.key || "") + ":" + (pk.label || "") + "=" + pk.value + "/" + (pk.baseValue != null ? pk.baseValue : "") + "/" + (pk.season || "") + "/" + (pk.round || "")).join(","));
+          mix(t.record); mix(t.pf); mix(t.arch); mix(t.frTag);
+          mix(t.stanceBand); mix(t.stanceLabel); mix(t.stanceWillingness); mix(t.stanceLean); mix(t.stanceOdds);
+          mix(t.cpRank); mix(t.frRank); mix(t.starterVal); mix(t.totalVal); mix(t.picksVal);
+          mix(t.frPlayers); mix(t.frPicks); mix(t.coreAge); mix(t.avgAgeTop);
+          mix(t.buyerCapacity); mix(t.buyerCapacityPct);
+          mix(t.tradeCount);
+          const st = t.strengths || {};
+          mix(st.QB); mix(st.RB); mix(st.WR); mix(st.TE);
+        }
+        return (h >>> 0).toString(36);
+      }
       function findTrades(rid) {
+        const key = ffFinderFingerprint(rid);
+        if (ffFinderCache && ffFinderCache.key === key) return ffFinderCache.result;
+        const result = findTradesCompute(rid);
+        ffFinderCache = { key, result };
+        return result;
+      }
+      function findTradesCompute(rid) {
         const mine = TBY[rid];
         /* Phase 4: the user's own EFFECTIVE stance picks the mode —
            Buyer buys, Seller/Maximal sells, Bubble does both. (The
