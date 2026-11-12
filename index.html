@@ -19637,16 +19637,15 @@ function drMasterRows(){
       (!q || r.name.toLowerCase().includes(q)));
     $("#poolBody").innerHTML = rows.slice(0, 120).map(r=>{
       if (r.kind === "pick") {
-        const v = r.vet || {};
         return "<tr class='pickrow'><td class='r num sub'>"+r.rank+"</td>"
-          + "<td><b>"+esc(r.name)+"</b> <span class='chip tier'>Pick</span><span class='msub'>worth "+esc(v.name||"—")+(v.pos? " · "+esc(v.pos):"")+(v.team? " · "+esc(v.team):"")+(v.value? " · vet "+fmt(v.value):"")+"</span></td>"
+          + "<td><b>"+esc(r.name)+"</b> <span class='chip tier'>Pick</span></td>"
           + "<td><span class='chip'>PK</span></td>"
           + "<td class='sub'>—</td>"
           + "<td class='r num'>—</td>"
           + "<td class='r num' style='font-weight:700; color:var(--lime)'>"+fmt(r.value)+"</td>"
           + "<td class='r num dx'>—</td>"
           + "<td><span class='chip tier'>Tier "+r.tier+"</span></td>"
-          + "<td><span class='sub'>Rookie pick · the veteran it buys is "+esc(v.name||"—")+"</span></td></tr>";
+          + "<td></td></tr>";
       }
       const p = r;
       const dc = p.exp===0 ? dcText(p) : null;
