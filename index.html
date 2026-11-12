@@ -5826,9 +5826,13 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         } catch (e) { return 0; }
       }
       function ffNullStance(t) {
+        /* Phase 4: nulls the STANCE fields only. Sellable inventory
+           and buyer capacity are year-round inputs (value + age +
+           picks exist in the offseason too) and are computed
+           unconditionally below, so the offseason driver can read
+           them while Stance stays quiet. */
         t.stanceBand = null; t.stanceLabel = null; t.stanceWillingness = null;
         t.stanceLean = null; t.stanceOdds = null;
-        t.sellableInventory = null; t.buyerCapacity = null; t.buyerCapacityPct = null;
       }
       window.ffComputeTwoRankings = function () {
         try {
@@ -5861,9 +5865,47 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
                same assignment the connect flow runs. */
             if (typeof slpFrTag === "function") teams.forEach(t => { try { t.frTag = slpFrTag(t, teams); } catch (e) {} });
           }
+          /* ---- Sellable inventory + buyer capacity (Phase 4,
+             year-round) ---- Computed here, BEFORE the quiet return,
+             so the offseason driver can read them while Current
+             Power and Stance stay quiet. Sellable inventory = share
+             of player value in at/past-peak players (FF_PEAKS).
+             Buyer capacity = pick capital + young surplus vs the
+             league (redraft: young surplus only — no picks exist
+             there); bottom third of the league = "limited". Picks
+             are a capacity input only, never a willingness input. */
+          const valOf = p => rd ? (p.rdValue != null ? p.rdValue : p.value) : p.value;
+          const youngVal = [], sellInv = {};
+          teams.forEach(t => {
+            let tot = 0, old = 0, young = 0;
+            (t.playerIds || []).forEach(id => {
+              const p = (typeof PBY !== "undefined") ? PBY[id] : null;
+              if (!p) return;
+              const v = valOf(p) || 0;
+              tot += v;
+              if ((p.age ?? 0) >= (FF_PEAKS[p.pos] ?? 28)) old += v;
+              else young += v;
+            });
+            sellInv[String(t.rid)] = tot > 0 ? old / tot : 0;
+            youngVal.push(young);
+            t._ffYoung = young;
+          });
+          const pickVals = teams.map(t => t.picksVal || 0);
+          if (hasRosters) teams.forEach(t => {
+            t.sellableInventory = sellInv[String(t.rid)];
+            const capPct = rd
+              ? ffPctile(youngVal, t._ffYoung)
+              : 0.7 * ffPctile(pickVals, t.picksVal || 0) + 0.3 * ffPctile(youngVal, t._ffYoung);
+            t.buyerCapacityPct = Math.round(capPct * 10) / 10;
+            t.buyerCapacity = capPct < (100 / 3) ? "limited" : capPct < (200 / 3) ? "moderate" : "strong";
+            delete t._ffYoung;
+          });
           /* ---- Offseason / guest / no rosters: CP + Stance quiet ---- */
           if (ph.phase === "offseason" || ph.phase === "guest" || !hasRosters) {
-            teams.forEach(t => { t.cpScore = null; t.cpRank = null; t.cpForecast = null; ffNullStance(t); });
+            teams.forEach(t => {
+              t.cpScore = null; t.cpRank = null; t.cpForecast = null; ffNullStance(t);
+              if (!hasRosters) { t.sellableInventory = null; t.buyerCapacity = null; t.buyerCapacityPct = null; }
+            });
             return;
           }
           /* ---- Current Power, Recipe A (approved): 50% optimal-lineup
@@ -5906,24 +5948,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           });
           [...teams].sort((a, b) => (b.cpScore - a.cpScore) || ((b.rosOpt || 0) - (a.rosOpt || 0)) || ((b.starterVal || 0) - (a.starterVal || 0)) || ((b.pf || 0) - (a.pf || 0)))
             .forEach((t, i) => { t.cpRank = i + 1; });
-          /* ---- Stance: three separate fields, never blended ---- */
-          const valOf = p => rd ? (p.rdValue != null ? p.rdValue : p.value) : p.value;
-          const youngVal = [], sellInv = {};
-          teams.forEach(t => {
-            let tot = 0, old = 0, young = 0;
-            (t.playerIds || []).forEach(id => {
-              const p = (typeof PBY !== "undefined") ? PBY[id] : null;
-              if (!p) return;
-              const v = valOf(p) || 0;
-              tot += v;
-              if ((p.age ?? 0) >= (FF_PEAKS[p.pos] ?? 28)) old += v;
-              else young += v;
-            });
-            sellInv[String(t.rid)] = tot > 0 ? old / tot : 0;
-            youngVal.push(young);
-            t._ffYoung = young;
-          });
-          const pickVals = teams.map(t => t.picksVal || 0);
+          /* ---- Stance: three separate fields, never blended ----
+             (Sellable inventory + buyer capacity were already
+             computed above, before the quiet return — the stance
+             loop only reads them now; no formula change.) */
           /* Sim odds — the ONE shared run, gated by the same freshness
              fingerprint the old formula uses; degenerate in the
              offseason (phase gate), so a finished season's final
@@ -5944,13 +5972,6 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           const early = actWeek <= 6;
           teams.forEach(t => {
             if (ph.stanceQuiet) { ffNullStance(t); return; }
-            t.sellableInventory = sellInv[String(t.rid)];
-            const capPct = rd
-              ? ffPctile(youngVal, t._ffYoung)
-              : 0.7 * ffPctile(pickVals, t.picksVal || 0) + 0.3 * ffPctile(youngVal, t._ffYoung);
-            t.buyerCapacityPct = Math.round(capPct * 10) / 10;
-            t.buyerCapacity = capPct < (100 / 3) ? "limited" : capPct < (200 / 3) ? "moderate" : "strong";
-            delete t._ffYoung;
             if (!haveSim) {
               /* No-sim fallback (lock): sub-.400 record ⇒ Seller;
                  no evidence ⇒ NOT a seller (Holding). Never a
@@ -7338,15 +7359,21 @@ ${rdP ? "" : `
           if (lineupIds.has(p.id)) notes.push({ cls: "warn", txt: `Losing ${p.name} costs a best-ball starter at ${p.pos} — judged on the peak lineup, not the set one.` });
         });
         /* Window fit notes are dynasty logic; redraft has no windows
-           and no picks, so none of them can fire in redraft mode. */
-        if (VALMODE !== "redraft" && t.arch === "win-now" && inPicks.length && !inPlayers.length)
-          notes.push({ cls: "warn", txt: `${t.name} is tagged Win-Now — taking only picks back trades this year's run for future capital.` });
-        if (VALMODE !== "redraft" && t.arch === "win-now" && outPicks.length)
-          notes.push({ cls: "good", txt: `Spending picks fits a Win-Now window.` });
-        if (VALMODE !== "redraft" && t.arch === "rebuilder" && inPlayers.some(p => (p.age ?? 0) >= 28 && p.pos === "RB"))
-          notes.push({ cls: "warn", txt: `A rebuilding roster taking on a 28+ RB is buying the decline phase of the age curve.` });
-        if (VALMODE !== "redraft" && t.arch === "rebuilder" && inPicks.length)
-          notes.push({ cls: "good", txt: `Extra picks fit the rebuild timeline.` });
+           and no picks, so none of them can fire in redraft mode.
+           Phase 4: keyed on the receiving team's EFFECTIVE stance
+           (Buyer ≈ the old win-now notes, Seller/Maximal ≈ the old
+           rebuilder notes); in the offseason the driver supplies
+           the franchise-tag stance, so the same notes fire off
+           lifecycle. Calculator math is untouched. */
+        const fst = VALMODE === "redraft" ? null : ffTradeStance(t);
+        if (VALMODE !== "redraft" && fst.band === "buyer" && inPicks.length && !inPlayers.length)
+          notes.push({ cls: "warn", txt: `${t.name} is a Buyer — taking only picks back trades this year's run for future capital.` });
+        if (VALMODE !== "redraft" && fst.band === "buyer" && outPicks.length)
+          notes.push({ cls: "good", txt: `Spending picks fits a Buyer's window.` });
+        if (VALMODE !== "redraft" && (fst.band === "seller" || fst.band === "maximal") && inPlayers.some(p => (p.age ?? 0) >= 28 && p.pos === "RB"))
+          notes.push({ cls: "warn", txt: `A selling roster taking on a 28+ RB is buying the decline phase of the age curve.` });
+        if (VALMODE !== "redraft" && (fst.band === "seller" || fst.band === "maximal") && inPicks.length)
+          notes.push({ cls: "good", txt: `Extra picks fit the selling timeline.` });
         if (!notes.length) notes.push({ cls: "", txt: "No strong fit signals either way — this one is close to a pure value swap for this roster." });
         return notes;
       }
@@ -7661,8 +7688,8 @@ ${rdP ? "" : `
          The hard rules: a win-now team's projected points per week can
          never go down in a suggested deal, a win-now team never takes a
          draft pick back or sends out a starter, and partners are matched
-         by mirror window — buyers shop from rebuilders, sellers shop to
-         contenders, never two contenders swapping starters sideways. */
+         by mirror window — buyers shop from sellers, sellers shop to
+         buyers, never two buyers swapping starters sideways. */
       const finderState = { want: "" };
       /* Trade-partner picker (Eric, 2026-11-03): one shared selection
          for Player Targets and the Upgrade Finder. sel = null means
@@ -7679,7 +7706,7 @@ ${rdP ? "" : `
         const label = !sel ? "All teams" : sel.size === 0 ? "None picked" : sel.size + " of " + eligible.length + " teams";
         const rows = eligible.map(t => {
           const on = !sel || sel.has(Number(t.rid));
-          const tag = VALMODE === "redraft" ? "" : ` <span class="p-sub">${archTag(t.arch)}</span>`;
+          const tag = VALMODE === "redraft" ? "" : ` <span class="p-sub">${esc(ffTradeStance(t).label)}</span>`;
           return `<label class="ppick-row"><input type="checkbox" data-ppick-team="${t.rid}" ${on ? "checked" : ""}><span>${esc(t.name)}</span>${tag}</label>`;
         }).join("");
         mount.innerHTML = `<div class="ppick"><button type="button" class="ppick-btn" data-ppick-toggle aria-expanded="${ppickOpen[mountId] ? "true" : "false"}">Trade partners: <strong>${label}</strong> ▾</button>
@@ -7870,26 +7897,88 @@ ${rdP ? "" : `
          vanishing silently at the cliff (an Ashton Jeanty deal at
          +2.81 used to disappear without a trace). */
       const NEAR_MISS_MIN_GAIN = 2.0;
-      /* Counterparty sanity for buys (Oct 21 fix): a partner is a
-         genuine firesale partner only if BOTH (a) their archetype is
-         rebuilder or crossroads, AND (b) their season is actually
-         gone — season-sim playoff odds under 35%, or (no sim yet) a
-         sub-.400 record. A partner failing (b) is plausibly
-         competitive whatever the power rank says (a 3–3 "rebuilder"
-         at #9 by power was offered two 1sts for her RB1 while sitting
-         at ~41% playoff odds), and a buy from them survives only if
-         the return includes a player who starts in THEIR post-trade
-         optimal lineup — the mirror of the check the sell engine has
-         always run on its partners. Picks-only strip-mining of a
-         competitive team's starter no longer renders. */
+      /* Phase 4 — classification-driver switch + effective stance.
+         ONE switch, read by every trade-tool consumer below: STANCE
+         drives in-season once ~2 weeks of real games exist; the
+         OFFSEASON driver (franchise tags + lifecycle) runs Feb–Aug,
+         the preseason, and the first ~1–2 weeks of real games, when
+         a 0-game sim stance is near-vacuous. Preseason Stance is
+         fully quiet (the engine nulls it; the driver never reads
+         it). Every consumer reads the EFFECTIVE stance through
+         ffTradeStance(t) — never t.arch, never t.stanceBand directly
+         — so the driver flip changes one place, not twelve.
+         Offseason willingness (locked addendum): DIRECTION from
+         lifecycle via the franchise tag (Win-Now buys / Rebuilder
+         sells / Dynasty selective / Crossroads either way);
+         SURPLUS-HOLE MATCHING is the pitch driver and is carried by
+         the existing needScore fit terms (positional strengths vs
+         the league median); CURRENCY is the capacity field (pick
+         inventory — never a direction input); MANAGER ACTIVITY is
+         the completed-trade-count booster below (franchise driver
+         only, tiebreak scale). */
+      function ffTradeDriver() {
+        try {
+          const ph = (typeof ffPhaseState === "function") ? ffPhaseState() : null;
+          if (!ph) return "stance";
+          if (ph.phase === "offseason" || ph.phase === "guest" || ph.phase === "preseason") return "franchise";
+          if ((ph.completedWeeks || 0) < 2) return "franchise";
+          return "stance";
+        } catch (e) { return "stance"; }
+      }
+      /* Franchise tag (frTag), with the old blended tag as fallback
+         ONLY when the engine hasn't produced one — the one place an
+         arch read survives in the trade tools, and it fires only
+         when there is no sim, no record fallback, and no franchise
+         tag to read. */
+      function ffFranchiseTag(t) { return (t && t.frTag) || (t && t.arch) || null; }
+      function ffIsDynastyFranchise(t) { return ffFranchiseTag(t) === "dynasty"; }
+      function ffStanceLabel(band) {
+        try { if (typeof FF_STANCE_LABELS !== "undefined" && FF_STANCE_LABELS[band]) return FF_STANCE_LABELS[band]; } catch (e) {}
+        return ({ buyer: "Buyer", bubble: "Holding", seller: "Seller", maximal: "Maximal Seller" })[band] || "Holding";
+      }
+      function ffOffseasonStance(t) {
+        const tag = ffFranchiseTag(t);
+        if (tag === "win-now") return { band: "buyer", label: "Buyer", willingness: "buyer", lean: null, odds: null };
+        if (tag === "rebuilder") return { band: "seller", label: "Seller", willingness: "seller", lean: null, odds: null };
+        if (tag === "dynasty") return { band: "bubble", label: "Holding", willingness: "bubble-buyer", lean: "buyer", odds: null };
+        return { band: "bubble", label: "Holding", willingness: "bubble", lean: null, odds: null };
+      }
+      function ffTradeStance(t) {
+        if (!t) return { band: "bubble", label: "Holding", willingness: "bubble", lean: null, odds: null, driver: "stance" };
+        if (ffTradeDriver() === "franchise") { const s = ffOffseasonStance(t); s.driver = "franchise"; return s; }
+        if (t.stanceBand) return { band: t.stanceBand, label: t.stanceLabel || ffStanceLabel(t.stanceBand), willingness: t.stanceWillingness || t.stanceBand, lean: t.stanceLean || null, odds: (t.stanceOdds != null ? t.stanceOdds : null), driver: "stance" };
+        /* No stance computed and no franchise driver: no evidence
+           either way ⇒ Holding, never a seller. */
+        return { band: "bubble", label: "Holding", willingness: "bubble", lean: null, odds: null, driver: "stance" };
+      }
+      function ffIsSellerStance(t) { const s = ffTradeStance(t); return s.band === "seller" || s.band === "maximal"; }
+      /* Manager activity booster (offseason model, item 4): completed
+         trades per manager, from the connect-time transactions feed
+         (t.tradeCount, stamped in buildConnLeague; 0 when unknown).
+         Active managers are pitched first, all else equal — a
+         tiebreak-scale nudge, only while the franchise driver runs. */
+      function ffActivityBoost(t) {
+        try {
+          if (typeof VALMODE !== "undefined" && VALMODE === "redraft") return 0;
+          if (ffTradeDriver() !== "franchise") return 0;
+          const c = (t && t.tradeCount) || 0;
+          return c >= 3 ? 2 : c >= 1 ? 1 : 0;
+        } catch (e) { return 0; }
+      }
+      /* Counterparty sanity for buys (Oct 21 fix, re-keyed Phase 4):
+         a partner is a genuine firesale partner only if their
+         EFFECTIVE stance is Seller or Maximal Seller — absolute sim
+         playoff odds (in-season) or lifecycle (offseason driver).
+         A Bubble partner (either lean) is NOT a firesale: a buy
+         from them survives only if the return includes a player who
+         starts in THEIR post-trade optimal lineup — the mirror of
+         the check the sell engine has always run on its partners.
+         No-sim fallback: sub-.400 record ⇒ Seller (engine
+         fallback); no evidence ⇒ NOT a seller (Holding) — the old
+         no-record default of true is retired. */
       function genuineRebuildPartner(partner) {
-        if (!partner || (partner.arch !== "rebuilder" && partner.arch !== "crossroads")) return false;
-        const sim = (typeof window !== "undefined" && window.SeasonSim && window.SeasonSim.results)
-          ? window.SeasonSim.results[partner.rid] : null;
-        if (sim && typeof sim.playoff === "number") return sim.playoff < 0.35;
-        const m = /^(\d+)-(\d+)/.exec(partner.record || "");
-        if (m) { const w = +m[1], l = +m[2]; return (w + l) > 0 && (w / (w + l)) < 0.4; }
-        return true;
+        if (!partner) return false;
+        return ffIsSellerStance(partner);
       }
       function pkgStartsForPartner(partner, target, pkg) {
         const incoming = (pkg || []).filter(a => a.kind === "player");
@@ -7913,9 +8002,9 @@ ${rdP ? "" : `
 
       /* BUY: the user sends picks / prospects / bench depth and receives
          one producer — any age, priced on the youth+production curve.
-         Partners are rebuilders first (window bonus), then everyone
+         Partners are sellers first (window bonus), then everyone
          else — all teams are shopped now (Eric, 2026-11-03, matching
-         the Upgrade Finder); deals with a non-rebuilding partner stay
+         the Upgrade Finder); deals with a non-selling partner stay
          honest through the counterparty sanity below (their package
          must include a player who starts for them). The guardrail is
          absolute: unless the deal raises the user's optimal-lineup
@@ -7933,27 +8022,37 @@ ${rdP ? "" : `
         if (!payPool.length) return [];
         const out = [];
         /* Every other roster is a potential partner (Eric,
-           2026-11-03): rebuilders still score a window bonus, and the
-           counterparty sanity below keeps contender deals honest.
+           2026-11-03): sellers still score a window bonus, and the
+           counterparty sanity below keeps buyer deals honest.
            Redraft is unchanged — it always shopped everyone. */
         DATA.teams.filter(t => t.rid !== rid).forEach(partner => {
-          const windowBonus = VALMODE === "redraft" ? 2 : partner.arch === "rebuilder" ? 5 : 1.5;
+          /* Phase 4: window bonus from the partner's effective
+             stance — Seller/Maximal 5, bubble-lean-Seller 3, else
+             1.5 (redraft 2, unchanged). Buyer capacity does NOT
+             scale the buy bonus; it scales sell-partner scoring. */
+          const pst = ffTradeStance(partner);
+          const windowBonus = VALMODE === "redraft" ? 2
+            : (pst.band === "seller" || pst.band === "maximal") ? 5
+            : (pst.band === "bubble" && pst.lean === "seller") ? 3 : 1.5;
           const pool = teamPlayers(partner.rid)
             .filter(p => dispVal(p) >= tradeFloors().target && (p.ros || 0) > 0 && wantMatch(p.pos));
-          /* From a rebuilder, prefer players 26+ — a young quarterback
+          /* From a soft Seller, prefer players 26+ — a young quarterback
              is their future, not a sell — and fall back to the full
-             pool when the age filter leaves nothing. */
-          const aged = (VALMODE !== "redraft" && partner.arch === "rebuilder") ? pool.filter(p => (p.age ?? 0) >= 26) : [];
+             pool when the age filter leaves nothing. From a Maximal
+             Seller the full inventory is pitchable (any high-value
+             player for picks), so no age filter applies there. */
+          const aged = (VALMODE !== "redraft" && pst.band === "seller") ? pool.filter(p => (p.age ?? 0) >= 26) : [];
           (aged.length ? aged : pool).forEach(target => {
               let pkg = buildPackage(payPool, target.value, 0.90, 1.12, null, target.value);
               if (!pkg) return;
-              /* COUNTERPARTY SANITY (Oct 21 fix, dynasty only): from
-                 a partner who is NOT a genuine firesale (archetype
-                 plus a live season — see genuineRebuildPartner), the
-                 package must give them a player who starts in their
-                 post-trade lineup. If the best package doesn't, try
-                 rebuilding around a starter-bound player; if no
-                 package qualifies, the buy doesn't exist. */
+              /* COUNTERPARTY SANITY (Oct 21 fix, re-keyed Phase 4,
+                 dynasty only): from a partner who is NOT a genuine
+                 firesale (effective stance Seller/Maximal — see
+                 genuineRebuildPartner), the package must give them a
+                 player who starts in their post-trade lineup. If the
+                 best package doesn't, try rebuilding around a
+                 starter-bound player; if no package qualifies, the
+                 buy doesn't exist. */
               if (VALMODE !== "redraft" && !genuineRebuildPartner(partner) && !pkgStartsForPartner(partner, target, pkg)) {
                 pkg = rebuildWithStarter(partner, target, payPool);
                 if (!pkg) return;
@@ -7985,8 +8084,11 @@ ${rdP ? "" : `
               const [cTgt, cPkg] = vaPair([target.value], pkg.map(a => a.value));
               const adjTarget = target.value + cTgt;
               const gapPct = Math.abs((pkgValue(pkg) + cPkg) - adjTarget) / adjTarget;
-              const score = dPpg * 6 + windowBonus + Math.max(0, 8 - gapPct * 20) + Math.min(3, target.value / 3000) + (fitA ? 4 : 0);
-              if (VALMODE !== "redraft" && mine.arch === "dynasty") {
+              const score = dPpg * 6 + windowBonus + Math.max(0, 8 - gapPct * 20) + Math.min(3, target.value / 3000) + (fitA ? 4 : 0) + ffActivityBoost(partner);
+              /* Phase 4 (S27, unchanged): the Dynasty selectivity bar
+                 keys on the user's FRANCHISE tag being Dynasty — a
+                 franchise-building protection, never stance logic. */
+              if (VALMODE !== "redraft" && ffIsDynastyFranchise(mine)) {
                 if (dPpg < DYNASTY_CLEAR_GAIN) {
                   const pickShare = pkg.filter(a => a.kind === "pick").reduce((s2, a) => s2 + a.value, 0) / Math.max(pkgValue(pkg), 1);
                   const youngOut = pkg.some(a => a.kind === "player" && (a.p.age ?? 99) < (ARCH_PEAK_AGE[a.p.pos] ?? 28));
@@ -8007,10 +8109,10 @@ ${rdP ? "" : `
 
       /* SELL: the user sends one veteran starter and receives picks and
          players 24 or younger at full value or better. Partners are
-         contenders (Win-Now and Dynasty) first, then crossroads
-         teams — and the veteran has to actually
-         help them this season, or there is no deal. The weekly-points
-         cost is computed and printed on the suggestion, not hidden. */
+         Buyers first, then lean-Buyer Bubbles — and the veteran has
+         to actually help them this season, or there is no deal. The
+         weekly-points cost is computed and printed on the suggestion,
+         not hidden. */
       function sellSuggestions(rid, mine) {
         const myIds = mine.playerIds;
         const base = optimalLineup(myIds).total;
@@ -8027,8 +8129,20 @@ ${rdP ? "" : `
           .slice(0, 6);
         const out = [];
         vets.forEach(vet => {
-          DATA.teams.filter(t => t.rid !== rid && t.arch !== "rebuilder").forEach(partner => {
-            const windowBonus = (partner.arch === "win-now" || partner.arch === "dynasty") ? 5 : 1.5;
+          /* Phase 4: never pitch your veterans to a team that is
+             itself selling (Seller/Maximal stance) — sell partners
+             are Buyers and lean-Buyer Bubbles. */
+          DATA.teams.filter(t => t.rid !== rid && !ffIsSellerStance(t)).forEach(partner => {
+            /* Phase 4: window bonus from the partner's effective
+               stance, scaled by Buyer capacity — a pick-rich Buyer
+               can actually pay (strong ×1.2), a pick-poor one is
+               still a Buyer but can only stretch so far (limited
+               ×0.6). The value-reach package check below stays the
+               hard gate. */
+            const pst = ffTradeStance(partner);
+            const capScale = partner.buyerCapacity === "limited" ? 0.6 : partner.buyerCapacity === "strong" ? 1.2 : 1;
+            const windowBonus = pst.band === "buyer" ? 5 * capScale
+              : (pst.band === "bubble" && pst.lean === "buyer") ? 3 * capScale : 1.5;
             const pLineup = lineupSet(partner.rid);
             const young = teamPlayers(partner.rid).filter(p => (p.age ?? 99) <= 24 && !pLineup.has(p.id) && p.value >= 500);
             const pool = [...pickAssets(partner), ...young.map(playerAsset)];
@@ -8059,7 +8173,7 @@ ${rdP ? "" : `
                hole for them — they are thin at his position and he
                raises their lineup. Fits score higher. */
             const fitPos = (needScore(partner.rid, vet.pos) > 400 && pD > 0) ? vet.pos : null;
-            const score = futureGain / 120 + windowBonus + (myLineup.has(vet.id) ? 2 : 0) + Math.max(0, pD) + (fitPos ? 4 : 0);
+            const score = futureGain / 120 + windowBonus + (myLineup.has(vet.id) ? 2 : 0) + Math.max(0, pD) + (fitPos ? 4 : 0) + ffActivityBoost(partner);
             out.push({ dir: "sell", partner, vet, pkg, dPpg, futureGain, score, basePpg: base, fitPos });
           });
         });
@@ -8187,6 +8301,11 @@ ${rdP ? "" : `
 
       function findTrades(rid) {
         const mine = TBY[rid];
+        /* Phase 4: the user's own EFFECTIVE stance picks the mode —
+           Buyer buys, Seller/Maximal sells, Bubble does both. (The
+           arch fallback lives inside ffTradeStance and fires only
+           when there is no sim, no record, and no franchise tag.) */
+        const mySt = ffTradeStance(mine);
         const myNeeds = ["QB", "RB", "WR", "TE"].filter(pos => needScore(rid, pos) > 400)
           .sort((a, b) => needScore(rid, b) - needScore(rid, a));
         let all = [];
@@ -8205,12 +8324,12 @@ ${rdP ? "" : `
           all = [...swaps, ...buySuggestions(rid, mine)];
           posNote = positionalNote(read, swaps.length);
         }
-        else if (mine.arch === "win-now" || mine.arch === "dynasty") {
+        else if (mySt.band === "buyer") {
           const buys = buySuggestions(rid, mine, { collectNear: VALMODE === "dynasty" });
           all = buys;
           nearRaw = buys.nearMisses || [];
         }
-        else if (mine.arch === "rebuilder") all = sellSuggestions(rid, mine);
+        else if (mySt.band === "seller" || mySt.band === "maximal") all = sellSuggestions(rid, mine);
         else {
           const buys = buySuggestions(rid, mine, { collectNear: VALMODE === "dynasty" });
           all = [...buys, ...sellSuggestions(rid, mine)];
@@ -8233,7 +8352,7 @@ ${rdP ? "" : `
           if ((perPartner[s.partner.rid] || 0) >= 3) continue;
           /* Dynasty: reserve candidate room per direction — buy
              scores run hotter than sell scores, so an uncapped pool
-             lets buys crowd a Crossroads team's sells out before grading. */
+             lets buys crowd a Bubble user's sells out before grading. */
           if (VALMODE !== "redraft") {
             const d = s.dir || "buy";
             if ((perDir[d] || 0) >= 16) continue;
@@ -8258,9 +8377,9 @@ ${rdP ? "" : `
         }
         /* Diversity: at most 3 offers per headline asset, so one
            superstar's market can't crowd the whole page — a
-           rebuilder's page covers each of her veterans, a contender's
+           seller's page covers each of her veterans, a contender's
            more than one target. The 8-card total still applies.
-           Crossroads teams first reserve up to 4 slots per direction, so both
+           Bubble-stance users first reserve up to 4 slots per direction, so both
            pivot paths always show their best deals; leftover slots
            then fill from either direction. */
         const perHead = {}; const picked = [];
@@ -8271,7 +8390,7 @@ ${rdP ? "" : `
           picked.push(s);
           return true;
         };
-        if (mine.arch === "crossroads") {
+        if (mySt.band === "bubble") {
           let nb = 0, ns = 0;
           for (const s of graded) {
             if (picked.length >= 8) break;
@@ -8509,12 +8628,14 @@ ${rdP ? "" : `
       }
       function tgSellInfo(owner, cand, ctx) {
         /* Seller context, from computed facts only: the owner's
-           window (archetype), standing (power rank), whether the
-           player starts for them, who is ahead of him, and how the
-           owner's whole group at the position ranks. The score only
-           ORDERS cards; the note is plain team context. */
+           window (effective stance), whether the player starts for
+           them, who is ahead of him, and how the owner's whole group
+           at the position ranks. The score only ORDERS cards; the
+           note is plain team context. Phase 4: every term keys on
+           the stance fields — no archetype, no power-rank thirds. */
         const n = DATA.teams.length;
         const rd = VALMODE === "redraft";
+        const st = rd ? null : ffTradeStance(owner);
         let starts = false, aheadName = null, posRankOwner = 99;
         try {
           if (!ctx.lineups.has(owner.rid)) ctx.lineups.set(owner.rid, lineupSet(owner.rid));
@@ -8526,29 +8647,42 @@ ${rdP ? "" : `
         } catch (e) { /* facts unavailable — the neutral note below still holds */ }
         const peak = TG_PEAK_AGE[cand.pos] || 28;
         const old = (cand.age ?? 0) >= peak;
-        const bottomThird = owner.powerRank > (2 * n) / 3;
-        const topThird = owner.powerRank <= Math.ceil(n / 3);
+        const oddsTxt = st && st.odds != null ? `${Math.round(st.odds * 100)}% playoff odds` : "no live playoff odds";
         let score = 30;
         if (!rd) {
-          if (owner.arch === "rebuilder") score += 34; else if (owner.arch === "crossroads") score += 18;
-          else if (owner.arch === "win-now") score += 2;
-          if (bottomThird) score += 14; if (topThird) score -= 8;
-          if (old && owner.arch === "rebuilder") score += 12; else if (old && owner.arch === "crossroads") score += 6;
+          /* Stance bands: Maximal strongest, then Seller, then
+             Bubble, then Buyer. Sellable inventory shapes what is
+             pitched: an old player on a selling team is the asset
+             that moves first. */
+          if (st.band === "maximal") score += 40;
+          else if (st.band === "seller") score += 34;
+          else if (st.band === "bubble") score += 18;
+          else score += 2;
+          if (old && (st.band === "seller" || st.band === "maximal")) score += 12;
+          else if (old && st.band === "bubble" && st.lean === "seller") score += 6;
+          score += ffActivityBoost(owner);
         }
         if (!starts) score += 16;
         if (posRankOwner <= 3) score += 8;
-        const longShot = !rd && starts && topThird && (owner.arch === "win-now" || owner.arch === "dynasty") && dispVal(cand) >= 6000;
+        /* A starter on a Buyer is the long shot: his team is playing
+           for now, so he only moves if a starter comes back. A
+           starter on a Seller/Maximal is never a long shot — selling
+           is what their season is for. */
+        const longShot = !rd && starts && st.band === "buyer" && dispVal(cand) >= 6000;
         const T = esc(owner.name);
+        const cpTxt = `Current Power #${owner.cpRank != null ? owner.cpRank : owner.powerRank} of ${n}`;
         let note;
-        if (!rd && owner.arch === "rebuilder" && old) note = `${T} is rebuilding — power #${owner.powerRank} of ${n} — and a ${cand.age}-year-old ${cand.pos} is on the wrong side of their window: his points help you long after they'd help them. Picks and young players are the currency that talks here.`;
-        else if (!rd && owner.arch === "rebuilder") note = `${T} sits at power #${owner.powerRank} of ${n} with a Rebuilder 🔨 tag — this season's production isn't their currency. Picks and youth are, and that's what the offer below is built from.`;
+        if (!rd && st.band === "maximal" && old) note = `${T} is a Maximal Seller — ${oddsTxt}, season over — and a ${cand.age}-year-old ${cand.pos} is on the wrong side of their window: his points help you long after they'd help them. Picks and young players are the currency that talks here.`;
+        else if (!rd && st.band === "maximal") note = `${T} is a Maximal Seller at ${oddsTxt} — this season's production isn't their currency. Picks and youth are, and that's what the offer below is built from.`;
+        else if (!rd && st.band === "seller" && old) note = `${T} is selling — ${oddsTxt} — and a ${cand.age}-year-old ${cand.pos} is on the wrong side of their window: his points help you long after they'd help them. Picks and young players are the currency that talks here.`;
+        else if (!rd && st.band === "seller") note = `${T} is a Seller at ${oddsTxt} — this season's production isn't their currency. Picks and youth are, and that's what the offer below is built from.`;
         else if (!starts && aheadName) note = `He's depth on ${T}'s roster, behind ${esc(aheadName)} — quality they can cash in without opening a hole in their own lineup.`;
         else if (!starts) note = `He doesn't crack ${T}'s starting lineup — bench production is exactly what a smart owner sells.`;
         else if (posRankOwner <= 3) note = `${T} is loaded at ${cand.pos} — ${ordinal(posRankOwner)} in the league there — so even a starter is movable when the return backfills the position.`;
-        else if (!rd && owner.arch === "crossroads") note = `${T} is Crossroads 🔀 at power #${owner.powerRank} of ${n} — one good offer can tip them into a rebuild, and a starter is the kind of piece that goes first.`;
-        else if (longShot) note = `He starts for a contender — ${T} is power #${owner.powerRank} of ${n} and playing for now — so this only happens if a starter comes back their way. A long shot, and priced like one.`;
-        else if (!rd && (owner.arch === "win-now" || owner.arch === "dynasty")) note = `${T} is tagged ${archTag(owner.arch)} at power #${owner.powerRank} of ${n} — not a natural seller, so the package has to genuinely help their lineup, not just balance on value.`;
-        else note = `${T} sits at power #${owner.powerRank} of ${n} — whether they'd move him comes down to the offer, and the one below is built to tempt them.`;
+        else if (!rd && st.band === "bubble" && st.lean === "seller") note = `${T} is Holding, leaning Seller at ${oddsTxt} — one good offer can tip them into a rebuild, and a starter is the kind of piece that goes first.`;
+        else if (longShot) note = `He starts for a Buyer — ${T} is at ${oddsTxt} and playing for now — so this only happens if a starter comes back their way. A long shot, and priced like one.`;
+        else if (!rd && st.band === "buyer") note = `${T} is a Buyer at ${oddsTxt} — not a natural seller, so the package has to genuinely help their lineup, not just balance on value.`;
+        else note = `${T} sits at ${cpTxt} — whether they'd move him comes down to the offer, and the one below is built to tempt them.`;
         return { score, note, longShot, starts, surplus: !starts };
       }
       function tgCardSellNote(s) {
@@ -8560,9 +8694,10 @@ ${rdP ? "" : `
         try {
           const o = s.partner;
           if (!o) return "";
+          const cp = o.cpRank != null ? o.cpRank : o.powerRank;
           const ctx = VALMODE === "redraft"
-            ? `${esc(o.name)} • Power ${o.powerRank} of ${DATA.teams.length}`
-            : `${esc(o.name)} — ${archTag(o.arch)} • Power ${o.powerRank} of ${DATA.teams.length}`;
+            ? `${esc(o.name)} • Current Power ${cp} of ${DATA.teams.length}`
+            : `${esc(o.name)} — ${esc(ffTradeStance(o).label)} • Current Power ${cp} of ${DATA.teams.length}`;
           return `<div class="tg-owner">${ctx}</div>`;
         } catch (e) { return ""; }
       }
@@ -8677,8 +8812,8 @@ ${rdP ? "" : `
           ? `adds <strong>+${dVal.toFixed(1)} pts/wk</strong> over your next man up`
           : `adds <strong>+${dVal.toFixed(1)} pts/wk</strong> to your projected lineup`;
         const ctx = VALMODE === "redraft"
-          ? `${esc(o.name)} • Power ${o.powerRank} of ${DATA.teams.length}`
-          : `${esc(o.name)} — ${archTag(o.arch)} • Power ${o.powerRank} of ${DATA.teams.length}`;
+          ? `${esc(o.name)} • Current Power ${o.cpRank != null ? o.cpRank : o.powerRank} of ${DATA.teams.length}`
+          : `${esc(o.name)} — ${esc(ffTradeStance(o).label)} • Current Power ${o.cpRank != null ? o.cpRank : o.powerRank} of ${DATA.teams.length}`;
         let offer, btnRow = "";
         if (c.pkg) {
           const give = c.pkg.map(a => esc(tgShortLabel(a))).join(" + ");
@@ -8800,8 +8935,9 @@ ${rdP ? "" : `
            target must be a genuine tier jump over the starter he'd
            replace (better value, better projection, better
            positional rank), the package must grade Fair or Close,
-           and the star's owner must be bad or rebuilding enough to
-           plausibly sell — a star on a contender produces NO card.
+           and the star's owner must be stance-Selling (Seller or
+           Maximal Seller) to plausibly sell — a star on a Buyer
+           produces NO card.
            Two variants per target when both build: (A) your starter
            + picks; (B) spare the starter, pay picks-heavy instead.
            Anchors are tried weakest starter first (the Caleb
@@ -8832,8 +8968,13 @@ ${rdP ? "" : `
             if (!owner || !partnerAllowed(owner.rid)) return;
             const val = dispVal(cand);
             if (!(val > aVal && rosProj(cand) > aProj && (cand.posRank ?? 999) < (anchor.posRank ?? 999))) return;
-            const badTeam = owner.arch === "rebuilder" || owner.powerRank > (2 * n) / 3 || (owner.arch === "crossroads" && owner.powerRank > n / 2);
-            if (!badTeam || owner.powerRank <= Math.ceil(n / 3)) return;
+            /* Phase 4: the stance test replaces the arch/power-thirds
+               test — only Sellers and Maximal Sellers plausibly sell
+               a star. The old top-third exclusion has no stance
+               analogue and goes away: a top-Current-Power team can
+               still be a stance Seller late, and that is the point
+               of absolute bands. */
+            if (!genuineRebuildPartner(owner)) return;
             let varA = null, gA = null, varB = null, gB = null;
             const pkgA = buildPackage(picks, val, 0.90, 1.12, playerAsset(anchor), val);
             if (pkgA) { const g = offerGrade(pkgA, [playerAsset(cand)]); if (g.zone !== "lopsided") { varA = pkgA; gA = g; } }
@@ -8864,8 +9005,8 @@ ${rdP ? "" : `
       function tgTierCardHtml(t, rid) {
         const p = t.cand, o = t.owner;
         const ctx = VALMODE === "redraft"
-          ? `${esc(o.name)} • Power ${o.powerRank} of ${DATA.teams.length}`
-          : `${esc(o.name)} — ${archTag(o.arch)} • Power ${o.powerRank} of ${DATA.teams.length}`;
+          ? `${esc(o.name)} • Current Power ${o.cpRank != null ? o.cpRank : o.powerRank} of ${DATA.teams.length}`
+          : `${esc(o.name)} — ${esc(ffTradeStance(o).label)} • Current Power ${o.cpRank != null ? o.cpRank : o.powerRank} of ${DATA.teams.length}`;
         const ser = pkg => pkg.map(a => a.kind === "pick" ? (a.key ? { kind: "pick", key: a.key, fromTeam: a.fromTeam } : null) : { kind: "player", id: a.p.id });
         const btn = pkg => {
           const payload = { a: rid, b: o.rid, give: ser(pkg), get: [{ kind: "player", id: p.id }] };
@@ -8992,11 +9133,19 @@ ${rdP ? "" : `
         const basePpg = optimalLineup(mine.playerIds).total;
         const want = finderState.want;
         const wantName = want === "FLEX" ? "flex (RB/WR/TE)" : want;
+        /* Phase 4 (S28): the diagnosis line shows the effective
+           Stance + Current Power rank — never the old tag. The
+           Dynasty-bar copy below still keys on the franchise tag
+           (S27), but the DIRECTION of the explanation follows the
+           stance: a Dynasty-franchise team that is stance-Selling
+           gets the sell explanation, not the buy one. */
+        const mySt = ffTradeStance(mine);
+        const isDynFr = ffIsDynastyFranchise(mine);
         /* Compact diagnosis line: the facts, no strategy essay —
            the window rules live in the "How it works" box below. */
         const diagBits = [];
-        if (VALMODE !== "redraft") diagBits.push(archTag(mine.arch));
-        diagBits.push(`Power <strong>#${mine.powerRank} of ${DATA.teams.length}</strong>`);
+        if (VALMODE !== "redraft") diagBits.push(`Stance <strong>${esc(mySt.label)}</strong>`);
+        diagBits.push(`Current Power <strong>#${mine.powerRank} of ${DATA.teams.length}</strong>`);
         const diagSim = window.SeasonSim && window.SeasonSim.results;
         if (VALMODE !== "redraft" && diagSim && DATA.teams.every(t => diagSim[t.rid] && isFinite(diagSim[t.rid].expWins))) {
           const order = [...DATA.teams].sort((a, b) => diagSim[b.rid].expWins - diagSim[a.rid].expWins);
@@ -9008,12 +9157,12 @@ ${rdP ? "" : `
         if (!suggestions.length) {
           const why = VALMODE === "redraft"
             ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every producer who would raise this lineup either can't be priced fairly with your bench depth, or the deal would cost a starter to make the values balance. Try another position, or build the deal by hand in the calculator.`
-            : mine.arch === "win-now"
-            ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every available producer who would raise this lineup either can't be priced fairly with your picks and depth, or the deal couldn't give his team a starter back. Try another position, or build the deal by hand in the calculator.`
-            : mine.arch === "dynasty"
+            : mySt.band === "buyer" && isDynFr
               ? `No buy cleared the Dynasty bar${want ? ` at ${esc(wantName)}` : ""}: this core only trades for clear upgrades — at least +3.0 projected pts/week, paid for with draft capital — and no available producer met it at a fair price today. That is the strategy working as designed; build the deal by hand in the calculator if you see one we don't.`
-            : mine.arch === "rebuilder"
-              ? `No sell cleared the bar${want ? ` with a young ${esc(wantName)} player headlining the return` : ""}: a veteran only appears here when a contender or a Crossroads team can pay full value in picks and youth <em>and</em> the veteran genuinely helps them this season. Try another position, or the calculator for one-sided ideas.`
+            : mySt.band === "buyer"
+            ? `No buy cleared the guardrail${want ? ` at ${esc(wantName)}` : ""}: every available producer who would raise this lineup either can't be priced fairly with your picks and depth, or the deal couldn't give his team a starter back. Try another position, or build the deal by hand in the calculator.`
+            : (mySt.band === "seller" || mySt.band === "maximal")
+              ? `No sell cleared the bar${want ? ` with a young ${esc(wantName)} player headlining the return` : ""}: a veteran only appears here when a contender or a Holding team can pay full value in picks and youth <em>and</em> the veteran genuinely helps them this season. Try another position, or the calculator for one-sided ideas.`
               : `No deal in either direction cleared its bar${want ? ` for ${esc(wantName)}` : ""} — buys must raise the projected lineup, sells must return full future value. Try another position, or the calculator for one-sided ideas.`;
           html += `<div class="diag"><p>${why}</p></div>`;
         }
@@ -9075,17 +9224,20 @@ ${rdP ? "" : `
           const gradeHtml = VALMODE === "redraft" ? "" : `<div class="sugg-values"><span>Your trade value <strong>${fmt(s.grade ? s.grade.giveAdj : tot(giveAssets))}</strong></span><span>Their trade value <strong>${fmt(s.grade ? s.grade.getAdj : tot(getAssets))}</strong></span>${s.grade ? `<span class="fair-chip ${s.grade.zone}">${s.grade.zone === "fair" ? "Fair" : "Close"}</span>` : ""}</div>${gradeBtn}`;
           /* One line of facts per card: the kind of move and what
              it does to the lineup. (The long window/why prose was
-             cut Nov 9 — Eric: "no one really cares.") */
+             cut Nov 9 — Eric: "no one really cares.") Phase 4
+             (S29): direction tags key on the effective stance,
+             except "Dynasty buy" / "Near miss", which key on the
+             franchise tag (S27). */
           const dirTag = VALMODE === "redraft"
             ? (s.needLine ? "Positional swap" : (isBuy ? "Win-now buy" : "Sell"))
             : isBuy
-              ? (mine.arch === "dynasty" && s.nearMiss ? "Near miss" : mine.arch === "dynasty" ? "Dynasty buy" : mine.arch === "crossroads" ? "Win-now path" : "Win-now buy")
-              : (mine.arch === "rebuilder" ? "Rebuilder sell" : "Rebuild path");
+              ? (isDynFr && s.nearMiss ? "Near miss" : isDynFr ? "Dynasty buy" : mySt.band === "bubble" ? "Win-now path" : "Win-now buy")
+              : ((mySt.band === "seller" || mySt.band === "maximal") ? "Rebuilder sell" : "Rebuild path");
           const windowLine = isBuy
             ? `<span class="dir-tag">${dirTag}</span><strong>${dTxt} projected pts/week</strong> to your optimal lineup`
             : `<span class="dir-tag sell">${dirTag}</span><strong>+${fmt(s.futureGain)} future value</strong> · <strong>${dTxt} pts/week</strong> this season`;
           return `<article class="suggestion">
-            <h3>With ${esc(s.partner.name)}${VALMODE === "redraft" ? "" : ` <span class="p-sub">(${archTag(s.partner.arch)})</span>`} · <span class="fit-score">match index ${fitIdx}/100</span></h3>
+            <h3>With ${esc(s.partner.name)}${VALMODE === "redraft" ? "" : ` <span class="p-sub">(${esc(ffTradeStance(s.partner).label)})</span>`} · <span class="fit-score">match index ${fitIdx}/100</span></h3>
             <div class="swap">
               <div class="col"><div class="lbl">You give · ${fmt(tot(giveAssets))}</div>${assetHtml(giveAssets)}</div>
               <div class="arrow">⇄</div>
@@ -9099,10 +9251,10 @@ ${rdP ? "" : `
             ${gradeHtml}
           </article>`;
         };
-        /* Crossroads teams get a CHOICE, not a blend: their cards
+        /* Bubble-stance users get a CHOICE, not a blend: their cards
            split under two labeled pivot paths. Everyone else gets
            one list. */
-        if (VALMODE !== "redraft" && mine.arch === "crossroads" && suggestions.length) {
+        if (VALMODE !== "redraft" && mySt.band === "bubble" && suggestions.length) {
           const buys = suggestions.filter(s => s.dir === "buy");
           const sells = suggestions.filter(s => s.dir === "sell");
           html += `<h3 class="path-head">Go Win-Now ⏳</h3><p class="path-desc">Production in, picks and youth out.</p>`;
@@ -10031,16 +10183,21 @@ ${rdP ? "" : `
           /* Redraft: no windows, no rebuilders, no dynasty math — the
              impact lines speak in rest-of-season value only. */
           const rdF = typeof VALMODE !== "undefined" && VALMODE === "redraft";
+          /* Phase 4 (S34): the window gates key on the user's
+             EFFECTIVE stance — a Seller (or Maximal Seller) doesn't
+             get "worth the overpay" lines for buying this season's
+             points, and gets the "helps them more" warning instead. */
+          const mySeller = !rdF && ffIsSellerStance(mine);
           const lines = [];
           lines.push(`<p><strong>This season:</strong> your title odds ${titleMove(meB, meA)} (${(() => { const v = Math.round(meA.champ * 100) - Math.round(meB.champ * 100); return (v > 0 ? "+" : "") + v + " pp"; })()} overall), playoff odds <strong>${playoffLabel(meB)} → ${playoffLabel(meA)}</strong>. ${esc(partner.name)}’s title odds move ${titleMove(thB, thA)}. Your projected lineup: <strong>${Math.round(means[rid])} → ${Math.round(imp.meansAfter[rid])} pts/wk</strong> ROS${hasWkData ? ` — and <strong>${Math.round(meansWk[rid])} → ${Math.round(imp.meansWkAfter[rid])}</strong> this week` : ""}.</p>`);
-          if ((rdF || mine.arch !== "rebuilder") && dChamp >= 0.03 && overpay >= 150)
+          if ((rdF || !mySeller) && dChamp >= 0.03 && overpay >= 150)
             lines.push(`<p class="good">Worth the overpay: you’d pay ${fmt(overpay)} extra ${rdF ? "rest-of-season value" : "dynasty value"} for ${pp(dChamp)} of title odds — ${rdF ? "in redraft, this season is exactly when that trade makes sense" : "a contending window is exactly when that trade makes sense"}.</p>`);
-          else if ((rdF || mine.arch !== "rebuilder") && dChamp >= 0.03 && overpay <= -150)
+          else if ((rdF || !mySeller) && dChamp >= 0.03 && overpay <= -150)
             lines.push(`<p class="good">A double win: your title odds rise ${pp(dChamp)} and the ${rdF ? "value math" : "dynasty math"} favors you too.</p>`);
-          else if ((rdF || mine.arch !== "rebuilder") && dChamp >= 0.03)
+          else if ((rdF || !mySeller) && dChamp >= 0.03)
             lines.push(`<p class="good">Fair on value and a clear win this season: title odds ${pp(dChamp)} for essentially even ${rdF ? "value math" : "dynasty math"}.</p>`);
-          if (!rdF && mine.arch === "rebuilder" && dThem - dChamp >= 0.03)
-            lines.push(`<p class="warn">Helps them more than you: their title odds gain ${pp(dThem)} against your ${pp(dChamp)}, and you’re rebuilding — this season’s points shouldn’t be what you’re buying.</p>`);
+          if (!rdF && mySeller && dThem - dChamp >= 0.03)
+            lines.push(`<p class="warn">Helps them more than you: their title odds gain ${pp(dThem)} against your ${pp(dChamp)}, and you’re selling — this season’s points shouldn’t be what you’re buying.</p>`);
           if (dChamp <= -0.03)
             lines.push(`<p class="warn">It costs you this season: your title odds fall ${Math.round(Math.abs(dChamp) * 100)} pp even though the ${rdF ? "value math" : "dynasty math"} is close — the production you’re sending out matters more in 2026 than the value gap suggests.</p>`);
           return `<div class="impact"><p class="impact-head">${rdF ? "Season impact — what it does to your title odds" : "Season impact — separate from dynasty value"}</p>${lines.join("")}<p class="p-sub">Title-odds moves carry roughly ±2pp of simulation sampling noise (3,000 runs) — treat small moves as ties.</p></div>`;
@@ -11847,7 +12004,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
                lives behind a small toggle under each line, so the
                list scans instead of sprawling. */
             const rowHtml = r => {
-              const arch = VALMODE === "redraft" ? "" : ` ${archTag(r.partner.arch)}`;
+              const arch = VALMODE === "redraft" ? "" : ` ${esc(ffTradeStance(r.partner).label)}`;
               const pkgHtml = r.pkgs.map(({ pkg, withAnchor }) => {
                 const assets = pkg.map(a => `${esc(a.label)} (${fmt(a.value)})`).join(" + ");
                 const grade = ufPkgGrade(pkg, dispVal(r.cand));
@@ -13033,7 +13190,26 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           const prs = Object.values(mg).filter(g => g.length === 2).map(g => [g[0], g[1]]);
           if (prs.length) matchupPairs = prs;
         }
+        ffStampTradeCounts(teams, b.transactions);
         return { platform: "sleeper", leagueId: String(league.league_id), league: meta, teams, opp6, matchupPairs, format: fmt, wireItems: slpWireItems(b.transactions || [], byRid, week), username: user.username, today, leagueType: slpLeagueType(league), stubs };
+      }
+
+      /* Phase 4 — manager activity (offseason driver): completed-trade
+         counts per roster, stamped here from the connect-time
+         transactions feed (Sleeper type "trade" + status "complete";
+         ESPN/demo callers pass transactions: [] here, so 0 = neutral,
+         never a penalty). Read only by the trade-tool scorers, only
+         while the franchise driver runs. */
+      function ffStampTradeCounts(teams, txns) {
+        try {
+          const tc = {};
+          (txns || []).forEach(tx => {
+            if (!tx || (tx.type !== "trade" && tx.type !== "TRADE" && tx.type !== "TRADE_ACCEPT")) return;
+            if (tx.status != null && tx.status !== "complete") return;
+            (tx.roster_ids || []).forEach(r => { tc[r] = (tc[r] || 0) + 1; });
+          });
+          teams.forEach(t => { t.tradeCount = tc[t.rid] || 0; });
+        } catch (e) { teams.forEach(t => { t.tradeCount = 0; }); }
       }
 
       function slpWireItems(txns, byRid, week) {
