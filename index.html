@@ -5874,8 +5874,13 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
              n/(n+3), n = completed weeks (0 weeks → both sit at 50).
              Matchup data comes from the cached weekly-points fetch
              (ffKickMatchupPts); until it lands both terms sit at the
-             median and the next recompute corrects them. ---- */
-          const mp = window.__ffMatchPts;
+             median and the next recompute corrects them. Item 8
+             (Nov 11): the points are per-league — read them only
+             through ffMatchPtsForCurrent, keyed to the league
+             currently in DATA. A foreign cache entry (the active
+             league's points during a swap) now yields median terms,
+             never another league's points. ---- */
+          const mp = (typeof ffMatchPtsForCurrent === "function") ? ffMatchPtsForCurrent() : window.__ffMatchPts;
           let apWin = null, apExp = null, formAvg = null;
           if (mp && mp.pts && mp.weeks && mp.weeks.length) {
             const ap = ffApFromPts(mp.pts, mp.weeks);
@@ -6007,6 +6012,43 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          the all-play/form terms sit at the median (honest, not
          fabricated). */
       window.__ffMatchPts = null;
+      /* Item 8 (Nov 11): per-league matchup-points cache. The engine's
+         all-play/form terms are 40% of Current Power and the points
+         are per-league, so one shared slot bleeds the active league's
+         points into every swapped league. `__ffMatchPtsByKey` holds
+         one entry per "platform:leagueId" (ffKickMatchupPts and the
+         swap installer both write it); `__ffMatchPts` stays the
+         current-league pointer for the existing readers.
+         `__ffSwapKey` is the league DATA currently points at during
+         a Command Center / My Team swap (DATA.league itself carries
+         no league id, so the swap must carry the key); it is set by
+         ff4CCSwap/mtSwapTo and cleared by ff4CCRestore. */
+      window.__ffMatchPtsByKey = {};
+      function ffMatchPtsKeyFor(platform, leagueId) {
+        if (!platform || leagueId == null || leagueId === "") return null;
+        return String(platform).toLowerCase() + ":" + String(leagueId);
+      }
+      function ffCurrentMatchKey() {
+        try {
+          if (window.__ffSwapKey) return window.__ffSwapKey;
+          if (window.CURRENT_LEAGUE === "conn" && !window.GUEST_MODE && window.CONN_LEAGUE) {
+            const C = window.CONN_LEAGUE;
+            return ffMatchPtsKeyFor(C.platform, C.leagueId);
+          }
+        } catch (e) {}
+        return null;
+      }
+      function ffMatchPtsForCurrent() {
+        try {
+          const key = ffCurrentMatchKey();
+          if (!key) return null;
+          const byKey = window.__ffMatchPtsByKey || null;
+          if (byKey && byKey[key]) return byKey[key];
+          const cur = window.__ffMatchPts;
+          if (cur && cur.key === key) return cur;
+        } catch (e) {}
+        return null;
+      }
       let ffMatchBusy = false;
       window.ffKickMatchupPts = function () {
         try {
@@ -6017,8 +6059,8 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           if (!completed) return;
           if (C.platform === "sleeper") {
             const key = "sleeper:" + C.leagueId;
-            const cached = window.__ffMatchPts;
-            if (cached && cached.key === key && cached.weeks && cached.weeks.length >= completed) return;
+            const cached = (window.__ffMatchPtsByKey && window.__ffMatchPtsByKey[key]) || window.__ffMatchPts;
+            if (cached && cached.key === key && cached.weeks && cached.weeks.length >= completed) { window.__ffMatchPts = cached; return; }
             if (typeof slpGet !== "function") return;
             ffMatchBusy = true;
             (async () => {
@@ -6033,14 +6075,15 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
                 const pts = {};
                 weeks.forEach(w => { (per[w] || []).forEach(en => { if (en && en.roster_id != null && typeof en.points === "number") (pts[String(en.roster_id)] = pts[String(en.roster_id)] || {})[w] = en.points; }); });
                 window.__ffMatchPts = { key, pts, weeks };
+                try { (window.__ffMatchPtsByKey = window.__ffMatchPtsByKey || {})[key] = window.__ffMatchPts; } catch (e) {}
                 if (typeof ffComputeTwoRankings === "function") ffComputeTwoRankings();
               } catch (e) {}
               finally { ffMatchBusy = false; }
             })();
           } else if (C.platform === "espn") {
             const key = "espn:" + C.leagueId;
-            const cached = window.__ffMatchPts;
-            if (cached && cached.key === key) return;
+            const cached = (window.__ffMatchPtsByKey && window.__ffMatchPtsByKey[key]) || window.__ffMatchPts;
+            if (cached && cached.key === key) { window.__ffMatchPts = cached; return; }
             let raw = null;
             try { if (typeof espnState !== "undefined" && espnState && espnState.leagueId === C.leagueId) raw = espnState.raw; } catch (e) {}
             if (!raw || !Array.isArray(raw.schedule)) return;
@@ -6057,9 +6100,71 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
             });
             const weeks = Object.keys(periodSet).map(Number).sort((a, b) => a - b).filter(w => w <= completed);
             window.__ffMatchPts = { key, pts, weeks };
+            try { (window.__ffMatchPtsByKey = window.__ffMatchPtsByKey || {})[key] = window.__ffMatchPts; } catch (e) {}
             if (typeof ffComputeTwoRankings === "function") ffComputeTwoRankings();
           }
         } catch (e) {}
+      };
+      /* Item 8 (Nov 11): per-league matchup-points installer for the
+         Command Center swap paths. The engine's all-play/form terms
+         need the SWAPPED league's own weekly points, not the active
+         league's — and the engine now only reads points through the
+         expected key (ffMatchPtsForCurrent), so installing the
+         league's own entry before ff4CCSwap is what makes a swapped
+         league's Current Power true instead of median. Cached entries
+         are reused across swaps; a failed fetch leaves the cache
+         empty (fail-closed to median terms), never a foreign league's
+         points. Callers await this BEFORE ff4CCSwap, so the recompute
+         inside the swap already sees the right points. */
+      window.ff4CCInstallMatchPts = async function (platform, leagueId, built, espnRaw) {
+        try {
+          const key = (typeof ffMatchPtsKeyFor === "function") ? ffMatchPtsKeyFor(platform, leagueId) : null;
+          if (!key) return null;
+          const byKey = (window.__ffMatchPtsByKey = window.__ffMatchPtsByKey || {});
+          const teams = (built && built.teams) || (typeof DATA !== "undefined" && DATA.teams) || [];
+          let completed = 0;
+          teams.forEach(t => { try { const r = (typeof ffParseRecord === "function") ? ffParseRecord(t.record) : null; if (r) completed = Math.max(completed, r.games); } catch (e) {} });
+          const cached = byKey[key];
+          if (cached && cached.weeks && cached.weeks.length >= completed && completed > 0) { window.__ffMatchPts = cached; return cached; }
+          if (!completed) return null;
+          if (platform === "espn") {
+            const raw = espnRaw || null;
+            if (!raw || !Array.isArray(raw.schedule)) return null;
+            const pts = {}, periodSet = {};
+            raw.schedule.forEach(m => {
+              if (!m || !m.home || !m.away) return;
+              const hp = m.home.totalPoints, ap2 = m.away.totalPoints;
+              if (typeof hp !== "number" || typeof ap2 !== "number") return;
+              if (!(m.winner === "HOME" || m.winner === "AWAY") && !(hp > 0 || ap2 > 0)) return;
+              const p = m.matchupPeriodId;
+              periodSet[p] = true;
+              (pts[String(m.home.teamId)] = pts[String(m.home.teamId)] || {})[p] = hp;
+              (pts[String(m.away.teamId)] = pts[String(m.away.teamId)] || {})[p] = ap2;
+            });
+            const weeks = Object.keys(periodSet).map(Number).sort((a, b) => a - b).filter(w => w <= completed);
+            if (!weeks.length) return null;
+            const entry = { key, pts, weeks };
+            byKey[key] = entry; window.__ffMatchPts = entry;
+            return entry;
+          }
+          if (platform === "sleeper") {
+            if (typeof slpGet !== "function") return null;
+            let regEnd = 14;
+            try { const lg = await slpGet("/league/" + leagueId).catch(() => null); if (lg && lg.settings && Number(lg.settings.playoff_week_start)) regEnd = Number(lg.settings.playoff_week_start) - 1; } catch (e) {}
+            const last = Math.max(1, Math.min(completed, regEnd));
+            const weeks = [];
+            for (let w = 1; w <= last; w++) weeks.push(w);
+            const per = {};
+            await Promise.all(weeks.map(async w => { per[w] = await slpGet("/league/" + leagueId + "/matchups/" + w).catch(() => null); }));
+            const pts = {};
+            weeks.forEach(w => { (per[w] || []).forEach(en => { if (en && en.roster_id != null && typeof en.points === "number") (pts[String(en.roster_id)] = pts[String(en.roster_id)] || {})[w] = en.points; }); });
+            if (!Object.keys(pts).length) return null;
+            const entry = { key, pts, weeks };
+            byKey[key] = entry; window.__ffMatchPts = entry;
+            return entry;
+          }
+          return null;
+        } catch (e) { return null; }
       };
       /* Readiness for the verification harness: every team has a Current
          Power score and a Stance band, and (Sleeper) the weekly-points
@@ -6073,7 +6178,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           if (!teams.every(t => t.stanceBand != null)) return false;
           const C = window.CONN_LEAGUE;
           if (C && C.platform === "sleeper") {
-            const mp = window.__ffMatchPts;
+            /* Item 8 (Nov 11): readiness reads the keyed per-league
+               cache, not the raw pointer — the pointer is a
+               current-league convenience, the cache is the record. */
+            const mp = (typeof ffMatchPtsForCurrent === "function") ? ffMatchPtsForCurrent() : window.__ffMatchPts;
             if (!mp || mp.key !== ("sleeper:" + C.leagueId) || !mp.weeks || !mp.weeks.length) return false;
           }
           return true;
@@ -15717,6 +15825,17 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
          setLeague / setConnectedLeague establish — without touching any
          chrome (no selects, headers, or tab renders). */
       function mtSwapTo(id) {
+        /* Item 8 (Nov 11): same swap-context key as ff4CCSwap — the
+           engine keys its matchup-points read off this while DATA
+           points at the swapped league; fail-closed to null when the
+           league has no cached entry. mtRestoreActive re-points at
+           the active league through this same function. */
+        try {
+          window.__ffSwapKey = (id === "conn" && window.CONN_LEAGUE && window.CONN_LEAGUE.leagueId != null)
+            ? (String(window.CONN_LEAGUE.platform || "sleeper").toLowerCase() + ":" + String(window.CONN_LEAGUE.leagueId)) : null;
+          const bk = window.__ffMatchPtsByKey || {};
+          window.__ffMatchPts = (window.__ffSwapKey && bk[window.__ffSwapKey]) ? bk[window.__ffSwapKey] : null;
+        } catch (e) {}
         DATA = mtDataFor(id);
         const om = {};
         DATA.teams.forEach(t => t.playerIds.forEach(pid => { om[pid] = t.rid; }));
@@ -20129,7 +20248,19 @@ window.drDraft = {
       function ff4CCSwap(built) {
         /* Point the shared engines at a built league bundle, the same
            context setConnectedLeague establishes — no chrome changes.
-           Stub entries are saved before overwriting and restored by
+           Item 8 (Nov 11): the swap context key — the engine keys its
+           matchup-points read off this while DATA points at the swapped
+           league (DATA.league itself carries no league id, so the swap
+           must carry the key). The cache pointer is fail-closed here
+           too: the swapped league's own entry when the installer (or
+           an earlier swap) cached it, else null — never the previous
+           league's points. Cleared by ff4CCRestore. */
+        try {
+          window.__ffSwapKey = (built && built.platform && built.leagueId != null) ? (String(built.platform).toLowerCase() + ":" + String(built.leagueId)) : null;
+          const bk = window.__ffMatchPtsByKey || {};
+          window.__ffMatchPts = (window.__ffSwapKey && bk[window.__ffSwapKey]) ? bk[window.__ffSwapKey] : null;
+        } catch (e) {}
+        /* Stub entries are saved before overwriting and restored by
            ff4CCRestore: the same unpriced player can be rostered in
            two leagues, and the active league's stub must survive. */
         ff4.ccSavedStubs = {};
@@ -20165,8 +20296,21 @@ window.drDraft = {
         /* The swap state goes back BEFORE the re-point below
            re-runs applyLeagueProjections. CONN_PROJ rides along in
            the capture for shape compatibility; nothing reads it
-           for projections anymore (Sleeper-only since 2026-11-11). */
+           for projections anymore (Sleeper-only since 2026-11-11).
+           Item 8 (Nov 11): the swap context ends here — the matchup
+           cache goes back to the ACTIVE league's per-league entry when
+           one is cached. The capture may predate the fetch landing, and
+           restoring a stale null would wipe the active league's points
+           (ffTwoRankingsReady reads the pointer). */
         window.CONN_PROJ = cap.connProj;
+        try {
+          delete window.__ffSwapKey;
+          if (cap) {
+            const bk = window.__ffMatchPtsByKey || {};
+            const ak = (typeof ffCurrentMatchKey === "function") ? ffCurrentMatchKey() : null;
+            window.__ffMatchPts = (ak && bk[ak]) ? bk[ak] : (cap.matchPts || null);
+          }
+        } catch (e) {}
         (window.CONN_STUB_IDS_CC || []).forEach(id => {
           if (ff4.ccSavedStubs && ff4.ccSavedStubs[id]) PBY[id] = ff4.ccSavedStubs[id];
           else if (PBY[id] && PBY[id].unpriced) delete PBY[id];
@@ -20204,7 +20348,7 @@ window.drDraft = {
       }
 
       function ff4CCCapture() {
-        return { settings: { ...SETTINGS }, valmode: VALMODE, seasonHtml: document.getElementById("season-out") ? document.getElementById("season-out").innerHTML : null, seasonSim: window.SeasonSim, connProj: window.CONN_PROJ || null };
+        return { settings: { ...SETTINGS }, valmode: VALMODE, seasonHtml: document.getElementById("season-out") ? document.getElementById("season-out").innerHTML : null, seasonSim: window.SeasonSim, connProj: window.CONN_PROJ || null, matchPts: window.__ffMatchPts || null };
       }
 
       /* Opponent map from a Sleeper matchups payload: the same
@@ -20755,6 +20899,10 @@ window.drDraft = {
           if (!myRoster) { snap.noTeam = true; ff4CCAfterLight(idx); return; }
           const built = buildConnLeague({ user, league, rosters, users, tradedPicks: [], matchups, matchupsNext, week, transactions: [] });
           const cap = ff4CCCapture();
+          /* Item 8 (Nov 11): install this league's own matchup points
+             before the swap, so the recompute inside it prices true
+             Current Power instead of the active league's points. */
+          try { if (typeof ff4CCInstallMatchPts === "function") await ff4CCInstallMatchPts("sleeper", lg.league_id, built, null); } catch (e) {}
           try {
             ff4CCSwap(built);
             const me = DATA.teams.find(t => t.isUser) || DATA.teams.find(t => t.rid === myRoster.roster_id);
@@ -20865,6 +21013,10 @@ window.drDraft = {
           snap.leagueName = built.league.name || snap.leagueName;
           snap.chips = ff4CCEspnChips(entry, built);
           const cap = ff4CCCapture();
+          /* Item 8 (Nov 11): install this league's own matchup points
+             before the swap, so the recompute inside it prices true
+             Current Power instead of the active league's points. */
+          try { if (typeof ff4CCInstallMatchPts === "function") await ff4CCInstallMatchPts("espn", entry.leagueId, built, raw); } catch (e) {}
           try {
             ff4CCSwap(built);
             const me = DATA.teams.find(t => t.isUser);
@@ -21012,6 +21164,20 @@ window.drDraft = {
         let sim = simIn || null;
         if (DATA.teams.length === 12) {
           if (!sim) { try { sim = buildSeasonSim(); } catch (e) { sim = null; } }
+          /* Item 8 (Nov 11): the detail builds the league's OWN sim —
+             re-run the engine with it installed so Stance reads the
+             sim odds instead of the no-sim record fallback (the
+             piece-3 rid-sort only fixes order mismatches; a swapped
+             context still holds another league's sim, so
+             ff4CCFreshSim() is null until this league's own sim is
+             built). The install is contained here — the previous sim
+             is restored immediately, so the swap restore's recompute
+             still sees the active league's sim. */
+          if (sim && sim.results && sim.results[me.rid]) {
+            const prevSim = window.SeasonSim;
+            try { window.SeasonSim = sim; if (typeof ffComputeTwoRankings === "function") ffComputeTwoRankings(); } catch (e) {}
+            try { window.SeasonSim = prevSim; } catch (e) {}
+          }
           if (sim && sim.results[me.rid]) {
             const base = sim.results[me.rid];
             d.odds = base.playoff; d.clinched = !!base.clinched; d.elim = !!base.elim;
@@ -21337,6 +21503,9 @@ window.drDraft = {
                 const built = buildEspnLeague(raw, lg.leagueId, lg.yourRid);
                 const cap = ff4CCCapture();
                 const savedConn = window.CONN_LEAGUE;
+                /* Item 8 (Nov 11): install this league's own matchup
+                   points before the swap (see ff4CCLoad). */
+                try { if (typeof ff4CCInstallMatchPts === "function") await ff4CCInstallMatchPts("espn", lg.leagueId, built, raw); } catch (e) {}
                 let det = null;
                 try {
                   ff4CCSwap(built);
@@ -21374,6 +21543,9 @@ window.drDraft = {
           const myRoster = rosters.find(r => r.owner_id === user.user_id || (r.co_owners || []).includes(user.user_id));
           const cap = ff4CCCapture();
           const savedConn = window.CONN_LEAGUE;
+          /* Item 8 (Nov 11): install this league's own matchup points
+             before the swap (see ff4CCLoad). */
+          try { if (typeof ff4CCInstallMatchPts === "function") await ff4CCInstallMatchPts("sleeper", lg.league_id, built, null); } catch (e) {}
           let det = null;
           try {
             ff4CCSwap(built);
