@@ -3518,7 +3518,9 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          and the Fantasy Tools strip. The slip carries Your Next
          Move (top move + the rest of the list), League Activity,
          the Top Trade Idea and the Manager Score, sticky on wide
-         screens; on phones it becomes a compact section on top.
+         screens; on phones it sits below Needs You First (Phase 6
+         item 1, Eric Nov 11, 2026 — it used to lead the page via
+         order:-1, so the slip showed above the team header).
          Every figure is the existing CC data, recomposed — no
          values, grades or odds changed. */
       /* CC header removal (Eric, Nov 10, 2026): on the Command Center
@@ -3535,7 +3537,12 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       /* two regions from the very top: main column + slip rail */
       #cc-out .cc3-wrap { display: flex; flex-direction: column; gap: 14px; }
       #cc-out .cc3-main { min-width: 0; }
-      #cc-out .cc3-slip { order: -1; }
+      /* Phase 6 item 1 (Eric, Nov 11, 2026): on phones the slip comes
+         AFTER the main column (header → strip → magic → Needs You
+         First), never first. Was order:-1, which put the slip above
+         the team header. Desktop (min-width:641px) still overrides
+         this to order:0 in the grid rail, unchanged. */
+      #cc-out .cc3-slip { order: 1; }
       @media (min-width: 641px) {
         #cc-out .cc3-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 262px; gap: 20px; align-items: start; }
         #cc-out .cc3-slip { order: 0; position: sticky; top: 10px; }
