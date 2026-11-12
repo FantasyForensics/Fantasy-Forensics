@@ -4808,7 +4808,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       <table>
         <thead><tr>
           <th style="width:21%">Pick</th><th style="width:13%" class="r">Value</th><th style="width:22%"></th>
-          <th style="width:9%" class="r">Ovr rank</th><th>Worth one veteran</th><th style="width:13%" class="r">Vet value</th>
+          <th style="width:9%" class="r">Ovr rank</th>
         </tr></thead>
         <tbody id="ladderBody"></tbody>
       </table>
@@ -19758,19 +19758,20 @@ function snakeSeq(order){
   const usedVets = new Set();
   const guideRank = {};
   groups.forEach(([title, test])=>{
-    html += '<tr class="grouprow"><td colspan="6">'+esc(title)+"</td></tr>";
+    html += '<tr class="grouprow"><td colspan="4">'+esc(title)+"</td></tr>";
     DATA.ladder.filter(test).forEach(l=>{
       let vet = null, bd = Infinity;
       poolSorted.forEach(v => { if (usedVets.has(v.id)) return; const d = Math.abs(v.value - l.value); if (d < bd) { bd = d; vet = v; } });
       if (vet) usedVets.add(vet.id);
       const vrank = vet ? (poolSorted.indexOf(vet) + 1) : "—";
       guideRank[l.label] = vrank;
+      /* Worth-one-veteran columns removed (Eric, 2026-11-12): the ladder shows
+         Pick / Value / Ovr rank only — picks stand on value alone. The vet
+         lookup above still runs because Ovr rank is the matched veteran's rank. */
       html += "<tr><td><span class='pickname'>"+esc(l.label)+"</span></td>"
         + "<td class='r num' style='font-weight:700'>"+fmt(l.value)+"</td>"
         + "<td><div class='valbar'><i style='width:"+Math.max(4, l.value/max*100)+"%'></i></div></td>"
-        + "<td class='r num sub'>#"+vrank+"</td>"
-        + (vet ? "<td><span class='vetname'>"+esc(vet.name)+"</span> <span class='pospill pos-"+vet.pos+"'>"+vet.pos+"</span> <span class='sub'>"+esc(vet.team||"")+" · #"+vrank+" overall</span><span class='sub vetv'> · vet "+fmt(vet.value)+"</span></td>"
-        + "<td class='r num sub'>"+fmt(vet.value)+"</td></tr>" : "<td>—</td><td class='r num sub'>—</td></tr>");
+        + "<td class='r num sub'>#"+vrank+"</td></tr>";
     });
   });
   $("#ladderBody").innerHTML = html;
