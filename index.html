@@ -10638,12 +10638,12 @@ ${rdP ? "" : `
       boardOwnerSel.addEventListener("change", e => { boardState.owner = e.target.value; boardState.shown = 60; renderBoard(); });
       /* All-toggle strip (Eric, 2026-11-12): every group is lit by
          default and in the list; tapping a lit button drops that group
-         out, tapping it again restores it. "All" is the master switch:
-         lit while every group is on — tapping it when all are on turns
-         everything off, tapping it again restores all. FLEX is the
-         flex-eligible set (RB/WR/TE); INJ is the injured set. The
-         separate Show/Hide picks button is deleted — the Picks toggle
-         in this strip owns picks now. */
+         out, tapping it again restores it. "All" is select-all only:
+         tapping it turns every group on (including INJ) and never
+         turns anything off — if all are already on it changes
+         nothing. FLEX is the flex-eligible set (RB/WR/TE); INJ is
+         the injured set. The separate Show/Hide picks button is
+         deleted — the Picks toggle in this strip owns picks now. */
       function syncFilterButtons() {
         const g = boardState.groups;
         document.querySelectorAll("#pos-filter button").forEach(b => {
@@ -10655,8 +10655,9 @@ ${rdP ? "" : `
         btn.addEventListener("click", () => {
           const k = btn.dataset.pos, g = boardState.groups;
           if (k === "ALL") {
-            const allOn = Object.values(g).every(Boolean);
-            Object.keys(g).forEach(key => { g[key] = !allOn; });
+            /* Select-all only: never turns anything off, so Injured
+               can never be deselected by tapping All. */
+            Object.keys(g).forEach(key => { g[key] = true; });
           } else if (k in g) {
             g[k] = !g[k];
           }
