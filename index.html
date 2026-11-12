@@ -810,7 +810,8 @@
 
       /* ---------- calculator ---------- */
       .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-      @media (max-width: 760px) { .calc-grid { grid-template-columns: 1fr; } }
+      /* Redesign (Eric, Nov 12, 2026): the two boxes stay side by side at
+         EVERY width — the old <=760px single-column stack is gone. */
       .side {
         background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
         padding: 18px;
@@ -848,6 +849,93 @@
       .side-total.adj { margin-top: 4px; padding-top: 0; border-top: none; font-size: 13.5px; color: var(--ink-2); }
       .side-total[hidden] { display: none; }
       .side-total.adj .t { font-size: 18px; color: var(--ink); }
+      /* ---------- Trade Calculator redesign (Eric, Nov 12, 2026) ----------
+         Built from the APPROVED mockup (trade-calculator-mock-up):
+         two compact boxes side by side at EVERY width, headshot +
+         name + value rows only, totals pinned to the bottom of each
+         box, ONE "Add a pick" dropdown per side, compact verdict +
+         balancer below. Layout only — grading, fairness bands, value
+         adjustment, balance suggestions and the share card are
+         untouched. */
+      /* The shared league header (view title + Dynasty/Redraft bar)
+         is hidden on this tab ONLY — the title lives in the tab's
+         own titlebar under the Wire (same pattern as
+         body.ff-on-command). Every other tab keeps the header. */
+      body.ff-on-calc header.league { display: none; }
+      #tab-trades .calc-titlebar { display: flex; align-items: center; gap: 10px; padding: 6px 0 5px; border-bottom: 2px solid var(--gold); }
+      #tab-trades .calc-title { min-width: 0; }
+      #tab-trades .calc-titlebar h2 { margin: 0; font-family: "Space Grotesk", sans-serif; font-size: 19px; font-weight: 700; letter-spacing: .01em; }
+      #tab-trades .calc-fmt { font-size: 10.5px; color: var(--ink-3); font-weight: 600; letter-spacing: .04em; margin-top: 2px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #tab-trades .calc-disconnect, #tab-trades .calc-connect { margin-left: auto; flex: none; background: transparent; color: var(--ink-2); border: 1px solid var(--line); border-radius: 9px; padding: 0 12px; font: 600 12px Inter, system-ui, sans-serif; cursor: pointer; min-height: 32px; }
+      #tab-trades .calc-connect { background: var(--accent); color: #0A0A1A; border-color: transparent; font-weight: 800; }
+      #tab-trades .calc-hint { margin: 4px 2px; font-size: 11.5px; color: var(--ink-3); }
+      #tab-trades .calc-hint b { color: var(--ink-2); font-weight: 600; }
+      /* The approved mockup carries no Player-Targets cross-link —
+         and at 95px it breaks the phone one-screen test. Hidden on
+         this tab only; Player Targets stays in the sidebar pill
+         strip. */
+      #tab-trades #calc-xlink { display: none; }
+      #tab-trades .calc-grid { gap: 8px; }
+      #tab-trades .side { display: flex; flex-direction: column; padding: 10px; min-width: 0; }
+      #tab-trades .calc-box-h { padding: 2px 2px 6px; border-bottom: 1px solid var(--line); }
+      #tab-trades .calc-team { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 13px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #tab-trades .calc-give { font-size: 10px; font-weight: 700; letter-spacing: .12em; color: var(--accent); margin-top: 1px; }
+      #side-b .calc-give { color: var(--cyan); }
+      #tab-trades .src-toggle { margin-bottom: 4px; }
+      #tab-trades .src-toggle button { padding: 4px 8px; font-size: 12px; min-height: 26px; }
+      #tab-trades .side select, #tab-trades .side input[type="search"] { padding: 7px 9px; margin-bottom: 5px; font-size: 12.5px; min-height: 28px; }
+      #tab-trades .results { max-height: 128px; border-radius: 8px; }
+      #tab-trades .results button { align-items: center; gap: 6px; padding: 5px 7px; min-height: 32px; }
+      #tab-trades .results .calc-row { display: flex; align-items: center; gap: 6px; flex: 1 1 auto; min-width: 0; }
+      #tab-trades .results .calc-row img { width: 24px; height: 24px; flex: none; margin: 0; }
+      #tab-trades .results .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #tab-trades .results .val { flex: none; font-size: 12px; }
+      #tab-trades .calc-pick { margin-top: 6px; }
+      #tab-trades .calc-pick select { width: 100%; background: rgba(0,0,0,.35); color: var(--ink-2); border: 1px dashed rgba(255,255,255,.22); border-radius: 8px; font-size: 11.5px; font-weight: 600; padding: 0 8px; height: 30px; min-height: 30px; outline: none; }
+      #tab-trades .assets { margin-top: 8px; gap: 4px; min-height: 56px; max-height: 100px; overflow-y: auto; flex: 1 1 auto; }
+      #tab-trades .asset { padding: 4px 8px; }
+      #tab-trades .asset .calc-asset-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #tab-trades .asset img { width: 20px; height: 20px; flex: none; margin: 0; }
+      #tab-trades .asset .calc-pk { width: 20px; height: 20px; border-radius: 6px; background: var(--surface-2); display: grid; place-items: center; font-size: 10px; flex: none; }
+      #tab-trades .asset button { min-width: 0; min-height: 0; width: 22px; height: 22px; }
+      /* The trailing value + remove button wrapped onto a second
+         line at phone width, making every asset row 57px tall
+         instead of ~30px. Keep it on one line. */
+      #tab-trades .asset > span:last-child { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; flex: none; }
+      #tab-trades .calc-totals { margin-top: auto; }
+      #tab-trades .side-total { margin-top: 6px; padding-top: 6px; }
+      #tab-trades .side-total.adj { margin-top: 2px; }
+      #tab-trades .side-total .t { font-size: 19px; }
+      #tab-trades .side-total.adj .t { font-size: 14px; }
+      #tab-trades .verdict { margin-top: 9px; padding: 8px 12px; }
+      #tab-trades .verdict h3 { font-size: 16px; }
+      #tab-trades .fairness-meter .fm-hint { display: none; }
+      #tab-trades .verdict .diffbar { height: 12px; margin: 6px 0 4px; }
+      #tab-trades .fairness-meter { margin: 8px 0 2px; padding: 8px 10px; }
+      #tab-trades .fm-scale { height: 15px; margin: 4px 0 8px; }
+      #tab-trades .fm-marker { height: 23px; }
+      #tab-trades .fm-center { height: 19px; }
+      #tab-trades .balance-note { margin-top: 9px; padding: 8px 10px; font-size: 13px; }
+      #tab-trades .verdict-more { margin-top: 10px; }
+      #tab-trades .bal-box { margin-top: 8px; padding: 6px 10px; }
+      #tab-trades .bal-chips { gap: 6px; margin-top: 8px; }
+      #tab-trades .bal-add { gap: 6px; padding: 5px 10px; font-size: 12px; }
+      #tab-trades .bal-note { line-height: 1.4; }
+      #tab-trades .bal-head { font-size: 13px; }
+      #tab-trades .bal-note { font-size: 12.5px; margin-top: 4px; }
+      #tab-trades .share-bar { margin-top: 9px; }
+      @media (max-width: 640px) {
+        #tab-trades .results { max-height: 64px; }
+        #tab-trades .assets { min-height: 34px; }
+        #tab-trades .calc-team { font-size: 12px; }
+        #tab-trades .side { padding: 8px; }
+      }
+      @media (min-width: 1024px) {
+        #tab-trades .calc-grid { gap: 12px; }
+        #tab-trades .side { padding: 14px; }
+        #tab-trades .results { max-height: 140px; }
+      }
+
       .pick-add { margin-top: 10px; }
       .pick-add .lbl { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); margin-bottom: 6px; }
       .pick-add button {
@@ -3257,7 +3345,6 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           <button type="button" role="tab" data-pnav-sub="risk" data-group="myteam" aria-selected="false">Starters at Risk</button>
           <button type="button" role="tab" data-pnav-sub="teamport" data-group="myteam" aria-selected="false">Team Portfolio</button>
           <button type="button" role="tab" data-pnav-sub="moves" data-group="myteam" aria-selected="false">Next Moves</button>
-          <button type="button" role="tab" data-pnav-sub="switchteams" data-group="myteam" aria-selected="false">Switch Teams</button>
         </div>
         <button role="tab" type="button" data-pnav="trades" aria-selected="false">Trades<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7.5h12.5"/><path d="M13.8 4.5l3 3-3 3"/><path d="M20 16.5H7.5"/><path d="M10.2 13.5l-3 3 3 3"/></svg></span></button>
         <div class="sb-subgroup" data-subgroup="trades" hidden>
@@ -3291,6 +3378,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         </div>
         <button role="tab" type="button" data-pnav="tools" aria-selected="false">Tools<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="15.5" cy="6.5" r="2.3"/><circle cx="8.5" cy="12" r="2.3"/><circle cx="15.5" cy="17.5" r="2.3"/><path d="M3.5 6.5h9.7M17.8 6.5h2.7M3.5 12h3.7M10.8 12h9.7M3.5 17.5h9.7M17.8 17.5h2.7"/></svg></span></button>
         <button role="tab" type="button" data-nav="draft" aria-selected="false">Draft Room<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5.5" y="4.5" width="13" height="16" rx="2"/><path d="M9.5 4.8a2.5 2.5 0 0 1 5 0"/><path d="M9 11h6M9 14.8h4"/></svg></span></button>
+        <button role="tab" type="button" data-nav="switchteams" aria-selected="false">Switch Teams<span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c.7-3.4 2.9-5.2 5.5-5.2 1.2 0 2.3.4 3.2 1.1"/><path d="M15 5h5M17.5 2.5L20 5l-2.5 2.5"/></svg></span></button>
       </nav>
         </div>
         <div class="sb-flyout" id="sb-flyout" hidden role="menu" aria-label="Section tools">
@@ -4021,15 +4109,14 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           <input type="search" class="board-search" id="board-search" placeholder="Search players…" aria-label="Search players" />
           <div class="pos-filter" id="pos-filter">
             <button data-pos="ALL" aria-pressed="true">All</button>
-            <button data-pos="QB" aria-pressed="false">QB</button>
-            <button data-pos="RB" aria-pressed="false">RB</button>
-            <button data-pos="WR" aria-pressed="false">WR</button>
-            <button data-pos="TE" aria-pressed="false">TE</button>
-            <button data-pos="FLEX" aria-pressed="false">FLEX</button>
-            <button data-pos="PICKS" aria-pressed="false">Picks</button>
+            <button data-pos="QB" aria-pressed="true">QB</button>
+            <button data-pos="RB" aria-pressed="true">RB</button>
+            <button data-pos="WR" aria-pressed="true">WR</button>
+            <button data-pos="TE" aria-pressed="true">TE</button>
+            <button data-pos="FLEX" aria-pressed="true">FLEX</button>
+            <button data-pos="PICKS" aria-pressed="true">Picks</button>
+            <button data-pos="INJ" id="inj-filter" aria-pressed="true">Injured</button>
           </div>
-          <button type="button" class="inj-toggle" id="picks-toggle" aria-pressed="true" hidden>Hide picks</button>
-          <button type="button" class="inj-toggle" id="inj-filter" aria-pressed="false">Injured</button>
           <select id="board-sort" aria-label="Sort players">
             <option value="value">Sort: Value</option>
             <option value="ageAsc">Sort: Age (youngest)</option>
@@ -4064,9 +4151,6 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         </div>
         <p class="board-grades-note">Letter grades are graded within each position — a quarterback's grade is measured against quarterbacks, a receiver's against receivers.</p>
         <button class="show-more" id="board-more">Show more players</button>
-        <div class="inj-note" id="inj-note" hidden>
-          <strong id="inj-note-count"></strong> Every chip shows the designation plus the detail Sleeper's player feed carries — body part, and a note where the feed has one. Where the feed has no more detail, the designation stands alone. For the latest reporting on a player, tap “Why?” on his row for a <strong>Latest news</strong> link to his ESPN player page, or browse <a href="https://www.espn.com/nfl/injuries" target="_blank" rel="noopener">ESPN's NFL injuries page ↗</a>.
-        </div>
         <!-- Movers strip removed (owner fix, 2026-11-02): it repeated
              the Risers & Fallers section further down this same page. -->
         <details class="how-box">
@@ -4295,7 +4379,15 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       </section>
 
       <section class="tab" id="tab-trades" role="tabpanel">
-        <h2 class="block-title">Trade Calculator</h2>
+        <div class="calc-titlebar">
+          <div class="calc-title">
+            <h2>Trade Calculator</h2>
+            <div class="calc-fmt" id="calc-fmt">Guest · Full player pool · Dynasty Standard</div>
+          </div>
+          <button type="button" class="calc-disconnect" id="calc-disconnect" hidden>Disconnect</button>
+          <button type="button" class="calc-connect" id="calc-connect">Connect a league</button>
+        </div>
+        <p class="calc-hint" id="calc-hint">Your roster vs. theirs, side by side. <b>Tap a player</b> — he drops into the trade at the bottom of his box.</p>
         <div class="xlink" id="calc-xlink"><span>Want deals built for your team instead?</span><button type="button" id="calc-xlink-btn">Player Targets →</button></div>
         <div class="calc-grid">
           <div class="side" id="side-a"></div>
@@ -4507,7 +4599,6 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           <h3 class="tools-group-h">Draft</h3>
           <div class="tools-pills">
             <button type="button" class="tools-pill" style="--tile-accent:#FF2E88" data-tools-draft="1"><span class="tools-pill-t">Draft Room</span><span class="tools-pill-s">Your league's board, mocks &amp; sheet</span></button>
-            <button type="button" class="tools-pill" style="--tile-accent:#00E5FF" data-tools-pill="switchteams" data-tools-group="myteam"><span class="tools-pill-t">Switch Teams</span><span class="tools-pill-s">All your teams — tap one to open it</span></button>
             <button type="button" class="tools-pill" style="--tile-accent:#69F0AE" data-tools-draft="sheet"><span class="tools-pill-t">Draft Sheet</span><span class="tools-pill-s">Printable board, draft order &amp; CSV</span></button>
           </div>
         </div>
@@ -6202,7 +6293,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            unconditionally below, so the offseason driver can read
            them while Stance stays quiet. */
         t.stanceBand = null; t.stanceLabel = null; t.stanceWillingness = null;
-        t.stanceLean = null; t.stanceOdds = null;
+        t.stanceLean = null; t.stanceOdds = null; t.stanceClinched = false;
       }
       window.ffComputeTwoRankings = function () {
         try {
@@ -6365,7 +6456,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
                  no evidence ⇒ NOT a seller (Holding). Never a
                  Maximal from record alone. */
               const rec = ffParseRecord(t.record);
-              t.stanceOdds = null;
+              t.stanceOdds = null; t.stanceClinched = false;
               if (rec.games > 0 && rec.winPct < 0.400) { t.stanceBand = "seller"; t.stanceWillingness = "seller"; }
               else { t.stanceBand = "bubble"; t.stanceWillingness = "bubble"; }
               t.stanceLean = null;
@@ -6374,7 +6465,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
             }
             const r = simRes[t.rid];
             const odds = r.playoff, elim = !!r.elim, clinched = !!r.clinched;
-            t.stanceOdds = odds;
+            t.stanceOdds = odds; t.stanceClinched = clinched;
             /* Bubble resolution: PF/all-play trajectory + luck gap.
                Luck = all-play expected wins − actual wins. Inputs
                shrink n/(n+3) early (same pattern as Current Power).
@@ -6877,6 +6968,11 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            view, and the reclaimed height lets the whole CC fit one
            screen. Every other view keeps the header as-is. */
         document.body.classList.toggle("ff-on-command", key === "command");
+        /* Calculator redesign (Eric, Nov 12, 2026): the shared league
+           header is hidden on this tab only — the title + Disconnect
+           live in the tab's own titlebar under the Wire. Every other
+           tab keeps the header as-is. */
+        document.body.classList.toggle("ff-on-calc", key === "trades");
         const anchorEl = key === "risk" ? document.getElementById("risk-panel") : (arg ? document.querySelector(arg) : null);
         if (anchorEl) setTimeout(() => anchorEl.scrollIntoView({ block: "start" }), 30);
         /* Where the nav itself scrolls sideways (phone bottom bar,
@@ -7962,13 +8058,25 @@ ${rdP ? "" : `
         const teamOpts = DATA.teams.map(t =>
           `<option value="${t.rid}" ${String(st.team) === String(t.rid) ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("") +
           `<option value="FA" ${st.team === "FA" ? "selected" : ""}>Free Agents</option>`;
-        const picks = !guest && !anyMode && VALMODE !== "redraft" && st.team !== "FA" ? TBY[st.team].picks.filter(pk => pk.value >= 150).sort((x, y) => pickPrice(y) - pickPrice(x)) : [];
+        const teamPicks = !guest && !anyMode && VALMODE !== "redraft" && st.team !== "FA" ? TBY[st.team].picks.filter(pk => pk.value >= 150).sort((x, y) => pickPrice(y) - pickPrice(x)) : [];
+        /* One "Add a pick" dropdown per side (Eric, Nov 12, 2026 — the
+           wall of pick buttons is gone). Team sides offer their owned
+           picks; guest / Any Player sides offer the standard rookie
+           slots, Mid tier first — generic picks default to Mid. */
+        const pickOpts = teamPicks.map(pk => ({ value: pk.key, label: `${pk.label} · ${fmt(pickPrice(pk))}` }));
+        const guestPickOpts = (guest || anyMode) && VALMODE !== "redraft"
+          ? [...GUEST_PICKS].sort((a, b) => (a.year - b.year) || (a.roundNum - b.roundNum) || ([1, 0, 2][a.tierIdx] - [1, 0, 2][b.tierIdx])).map(pk => ({ value: "G:" + pk.key, label: `${pk.label} · ${fmt(guestPickValue(pk))}` }))
+          : [];
+        const allPickOpts = teamPicks.length ? pickOpts : guestPickOpts;
         /* The full-pool pick chip grid is GONE (Eric, 2026-10-23):
            in guest / Any Player mode, picks are found through the
            search box instead — see pickSearchMatches / renderResults.
            Team-mode owned picks (below) keep their short list. */
         el.innerHTML = `
-          <h3>Side ${side} gives</h3>
+          <div class="calc-box-h">
+            <div class="calc-team">${esc(calcSideName(side))}</div>
+            <div class="calc-give">${side === "A" ? "YOU GIVE" : "THEY GIVE"}</div>
+          </div>
           ${guest ? "" : `<div class="src-toggle" role="group" aria-label="Player source for side ${side}">
             <button type="button" data-srcsel="team" aria-pressed="${!anyMode}">Team roster</button>
             <button type="button" data-srcsel="any" aria-pressed="${anyMode}">Any Player</button>
@@ -7976,12 +8084,15 @@ ${rdP ? "" : `
           ${guest || anyMode ? "" : `<select id="team-${side}" aria-label="Team for side ${side}">${teamOpts}</select>`}
           <input type="search" id="search-${side}" placeholder="${guest || anyMode ? "Search any player or pick" : "Search this team's players…"}" aria-label="Search players for side ${side}" />
           <div class="results" id="results-${side}"></div>
-          ${picks.length ? `<div class="pick-add"><div class="lbl">Add a pick owned by ${esc(teamName(st.team))}</div>
-            ${picks.map(pk => `<button data-pick="${pk.key}">${esc(pk.label)} · ${fmt(pickPrice(pk))}</button>`).join("")}</div>` : ""}
+          ${allPickOpts.length ? `<div class="calc-pick"><select class="calc-pick-select" data-pickside="${side}" aria-label="Add a pick to side ${side}">
+            <option value="">＋ Add a pick…</option>
+            ${allPickOpts.map(o => `<option value="${o.value}">${esc(o.label)}</option>`).join("")}</select></div>` : ""}
           <div class="assets" id="assets-${side}"></div>
-          <div class="side-total"><span>Trade value</span><span class="t" id="adjtotal-${side}">0</span></div>
-          <div class="side-total adj"><span>Raw sum</span><span class="t" id="total-${side}">0</span></div>
-          <div class="side-total adj" id="bonusrow-${side}" hidden><span>Value adjustment</span><span class="t" id="bonus-${side}">0</span></div>`;
+          <div class="calc-totals">
+            <div class="side-total"><span>Trade value</span><span class="t" id="adjtotal-${side}">0</span></div>
+            <div class="side-total adj"><span>Raw sum</span><span class="t" id="total-${side}">0</span></div>
+            <div class="side-total adj" id="bonusrow-${side}" hidden><span>Value adjustment</span><span class="t" id="bonus-${side}">0</span></div>
+          </div>`;
         const teamSel = document.getElementById("team-" + side);
         if (teamSel) teamSel.addEventListener("change", e => {
           st.team = e.target.value === "FA" ? "FA" : Number(e.target.value);
@@ -7999,19 +8110,64 @@ ${rdP ? "" : `
         });
         const searchEl = document.getElementById("search-" + side);
         searchEl.addEventListener("input", () => renderResults(side));
-        el.querySelectorAll("[data-pick]").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const key = btn.dataset.pick;
-            if (!st.assets.some(a => a.kind === "pick" && a.key === key)) {
-              st.assets.push({ kind: "pick", key, fromTeam: st.team });
+        const pickSel = el.querySelector(".calc-pick-select");
+        if (pickSel) pickSel.addEventListener("change", () => {
+          const v = pickSel.value;
+          if (!v) return;
+          if (v.startsWith("G:")) {
+            const key = v.slice(2);
+            if (!st.assets.some(a => a.kind === "pick" && a.key === key && a.fromTeam === "G")) {
+              st.assets.push({ kind: "pick", key, fromTeam: "G" });
             }
-            renderSide(side); renderVerdict();
-          });
+          } else if (!st.assets.some(a => a.kind === "pick" && a.key === v)) {
+            st.assets.push({ kind: "pick", key: v, fromTeam: st.team });
+          }
+          renderSide(side); renderVerdict();
         });
         /* [data-gpick] buttons are rendered by renderResults (search
            results), which wires their clicks itself. */
         renderResults(side);
         renderAssets(side);
+        calcTitlebarSync();
+      }
+
+      /* Calculator titlebar (Eric, Nov 12, 2026): the shared league
+         header is hidden on this tab only (body.ff-on-calc), so the
+         title lives here, under the Wire, with Disconnect — or a
+         Connect-a-league button when no league is connected — on the
+         same line. Synced on every calculator render, so connect /
+         disconnect flips it immediately. */
+      function calcTitlebarSync(){
+        const bar = document.getElementById("calc-fmt");
+        const disc = document.getElementById("calc-disconnect");
+        const conn = document.getElementById("calc-connect");
+        if (!bar || !disc || !conn) return;
+        const connected = !window.GUEST_MODE && window.CURRENT_LEAGUE === "conn";
+        /* NOTE: sheetConn() lives inside the Draft Room IIFE and is
+           invisible from this block — read the connected league
+           off window.CONN_LEAGUE directly. */
+        const C = (connected && window.CONN_LEAGUE) ? window.CONN_LEAGUE : null;
+        if (C && C.league && C.league.name) {
+          bar.textContent = (C.league.name + " · " + (VALMODE === "redraft" ? "Redraft" : "Dynasty") + " · " + (C.format && C.format.sf === false ? "1 QB" : "Superflex")).toUpperCase();
+        } else {
+          bar.textContent = "Guest · Full player pool · Dynasty Standard";
+        }
+        disc.hidden = !connected;
+        conn.hidden = connected;
+        const hint = document.getElementById("calc-hint");
+        if (hint) hint.innerHTML = connected
+          ? "Your roster vs. theirs, side by side. <b>Tap a player</b> — he drops into the trade at the bottom of his box."
+          : "Any player on either side — no league needed. <b>Tap a player</b> — he drops into the trade at the bottom of his box.";
+      }
+      if (!window.__calcTitlebarWired) {
+        window.__calcTitlebarWired = true;
+        const cd = document.getElementById("calc-disconnect");
+        if (cd) cd.addEventListener("click", () => {
+          if (typeof slpDisconnect === "function") slpDisconnect();
+          else { const d = document.getElementById("slp-disconnect"); if (d) d.click(); }
+        });
+        const cc = document.getElementById("calc-connect");
+        if (cc) cc.addEventListener("click", () => { if (typeof window.openSleeperConnect === "function") window.openSleeperConnect(); });
       }
 
       function candidatePlayers(side) {
@@ -8090,7 +8246,7 @@ ${rdP ? "" : `
           </button>`).join("");
         const playerHtml = list.map(p => `
           <button data-add="${p.id}">
-            <span>${hsImg(p, "phs-sm")}<span class="who">${esc(p.name)}</span> <span class="sub">${p.pos}${p.posRank} · ${logoImg(p.team)}${esc(p.team)} · Age ${p.age ?? "—"}</span></span>
+            <span class="calc-row">${hsImg(p, "phs-sm")}<span class="who">${esc(p.name)}</span></span>
             <span class="val">${p.unpriced ? "Unpriced" : fmt(dispVal(p))}</span>
           </button>`).join("");
         box.innerHTML = (pickHtml + playerHtml) || `<div class="empty">No players match.</div>`;
@@ -8131,7 +8287,7 @@ ${rdP ? "" : `
         const box = document.getElementById("assets-" + side);
         const st = calc[side];
         box.innerHTML = st.assets.map((a, i) => `
-          <div class="asset">${a.kind === "player" && PBY[a.id] ? hsImg(PBY[a.id], "phs-sm") : ""}<span>${esc(assetLabel(a))}</span>
+          <div class="asset">${a.kind === "player" && PBY[a.id] ? hsImg(PBY[a.id], "phs-sm") : (a.kind === "pick" ? '<span class="calc-pk">PK</span>' : "")}<span class="calc-asset-name">${esc(a.kind === "player" && PBY[a.id] ? PBY[a.id].name : assetLabel(a))}</span>
           <span><span class="val">${a.kind === "player" && PBY[a.id] && PBY[a.id].unpriced ? "Unpriced" : fmt(assetValue(a))}</span> <button data-rm="${i}" aria-label="Remove">×</button></span></div>`).join("");
         box.querySelectorAll("[data-rm]").forEach(btn => {
           btn.addEventListener("click", () => {
@@ -8446,7 +8602,7 @@ ${rdP ? "" : `
       const tradesTabEl = document.getElementById("tab-trades");
       const hideSharedFlag = () => { const f = document.getElementById("shared-flag"); if (f) f.classList.remove("show"); };
       tradesTabEl.addEventListener("click", e => { if (e.target.closest("[data-add], [data-rm], [data-pick]")) hideSharedFlag(); });
-      tradesTabEl.addEventListener("change", e => { if (e.target.id === "team-A" || e.target.id === "team-B") hideSharedFlag(); });
+      tradesTabEl.addEventListener("change", e => { if (e.target.id === "team-A" || e.target.id === "team-B" || e.target.classList.contains("calc-pick-select")) hideSharedFlag(); });
 
       /* ================= Trade finder ================= */
       function median(arr) { const s = [...arr].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; }
@@ -8769,7 +8925,7 @@ ${rdP ? "" : `
       function ffTradeStance(t) {
         if (!t) return { band: "bubble", label: "Holding", willingness: "bubble", lean: null, odds: null, driver: "stance" };
         if (ffTradeDriver() === "franchise") { const s = ffOffseasonStance(t); s.driver = "franchise"; return s; }
-        if (t.stanceBand) return { band: t.stanceBand, label: t.stanceLabel || ffStanceLabel(t.stanceBand), willingness: t.stanceWillingness || t.stanceBand, lean: t.stanceLean || null, odds: (t.stanceOdds != null ? t.stanceOdds : null), driver: "stance" };
+        if (t.stanceBand) return { band: t.stanceBand, label: t.stanceLabel || ffStanceLabel(t.stanceBand), willingness: t.stanceWillingness || t.stanceBand, lean: t.stanceLean || null, odds: (t.stanceOdds != null ? t.stanceOdds : null), clinched: !!t.stanceClinched, driver: "stance" };
         /* No stance computed and no franchise driver: no evidence
            either way ⇒ Holding, never a seller. */
         return { band: "bubble", label: "Holding", willingness: "bubble", lean: null, odds: null, driver: "stance" };
@@ -9171,7 +9327,7 @@ ${rdP ? "" : `
           mix(t.rid); mix((t.playerIds || []).join(","));
           mix((t.picks || []).map(pk => (pk.key || "") + ":" + (pk.label || "") + "=" + pk.value + "/" + (pk.baseValue != null ? pk.baseValue : "") + "/" + (pk.season || "") + "/" + (pk.round || "")).join(","));
           mix(t.record); mix(t.pf); mix(t.arch); mix(t.frTag);
-          mix(t.stanceBand); mix(t.stanceLabel); mix(t.stanceWillingness); mix(t.stanceLean); mix(t.stanceOdds);
+          mix(t.stanceBand); mix(t.stanceLabel); mix(t.stanceWillingness); mix(t.stanceLean); mix(t.stanceOdds); mix(t.stanceClinched);
           mix(t.cpRank); mix(t.frRank); mix(t.starterVal); mix(t.totalVal); mix(t.picksVal);
           mix(t.frPlayers); mix(t.frPicks); mix(t.coreAge); mix(t.avgAgeTop);
           mix(t.buyerCapacity); mix(t.buyerCapacityPct);
@@ -9536,7 +9692,10 @@ ${rdP ? "" : `
         } catch (e) { /* facts unavailable — the neutral note below still holds */ }
         const peak = TG_PEAK_AGE[cand.pos] || 28;
         const old = (cand.age ?? 0) >= peak;
-        const oddsTxt = st && st.odds != null ? `${Math.round(st.odds * 100)}% playoff odds` : "no live playoff odds";
+        /* Targets notes print playoff odds through the same flag-gated
+           cap as the headlines (Eric, 2026-11-10): a sim sweep alone
+           never reads 100% — only a mathematical clinch does. */
+        const oddsTxt = st && st.odds != null ? `${(typeof playoffLabel === "function" ? playoffLabel({ playoff: st.odds, clinched: !!st.clinched }) : (typeof oddsPct === "function" ? oddsPct(st.odds) : Math.round(st.odds * 100) + "%"))} playoff odds` : "no live playoff odds";
         let score = 30;
         if (!rd) {
           /* Stance bands: Maximal strongest, then Seller, then
@@ -10208,7 +10367,12 @@ ${rdP ? "" : `
       renderFinder();
 
       /* ================= Player values board ================= */
-      const boardState = { pos: "ALL", q: "", sort: "value", owner: "ALL", shown: 60, injOnly: false, showPicks: true };
+      /* All-toggle filter strip (Eric, 2026-11-12): every group is lit
+         by default and in the list; tapping a lit button drops that
+         group out, tapping it again restores it. "All" is the master
+         switch (see syncFilterButtons). Picks are in the value-ordered
+         list by default (PICKS on). */
+      const boardState = { groups: { QB: true, RB: true, WR: true, TE: true, FLEX: true, PICKS: true, INJ: true }, q: "", sort: "value", owner: "ALL", shown: 60 };
       const boardOwnerSel = document.getElementById("board-owner");
       DATA.teams.forEach(t => {
         const o = document.createElement("option");
@@ -10220,27 +10384,34 @@ ${rdP ? "" : `
            (unpriced:true) live in DATA.players for the calculator,
            waivers and lineup, but carry no dynasty price to rank by. */
         let list = [...DATA.players].filter(p => !p.unpriced).sort((a, b) => dispVal(b) - dispVal(a));
-        /* Picks tab (Eric, 2026-11-12): the pick ladder merged into the
+        /* Picks (Eric, 2026-11-12): the pick ladder merged into the
            value-ordered list at each pick's value spot — the 2027 early
            1st sits beside the veteran it buys. Dynasty only: picks carry
-           no redraft price. showPicks hides them back to players only. */
-        if (boardState.pos === "PICKS" && VALMODE !== "redraft" && boardState.showPicks) {
-          let merged = list.slice();
-          if (boardState.q) merged = merged.filter(p => p.name.toLowerCase().includes(boardState.q));
+           no redraft price. Picks are IN the list by default; the Picks
+           toggle drops them out. */
+        const g = boardState.groups;
+        if (VALMODE !== "redraft" && g.PICKS) {
           /* The pick ladder lives in the Draft Room's own DATA (IIFE scope,
              line ~19419) — the site-wide DATA this function sees has no
              ladder key, so read it through the drDraft accessor. */
           const ladder = (typeof window !== "undefined" && window.drDraft && typeof window.drDraft.ladder === "function") ? window.drDraft.ladder() : [];
           ladder.forEach(l => {
-            if (boardState.q && !l.label.toLowerCase().includes(boardState.q)) return;
-            merged.push({ isPick: true, id: "pick:" + l.label, name: l.label, pos: "PK", team: "", age: null, value: l.value, vet: l.vet, tier: "", posRank: null, trnd: 0, ros: 0 });
+            list.push({ isPick: true, id: "pick:" + l.label, name: l.label, pos: "PK", team: "", age: null, value: l.value, tier: "", posRank: null, trnd: 0, ros: 0 });
           });
-          merged.sort((a, b) => (b.value || 0) - (a.value || 0));
-          return merged;
+          const dv = p => p.isPick ? (p.value || 0) : dispVal(p);
+          list.sort((a, b) => dv(b) - dv(a));
         }
-        if (boardState.injOnly) list = list.filter(p => p.inj);
-        if (boardState.pos === "FLEX") list = list.filter(p => ["RB", "WR", "TE"].includes(p.pos));
-        else if (boardState.pos !== "ALL" && boardState.pos !== "PICKS") list = list.filter(p => p.pos === boardState.pos);
+        /* All-toggle strip (Eric, 2026-11-12): every group is in the list
+           by default; tapping a lit button drops that group out, tapping
+           it again restores it. FLEX is the flex-eligible set (RB/WR/TE);
+           INJ is the injured set. Picks carry pos "PK" and no injury
+           flag, so the position/injury filters never touch them. */
+        if (!g.QB) list = list.filter(p => p.pos !== "QB");
+        if (!g.RB) list = list.filter(p => p.pos !== "RB");
+        if (!g.WR) list = list.filter(p => p.pos !== "WR");
+        if (!g.TE) list = list.filter(p => p.pos !== "TE");
+        if (!g.FLEX) list = list.filter(p => !["RB", "WR", "TE"].includes(p.pos));
+        if (!g.INJ) list = list.filter(p => !p.inj);
         if (boardState.owner === "FA") list = list.filter(p => !p.owner);
         else if (boardState.owner !== "ALL") list = list.filter(p => p.owner === Number(boardState.owner));
         if (boardState.q) list = list.filter(p => p.name.toLowerCase().includes(boardState.q));
@@ -10372,34 +10543,28 @@ ${rdP ? "" : `
         });
       }
       function renderBoard() {
-        /* Picks are a dynasty asset: in redraft mode the tab hides and
-           an open Picks tab falls back to All. */
-        if (VALMODE === "redraft" && boardState.pos === "PICKS") {
-          boardState.pos = "ALL";
-          document.querySelectorAll("#pos-filter button").forEach(b => b.setAttribute("aria-pressed", b.dataset.pos === "ALL" ? "true" : "false"));
-        }
-        const inPicks = boardState.pos === "PICKS";
+        /* Picks are a dynasty asset: in redraft mode the Picks toggle
+           hides — picks carry no redraft price and never enter the list. */
         const pickBtn = document.querySelector('#pos-filter button[data-pos="PICKS"]');
         if (pickBtn) pickBtn.style.display = (VALMODE === "redraft") ? "none" : "";
-        const picksTgl = document.getElementById("picks-toggle");
-        if (picksTgl) picksTgl.hidden = !(boardState.pos === "PICKS" && VALMODE !== "redraft");
         const list = boardList();
         const body = document.getElementById("board-body");
         const rows = list.slice(0, boardState.shown);
-        const rankMapB = {};
-        DATA.players.filter(p => !p.unpriced && dispVal(p) > 0).sort((a, b) => dispVal(b) - dispVal(a)).forEach((p, ix) => { rankMapB[p.id] = ix + 1; });
         const rdPosMapB = {};
         if (VALMODE === "redraft") ["QB", "RB", "WR", "TE"].forEach(pos => { DATA.players.filter(p => p.pos === pos && p.rdValue != null && !p.unpriced).sort((a, b) => (b.rdValue || 0) - (a.rdValue || 0)).forEach((p, ix) => { rdPosMapB[p.id] = ix + 1; }); });
         const SIG = { buy: ["buy", "Buy low"], sell: ["sell", "Sell high"], rise: ["rise", "Form rising"], fall: ["fall", "Form falling"] };
         body.innerHTML = rows.map((p, i) => {
           if (p.isPick) {
+            /* Vet lines removed (Eric, 2026-11-12): no "Worth <veteran>"
+               note and no "the veteran it buys is <player>" line — a pick
+               stands on its value alone; its spot in the value-ordered
+               list already shows what it buys. */
             const pkCls = /Early/.test(p.name) ? "e" : /Mid/.test(p.name) ? "m" : "l";
             const pkTier = /Early/.test(p.name) ? "Early" : /Mid/.test(p.name) ? "Mid" : "Late";
             return `
           <tr class="pickrow">
             <td class="num">${i + 1}</td>
-            <td><span class="p-name">${esc(p.name)}</span> <span class="pk-tier ${pkCls}">${pkTier}</span>
-              <div class="p-sub">Worth ${esc(p.vet.name)} · ${esc(p.vet.pos)} · ${esc(p.vet.team)} · vet ${fmt(p.vet.value)}</div></td>
+            <td><span class="p-name">${esc(p.name)}</span> <span class="pk-tier ${pkCls}">${pkTier}</span></td>
             <td><span class="p-sub" style="font-weight:700">PICK</span></td>
             <td class="num hide-sm">—</td>
             <td class="hide-sm">—</td>
@@ -10418,7 +10583,7 @@ ${rdP ? "" : `
             : `<span class="trnd ${trCls}">${trArrow ? trArrow + " " : ""}${tr > 0 ? "+" : ""}${tr}%</span>`;
           return `
           <tr>
-            <td class="num">${inPicks ? (i + 1) : (rankMapB[p.id] != null ? rankMapB[p.id] : i + 1)}</td>
+            <td class="num">${i + 1}</td>
             <td>${hsImg(p)}<span class="p-name">${esc(p.name)}</span>${injChip(p)}${typeof radarChip === "function" ? radarChip(p) : ""}${p.flag ? ` <span class="sig ${SIG[p.flag][0]}"${p.flag === "rise" || p.flag === "fall" ? ` title="Role and production trend over his last 3 games"` : ""}>${SIG[p.flag][1]}</span>` : ""}${(boardState.owner !== "ALL" && boardState.owner !== "FA" && VALMODE !== "redraft" && !p.unpriced && dispVal(p) < 1000) ? ` <span class="sig fall" title="Value under 1,000 — low risk to drop">safely droppable</span>` : ""}${p.trendDir === "up" ? ` <span class="sig lead">Leads algorithm</span>` : p.trendDir === "dn" ? ` <span class="sig lag">Lags algorithm</span>` : ""}
               <div class="p-sub">${esc(ownerLabel(p))} · ${esc(p.tier)}</div></td>
             <td><span class="pos-badge pos-${p.pos.toLowerCase()}">${p.pos}${rd && rdPosMapB[p.id] != null ? rdPosMapB[p.id] : p.posRank}</span></td>
@@ -10454,34 +10619,37 @@ ${rdP ? "" : `
       document.getElementById("board-search").addEventListener("input", e => { boardState.q = e.target.value.toLowerCase().trim(); boardState.shown = 60; renderBoard(); });
       document.getElementById("board-sort").addEventListener("change", e => { boardState.sort = e.target.value; renderBoard(); });
       boardOwnerSel.addEventListener("change", e => { boardState.owner = e.target.value; boardState.shown = 60; renderBoard(); });
+      /* All-toggle strip (Eric, 2026-11-12): every group is lit by
+         default and in the list; tapping a lit button drops that group
+         out, tapping it again restores it. "All" is the master switch:
+         lit while every group is on — tapping it when all are on turns
+         everything off, tapping it again restores all. FLEX is the
+         flex-eligible set (RB/WR/TE); INJ is the injured set. The
+         separate Show/Hide picks button is deleted — the Picks toggle
+         in this strip owns picks now. */
+      function syncFilterButtons() {
+        const g = boardState.groups;
+        document.querySelectorAll("#pos-filter button").forEach(b => {
+          const k = b.dataset.pos;
+          b.setAttribute("aria-pressed", k === "ALL" ? String(Object.values(g).every(Boolean)) : String(!!g[k]));
+        });
+      }
       document.getElementById("pos-filter").querySelectorAll("button").forEach(btn => {
         btn.addEventListener("click", () => {
-          document.querySelectorAll("#pos-filter button").forEach(b => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
-          boardState.pos = btn.dataset.pos; boardState.shown = 60; renderBoard();
+          const k = btn.dataset.pos, g = boardState.groups;
+          if (k === "ALL") {
+            const allOn = Object.values(g).every(Boolean);
+            Object.keys(g).forEach(key => { g[key] = !allOn; });
+          } else if (k in g) {
+            g[k] = !g[k];
+          }
+          syncFilterButtons();
+          boardState.shown = 60; renderBoard();
         });
       });
       const injBtn = document.getElementById("inj-filter");
-      const injCount = DATA.players.filter(p => p.inj).length;
-      injBtn.textContent = `Injured · ${injCount}`;
-      document.getElementById("inj-note-count").textContent =
-        `${injCount} players carry a designation in this snapshot, sorted by value.`;
-      injBtn.addEventListener("click", () => {
-        boardState.injOnly = !boardState.injOnly;
-        injBtn.setAttribute("aria-pressed", boardState.injOnly ? "true" : "false");
-        document.getElementById("inj-note").hidden = !boardState.injOnly;
-        boardState.shown = 60; renderBoard();
-      });
-      const picksTglBtn = document.getElementById("picks-toggle");
-      if (picksTglBtn) picksTglBtn.addEventListener("click", () => {
-        boardState.showPicks = !boardState.showPicks;
-        picksTglBtn.textContent = boardState.showPicks ? "Hide picks" : "Show picks";
-        picksTglBtn.setAttribute("aria-pressed", boardState.showPicks ? "true" : "false");
-        boardState.shown = 60; renderBoard();
-      });
-      /* FLEX is a member of the position group above (Eric, 2026-10-23):
-         it used to be a standalone "Flex only" toggle that stayed lit
-         alongside a position pick; now the group's single-select click
-         handler owns it, and boardList maps pos "FLEX" to RB/WR/TE. */
+      injBtn.textContent = `Injured · ${DATA.players.filter(p => p.inj).length}`;
+      syncFilterButtons();
       document.getElementById("board-more").addEventListener("click", () => { boardState.shown += 80; renderBoard(); });
       renderBoard();
       renderTeamStrip();
@@ -19688,7 +19856,18 @@ function orderRowHTML(prefix){
 function fillOrder(prefix, order){
   for(let i=0;i<12;i++){
     const sel = drRoot.querySelector('[data-ord="'+prefix+i+'"]');
-    sel.innerHTML = TEAMS.map(t=>'<option value="'+t.id+'"'+(t.id===order[i]?" selected":"")+">"+esc(t.name)+"</option>").join("");
+    if (!sel) continue;
+    /* Live Rooms ("r"/"s") never show the demo league's fictional
+       names: the order selects list the live feed's names, else the
+       connected league's real teams, else numbered placeholder
+       slots. The Analyzer ("a") keeps its own demo board. */
+    if (prefix === "r" || prefix === "s") {
+      const w = liveWaitingTeams();
+      const names = (LIVE.names && Object.keys(LIVE.names).length) ? LIVE.names : w.names;
+      sel.innerHTML = order.map(tid=>'<option value="'+tid+'"'+(tid===order[i]?" selected":"")+">"+esc(names[tid] || ("Team " + tid))+"</option>").join("");
+    } else {
+      sel.innerHTML = TEAMS.map(t=>'<option value="'+t.id+'"'+(t.id===order[i]?" selected":"")+">"+esc(t.name)+"</option>").join("");
+    }
   }
 }
 function readOrder(prefix, cur){
@@ -19902,7 +20081,7 @@ $("#loadBtnA").addEventListener("click", ()=>{
 });
 
 /* ---------- 4. live draft room ---------- */
-const R = { order: DATA.defaultOrder.slice(), picks: new Array(48).fill(null), mine: 4, follow: false };
+const R = { order: DATA.defaultOrder.slice(), picks: new Array(48).fill(null), mine: null, follow: false };
 /* Live sync state (Round 2, Eric 2026-11-08): when a room is bound to
    a real Sleeper draft, LIVE carries the draft's identity, its team
    names, its pick sequence, and any picked player who sits outside
@@ -19912,15 +20091,63 @@ const R = { order: DATA.defaultOrder.slice(), picks: new Array(48).fill(null), m
    (liveBind/livePollNow/…) lives with the Round 2 view layer. */
 const LIVE = { room: null, bound: false, polling: false, binding: false, draftId: null, leagueId: null, status: null, name: "", type: "snake", rounds: 4, seq: null, names: {}, extra: {}, lastAt: 0, timer: null, agoTimer: null };
 function liveActive(room){ return LIVE.bound && LIVE.room === room && !window.__liveStale; }
-function liveTeamName(tid){ return (LIVE.bound && LIVE.names[tid]) || TEAMNAME[tid] || ("Team " + tid); }
+/* Live Room waiting state (Eric, 2026-11-12): the built-in demo
+   league is GONE from this room — no fictional team names anywhere
+   in it. Names resolve, in order, from the live draft feed, then
+   from the connected league's real teams, then to a numbered
+   placeholder slot ("Team 1" ... "Team 12"). */
+function liveWaitingTeams(){
+  let C = null;
+  try { C = (typeof sheetConn === "function") ? sheetConn() : null; } catch (e) { C = null; }
+  const teams = (C && Array.isArray(C.teams)) ? C.teams.filter(t => t) : [];
+  if (teams.length) return { order: teams.map(t => Number(t.rid)), names: Object.fromEntries(teams.map(t => [Number(t.rid), t.name])) };
+  return { order: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], names: {} };
+}
+function liveTeamName(tid){ return (LIVE.names && LIVE.names[tid]) || liveWaitingTeams().names[tid] || ("Team " + tid); }
+/* True while a room still holds its untouched boot state (the baked
+   draft order, no picks) — the only state liveBind may reset to the
+   waiting board. A board the visitor has touched (picks made, order
+   changed) is theirs and is never wiped by a re-bind. */
+function liveRoomIsPristine(room){
+  const st = room === "r" ? R : S;
+  return st.picks.every(p => !p) && st.order.length === DATA.defaultOrder.length && st.order.every((v, i) => v === DATA.defaultOrder[i]);
+}
+/* Put one Live Room on the waiting board: the connected league's
+   real teams (or numbered placeholder slots), an empty board, your
+   own team pre-picked when the league knows it. */
+function liveResetRoomToWaiting(room){
+  const w = liveWaitingTeams();
+  const st = room === "r" ? R : S;
+  const sel = room === "r" ? yt : ytS;
+  let myRid = null;
+  try { const C = (typeof sheetConn === "function") ? sheetConn() : null; myRid = (typeof sheetMyRid === "function") ? sheetMyRid(C) : null; } catch (e) { myRid = null; }
+  st.order = w.order.slice();
+  st.picks = new Array(room === "r" ? 48 : SPICKS).fill(null);
+  st.mine = (myRid != null && w.order.map(Number).includes(Number(myRid))) ? myRid : null;
+  st.follow = false;
+  sel.innerHTML = (st.mine == null ? '<option value="" selected>Pick your team\u2026</option>' : "")
+    + w.order.map(rid => '<option value="' + rid + '"' + (st.mine != null && Number(rid) === Number(st.mine) ? " selected" : "") + ">" + esc(w.names[rid] || ("Team " + rid)) + "</option>").join("");
+  sel.disabled = false;
+  fillOrder(room, st.order);
+  drRoot.querySelectorAll('[data-ord^="' + room + '"]').forEach(s => { s.disabled = false; });
+  if (room === "r") {
+    $("#undoBtn").disabled = false; $("#resetBtnR").disabled = false;
+    renderRoom();
+  } else {
+    $("#undoBtnS").disabled = false; $("#resetBtnS").disabled = false; $("#draftSearchS").disabled = false;
+    renderSnakeRoom();
+  }
+}
 function roomPl(pid){ if (pid == null) return null; const r = ROOKIES[RBYIDX[pid]]; if (r) return r; return LIVE.extra[pid] || null; }
 function snakePl(pid){ if (pid == null) return null; const p = SNAKE[SBYIDX[pid]]; if (p) return p; return LIVE.extra[pid] || null; }
 $("#orderRowR").innerHTML = orderRowHTML("r");
 fillOrder("r", R.order);
 wireOrder("r", ()=>R.order, v=>R.order=v, ()=>renderRoom());
 const yt = $("#yourTeam");
-yt.innerHTML = TEAMS.map(t=>'<option value="'+t.id+'"'+(t.id===4?" selected":"")+">"+esc(t.name)+"</option>").join("");
-yt.addEventListener("change", ()=>{ R.mine = +yt.value; renderRoom(); });
+/* Waiting state: numbered placeholder slots until a league syncs —
+   never the demo league's fictional names. */
+(function(){ const w = liveWaitingTeams(); yt.innerHTML = '<option value="" selected>Pick your team\u2026</option>' + w.order.map(rid=>'<option value="'+rid+'">'+esc(w.names[rid] || ("Team " + rid))+"</option>").join(""); })();
+yt.addEventListener("change", ()=>{ R.mine = yt.value === "" ? null : +yt.value; renderRoom(); });
 $("#sleeperBtnR").addEventListener("click", ()=>{ liveBind("r", true); });
 
 function roomSeq(){ if (liveActive("r") && LIVE.seq) return LIVE.seq; return snakeSeq(R.order); }
@@ -20153,14 +20380,19 @@ function drRosTotal(p){
 })();
 
 /* ----- snake live room ----- */
-const S = { order: DATA.defaultOrder.slice(), picks: new Array(SPICKS).fill(null), mine: 4, follow: false };
+const S = { order: DATA.defaultOrder.slice(), picks: new Array(SPICKS).fill(null), mine: null, follow: false };
 $("#orderRowS").innerHTML = orderRowHTML("s");
 fillOrder("s", S.order);
 wireOrder("s", ()=>S.order, v=>S.order=v, ()=>renderSnakeRoom());
 const ytS = $("#yourTeamS");
-ytS.innerHTML = TEAMS.map(t=>'<option value="'+t.id+'"'+(t.id===4?" selected":"")+">"+esc(t.name)+"</option>").join("");
-ytS.addEventListener("change", ()=>{ S.mine = +ytS.value; renderSnakeRoom(); });
+(function(){ const w = liveWaitingTeams(); ytS.innerHTML = '<option value="" selected>Pick your team\u2026</option>' + w.order.map(rid=>'<option value="'+rid+'">'+esc(w.names[rid] || ("Team " + rid))+"</option>").join(""); })();
+ytS.addEventListener("change", ()=>{ S.mine = ytS.value === "" ? null : +ytS.value; renderSnakeRoom(); });
 $("#sleeperBtnS").addEventListener("click", ()=>{ liveBind("s", true); });
+/* Waiting copy is live from first paint (Eric, Nov 12, 2026): the
+   status lines read the waiting board even before the room view
+   is entered — the Draft Room gate never calls liveBind for
+   guests, so without this the lines stay empty. */
+liveRenderStatus();
 
 function sSeq(){ if (liveActive("s") && LIVE.seq) return LIVE.seq; return snakeSeqN(S.order, SROUNDS); }
 function sCurrentIdx(){ return S.picks.findIndex(p=>!p); }
@@ -20988,8 +21220,10 @@ window.addEventListener("hashchange", ()=>{ const rt = drParseRoute(); if (rt) d
    every 20 seconds while the room view is open — per-browser by
    design, no central relay, so a busy draft day scales with the
    visitors themselves and any rate limit lands on one poller, never
-   the site. Guests, ESPN leagues, and leagues with no draft keep
-   the built-in demo room, labeled as the demo. */
+   the site. Guests, ESPN leagues, and leagues with no draft get an empty
+   waiting board on their own league's real teams — or numbered
+   placeholder slots when no league is connected. There is no demo
+   league anywhere in this room (Eric, 2026-11-12). */
 const LIVE_API = "https://api.sleeper.app/v1";
 async function liveFetch(path){
   const r = await fetch(LIVE_API + path);
@@ -21021,9 +21255,9 @@ function liveStatusFor(room){
     if (LIVE.status === "complete") return "Draft complete · <b style='color:var(--ink)'>" + esc(LIVE.name) + "</b> — the final board, straight from the draft feed.";
     return "<span class='live-dot'>● LIVE</span> · <b style='color:var(--ink)'>" + esc(LIVE.name) + "</b> — this room follows the real draft; new picks land on their own. Updated " + liveAgo() + "." + (LIVE.type === "auction" ? " Auction draft — dollar values, not a ranking." : "");
   }
-  if (C && C.platform === "espn") return "Demo league — live draft sync follows Sleeper drafts, and this league is on ESPN, so the room runs on the built-in demo. Picks are manual here.";
-  if (C) return "Demo league for now — this room follows your league's draft live while it's running. Until then it runs on the built-in demo, picks manual.";
-  return "Demo league — connect your league and this room follows its draft live, pick by pick. Until then it runs on the built-in demo, picks manual.";
+  if (C && C.platform === "espn") return "Waiting for the draft — live draft sync follows Sleeper drafts, so this ESPN league can't sync live. The board below is your league's teams; picks are manual here.";
+  if (C) return "Waiting for your league's draft — this room follows it live while it's running. Until then the board is empty; add picks manually, or sync when the draft starts.";
+  return "Connect your league and this room follows its draft live, pick by pick. Until then the board is empty — pick your team above to start a manual board.";
 }
 function liveRenderStatus(){
   const r = $("#liveStatusR"), s = $("#liveStatusS");
@@ -21048,8 +21282,9 @@ function liveStop(){
   if (window.__liveStale && LIVE.bound) liveResetState();
 }
 /* Unbind. Two cases: the binding simply ended (league gone, room
-   reset) — restore the room's built-in demo state. Or a pasted room
-   code superseded the binding (__liveStale) — the followed board now
+   reset) — restore the room's waiting board (connected league's
+   real teams, or placeholder slots). Or a pasted room code
+   superseded the binding (__liveStale) — the followed board now
    owns the room, so drop ONLY the live overlay and leave it alone. */
 function liveResetState(){
   liveStopTimers();
@@ -21058,23 +21293,7 @@ function liveResetState(){
   LIVE.status = null; LIVE.name = ""; LIVE.seq = null; LIVE.names = {}; LIVE.extra = {}; LIVE.lastAt = 0;
   window.__liveStale = false;
   if (superseded) { LIVE.room = null; liveRenderStatus(); return; }
-  if (room === "r") {
-    R.order = DATA.defaultOrder.slice(); R.picks = new Array(48).fill(null); R.mine = 4; R.follow = false;
-    yt.innerHTML = TEAMS.map(t => '<option value="' + t.id + '"' + (t.id === 4 ? " selected" : "") + ">" + esc(t.name) + "</option>").join("");
-    yt.disabled = false;
-    fillOrder("r", R.order);
-    drRoot.querySelectorAll('[data-ord^="r"]').forEach(sel => { sel.disabled = false; });
-    $("#undoBtn").disabled = false; $("#resetBtnR").disabled = false;
-    renderRoom();
-  } else if (room === "s") {
-    S.order = DATA.defaultOrder.slice(); S.picks = new Array(SPICKS).fill(null); S.mine = 4; S.follow = false;
-    ytS.innerHTML = TEAMS.map(t => '<option value="' + t.id + '"' + (t.id === 4 ? " selected" : "") + ">" + esc(t.name) + "</option>").join("");
-    ytS.disabled = false;
-    fillOrder("s", S.order);
-    drRoot.querySelectorAll('[data-ord^="s"]').forEach(sel => { sel.disabled = false; });
-    $("#undoBtnS").disabled = false; $("#resetBtnS").disabled = false; $("#draftSearchS").disabled = false;
-    renderSnakeRoom();
-  }
+  if (room === "r" || room === "s") liveResetRoomToWaiting(room);
   LIVE.room = null;
   liveRenderStatus();
 }
@@ -21161,7 +21380,7 @@ async function liveBind(room, force){
   }
   if (LIVE.bound && LIVE.room !== room) liveResetState();   /* the other room was bound — restore it first */
   LIVE.room = room;
-  if (!manualId && !wantLeague) { if (LIVE.bound) liveResetState(); LIVE.room = room; liveRenderStatus(); return; }
+  if (!manualId && !wantLeague) { if (LIVE.bound) liveResetState(); LIVE.room = room; if (liveRoomIsPristine(room)) liveResetRoomToWaiting(room); liveRenderStatus(); return; }
   LIVE.binding = true;
   try {
     let draft = null;
@@ -21170,7 +21389,7 @@ async function liveBind(room, force){
       const ds = await liveFetch("/league/" + encodeURIComponent(wantLeague) + "/drafts");
       draft = liveChooseDraft(Array.isArray(ds) ? ds : []);
     }
-    if (!draft || !draft.draft_id) { if (LIVE.bound) liveResetState(); LIVE.room = room; liveRenderStatus(); LIVE.binding = false; return; }
+    if (!draft || !draft.draft_id) { if (LIVE.bound) liveResetState(); LIVE.room = room; if (liveRoomIsPristine(room)) liveResetRoomToWaiting(room); liveRenderStatus(); LIVE.binding = false; return; }
     LIVE.room = room;
     await liveApplyDraft(room, draft, C);
     LIVE.binding = false;
@@ -21180,6 +21399,7 @@ async function liveBind(room, force){
     LIVE.binding = false;
     if (LIVE.bound) liveResetState();
     LIVE.room = room;
+    if (liveRoomIsPristine(room)) liveResetRoomToWaiting(room);
     liveRenderStatus();
   }
 }
@@ -24455,7 +24675,16 @@ window.drDraft = {
           </button>`;
         }).join("") : ff4CCRailEmptyNote(tab, pr, leagues);
         rail.innerHTML = `<div class="cc-rail-h">Your leagues · by playoff odds</div>` + list;
-        rail.querySelectorAll("[data-cc-focus]").forEach(b => b.addEventListener("click", () => ff4CCFocusLeague(+b.dataset.ccFocus)));
+        /* Rail switch re-points the MASTER league (Nov 12, 2026): a tap used
+           to call ff4CCFocusLeague only, which sets ff4.ccFocus and leaves
+           connLeagueKey / CONN_LEAGUE untouched — so Roster and every
+           other view fell back to the first league. ff4CCOpen is the
+           existing open path: the active league just refocuses, any other
+           league loads through slpLoadLeague (with the saved-record
+           persistence) exactly like a switch anywhere else. Needs You
+           First / Action Slip names stay non-clickable — switching stays
+           with the rail, the sidebar switcher and the Switch Teams tab. */
+        rail.querySelectorAll("[data-cc-focus]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccFocus)));
         rail.querySelectorAll("[data-cc-open]").forEach(b => b.addEventListener("click", () => ff4CCOpen(+b.dataset.ccOpen)));
       }
 
@@ -26198,7 +26427,7 @@ window.__lifeline = (function () {
       var mainBtns = document.querySelectorAll("#site-main [data-pnav]");
       var subBar = document.getElementById("site-sub");
       var subBtns = document.querySelectorAll("[data-pnav-sub]");
-      var MAIN_FOR = { values: "players", risers: "players", insights: "players", radar: "players", ineff: "players", roster: "myteam", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", upgrades: "trades", realtrades: "trades", tradeboard: "trades", spotlight: "league", power: "league", rosters: "league", outlook: "league", odds: "league", storylines: "league", mscore: "league", league: "league", command: "command", switchteams: "myteam" };
+      var MAIN_FOR = { values: "players", risers: "players", insights: "players", radar: "players", ineff: "players", roster: "myteam", lineup: "myteam", risk: "myteam", bye: "myteam", waivers: "myteam", teamport: "myteam", moves: "myteam", trades: "trades", targets: "trades", upgrades: "trades", realtrades: "trades", tradeboard: "trades", spotlight: "league", power: "league", rosters: "league", outlook: "league", odds: "league", storylines: "league", mscore: "league", league: "league", command: "command" };
       var GROUP_FOR = { players: "players", myteam: "myteam", trades: "trades", league: "league" };
       function setMainSel(key) {
         mainBtns.forEach(function (b) { b.setAttribute("aria-selected", b.dataset.pnav === key ? "true" : "false"); });
@@ -26318,7 +26547,7 @@ window.__lifeline = (function () {
       document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeFlyout(); });
       window.addEventListener("resize", closeFlyout);
       function syncNav(key, arg) {
-        if (key === "draft" || key === "format" || key === "how") { setMainSel(""); showGroup(null); return; }
+        if (key === "draft" || key === "format" || key === "how" || key === "switchteams") { setMainSel(""); showGroup(null); return; }
         if (key === "tools") { setMainSel("tools"); showGroup(null); return; }
         var main = MAIN_FOR[key];
         if (!main) return;
