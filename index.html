@@ -5205,6 +5205,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
 
         const items = [...wireTrades, ...wireInj, ...movers, ...wireTrending, ...wireNews];
         if (!items.length) { document.getElementById("ticker").style.display = "none"; return; }
+        /* One-way trap closed (Nov 12): an earlier empty render hid the
+           ticker, and nothing ever restored it when a later render had
+           items. The bar is visible whenever there is anything to show. */
+        document.getElementById("ticker").style.display = "";
         const CHIP = { TRADE: "trade", WAIVER: "waiver", INJURY: "inj", NEWS: "news", RISER: "rise", FALLER: "fall", TRENDING: "trend" };
         const itemHTML = it => {
           const inner = `<span class="tk-chip ${CHIP[it.cat]}">${it.cat}</span><span class="tk-head">${wEsc(it.head)}</span>${it.when ? `<span class="tk-when">${wEsc(it.when)}</span>` : ""}`;
@@ -5243,10 +5247,21 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
            clear a hover hold, because taps fire synthesized mouse-enter
            events (sticky hover) that never get a matching leave */
         let holdHover = false, holdTouch = false, holdFocus = false, holdPress = false;
-        const held = () => holdHover || holdTouch || holdFocus || holdPress;
         let resumeAt = 0;    /* rAF-clock time before which we stay paused */
         let last = 0;
         let cloning = false; /* observer guard for our own clones */
+
+        /* A focus hold is only live while focus is actually inside the
+           bar. renderWire replaces the track on every league/mode
+           switch, and a focused link destroyed by that replacement
+           may never fire focusout — so re-validate the latch on every
+           frame instead of trusting it. Genuine focus-pause (tabbing
+           through Wire links) is untouched: focus inside the bar keeps
+           the hold. */
+        function holdsLive() {
+          if (holdFocus && !ticker.contains(document.activeElement)) holdFocus = false;
+          return holdHover || holdTouch || holdFocus || holdPress;
+        }
 
         function measure() {
           const first = track.children[0];
@@ -5275,14 +5290,26 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           if (!last) { last = ts; return; }
           const dt = Math.min(ts - last, 100); /* tab-switch gaps don't jump */
           last = ts;
-          if (mq.matches || held() || setW <= 0) return;
+          if (mq.matches || holdsLive() || setW <= 0) return;
           if (resumeAt && ts < resumeAt) return;
           view.scrollLeft += SPEED * dt / 1000;
           if (view.scrollLeft >= setW) view.scrollLeft -= setW;
         }
 
-        function released() { if (!held()) resumeAt = performance.now() + 1200; }
-        ticker.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") holdHover = true; });
+        function released() { if (!holdsLive()) resumeAt = performance.now() + 1200; }
+        /* Hover latches on real movement, NOT on pointerenter (Nov 12):
+           a pointerenter also fires when content moves under a
+           stationary pointer — an overlay closing, a re-render — or as
+           a synthesized mouse event from a tap on a touch device, and
+           its matching pointerleave may never come. That is the Nov 11
+           freeze: the league-picker overlay closed under a stationary
+           pointer, pointerenter latched holdHover, and nothing ever
+           fired pointerleave, so the Wire stopped in every league
+           view. A genuine hover always moves the mouse over the bar
+           first, and that movement fires pointermove on the ticker
+           (it bubbles from children), so latch there instead — a
+           stationary pointer can never latch the hover again. */
+        ticker.addEventListener("pointermove", e => { if (e.pointerType === "mouse") holdHover = true; });
         ticker.addEventListener("pointerleave", e => {
           if (e.pointerType === "mouse" && holdHover) { holdHover = false; released(); }
         });
@@ -5304,6 +5331,31 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         view.addEventListener("pointercancel", e => {
           if (e.pointerType !== "touch" && holdPress) { holdPress = false; released(); }
         });
+
+        /* Self-healing on navigation and tab return (Nov 12): a
+           view/tab switch, or coming back to the tab, means the user's
+           pointer and focus are on the nav or the new view, not the
+           bar — any latched hold is stale by definition (a touch that
+           navigated away before touchend, a press with no matching
+           up). Drop the holds (focus is re-derived live, never forced
+           off) and re-measure: a measure taken while the bar was
+           hidden or empty can strand setW at 0, and nothing
+           re-measured on view switches before. Genuine hover/focus
+           re-latches the moment it returns. */
+        function dropStaleHolds() {
+          holdHover = false; holdTouch = false; holdPress = false;
+          holdFocus = ticker.contains(document.activeElement);
+          resumeAt = 0;
+          measure();
+        }
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) dropStaleHolds(); });
+        window.addEventListener("hashchange", () => { dropStaleHolds(); });
+        /* Nav taps re-measure too (the bar is always visible, so the
+           width read is valid) — a view switch is the other moment a
+           stale setW could strand the marquee. */
+        document.addEventListener("click", e => {
+          if (e.target && e.target.closest && e.target.closest("[data-pnav], [data-pnav-sub]")) measure();
+        }, true);
 
         /* renderWire replaces the track's sets on every league/mode
            switch — re-measure (and re-clone) whenever it does */
