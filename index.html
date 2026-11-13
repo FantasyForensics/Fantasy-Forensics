@@ -23950,6 +23950,13 @@ window.drDraft = {
           return;
         }
         await slpLoadLeague(lg, { skipTabRefresh: true });
+        /* Rail-switch hang (Eric, 2026-11-13): ff4CCOpen sets ccDead
+           above to kill the old session, but nothing on this path ever
+           cleared it — ff4CCDetail then aborts on its ccDead check and
+           the spot spins forever. The kill-switch has done its job once
+           the new league has loaded, so revive the dashboard before
+           refocusing. A failed load never reaches here. */
+        ff4.ccDead = false;
         /* Session bake (Eric, Nov 11): opening a league refocuses the
            dashboard from the cached session build — it never forces a
            full re-pull. Only when the dashboard was never built (or
