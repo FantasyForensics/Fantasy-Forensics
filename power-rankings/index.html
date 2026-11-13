@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Google tag (gtag.js) — same GA4 property + owner opt-out gate as the main site -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0LN6ZHJN6C"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+window.__ffGaOwners = ['thefantasyforensics@gmail.com'];
+try {
+  var ffGaQ = new URLSearchParams(location.search);
+  if (ffGaQ.get('ff_ga') === 'off') localStorage.setItem('ff_ga_off', '1');
+  if (ffGaQ.get('ff_ga') === 'on') localStorage.removeItem('ff_ga_off');
+  for (var ffK = 0; ffK < localStorage.length; ffK++) {
+    var ffKey = localStorage.key(ffK) || '';
+    if (ffKey.indexOf('firebase:authUser:') === 0) {
+      var ffU = JSON.parse(localStorage.getItem(ffKey) || 'null');
+      if (ffU && ffU.email && window.__ffGaOwners.indexOf(String(ffU.email).toLowerCase()) >= 0) localStorage.setItem('ff_ga_off', '1');
+    }
+  }
+  window.__ffGaOff = localStorage.getItem('ff_ga_off') === '1';
+} catch (e) { window.__ffGaOff = false; }
+if (!window.__ffGaOff) {
+  gtag('js', new Date());
+  gtag('config', 'G-0LN6ZHJN6C');
+}
+</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fantasy Football Power Rankings — Dynasty &amp; Redraft | Fantasy Forensics</title>
+<meta name="description" content="Who is most likely to win your league? Dynasty Current Power and Franchise Value rankings from thousands of season simulations — free.">
+<link rel="canonical" href="https://thefantasyforensics.com/power-rankings/">
+<meta property="og:title" content="Fantasy Football Power Rankings — Dynasty &amp; Redraft | Fantasy Forensics">
+<meta property="og:description" content="Who is most likely to win your league? Dynasty Current Power and Franchise Value rankings from thousands of season simulations — free.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://thefantasyforensics.com/power-rankings/">
+<meta property="og:image" content="https://thefantasyforensics.com/og-image.png">
+<link rel="icon" href="https://thefantasyforensics.com/favicon.png">
+<style>
+:root{--bg:#0b0f16;--card:#121826;--line:#22304a;--txt:#e8edf5;--dim:#9fb0c7;--acc:#a3e635;--red:#f87171}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.55 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 56px}
+header.site{display:flex;justify-content:space-between;align-items:center;padding:6px 0 18px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.logo{font-weight:800;font-size:19px;color:var(--txt)}.logo span{color:var(--acc)}
+nav.top a{margin-left:16px;font-size:14px}
+h1{font-size:30px;line-height:1.2;margin:6px 0 8px}h2{font-size:21px;margin:30px 0 10px}
+.sub{color:var(--dim);font-size:15px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:15px}
+th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+td.num,th.num{text-align:right}
+.up{color:var(--acc)}.down{color:var(--red)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:18px 0}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0}
+.kv div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kv b{display:block;font-size:19px}.kv span{color:var(--dim);font-size:13px}
+.cta{background:#16240f;border:1px solid #3f6212;border-radius:12px;padding:16px 18px;margin:26px 0}
+.cta a{font-weight:700}
+footer{border-top:1px solid var(--line);margin-top:36px;padding-top:14px;color:var(--dim);font-size:13px}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;color:var(--dim);margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="site"><a class="logo" href="https://thefantasyforensics.com/">Fantasy <span>Forensics</span></a><nav class="top"><a href="https://thefantasyforensics.com/players/">Rankings</a><a href="https://thefantasyforensics.com/risers-fallers/">Risers &amp; Fallers</a><a href="https://thefantasyforensics.com/">Trade Calculator</a></nav></header>
+
+<h1>Fantasy Football Power Rankings</h1>
+<p>Who is actually most likely to win your league — and what is every team worth as a franchise? Two rankings, two different questions, one page each.</p>
+<h2>Current Power — who wins the title?</h2>
+<p>Current Power is the chance each team wins the championship, from thousands of simulations of the rest of the season: playoff odds, rest-of-season projections and the real remaining schedule, all baked in. A team with no real playoff path can't rank high — its title chance is capped by its playoff odds.</p>
+<h2>Franchise Value — what is the team worth?</h2>
+<p>Franchise Value is the roster plus the picks, players and draft picks shown as separate subtotals. It answers the long question: how much is this team worth as an asset, not just this season.</p>
+<h2>Trade stance — buy, hold, or sell?</h2>
+<p>Every team also carries a stance from its playoff odds: Buyer, Holding, Seller, or Maximal Seller. The stance drives the trade tools — who to target, who is selling, and what a firesale partner looks like. A team can top one ranking and sit mid-table on the other, and that's the point: strength now and value later are different things.</p>
+<h2>How to use the rankings</h2>
+<p>Check your Current Power rank to see where you really stand, then check your stance before you offer: buyers chase win-now pieces, sellers collect picks, and the teams in the middle get two pivot paths. The full rankings live in the app, per league, with every team graded against its own league.</p>
+<div class="cta"><strong>See your rankings.</strong><br>
+Connect your league in the free <a href="https://thefantasyforensics.com/">Fantasy Forensics tools</a> and the Power Rankings build around your team.</div>
+<p class='sub'>More free tools: <a href='https://thefantasyforensics.com/trade-calculator/'>Trade Calculator</a> · <strong>Power Rankings</strong> · <a href='https://thefantasyforensics.com/draft-room/'>Draft Room</a> · <a href='https://thefantasyforensics.com/players/'>Dynasty Rankings</a> · <a href='https://thefantasyforensics.com/insights/'>Insights</a></p>
+
+<footer>Fantasy Forensics — free dynasty and redraft tools: trade grades, power rankings and player values, all from our proprietary algorithm. <a href="https://thefantasyforensics.com/">Open the tools</a> · Values last updated November 10, 2026.</footer>
+</div>
+</body>
+</html>

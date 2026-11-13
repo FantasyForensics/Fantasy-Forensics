@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Google tag (gtag.js) — same GA4 property + owner opt-out gate as the main site -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0LN6ZHJN6C"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+window.__ffGaOwners = ['thefantasyforensics@gmail.com'];
+try {
+  var ffGaQ = new URLSearchParams(location.search);
+  if (ffGaQ.get('ff_ga') === 'off') localStorage.setItem('ff_ga_off', '1');
+  if (ffGaQ.get('ff_ga') === 'on') localStorage.removeItem('ff_ga_off');
+  for (var ffK = 0; ffK < localStorage.length; ffK++) {
+    var ffKey = localStorage.key(ffK) || '';
+    if (ffKey.indexOf('firebase:authUser:') === 0) {
+      var ffU = JSON.parse(localStorage.getItem(ffKey) || 'null');
+      if (ffU && ffU.email && window.__ffGaOwners.indexOf(String(ffU.email).toLowerCase()) >= 0) localStorage.setItem('ff_ga_off', '1');
+    }
+  }
+  window.__ffGaOff = localStorage.getItem('ff_ga_off') === '1';
+} catch (e) { window.__ffGaOff = false; }
+if (!window.__ffGaOff) {
+  gtag('js', new Date());
+  gtag('config', 'G-0LN6ZHJN6C');
+}
+</script>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same Points, Opposite Prices: Why Dynasty and Redraft Values Diverge | Fantasy Forensics</title>
+<meta name="description" content="Derrick Henry and Jordan Love average nearly identical points (22.4 vs 22.6 per game), yet redraft prices Henry 54% higher and dynasty prices Love 39% higher. The two questions behind the flip.">
+<link rel="canonical" href="https://thefantasyforensics.com/insights/dynasty-vs-redraft-henry-love/">
+<meta property="og:title" content="Same Points, Opposite Prices: Why Dynasty and Redraft Values Diverge | Fantasy Forensics">
+<meta property="og:description" content="Derrick Henry and Jordan Love average nearly identical points (22.4 vs 22.6 per game), yet redraft prices Henry 54% higher and dynasty prices Love 39% higher. The two questions behind the flip.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://thefantasyforensics.com/insights/dynasty-vs-redraft-henry-love/">
+<meta property="og:image" content="https://thefantasyforensics.com/og-image.png">
+<link rel="icon" href="https://thefantasyforensics.com/favicon.png">
+<style>
+:root{--bg:#0b0f16;--card:#121826;--line:#22304a;--txt:#e8edf5;--dim:#9fb0c7;--acc:#a3e635;--red:#f87171}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.55 -apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+a{color:var(--acc);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 56px}
+header.site{display:flex;justify-content:space-between;align-items:center;padding:6px 0 18px;border-bottom:1px solid var(--line);margin-bottom:22px}
+.logo{font-weight:800;font-size:19px;color:var(--txt)}.logo span{color:var(--acc)}
+nav.top a{margin-left:16px;font-size:14px}
+h1{font-size:30px;line-height:1.2;margin:6px 0 8px}h2{font-size:21px;margin:30px 0 10px}
+.sub{color:var(--dim);font-size:15px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:15px}
+th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--dim);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+td.num,th.num{text-align:right}
+.up{color:var(--acc)}.down{color:var(--red)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:18px 0}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0}
+.kv div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kv b{display:block;font-size:19px}.kv span{color:var(--dim);font-size:13px}
+.cta{background:#16240f;border:1px solid #3f6212;border-radius:12px;padding:16px 18px;margin:26px 0}
+.cta a{font-weight:700}
+footer{border-top:1px solid var(--line);margin-top:36px;padding-top:14px;color:var(--dim);font-size:13px}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:13px;color:var(--dim);margin-right:6px}
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Same Points, Opposite Prices: Why Dynasty and Redraft Values Diverge",
+  "datePublished": "2026-10-13",
+  "url": "https://thefantasyforensics.com/insights/dynasty-vs-redraft-henry-love/",
+  "description": "Derrick Henry and Jordan Love average nearly identical points (22.4 vs 22.6 per game), yet redraft prices Henry 54% higher and dynasty prices Love 39% higher. The two questions behind the flip."
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+<header class="site"><a class="logo" href="https://thefantasyforensics.com/">Fantasy <span>Forensics</span></a><nav class="top"><a href="https://thefantasyforensics.com/players/">Rankings</a><a href="https://thefantasyforensics.com/risers-fallers/">Risers &amp; Fallers</a><a href="https://thefantasyforensics.com/">Trade Calculator</a></nav></header>
+
+<p class="sub"><a href="https://thefantasyforensics.com/insights/">Insights</a> › Strategy › Tuesday, October 13, 2026</p>
+<h1>Same Points, Opposite Prices: Why Dynasty and Redraft Values Diverge</h1>
+<p class="sub">Through five weeks, Derrick Henry and Jordan Love are producing identical points. Redraft prices Henry 54% higher; dynasty prices Love 39% higher. Both are right — they're answering different questions.</p>
+<p>Derrick Henry and Jordan Love are, right now, effectively the same player. Through Week 5 in this league's scoring, Henry averaged <strong>22.4 points per game</strong>; Love averaged <strong>22.6</strong>. Our rest-of-season projections keep them level the rest of the way — 21.9 vs. 22.2 points per week. And yet the two formats on this site price them in opposite directions, by a lot. That flip is the entire difference between dynasty and redraft, contained in one pair of names.</p>
+<h3>Henry vs. Love — same production, two prices</h3><table><tr><th></th><th class='num'>Derrick Henry</th><th class='num'>Jordan Love</th></tr><tr><td>Positional rank</td><td class='num'>RB17</td><td class='num'>QB11</td></tr><tr><td>Points per game, Weeks 1–5</td><td class='num'>22.4</td><td class='num'>22.6</td></tr><tr><td>Rest-of-season projection (pts/wk)</td><td class='num'>21.9</td><td class='num'>22.2</td></tr><tr><td>Redraft value</td><td class='num'>6,767</td><td class='num'>4,392</td></tr><tr><td>Dynasty value</td><td class='num'>3,994</td><td class='num'>5,562</td></tr></table>
+<h2>Redraft asks one question</h2>
+<p>Redraft asks a single question: who scores more between now and Week 17? By that measure Henry is the prize — a single-season value of <strong>6,767 against Love's 4,392, a 54% edge</strong>. He is a workhorse back producing RB1 points today, and in a format where next season doesn't exist, nothing else about him matters. The age curve is somebody else's problem.</p>
+<h2>Dynasty asks a longer one</h2>
+<p>Dynasty asks what a player is worth across every season you'll own him, and the answer flips: <strong>Love 5,562 (QB11) against Henry 3,994 (RB17) — a 39% edge the other way</strong>. Two forces do it. The first is the age curve: Henry is 32, and in our measured curves running back value falls off a cliff in the late 20s — and keeps falling. That is why our algorithm's price on him sits where it does — it discounts his age more steeply than most managers do. The second force is time. Love is 27 at the position that holds value longest — quarterback prices barely move into the early 30s — and in superflex, a stable starting quarterback is the scarcest asset in the format. Love's price contains the better part of a decade of starter seasons. Henry's contains what's left of this one, and maybe the next.</p>
+<p>Neither price is wrong; they're answers to different questions — which is why all 401 players on this board carry both. Flip the Format switch at the top of the page from Dynasty to Redraft and every price re-renders through the single-season lens. Contending? Henry's profile is what you buy. Rebuilding? Love's is. Just know which question you're answering before you send the offer.</p>
+<div class='cta'><a href='https://thefantasyforensics.com/players/'>See both prices on the board →</a></div>
+<div class="cta"><strong>Put it to work.</strong><br>
+Grade your next offer in the free <a href="https://thefantasyforensics.com/">Trade Calculator</a>, or see where every player sits on the <a href="https://thefantasyforensics.com/players/">Dynasty Rankings</a>.</div>
+<p class="sub"><a href="https://thefantasyforensics.com/insights/">← All Insights</a></p>
+
+<footer>Fantasy Forensics — free dynasty and redraft tools: trade grades, power rankings and player values, all from our proprietary algorithm. <a href="https://thefantasyforensics.com/">Open the tools</a> · Values last updated November 10, 2026.</footer>
+</div>
+</body>
+</html>
