@@ -14660,6 +14660,16 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         if (Array.isArray(b.matchups)) {
           b.matchups.forEach(m => { if (m && m.roster_id != null) curByRid[m.roster_id] = m; });
         }
+        /* Week-done signal (hoisted — the opponent preview below
+           used to compute it after the teams map): the most-played
+           team's banked games. The week is DONE only once that
+           reaches the week number; a week in progress stays below
+           it until Sleeper finalizes the week. */
+        const maxGames = (rosters || []).reduce((m, r) => {
+          const s = r.settings || {};
+          return Math.max(m, (s.wins || 0) + (s.losses || 0) + (s.ties || 0));
+        }, 0);
+        const weekDone = (typeof week === "number") && maxGames >= week;
         const teams = rosters.map(r => {
           const s = r.settings || {};
           const pf = (s.fpts || 0) + (s.fpts_decimal || 0) / 100;
@@ -14670,8 +14680,6 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           const curOk = entryOk(cur);
           const nxtOk = entryOk(nxt);
           const srcLineup = curOk ? cur.starters : nxtOk ? nxt.starters : (r.starters || []);
-          const lineup = srcLineup.map((pid, i) => ({ id: pid, slot: slotLabel(startSlots[i] || "") }))
-            .filter(l => KEEP_SLOTS.includes(l.slot));
           /* A set lineup Sleeper already rolled forward still names next
              week's starters even when it came from rosters[] (the
              next-week entry fetch failed, or the rollover landed after
@@ -14683,7 +14691,22 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           const nxtSet = (nxt && Array.isArray(nxt.starters)) ? new Set(nxt.starters.map(String)) : null;
           const srcSet = new Set(srcLineup.map(String));
           const matchesNext = !!(nxt && (nxt.points == null || nxt.points === 0) && nxtSet && srcSet.size > 0 && nxtSet.size === srcSet.size && [...srcSet].every(id => nxtSet.has(id)));
-          const lineupWeek = curOk ? week : (((nxtOk || matchesNext) && typeof week === "number") ? week + 1 : week);
+          /* Week-done gate (2026-11-13, bye-swap fix): the flip to
+             next week's lineup/week fires ONLY once the week is
+             actually complete (weekDone, hoisted above). A week that
+             merely STARTED — Thursday points > 0, maxGames still
+             below the week — is not done: flipping then makes the
+             whole queue evaluate next week while the user is still
+             managing this one (Dynasty 2025, Week 10: one Thursday
+             score flipped lineupWeek to 11, and the queue priced two
+             Week-10-bye Broncos off Week-11 lines — Pat Bryant 9.86
+             over Courtland Sutton 9.42, a +0.5 fine-tune row for
+             players who do not play this week). */
+          const useNext = weekDone && (nxtOk || matchesNext);
+          const effLineup = curOk ? cur.starters : useNext ? nxt.starters : (r.starters || []);
+          const lineup = effLineup.map((pid, i) => ({ id: pid, slot: slotLabel(startSlots[i] || "") }))
+            .filter(l => KEEP_SLOTS.includes(l.slot));
+          const lineupWeek = (curOk || !useNext) ? week : week + 1;
           return {
             rid: r.roster_id,
             name: teamNameOf(r),
@@ -14786,11 +14809,6 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            2026-10-27: the preview said Week 8 against the Week 7
            opponent). */
         let opp6 = null;
-        const maxGames = (rosters || []).reduce((m, r) => {
-          const s = r.settings || {};
-          return Math.max(m, (s.wins || 0) + (s.losses || 0) + (s.ties || 0));
-        }, 0);
-        const weekDone = (typeof week === "number") && maxGames >= week;
         const oppSrc = (weekDone && b.matchupsNext && b.matchupsNext.length) ? b.matchupsNext : b.matchups;
         if (oppSrc && oppSrc.length) {
           opp6 = {};
