@@ -1110,6 +1110,7 @@
         border-radius: 10px; padding: 9px 12px; font-size: 14px; font-weight: 600;
       }
       .shared-flag.show { display: block; }
+      .shared-flag .share-btn { display: block; margin-top: 8px; }
 
       /* ---------- finder ---------- */
       .finder-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
@@ -8483,6 +8484,7 @@ ${rdP ? "" : `
             <div class="fm-hint">Add or remove players to move the marker — green is the target zone.</div>
           </div>`;
           })()}
+          <div class="share-row"><button type="button" class="share-btn" id="copy-trade-link">Copy link</button></div>
           <details class="verdict-more">
           <summary>See in-depth analysis</summary>
           <div style="display:flex;justify-content:space-between;font-weight:600">
@@ -8506,6 +8508,8 @@ ${rdP ? "" : `
           </details>`;
         const sv = document.getElementById("share-verdict");
         if (sv) sv.addEventListener("click", () => { if (typeof window.shareVerdictImage === "function") window.shareVerdictImage(); });
+        const cl = document.getElementById("copy-trade-link");
+        if (cl) cl.addEventListener("click", () => { const url = buildShareTradeUrl(); if (url) copyLinkWithFeedback(cl, url); });
         const vm = el.querySelector(".verdict-more");
         if (vm) vm.addEventListener("toggle", () => { const s = vm.querySelector("summary"); if (s) s.textContent = vm.open ? "Hide in-depth analysis" : "See in-depth analysis"; });
       }
@@ -8522,16 +8526,84 @@ ${rdP ? "" : `
 
       /* ================= Share-a-trade links =================
          "Share this trade" encodes both sides into the URL fragment:
-         #trade=<sideA>~<sideB>[~r] — each side is "<team>:<assets>",
-         team a roster id, FA, or ANY for an Any Player side; an asset is a player id, or "pk" +
-         pick key + "@" + owning roster id for a pick ("@G" instead of
-         a roster id for a standard guest pick slot); "~r" marks a
-         redraft-mode trade. Opening the link rebuilds the trade in the
+         #trade=<sideA>~<sideB>[~r][~f=<settings>] — each side is
+         "<team>:<assets>", team a roster id, FA, or ANY for an Any
+         Player side; an asset is a player id, or "pk" + pick key +
+         "@" + owning roster id for a pick ("@G" instead of a roster
+         id for a standard guest pick slot); "~r" marks a redraft-mode
+         trade; "~f=<sf>_<ppr>_<tep>_<ptd>_<passYds>" carries the
+         sender's format (e.g. f=1_1_0.5_4_0.04) so the opener grades
+         under the same settings. Old links without "~f=" load exactly
+         as before. Opening the link rebuilds the trade in the
          calculator and pre-computes the verdict. Ids that no longer
          resolve (a player or pick gone from the snapshot) are dropped,
          never guessed. Fragment only — no server involved. */
       const shareNoteEl = document.getElementById("share-note");
       function noteShare(msg) { if (shareNoteEl) shareNoteEl.textContent = msg; }
+      /* Settings segment: "~f=<sf>_<ppr>_<tep>_<ptd>_<passYds>".
+         sf is 1/0, the rest plain numbers. parseSettingsSeg
+         validates all five fields — any bad value voids the whole
+         segment and the opener's settings stand. */
+      function settingsSegValue() {
+        const s = SETTINGS;
+        return (s.sf ? "1" : "0") + "_" + Number(s.ppr) + "_" + Number(s.tep) + "_" + Number(s.ptd) + "_" + Number(s.passYds);
+      }
+      function parseSettingsSeg(seg) {
+        const parts = String(seg).split("_");
+        if (parts.length !== 5) return null;
+        if (parts.some(p => p === "" || p == null)) return null;
+        const nums = parts.map(Number);
+        if (nums.some(v => !isFinite(v))) return null;
+        const sf = nums[0], ppr = nums[1], tep = nums[2], ptd = nums[3], passYds = nums[4];
+        if (sf !== 0 && sf !== 1) return null;
+        if (ppr < 0 || ppr > 1) return null;
+        if (tep < 0 || tep > 1.5) return null;
+        if (ptd < 4 || ptd > 6) return null;
+        if (passYds < 0 || passYds > 0.1) return null;
+        return { sf: sf === 1, ppr, tep, ptd, passYds };
+      }
+      /* Clipboard with a textarea+execCommand fallback (older
+         browsers, non-secure contexts). Feedback swaps the button
+         label for ~2s, then reverts. */
+      function fallbackCopy(text) {
+        try {
+          const ta = document.createElement("textarea");
+          ta.value = text; ta.setAttribute("readonly", "");
+          ta.style.position = "fixed"; ta.style.opacity = "0";
+          document.body.appendChild(ta); ta.select();
+          const ok = document.execCommand("copy");
+          document.body.removeChild(ta);
+          return !!ok;
+        } catch (e) { return false; }
+      }
+      function copyLinkWithFeedback(btn, text) {
+        const orig = btn.dataset.origLabel || btn.textContent;
+        btn.dataset.origLabel = orig;
+        const done = () => { btn.textContent = "Link copied ✓"; setTimeout(() => { btn.textContent = orig; }, 2000); };
+        const fail = () => { btn.textContent = "Copy failed — try again"; setTimeout(() => { btn.textContent = orig; }, 2000); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done, () => { if (fallbackCopy(text)) done(); else fail(); });
+        } else if (fallbackCopy(text)) done(); else fail();
+      }
+      /* Encode the calculator's current trade as a shareable link.
+         Only when both sides hold assets (a verdict exists, FF-03).
+         Team token: ANY for an Any Player side, FA, else the roster
+         id; picks ride as pk<key>@<fromTeam> ("G" for guest slots).
+         "~r" in redraft, "~f=" carries the live SETTINGS so the
+         opener grades under the sender's format. */
+      function encodeCalcSide(side) {
+        const st = calc[side];
+        const tok = st.src === "any" ? "ANY" : (st.team === "FA" ? "FA" : String(st.team));
+        const parts = st.assets.map(a => a.kind === "player" ? String(a.id) : "pk" + a.key + "@" + (a.fromTeam === "G" ? "G" : String(a.fromTeam)));
+        return tok + ":" + parts.join(",");
+      }
+      function buildShareTradeUrl() {
+        if (!calc.A.assets.length || !calc.B.assets.length) return null;
+        let frag = "trade=" + encodeCalcSide("A") + "~" + encodeCalcSide("B");
+        if (VALMODE === "redraft") frag += "~r";
+        frag += "~f=" + settingsSegValue();
+        return location.origin + location.pathname + "#" + frag;
+      }
       function parseTradeSide(str) {
         const i = str.indexOf(":");
         if (i < 0) return null;
@@ -8542,7 +8614,12 @@ ${rdP ? "" : `
           if (teamTok === "FA") team = "FA";
           else if (teamTok === "ANY") team = "ANY";
           else if (TBY[teamTok]) team = Number(teamTok);
-          if (team === null) return null;
+          /* Cross-league team token: the sender's roster id is not
+             in this league — it must NEVER fail the link or
+             misattribute a roster. The side resolves globally
+             (players by id, picks as guest slots) and renders under
+             a generic label; see loadSharedTrade. */
+          else team = "UNKNOWN";
         }
         const assets = [], seen = new Set();
         str.slice(i + 1).split(",").filter(Boolean).slice(0, 14).forEach(t => {
@@ -8553,18 +8630,39 @@ ${rdP ? "" : `
             const key = t.slice(2, at);
             if (t.slice(at + 1) === "G") {
               // standard guest pick slot — resolves in guest mode, and
-              // on the Any Player side of a connected link
-              if ((!guest && team !== "ANY") || !GPBY[key]) return;
+              // on the Any Player side of a connected link (or a
+              // cross-league side, which resolves globally)
+              if ((!guest && team !== "ANY" && team !== "UNKNOWN") || !GPBY[key]) return;
               const dk = "pk" + key + "@G";
               if (seen.has(dk)) return; seen.add(dk);
               assets.push({ kind: "pick", key, fromTeam: "G" });
               return;
             }
             if (guest) return;
+            if (team === "UNKNOWN") {
+              // Cross-league team: no roster owns the pick in this
+              // league — resolve it as a standard guest slot. Guest
+              // and team prices are the same ladder price under the
+              // same settings, so the grade is preserved.
+              if (!GPBY[key]) return;
+              const dk = "pk" + key + "@G";
+              if (seen.has(dk)) return; seen.add(dk);
+              assets.push({ kind: "pick", key, fromTeam: "G" });
+              return;
+            }
             let fromTeam = Number(t.slice(at + 1));
             if (!TBY[fromTeam] || !TBY[fromTeam].picks.some(p => p.key === key)) {
               const owner = DATA.teams.find(tm => tm.picks.some(p => p.key === key));
-              if (!owner) return;
+              if (!owner) {
+                // No roster in this league holds the pick — keep it
+                // as a guest slot rather than dropping it (same
+                // ladder price, grade preserved).
+                if (!GPBY[key]) return;
+                const dk = "pk" + key + "@G";
+                if (seen.has(dk)) return; seen.add(dk);
+                assets.push({ kind: "pick", key, fromTeam: "G" });
+                return;
+              }
               fromTeam = owner.rid;
             }
             const dk = "pk" + key + "@" + fromTeam;
@@ -8577,15 +8675,34 @@ ${rdP ? "" : `
         });
         return { team, assets };
       }
+      /* A shared link's format override: the opener's SETTINGS as
+         they were before the link's "~f=" segment was applied.
+         Null when no override is active. Restoring it re-grades
+         under the opener's own format. */
+      let sharedOverride = null;
+      const SHARED_FLAG_DEFAULT = "Opened from a shared link — this exact trade was restored from the URL, and the verdict below is computed from the current values.";
       function loadSharedTrade() {
         const m = /(?:^#|[#&])trade=([^&]+)/.exec(location.hash || "");
         if (!m) return;
+        /* A trade= fragment that parses to nothing usable: say so
+           plainly and leave an empty calculator — never a blank
+           page, never a crash, never the shared flag. */
+        const sharedLinkInvalid = () => {
+          if (sharedOverride) clearSharedOverride(true);
+          calc.A.assets = []; calc.B.assets = [];
+          renderSide("A"); renderSide("B"); renderVerdict();
+          hideSharedFlag();
+          noteShare("That shared link couldn't be loaded — the trade isn't available anymore. Start a new trade below.");
+          activateNav("trades");
+        };
         let raw;
-        try { raw = decodeURIComponent(m[1]); } catch (e) { return; }
+        try { raw = decodeURIComponent(m[1]); } catch (e) { sharedLinkInvalid(); return; }
         const parts = raw.split("~");
         const wantRedraft = parts.includes("r");
-        const sideStrs = parts.filter(p => p !== "r");
-        if (sideStrs.length !== 2) return;
+        const fPart = parts.find(p => p.indexOf("f=") === 0);
+        const sideStrs = parts.filter(p => p !== "r" && p.indexOf("f=") !== 0);
+        if (sideStrs.length !== 2) { sharedLinkInvalid(); return; }
+        const senderSettings = fPart ? parseSettingsSeg(fPart.slice(2)) : null;
         // A link carrying standard guest pick slots ("pk…@G") was built
         // in guest mode — enter guest mode first, so the picks resolve
         // instead of dropping against league rosters on a cold open.
@@ -8600,13 +8717,29 @@ ${rdP ? "" : `
         if (wantRedraft !== (VALMODE === "redraft") && typeof setValMode === "function") {
           setValMode(wantRedraft ? "redraft" : "dynasty");
         }
+        /* Apply the sender's format BEFORE grading: save the opener's
+           settings first (mtCapture pattern), then re-price
+           everything and sync the format controls so the page shows
+           the format the verdict was graded under. A bad "~f="
+           segment is ignored — the opener's settings stand, and the
+           link still loads. */
+        if (senderSettings) {
+          if (!sharedOverride) sharedOverride = { settings: { ...SETTINGS } };
+          Object.assign(SETTINGS, senderSettings);
+          recomputeValues();
+          if (typeof renderFormatPanel === "function") renderFormatPanel();
+        } else if (sharedOverride) {
+          // A settings-less link replaces a settings link — grade
+          // under the opener's own settings again.
+          clearSharedOverride(true);
+        }
         const pa = parseTradeSide(sideStrs[0]), pb = parseTradeSide(sideStrs[1]);
-        if (!pa || !pb) return;
-        if (!pa.assets.length && !pb.assets.length) return;
+        if (!pa || !pb) { sharedLinkInvalid(); return; }
+        if (!pa.assets.length && !pb.assets.length) { sharedLinkInvalid(); return; }
         if (!window.GUEST_MODE) {
-          if (pa.team === "ANY") calc.A.src = "any";
+          if (pa.team === "ANY" || pa.team === "UNKNOWN") calc.A.src = "any";
           else if (pa.team !== null) { calc.A.team = pa.team; calc.A.src = "team"; }
-          if (pb.team === "ANY") calc.B.src = "any";
+          if (pb.team === "ANY" || pb.team === "UNKNOWN") calc.B.src = "any";
           else if (pb.team !== null) { calc.B.team = pb.team; calc.B.src = "team"; }
         }
         calc.A.assets = pa.assets; calc.B.assets = pb.assets;
@@ -8616,7 +8749,16 @@ ${rdP ? "" : `
           calc.B.assets = calc.B.assets.filter(a => a.kind !== "player" || !aIds.has(String(a.id))); }
         renderSide("A"); renderSide("B"); renderVerdict();
         const flag = document.getElementById("shared-flag");
-        if (flag) flag.classList.add("show");
+        if (flag) {
+          if (senderSettings) {
+            const fmtTxt = (typeof slpFormatSummary === "function") ? slpFormatSummary(senderSettings) : "the sender's format";
+            const modeTxt = VALMODE === "redraft" ? "Redraft" : "Dynasty";
+            flag.innerHTML = `<span>Opened from a shared link — graded under ${modeTxt} · ${esc(fmtTxt)}, the settings this link was shared with.</span><button type="button" class="share-btn" id="shared-reprice">Re-grade under my league's settings</button>`;
+          } else {
+            flag.innerHTML = SHARED_FLAG_DEFAULT;
+          }
+          flag.classList.add("show");
+        }
         noteShare("Shared trade loaded — edit either side to re-grade it.");
         activateNav("trades");
         const v = document.getElementById("verdict");
@@ -8629,8 +8771,48 @@ ${rdP ? "" : `
          the "opened from a shared link" flag comes down. */
       const tradesTabEl = document.getElementById("tab-trades");
       const hideSharedFlag = () => { const f = document.getElementById("shared-flag"); if (f) f.classList.remove("show"); };
-      tradesTabEl.addEventListener("click", e => { if (e.target.closest("[data-add], [data-rm], [data-pick]")) hideSharedFlag(); });
-      tradesTabEl.addEventListener("change", e => { if (e.target.id === "team-A" || e.target.id === "team-B" || e.target.classList.contains("calc-pick-select")) hideSharedFlag(); });
+      /* Clear a format override. restore = put the opener's own
+         settings back and re-grade (re-price button, editing the
+         trade, connecting or switching leagues). Silent = just drop
+         the saved snapshot — the settings already in force stand
+         (a format-control drag or a mode flip the viewer chose). */
+      function clearSharedOverride(restore) {
+        if (!sharedOverride) { hideSharedFlag(); return; }
+        const saved = sharedOverride.settings;
+        sharedOverride = null;
+        if (restore) {
+          Object.assign(SETTINGS, saved);
+          recomputeValues();
+          if (typeof renderFormatPanel === "function") renderFormatPanel();
+          renderSide("A"); renderSide("B"); renderVerdict();
+        }
+        hideSharedFlag();
+      }
+      tradesTabEl.addEventListener("click", e => { if (e.target.closest("[data-add], [data-rm], [data-pick]")) clearSharedOverride(true); });
+      tradesTabEl.addEventListener("change", e => { if (e.target.id === "team-A" || e.target.id === "team-B" || e.target.classList.contains("calc-pick-select")) clearSharedOverride(true); });
+      /* The flag's own re-price button (delegation — the flag's
+         content is rewritten on every shared load). */
+      const sharedFlagEl = document.getElementById("shared-flag");
+      if (sharedFlagEl) sharedFlagEl.addEventListener("click", e => { if (e.target.closest("#shared-reprice")) clearSharedOverride(true); });
+      /* Connecting a league or switching leagues clears the override
+         too — the new league brings its own format. Every connect /
+         switch path funnels through applyMode, which fires modechange. */
+      window.addEventListener("modechange", () => clearSharedOverride(true));
+      /* A format-control drag or a Dynasty/Redraft flip the viewer
+         makes themselves also ends the override — silently: the
+         settings they just chose stand, the flag just comes down. */
+      ["ctl-sf", "ctl-ppr", "ctl-tep", "ctl-ptd"].forEach(id => {
+        const c = document.getElementById(id);
+        if (!c) return;
+        c.addEventListener("input", () => clearSharedOverride(false));
+        c.addEventListener("change", () => clearSharedOverride(false));
+      });
+      const fpPresets = document.getElementById("fp-presets");
+      if (fpPresets) fpPresets.addEventListener("click", () => clearSharedOverride(false));
+      ["vm-dynasty", "vm-redraft"].forEach(id => {
+        const b = document.getElementById(id);
+        if (b) b.addEventListener("click", () => clearSharedOverride(false));
+      });
 
       /* ================= Trade finder ================= */
       function median(arr) { const s = [...arr].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; }
@@ -18301,7 +18483,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           const adjs = sideAdjRT(t);
           const sides = t.s.map((sd, i) => sideHtml(sd, hlPid, adjs[i])).join(`<div class="rt-swap" aria-hidden="true">⇄</div>`);
           const take = tradeTake(t);
-          const shareBtn = rtShareable(t) ? `<div class="share-row"><button type="button" class="share-btn" data-rt-share="${RT.trades.indexOf(t)}">Share trade as image</button></div>` : "";
+          const shareBtn = rtShareable(t) ? `<div class="share-row"><button type="button" class="share-btn" data-rt-share="${RT.trades.indexOf(t)}">Share trade as image</button> <button type="button" class="share-btn share-copy" data-rt-link="${RT.trades.indexOf(t)}">Copy link</button></div>` : "";
           return `<div class="rt-card">
             <div class="rt-card-top"><span class="rt-date">${fmtDate(t.d)}</span>${badge}<span class="rt-league">${esc(t.lg)} · ${t.nt} teams</span></div>
             <div class="rt-sides${t.s.length > 2 ? " rt-sides-3" : ""}">${sides}</div>
@@ -18332,6 +18514,30 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             const adjs = sideAdjRT(t);
             return adjs.every(e => e != null) && t.s.every(sd => sideTotal(sd) != null);
           } catch (e) { return false; }
+        }
+        /* Shareable link for a graded real trade: the same gate as
+           the image share. Both sides ride as ANY (Real Trades teams
+           are anonymized labels, never roster ids); players by id,
+           picks as pk<season>-<round>-M@G — always Mid tier, the
+           tier pickVal prices. Past-class picks (season ≤ 2026) are
+           spent and unpriced, so they are dropped — the card totals
+           already exclude them, so the link grade matches the card.
+           "~r" for redraft trades, "~f=" carries the viewer's
+           current settings. */
+        function rtTradeLink(t) {
+          if (!rtShareable(t)) return null;
+          const enc = sd => {
+            const parts = [];
+            sd.p.forEach(pid => parts.push(String(pid)));
+            sd.k.forEach(([ss, rr]) => { if (!pastClass(ss)) parts.push("pk" + ss + "-" + rr + "-M@G"); });
+            return "ANY:" + parts.join(",");
+          };
+          const a = enc(t.s[0]), b = enc(t.s[1]);
+          if (!a.split(":")[1] || !b.split(":")[1]) return null;
+          let frag = "trade=" + a + "~" + b;
+          if (t.f === "r") frag += "~r";
+          if (typeof settingsSegValue === "function") frag += "~f=" + settingsSegValue();
+          return location.origin + location.pathname + "#" + frag;
         }
         window.shareRTImage = function (t) {
           try {
@@ -18565,6 +18771,17 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           if (t && typeof window.shareRTImage === "function") window.shareRTImage(t);
         });
 
+        /* Copy-link buttons on graded cards (full cards + calculator
+           strip minis) — same delegated pattern as the image share. */
+        document.addEventListener("click", e => {
+          const b = e.target && e.target.closest ? e.target.closest("[data-rt-link]") : null;
+          if (!b) return;
+          const t = RT.trades[+b.dataset.rtLink];
+          if (!t) return;
+          const url = rtTradeLink(t);
+          if (url && typeof copyLinkWithFeedback === "function") copyLinkWithFeedback(b, url);
+        });
+
         /* ---------- calculator tie-in: "Recently traded for" strip ---------- */
         const stripEl = document.getElementById("rt-calc-strip");
         function gotSummary(side, hlPid) {
@@ -18604,7 +18821,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             }).join("");
           } catch (e) { totals = ""; }
           const take = tradeTake(t);
-          const shareLink = rtShareable(t) ? `<button type="button" class="rt-strip-link" data-rt-share="${RT.trades.indexOf(t)}">Share as image</button>` : "";
+          const shareLink = rtShareable(t) ? `<button type="button" class="rt-strip-link" data-rt-share="${RT.trades.indexOf(t)}">Share as image</button> <button type="button" class="rt-strip-link" data-rt-link="${RT.trades.indexOf(t)}">Copy link</button>` : "";
           return `<div class="rt-mini"><div class="rt-mini-top"><span class="rt-date">${fmtDate(t.d)}</span>${badge}</div>${lines}${totals}${take ? `<div class="rt-take rt-take-${take.kind}">${take.html}</div>` : ""}${shareLink}</div>`;
         }
         function syncStrip() {
