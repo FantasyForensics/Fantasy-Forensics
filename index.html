@@ -23229,9 +23229,11 @@ window.drDraft = {
                 const reps = bench.filter(b => cs.includes(b.pos) && !wkIsBye(b, wk))
                   .map(b => ({ p: b, pts: projL(b).pts })).filter(x => x.pts > 0);
                 if (reps.length && reps.every(x => { const L = locks[x.p.team]; return !!(L && typeof L.t === "number" && L.t < mine.t); })) {
-                  const firstT = Math.min(...reps.map(x => locks[x.p.team].t));
-                  const day = new Date(firstT).toLocaleDateString("en-US", { weekday: "short" });
-                  push(5, "dbt", p.name, "Questionable" + (p.ibp ? " — " + p.ibp : "") + " — your only bench cover plays earlier (" + day + "); decide before that game locks", 8, { pid: String(p.id) });
+                  const best = reps.reduce((a, b) => (b.pts > a.pts ? b : a));
+                  const fmtT = t => { const d = new Date(t); return d.toLocaleDateString("en-US", { weekday: "short" }) + " " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }); };
+                  const firstName = n => String(n).split(" ")[0];
+                  const lastName = n => { const w = String(n).split(" "); const s = ["Sr.", "Jr.", "II", "III"]; return (s.includes(w[w.length - 1]) && w.length > 1) ? w[w.length - 2] : w[w.length - 1]; };
+                  push(5, "dbt", p.name, "Questionable" + (p.ibp ? " — " + p.ibp : "") + ". If he's out, start " + best.p.name + " (" + fmtT(locks[best.p.team].t) + ") — " + firstName(p.name) + " plays " + fmtT(mine.t) + ". Decide before " + lastName(best.p.name) + "'s game locks.", 8, { pid: String(p.id) });
                 }
               }
             }
