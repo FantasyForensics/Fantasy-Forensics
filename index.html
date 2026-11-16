@@ -4544,6 +4544,23 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       </section>
 
       <style>
+        /* First-connect account prompt (Eric, 2026-11-16, growth piece 1):
+           one compact row atop Command Center, shown once after a
+           guest connects their first league. Copy + button pattern
+           reused from the waitlist account nudge (.wl-acct-prompt). */
+        .fc-acct-prompt { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid rgba(198,255,0,.35); border-radius: 12px; background: rgba(198,255,0,.07); color: var(--ink); font-size: 13.5px; line-height: 1.35; }
+        .fc-acct-prompt-t { flex: 1 1 auto; min-width: 0; }
+        .fc-acct-prompt-b { flex: 0 0 auto; background: var(--accent); color: #0b0f00; border: 0; border-radius: 8px; padding: 7px 12px; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .fc-acct-prompt-b:hover { filter: brightness(1.08); }
+        .fc-acct-prompt-x { flex: 0 0 auto; background: transparent; color: var(--ink-2); border: 0; padding: 2px 6px; font-size: 18px; line-height: 1; cursor: pointer; }
+        .fc-acct-prompt-x:hover { color: var(--ink); }
+        @media (max-width: 760px) {
+          .fc-acct-prompt { flex-wrap: wrap; gap: 8px; }
+          .fc-acct-prompt-t { flex: 1 1 100%; }
+        }
+      </style>
+
+      <style>
         /* Tools hub (Eric, 2026-11-07): one directory screen of compact
            pills in the Command Center tile family. Desktop ~4 across so
            the whole directory fits on one screen; phones go 2-across
@@ -16068,6 +16085,82 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         const el = document.getElementById("ff-rollover-banner");
         if (el) { el.hidden = true; el.innerHTML = ""; }
       }
+      /* First-connect account prompt (Eric, 2026-11-16, growth piece 1):
+         after a signed-out guest connects their FIRST league, offer
+         the free account that keeps leagues saved across devices.
+         First connect only, once ever per browser (localStorage
+         flag); never for signed-in visitors, never on failed
+         connects, never again after dismiss. Called from the
+         landCommand branch of both connect paths (Sleeper
+         slpLoadLeague, ESPN espnConnect) — the only places a fresh
+         manual connect lands on Command Center. Copy + button
+         pattern reused from the waitlist account nudge
+         (.wl-acct-prompt); the button opens the EXISTING auth
+         dialog via window.__ffAuth.openPanel("signup"). */
+      var FF_FIRST_CONNECT_PROMPT_KEY = "ff-first-connect-prompt";
+      function ffFirstConnectPromptSeen() {
+        try { return !!window.localStorage.getItem(FF_FIRST_CONNECT_PROMPT_KEY); } catch (e) { return true; /* storage unavailable: fail closed, never show */ }
+      }
+      function ffFirstConnectPromptMark() {
+        try { window.localStorage.setItem(FF_FIRST_CONNECT_PROMPT_KEY, "1"); } catch (e) {}
+      }
+      function ffMaybeFirstConnectPrompt() {
+        try {
+          if (ffFirstConnectPromptSeen()) return;
+          var auth = window.__ffAuth || null;
+          if (auth && auth.user) { ffFirstConnectPromptMark(); return; } /* signed in: never prompt */
+          if (!auth) { ffFirstConnectPromptMark(); return; } /* no auth module: the dialog is unavailable */
+          if (auth.stateResolved !== true) {
+            /* Auth state still resolving (connect happens seconds
+               after load, so this is rare): wait briefly, then
+               decide exactly once. */
+            var tries = 0;
+            var iv = setInterval(function () {
+              tries++;
+              var a2 = window.__ffAuth || null;
+              if ((a2 && a2.stateResolved === true) || tries >= 16) {
+                clearInterval(iv);
+                if (a2 && a2.user) { ffFirstConnectPromptMark(); return; }
+                if (a2 && a2.stateResolved === true && !a2.user) ffShowFirstConnectPrompt();
+                else ffFirstConnectPromptMark(); /* unresolved after ~4s: suppress (the dialog needs Firebase anyway) */
+              }
+            }, 250);
+            return;
+          }
+          ffShowFirstConnectPrompt();
+        } catch (e) {}
+      }
+      function ffShowFirstConnectPrompt() {
+        try {
+          var tab = document.getElementById("tab-command");
+          if (!tab || tab.querySelector(".fc-acct-prompt")) return;
+          ffFirstConnectPromptMark();
+          var pr = document.createElement("div");
+          pr.className = "fc-acct-prompt";
+          pr.setAttribute("role", "status");
+          var tx = document.createElement("span");
+          tx.className = "fc-acct-prompt-t";
+          tx.appendChild(document.createTextNode("Create a free account to keep your leagues saved across devices. "));
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "fc-acct-prompt-b";
+          btn.textContent = "Create a free account";
+          btn.addEventListener("click", function () { try { if (window.__ffAuth && typeof window.__ffAuth.openPanel === "function") window.__ffAuth.openPanel("signup"); } catch (e) {} });
+          var x = document.createElement("button");
+          x.type = "button";
+          x.className = "fc-acct-prompt-x";
+          x.setAttribute("aria-label", "Dismiss");
+          x.textContent = "\u00d7";
+          x.addEventListener("click", function () { try { pr.remove(); } catch (e) {} });
+          pr.appendChild(tx);
+          pr.appendChild(btn);
+          pr.appendChild(x);
+          var out = document.getElementById("cc-out");
+          if (out && out.parentNode === tab) tab.insertBefore(pr, out);
+          else tab.insertBefore(pr, tab.firstChild);
+        } catch (e) {}
+      }
+
       async function slpLoadLeague(lg, opts) {
         /* opts.quiet (auto-reconnect only): apply the league silently.
            A manual connect lands the user on the League Analyzer at
@@ -16278,6 +16371,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             if (opts && opts.landCommand) {
               activateNav("command");
               window.scrollTo({ top: 0 });
+              try { ffMaybeFirstConnectPrompt(); } catch (e) { /* prompt is best-effort; never break a connect */ }
             } else if (!(opts && opts.skipTabRefresh)) {
               ffRefreshCurrentTab();
             }
@@ -16987,6 +17081,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           if (opts && opts.landCommand) {
             activateNav("command");
             window.scrollTo({ top: 0 });
+            try { ffMaybeFirstConnectPrompt(); } catch (e) { /* prompt is best-effort; never break a connect */ }
           }
           return true;
         } catch (e) {
