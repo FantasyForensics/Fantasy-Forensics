@@ -6012,6 +6012,66 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         const rs = (typeof ROS_STATS !== "undefined" && ROS_STATS) ? ROS_STATS[p.id] : null;
         return !(rs && Number(rs.g) > 0);
       };
+      /* Redraft re-derivation curves (audit FF-04, 2026-11-17): the
+         per-position isotonic curves from rd_curves.json (the same
+         knots rebake_rd_values.py uses) — projected pts/wk at the
+         reference format -> market-baseline redraft value. Embedded
+         here so an IR/PUP player whose baked rdSnap is a stale 0 can
+         be re-priced from live ROS without waiting for the Tuesday
+         rebake. */
+      const RD_CURVES = {"QB":[[0.0,0.0],[13.773,579.222458],[14.445,679.07577],[16.91175,1279.256874],[19.224,4160.458056],[19.317,4237.471251],[20.168,4933.418993],[21.154,5744.601209],[21.273,5844.554101],[21.311,5875.700956],[22.622,7195.48925],[22.78,7414.043471],[25.565333,8914.511429],[27.571,8916.286239]],"RB":[[0.0,0.0],[4.796545,127.272559],[6.2125,225.848075],[6.906,309.962624],[7.016,349.698471],[7.059,365.564442],[7.265,441.891329],[7.561,525.105674],[8.638333,591.590201],[8.962,817.809452],[8.969,823.622256],[9.016,844.907153],[9.069,872.754176],[9.495,1164.499348],[9.576,1221.101066],[10.017,1528.255204],[10.185,1614.338258],[10.196,1615.130007],[10.941,1791.384439],[12.984,2606.978534],[13.09,2639.556917],[13.308,2708.219772],[13.484,2756.904977],[14.996,3102.790543],[15.533,3186.978461],[15.623,3201.51286],[15.626,3204.563728],[15.898,3245.678396],[16.294,3423.877319],[16.593,4278.903921],[16.879,4355.19766],[18.575,5073.614651],[18.795,5241.384537],[19.87,6127.195044],[21.415,6875.432611],[21.46,6895.139795],[22.715,7373.397675],[25.738,8448.248749]],"WR":[[0.0,0.0],[1.109,25.628906],[2.539,51.0],[2.747,51.396666],[4.313,64.327203],[6.336,74.807495],[8.049,82.822823],[8.399,198.127205],[8.5,206.281231],[8.618,216.492501],[8.689,220.092691],[8.843,236.409689],[8.941,249.833539],[9.168,294.291739],[9.507,460.051136],[10.082,959.44764],[10.6372,1039.334132],[11.222,1504.669396],[11.322,1514.015755],[11.382,1515.620486],[11.754,1547.386111],[12.495,1833.11898],[12.551,1858.475357],[12.614,1886.666295],[12.666,1912.518409],[12.888,2012.039456],[13.833,2425.06525],[13.881,2447.973174],[13.957,2491.035687],[14.195,2626.049054],[14.232,2644.815674],[14.413,2745.798681],[14.755,2933.311516],[14.776,2941.441949],[14.838,2976.668046],[14.856,2988.669159],[15.679,3437.177006],[16.701,4211.693094],[16.899,4332.635365],[17.316,4603.521206],[17.34,4619.557449],[17.57,4769.972143],[17.882,4974.09871],[18.343,5248.444683],[18.615,5407.089349],[19.072,5671.825271],[19.218,5760.433286],[21.749,7658.840864],[24.594,8784.572683]],"TE":[[0.0,0.0],[9.879667,144.545516],[11.018667,283.796985],[11.963,359.335975],[13.4095,1213.609537],[15.2405,2092.188562],[16.223,2092.897455],[16.308,2093.346636],[19.496,2093.417357]]};
+      function rdCurveValue(pos, ros) {
+        const k = RD_CURVES[pos];
+        if (!k || !k.length) return 0;
+        if (ros <= k[0][0]) return k[0][1];
+        if (ros >= k[k.length - 1][0]) return k[k.length - 1][1];
+        for (let i = 0; i < k.length - 1; i++) {
+          const a = k[i], b = k[i + 1];
+          if (ros >= a[0] && ros <= b[0]) {
+            if (b[0] === a[0]) return b[1];
+            return a[1] + (b[1] - a[1]) * (ros - a[0]) / (b[0] - a[0]);
+          }
+        }
+        return k[k.length - 1][1];
+      }
+      /* Reference-format ROS pts/wk — rebake_rd_values.py score() at
+         LEAGUE_DEFAULT (superflex, 1.0 PPR, TE +0.75, 6-pt pass TD,
+         0.04/pass yd, -1 INT). Mirrors the bake's scorer, not
+         wkScoreFromStats: the bake's score carries no fum_lost or
+         two_pt terms. */
+      function rdRefRos(p) {
+        const e = (typeof ROS_STATS !== "undefined" && ROS_STATS) ? ROS_STATS[p.id] : null;
+        if (!e || !e.s) return 0;
+        const st = e.s;
+        return (st.pass_td || 0) * 6 + (st.pass_yds || 0) * 0.04 + (st.int || 0) * -1
+          + ((st.rush_yds || 0) + (st.rec_yds || 0)) / 10 + (st.rush_td || 0) * 6 + (st.rec_td || 0) * 6
+          + (st.rec || 0) * (p.pos === "TE" ? 1.75 : 1.0);
+      }
+      /* Re-derive a stale baked-zero rdSnap from live ROS, at the
+         bake's own construction (curve model, quarter-damped lean off
+         the FantasyCalc baseline, hard-capped at +/-5%). Returns the
+         new rdSnap, or null when the baked 0 stands: only IR/PUP
+         players with a baked 0, a projected return (ROS weeks > 0)
+         and NOT out-for-season qualify. Unanchored players (no fc)
+         sit on the curve's absolute scale — the rebake's fallback for
+         a player with no prior reference ROS. */
+      function rdRederiveSnap(p) {
+        if (!p || (p.inj !== "IR" && p.inj !== "PUP")) return null;
+        if (p.rdSnap != null && p.rdSnap !== 0) return null;
+        const out = (typeof ffBakeRdOut === "function" ? ffBakeRdOut(p) : (typeof window.rdOutForSeason === "function" && window.rdOutForSeason(p)));
+        if (out) return null;
+        const rs = (typeof ROS_STATS !== "undefined" && ROS_STATS) ? ROS_STATS[p.id] : null;
+        if (!rs || !(Number(rs.g) > 0)) return null;
+        const model = rdCurveValue(p.pos, rdRefRos(p));
+        let fc = (p.rdfc != null && p.rdfc > 0) ? p.rdfc : null;
+        if (fc == null && typeof RD !== "undefined" && RD && RD[p.id] && RD[p.id][1] > 0) fc = RD[p.id][1];
+        if (fc) {
+          const lean = Math.min(1.05, Math.max(0.95, Math.pow(model / fc, 0.25)));
+          return Math.round(fc * lean);
+        }
+        return Math.round(model);
+      }
+      window.rdRederiveSnap = rdRederiveSnap;
       function recomputeValues() {
         /* Per-game rates follow the format: p.ros / p.ppg are
            re-converted from the baked stat means under the SETTINGS
@@ -6020,6 +6080,17 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
         DATA.players.forEach(p => {
           p.value = Math.round(p.snapValue * factorRatio(p.pos));
           if (p.rdSnap != null) p.rdValue = Math.round(p.rdSnap * factorRatio(p.pos));
+          /* FF-04: a baked rdSnap of 0 for an IR/PUP player with
+             projected remaining weeks is a stale snapshot, not a
+             price — the Nov 10 bake zeroed him before his ROS row
+             existed. Re-derive from the live ROS at the bake's own
+             construction so the board, the Why text and the
+             calculator agree. Out-for-season players (no ROS weeks)
+             keep 0 — the ffBakeRdOut zero below still applies. */
+          if ((p.rdSnap == null || p.rdSnap === 0) && typeof rdRederiveSnap === "function") {
+            const __rdNew = rdRederiveSnap(p);
+            if (__rdNew != null) { p.rdSnap = __rdNew; p.rdValue = Math.round(__rdNew * factorRatio(p.pos)); }
+          }
           /* Redraft prices are rest-of-season only, and a player on
              injured reserve or the PUP list has no return date the data
              can stand behind — to a redraft manager he is worth ~0,
@@ -7646,7 +7717,7 @@ ${rdP ? "" : `
           clinched: sr ? !!sr.clinched : false, titleIfIn: sr ? titlePct(sr) : null,
           simPending: !sr && teams.length === 12 && !mtSimFailed.has(id),
           simNA: !sr && teams.length !== 12 ? "size" : (!sr && mtSimFailed.has(id) ? "failed" : null),
-          week: DATA.league.week,
+          week: (typeof ffActiveWeek === "function") ? ffActiveWeek() : DATA.league.week,
           opp: opp ? { name: opp.name, record: opp.record } : null,
           waivers: mtWaivers(me),
         };
@@ -7873,7 +7944,7 @@ ${rdP ? "" : `
         return pk ? pickPrice(pk) : 0;
       }
       function assetLabel(a) {
-        if (a.kind === "player") { const p = PBY[a.id]; return `${p.name} (${p.pos}${p.posRank}, ${p.team})`; }
+        if (a.kind === "player") { const p = PBY[a.id]; return `${p.name} (${p.pos}${(typeof VALMODE !== "undefined" && VALMODE === "redraft" && typeof window.rdPosRank === "function" && window.rdPosRank(p) != null) ? window.rdPosRank(p) : p.posRank}, ${p.team})`; }
         if (a.fromTeam === "G") { const gp = GPBY[a.key]; return gp ? gp.label : "Pick"; }
         const pk = TBY[a.fromTeam].picks.find(p => p.key === a.key);
         return pk ? pk.label : "Pick";
@@ -8040,6 +8111,18 @@ ${rdP ? "" : `
          from the season sim's projected final standings through the
          same mapping (restampPickTiers) — no second copy of the rule
          may exist. */
+      /* A baked ladder pick's live price under the current format
+         settings (FF-07): the ladder is priced in Superflex; in 1 QB
+         the pickScalar ratio (2027 R1 Late 1.0126: 4,657 -> 4,716)
+         applies, parsed off the label ("2027 1st (Late)"). Unparseable
+         labels fall back to the raw baked value. */
+      function ladderPickVal(l) {
+        if (!l || l.value == null) return l ? l.value : null;
+        const m = /^\s*(\d{4})\s+(\d)(?:st|nd|rd|th)\s+\((Early|Mid|Late)\)/.exec(String(l.label || ""));
+        if (!m) return l.value;
+        return Math.round(l.value * pickScalar(SETTINGS, Number(m[1]), Number(m[2]), m[3]));
+      }
+      window.ladderPickVal = ladderPickVal;
       function pickTierFromRank(rk, n) {
         const r = rk || Math.ceil(n / 2);
         return r > (2 * n) / 3 ? "Early" : r <= n / 3 ? "Late" : "Mid";
@@ -8143,7 +8226,7 @@ ${rdP ? "" : `
         if (teamSel) teamSel.addEventListener("change", e => {
           st.team = e.target.value === "FA" ? "FA" : Number(e.target.value);
           st.assets = [];
-          renderSide(side); renderVerdict();
+          renderSide(side); renderVerdict(); renderResults(side === "A" ? "B" : "A");
         });
         el.querySelectorAll("[data-srcsel]").forEach(btn => {
           btn.addEventListener("click", () => {
@@ -8151,7 +8234,7 @@ ${rdP ? "" : `
             if ((v === "any") === (st.src === "any")) return;
             st.src = v;
             st.assets = [];
-            renderSide(side); renderVerdict();
+            renderSide(side); renderVerdict(); renderResults(side === "A" ? "B" : "A");
           });
         });
         const searchEl = document.getElementById("search-" + side);
@@ -8168,7 +8251,7 @@ ${rdP ? "" : `
           } else if (!st.assets.some(a => a.kind === "pick" && a.key === v)) {
             st.assets.push({ kind: "pick", key: v, fromTeam: st.team });
           }
-          renderSide(side); renderVerdict();
+          renderSide(side); renderVerdict(); renderResults(side === "A" ? "B" : "A");
         });
         /* [data-gpick] buttons are rendered by renderResults (search
            results), which wires their clicks itself. */
@@ -8194,9 +8277,9 @@ ${rdP ? "" : `
            off window.CONN_LEAGUE directly. */
         const C = (connected && window.CONN_LEAGUE) ? window.CONN_LEAGUE : null;
         if (C && C.league && C.league.name) {
-          bar.textContent = (C.league.name + " · " + (VALMODE === "redraft" ? "Redraft" : "Dynasty") + " · " + (C.format && C.format.sf === false ? "1 QB" : "Superflex")).toUpperCase();
+          bar.textContent = (C.league.name + " · " + (VALMODE === "redraft" ? "Redraft" : "Dynasty") + " · " + ((typeof SETTINGS !== "undefined" && SETTINGS.sf === false) ? "1 QB" : "Superflex")).toUpperCase();
         } else {
-          bar.textContent = "Guest · Full player pool · Dynasty Standard";
+          bar.textContent = ("Guest · Full player pool · " + (VALMODE === "redraft" ? "Redraft" : "Dynasty") + " · " + ((typeof SETTINGS !== "undefined" && SETTINGS.sf === false) ? "1 QB" : "Superflex")).toUpperCase();
         }
         disc.hidden = !connected;
         conn.hidden = connected;
@@ -8302,9 +8385,20 @@ ${rdP ? "" : `
                this list rendered — never let one player sit on both
                sides; drop the stale row instead. */
             const otherSt2 = calc[side === "A" ? "B" : "A"];
-            if (otherSt2 && otherSt2.assets.some(a => a.kind === "player" && String(a.id) === String(btn.dataset.add))) { renderResults(side); return; }
+            if (otherSt2 && otherSt2.assets.some(a => a.kind === "player" && String(a.id) === String(btn.dataset.add))) {
+              /* FF-10: say so instead of silently dropping the click — the
+                 row is stale because the other side claimed this player
+                 after the list rendered. */
+              renderResults(side);
+              const __nm = (typeof PBY !== "undefined" && PBY[btn.dataset.add] && PBY[btn.dataset.add].name) ? PBY[btn.dataset.add].name : "That player";
+              const __note = document.createElement("div");
+              __note.className = "empty";
+              __note.textContent = __nm + " is already on Side " + (side === "A" ? "B" : "A") + " — remove them there to add them here.";
+              box.prepend(__note);
+              return;
+            }
             calc[side].assets.push({ kind: "player", id: btn.dataset.add });
-            renderSide(side); renderVerdict();
+            renderSide(side); renderVerdict(); renderResults(side === "A" ? "B" : "A");
           });
         });
         box.querySelectorAll("[data-gpick]").forEach(btn => {
@@ -8314,7 +8408,7 @@ ${rdP ? "" : `
             if (!st.assets.some(a => a.kind === "pick" && a.key === key && a.fromTeam === "G")) {
               st.assets.push({ kind: "pick", key, fromTeam: "G" });
             }
-            renderSide(side); renderVerdict();
+            renderSide(side); renderVerdict(); renderResults(side === "A" ? "B" : "A");
           });
         });
       }
@@ -8338,7 +8432,7 @@ ${rdP ? "" : `
         box.querySelectorAll("[data-rm]").forEach(btn => {
           btn.addEventListener("click", () => {
             st.assets.splice(Number(btn.dataset.rm), 1);
-            renderSide(side); renderVerdict();
+            renderSide(side); renderVerdict(); renderResults(side === "A" ? "B" : "A");
           });
         });
         writeTotals(side);
@@ -8971,7 +9065,7 @@ ${rdP ? "" : `
          dynasty price in dynasty mode and the rest-of-season redraft
          price in redraft mode, so packages price identically to the
          board and the calculator in whichever mode is live. */
-      function playerAsset(p) { return { kind: "player", p, label: `${p.name} (${p.pos}${p.posRank}, age ${p.age ?? "—"})`, value: dispVal(p) }; }
+      function playerAsset(p) { return { kind: "player", p, label: `${p.name} (${p.pos}${(typeof VALMODE !== "undefined" && VALMODE === "redraft" && typeof window.rdPosRank === "function" && window.rdPosRank(p) != null) ? window.rdPosRank(p) : p.posRank}, age ${p.age ?? "—"})`, value: dispVal(p) }; }
       /* Assemble an offer out of a pool of picks/players that lands inside
          [lo, hi] x the target price — the mechanism that makes young studs
          cost a stack and veterans cost a song. Tries several orderings and
@@ -10714,7 +10808,7 @@ ${rdP ? "" : `
         </div>`;
       }
       function redraftWhy(p) {
-        const base = `Redraft value — this year's remaining production, priced in the scoring format set in the League Format tool — ${(p.ros || 0).toFixed(1)} projected pts/wk from Week ${DATA.league.week} on.`;
+        const base = `Redraft value — this year's remaining production, priced in the scoring format set in the League Format tool — ${(p.ros || 0).toFixed(1)} projected pts/wk from Week ${(typeof ffEffWeek === "function" ? ffEffWeek() : DATA.league.week)} on.`;
         if (p.inj === "IR" || p.inj === "PUP") {
           /* Wording gated on the same availability test that
              prices him (audit FF-04): "out for the season" is
@@ -10981,21 +11075,24 @@ ${rdP ? "" : `
          writes to p.value and
          never feeds the trade calculator's verdict — it only annotates trade
          advice with title-odds swings. */
-      /* Strength of schedule (baked Oct 17, 2026): per player
-         [ROS factor, Week 6 factor, Week 6 opponent]. Each NFL defense's
-         fantasy points allowed per game by position was computed from
-         Sleeper weekly stats Weeks 1-5 in this league's scoring (validated
-         against the baked PPG to ±0.05). A factor is that defense's
-         points-allowed ratio vs the league average for the position,
-         capped at ±12%. The ROS factor averages the ratios across the
-         player's real remaining schedule (Weeks 6-14, bye weeks skipped;
-         schedule from the published 2026 NFL schedule). DESCRIPTIVE
+      /* Strength of schedule (re-baked Nov 17, 2026 — audit FF-05):
+         per player [ROS factor, Week 11 factor, Week 11 opponent]. Each
+         NFL defense's fantasy points allowed per game by position was
+         computed from Sleeper weekly stats Weeks 1-9 in this league's
+         scoring (the Nov 10 NFLDEF bake; validated against the baked PPG
+         to ±0.05). A factor is that defense's points-allowed ratio vs
+         the league average for the position, capped at ±12%. The ROS
+         factor averages the ratios across the player's real remaining
+         schedule (Weeks 11-14, bye weeks skipped; schedule from the
+         published 2026 NFL schedule). A player whose team is on bye in
+         Week 11 carries [ROS, null, null] — no matchup to label.
+         DESCRIPTIVE
          ONLY since Oct 21, 2026: the ROS factor [0] no longer
          multiplies any per-game rate (Eric's rule — no SOS bump on a
          points-per-game basis); the weekly factor [1] still labels
          the current week's matchup in the Lineup tab. Dynasty values
          never read this. */
-      const SOS = {"9487":[1.067,1.12,"HOU"],"6786":[1.033,0.987,"GB"],"11584":[1.021,0.979,"PIT"],"6783":[1.055,1.12,"BAL"],"9504":[1.008,1.12,"JAX"],"12507":[0.916,0.938,"KC"],"13302":[0.954,0.88,"CLE"],"12493":[0.952,1.12,"KC"],"7553":[1.101,0.88,"CHI"],"19":[0.992,null,null],"8698":[0.99,1.12,"WAS"],"8116":[1.076,1.12,"DAL"],"7585":[1.02,0.88,"JAX"],"11579":[1.002,0.898,"BAL"],"3294":[0.88,0.88,"GB"],"13301":[1.062,0.88,"SF"],"421":[1.017,1.12,"ARI"],"8134":[0.908,1.075,"LV"],"7828":[0.948,0.88,"LAC"],"11557":[1.12,1.114,"CAR"],"5995":[0.954,0.88,"CLE"],"12517":[1.12,1.12,"ATL"],"8138":[1.024,1.083,"LV"],"8119":[0.909,1.026,"CHI"],"12542":[1.025,0.931,"NYJ"],"7049":[1.053,null,null],"8136":[0.923,1.044,"SF"],"11610":[1.037,null,null],"4943":[1.047,0.978,"DEN"],"10222":[1.06,1.12,"DAL"],"11370":[1.076,1.12,"DAL"],"8111":[1.08,0.917,"PIT"],"13270":[0.988,1.12,"ARI"],"11647":[0.916,0.938,"KC"],"9488":[0.934,0.88,"DEN"],"11571":[1.105,0.88,"NE"],"7526":[0.88,0.88,"SEA"],"13079":[0.962,1.119,"ATL"],"13380":[0.981,0.88,"KC"],"13400":[0.974,null,null],"5870":[0.958,0.88,"TEN"],"13421":[0.949,0.88,"NYJ"],"5844":[1.057,null,null],"12529":[1.057,1.12,"NYJ"],"13310":[1.042,1.12,"ATL"],"13268":[1.077,1.009,"CLE"],"12535":[0.979,null,null],"6790":[0.986,0.943,"ATL"],"1373":[1.064,0.88,"NE"],"12491":[1.057,1.12,"NYJ"],"6768":[0.953,0.923,"CHI"],"6130":[0.999,1.12,"NO"],"6904":[1.12,1.114,"CAR"],"11635":[0.981,0.88,"KC"],"13347":[1.12,null,null],"12475":[0.934,0.88,"DEN"],"8154":[0.88,0.88,"CHI"],"11273":[1.02,0.943,"LAC"],"11620":[0.962,1.119,"ATL"],"10232":[0.938,0.931,"LAR"],"6804":[1.111,1.12,"DAL"],"11592":[1.12,null,null],"3634":[0.962,1.119,"ATL"],"4037":[1.017,0.887,"PIT"],"5906":[1.024,1.12,"LV"],"8205":[0.956,null,null],"1166":[0.994,1.12,"BUF"],"8110":[0.88,0.88,"GB"],"11589":[0.952,0.88,"LAR"],"8131":[0.939,1.12,"NO"],"4046":[1.041,0.936,"LAC"],"3286":[1.0,1.12,"WAS"],"11608":[0.901,0.981,"NE"],"12524":[0.982,0.929,"BAL"],"7564":[0.987,null,null],"8117":[1.037,null,null],"6797":[0.939,0.88,"KC"],"6801":[0.987,null,null],"10859":[0.88,null,null],"11633":[0.936,1.12,"BUF"],"9501":[1.025,0.931,"NYJ"],"8180":[0.936,1.12,"BUF"],"12519":[0.962,1.119,"ATL"],"9486":[1.046,0.924,"CAR"],"12455":[1.02,0.943,"LAC"],"4881":[1.024,1.081,"CLE"],"13349":[1.12,1.12,"CAR"],"11618":[1.017,0.887,"PIT"],"2133":[0.988,1.12,"ARI"],"96":[0.942,0.892,"TB"],"5872":[1.0,1.12,"WAS"],"9480":[0.88,0.88,"HOU"],"12545":[0.945,1.12,"NYG"],"4892":[1.061,0.88,"PIT"],"4137":[0.952,0.88,"LAR"],"12518":[0.88,0.88,"TEN"],"13264":[0.987,null,null],"13330":[1.12,0.88,"NE"],"9506":[1.021,0.979,"PIT"],"7607":[0.899,1.12,"IND"],"8167":[1.06,1.12,"DAL"],"12509":[0.981,0.88,"KC"],"5947":[1.067,1.12,"HOU"],"13272":[1.052,1.12,"LAR"],"3271":[1.12,1.12,"ARI"],"4988":[1.0,null,null],"11638":[1.0,1.12,"WAS"],"12514":[1.017,0.887,"PIT"],"7569":[1.008,1.12,"JAX"],"9228":[0.88,0.88,"PHI"],"12487":[1.12,1.12,"ARI"],"8408":[1.12,null,null],"13296":[1.037,null,null],"7021":[0.96,0.88,"TB"],"11630":[1.022,0.921,"TB"],"7083":[1.024,1.081,"CLE"],"8137":[1.033,0.987,"GB"],"7694":[0.924,0.88,"PHI"],"9484":[1.006,0.897,"DAL"],"11597":[0.939,1.12,"NO"],"11576":[1.105,0.88,"NE"],"8146":[0.901,0.981,"NE"],"4663":[0.923,1.044,"SF"],"9511":[0.916,0.938,"KC"],"13311":[1.037,null,null],"12543":[0.96,null,null],"11586":[0.997,0.943,"ARI"],"12504":[1.076,1.12,"DAL"],"12474":[0.914,0.88,"JAX"],"3321":[1.0,null,null],"2216":[1.0,1.12,"WAS"],"7562":[0.988,1.12,"ARI"],"8132":[0.952,0.88,"LAR"],"12523":[1.055,1.12,"BAL"],"13401":[0.88,0.88,"GB"],"8107":[1.12,1.12,"ATL"],"12489":[1.077,0.943,"SEA"],"12482":[1.06,1.12,"DAL"],"13423":[0.96,0.88,"TB"],"13424":[0.942,0.919,"TEN"],"3198":[0.954,0.88,"CLE"],"12522":[1.12,1.09,"IND"],"8143":[0.952,0.88,"LAR"],"12496":[1.053,null,null],"2750":[0.979,null,null],"9493":[0.988,1.12,"ARI"],"10226":[0.987,null,null],"11617":[1.055,1.12,"BAL"],"4981":[1.089,0.882,"IND"],"13417":[1.0,1.12,"WAS"],"9479":[0.96,1.048,"TB"],"11577":[1.078,1.12,"CAR"],"12540":[1.089,0.882,"IND"],"13307":[0.987,0.88,"JAX"],"5859":[1.025,0.931,"NYJ"],"4034":[0.922,0.88,"WAS"],"7591":[1.041,0.936,"LAC"],"4866":[1.078,1.12,"CAR"],"5967":[0.899,1.12,"IND"],"12048":[1.029,1.12,"DEN"],"13353":[0.95,1.12,"PHI"],"12641":[1.062,0.88,"SF"],"10213":[0.936,1.12,"BUF"],"8130":[0.924,0.88,"LAR"],"13286":[1.029,1.12,"DEN"],"8142":[1.079,1.12,"TEN"],"3214":[0.949,0.88,"NYJ"],"7523":[0.936,0.97,"HOU"],"12508":[0.976,1.017,"NO"],"4066":[1.12,0.88,"SEA"],"12533":[0.923,1.044,"SF"],"11565":[0.976,1.017,"NO"],"8676":[0.934,0.88,"DEN"],"13285":[1.019,0.88,"NO"],"6271":[0.909,1.026,"CHI"],"12527":[1.028,1.12,"BUF"],"12470":[0.958,0.88,"TEN"],"10219":[0.953,0.88,"HOU"],"13277":[1.067,0.988,"NYG"],"4983":[0.908,1.075,"LV"],"5022":[1.12,1.12,"CAR"],"13414":[0.922,0.88,"WAS"],"12495":[1.082,null,null],"11655":[0.999,1.12,"NO"],"10229":[0.994,0.88,"LAC"],"9226":[1.082,null,null],"9494":[0.88,0.88,"SEA"],"11559":[0.953,0.923,"CHI"],"13279":[1.089,0.882,"IND"],"4993":[1.12,null,null],"11627":[0.88,0.88,"SEA"],"13151":[1.07,0.997,"DEN"],"13287":[0.952,0.88,"LAR"],"9509":[0.88,0.88,"CHI"],"7525":[1.046,0.924,"CAR"],"12476":[0.923,1.044,"SF"],"12511":[0.942,0.892,"TB"],"8207":[1.055,1.12,"GB"],"12490":[0.953,0.88,"HOU"],"12457":[1.078,1.12,"CAR"],"8112":[0.909,1.026,"CHI"],"11632":[1.019,0.88,"NO"],"4177":[1.025,0.931,"NYJ"],"12983":[1.024,1.083,"LV"],"5848":[1.046,0.924,"CAR"],"9229":[0.958,0.88,"TEN"],"6770":[0.992,null,null],"11624":[0.994,0.88,"LAC"],"12499":[1.089,0.882,"IND"],"13013":[1.006,0.897,"DAL"],"9221":[0.956,null,null],"3163":[0.88,null,null],"4039":[0.934,0.88,"DEN"],"12483":[0.936,1.12,"BUF"],"8148":[0.979,null,null],"10444":[0.943,0.91,"NYG"],"7090":[1.019,0.88,"NO"],"4217":[0.99,1.12,"WAS"],"11628":[1.008,1.12,"JAX"],"2306":[0.976,1.017,"NO"],"1479":[1.079,1.12,"TEN"],"13394":[1.067,1.12,"HOU"],"12531":[1.082,0.979,"PHI"],"13275":[1.017,1.12,"ARI"],"8183":[1.113,1.12,"WAS"],"13320":[0.909,1.026,"CHI"],"12541":[0.936,1.12,"BUF"],"13269":[0.994,1.12,"BUF"],"13420":[0.943,0.91,"NYG"],"12512":[1.002,0.898,"BAL"],"12634":[1.0,1.12,"WAS"],"13405":[1.082,null,null],"8151":[1.02,0.943,"LAC"],"10236":[1.024,1.12,"LV"],"2078":[1.053,null,null],"12062":[1.057,null,null],"7547":[0.979,null,null],"11474":[0.909,1.026,"CHI"],"13413":[0.994,0.88,"LAC"],"12829":[1.06,1.12,"DAL"],"12718":[0.988,1.12,"ARI"],"9481":[1.006,0.897,"DAL"],"8129":[1.078,1.12,"CAR"],"13281":[0.943,0.91,"NYG"],"11581":[1.076,1.12,"DAL"],"13303":[1.064,0.88,"NE"],"4147":[0.96,null,null],"13726":[1.033,0.987,"GB"],"12536":[1.008,1.12,"JAX"],"12492":[0.88,0.88,"SEA"],"6826":[1.12,1.12,"ATL"],"12526":[0.95,1.12,"PHI"],"13276":[0.901,0.981,"NE"],"11563":[0.981,0.88,"SEA"],"2449":[1.062,0.88,"SF"],"7567":[1.021,0.979,"PIT"],"7543":[1.067,0.988,"NYG"],"9508":[0.899,1.12,"IND"],"11570":[0.954,0.88,"CLE"],"12534":[0.986,0.943,"ATL"],"13533":[0.943,0.91,"NYG"],"13337":[1.02,0.943,"LAC"],"11631":[1.067,1.12,"HOU"],"5892":[0.914,0.88,"JAX"],"13150":[1.046,0.924,"CAR"],"11186":[1.082,null,null],"11583":[1.082,0.979,"PHI"],"12497":[0.934,0.88,"DEN"],"12469":[1.002,0.898,"BAL"],"13425":[1.061,0.88,"PIT"],"8219":[1.12,0.88,"NE"],"13297":[0.938,0.931,"LAR"],"12502":[1.12,1.12,"IND"],"7571":[1.077,1.009,"CLE"],"5927":[1.062,0.88,"SF"],"4199":[1.12,null,null],"4950":[1.0,1.12,"WAS"],"12472":[1.002,0.898,"BAL"],"11646":[0.95,1.12,"PHI"],"4454":[0.938,0.931,"LAR"],"12498":[1.12,0.88,"NE"],"12481":[0.999,1.12,"NO"],"10218":[1.008,1.12,"JAX"],"6931":[1.12,null,null],"9225":[1.078,1.12,"CAR"],"13411":[0.962,1.119,"ATL"],"11603":[1.07,0.997,"DEN"],"13348":[0.953,0.88,"HOU"],"9757":[1.067,0.988,"NYG"],"7670":[0.908,1.075,"LV"],"7611":[1.057,1.12,"NYJ"],"12547":[1.025,0.931,"NYJ"],"8150":[0.997,0.943,"ARI"],"8121":[1.025,0.931,"NYJ"],"7600":[0.96,1.048,"TB"],"12486":[0.982,0.929,"BAL"],"8161":[1.048,null,null],"11729":[0.956,null,null],"8228":[0.96,0.88,"TB"],"12494":[1.048,null,null],"11626":[0.95,1.12,"PHI"],"11637":[0.908,1.075,"LV"],"13408":[0.88,0.88,"HOU"],"5857":[0.962,0.88,"NYG"],"9224":[0.96,null,null],"13477":[0.987,null,null],"12521":[1.07,0.997,"DEN"],"5012":[0.964,1.106,"CLE"],"12484":[1.008,1.12,"JAX"],"13404":[1.041,0.936,"LAC"],"6794":[1.053,null,null],"9230":[1.12,1.114,"CAR"],"9754":[0.981,0.88,"KC"],"13288":[0.899,1.12,"IND"],"12503":[1.055,1.12,"BAL"],"11625":[0.901,0.981,"NE"],"13274":[1.022,0.921,"TB"],"12471":[0.942,0.919,"TEN"],"12467":[0.922,0.88,"WAS"],"8144":[0.943,0.91,"NYG"],"13305":[1.028,1.12,"BUF"],"4984":[0.88,1.12,"LV"],"9500":[1.079,1.12,"TEN"],"6803":[1.0,1.12,"WAS"],"12544":[0.953,0.88,"HOU"],"9997":[1.077,1.009,"CLE"],"8172":[0.974,null,null],"12506":[1.053,0.88,"BAL"],"4144":[1.006,0.897,"DAL"],"13346":[1.055,1.12,"BAL"],"8126":[1.089,0.882,"IND"],"13345":[1.077,0.943,"SEA"],"13293":[1.077,1.009,"CLE"],"5045":[0.88,0.88,"SEA"],"7594":[1.082,0.979,"PHI"],"11834":[0.943,0.91,"NYG"],"13208":[0.943,0.91,"NYG"],"13402":[0.908,1.075,"LV"],"8127":[0.952,1.12,"KC"],"3200":[0.901,0.981,"NE"],"7528":[0.999,1.12,"NO"],"9482":[0.88,0.956,"BUF"],"8800":[1.055,1.12,"GB"],"13278":[1.12,1.12,"ARI"],"10235":[0.986,0.943,"ATL"],"11560":[1.042,1.12,"ATL"],"13434":[0.974,null,null],"4035":[1.067,0.988,"NYG"],"11569":[1.067,0.988,"NYG"],"13319":[0.962,0.88,"NYG"],"11783":[1.033,0.987,"GB"],"11435":[1.029,1.12,"DEN"],"3257":[1.052,1.12,"LAR"],"9758":[1.02,0.88,"JAX"],"4972":[0.942,0.892,"TB"],"9502":[1.008,1.12,"JAX"],"2307":[0.983,0.88,"SF"],"1466":[0.948,0.88,"LAC"],"6149":[1.0,null,null],"4017":[0.982,0.929,"BAL"],"13329":[0.936,1.12,"BUF"],"12510":[1.047,0.978,"DEN"],"2505":[0.924,0.88,"PHI"],"8210":[0.88,0.88,"SF"],"12670":[0.981,0.88,"KC"],"13306":[0.982,0.929,"BAL"],"11256":[1.042,1.12,"ATL"],"13317":[1.017,0.887,"PIT"],"5850":[1.076,1.12,"DAL"],"9753":[1.029,1.12,"DEN"],"7527":[1.113,1.12,"WAS"],"13289":[0.942,0.892,"TB"],"11604":[0.88,0.956,"BUF"],"11566":[0.983,0.88,"SF"],"13338":[1.037,null,null],"13322":[1.12,1.12,"ATL"],"5001":[0.987,0.88,"JAX"],"11643":[1.082,null,null],"13602":[0.953,0.923,"CHI"],"9756":[1.053,null,null],"4033":[0.952,1.12,"KC"],"13324":[0.964,1.106,"CLE"],"13298":[1.055,1.12,"BAL"],"5849":[1.059,null,null],"6819":[1.022,0.921,"TB"],"11575":[1.024,1.083,"LV"],"7002":[0.962,0.88,"NYG"],"12485":[1.017,0.887,"PIT"],"12738":[0.999,1.12,"NO"],"5846":[1.022,0.921,"TB"],"8155":[1.105,0.88,"NE"],"13333":[1.079,1.12,"TEN"],"6806":[1.077,0.943,"SEA"],"6813":[0.942,0.919,"TEN"],"11564":[1.001,0.88,"NYJ"],"7588":[1.055,1.12,"GB"],"8188":[0.994,0.88,"LAC"],"6865":[1.12,1.12,"ARI"],"13294":[1.046,0.924,"CAR"],"12505":[0.994,0.88,"LAC"],"12501":[1.06,1.12,"DAL"]};
+      const SOS = {"9487":[0.986,0.917,"NYG"],"6786":[1.04,1.12,"TEN"],"11584":[0.984,0.88,"DET"],"6783":[1.034,null,null],"9504":[1.024,0.958,"IND"],"12507":[1.001,1.12,"NYJ"],"13302":[1.006,1.12,"CAR"],"12493":[1.027,1.056,"NYJ"],"7553":[1.017,null,null],"19":[1.009,1.12,"WAS"],"8698":[0.889,0.88,"MIN"],"8116":[1.042,null,null],"7585":[1.043,1.12,"IND"],"11579":[1.038,0.943,"CHI"],"3294":[1.035,1.12,"TEN"],"13301":[1.056,0.961,"CIN"],"421":[0.88,null,null],"8134":[1.0,0.88,"MIA"],"7828":[1.024,1.117,"ARI"],"11557":[1.06,0.88,"PIT"],"5995":[1.006,1.12,"CAR"],"12517":[1.06,1.12,"NO"],"8138":[1.008,1.12,"MIA"],"8119":[0.976,null,null],"12542":[1.032,null,null],"7049":[1.015,0.88,"SF"],"8136":[0.98,0.971,"CIN"],"11610":[0.953,1.097,"BUF"],"4943":[1.014,null,null],"10222":[0.99,null,null],"11370":[1.042,null,null],"8111":[0.986,1.12,"DET"],"13270":[0.96,null,null],"11647":[1.001,1.12,"NYJ"],"9488":[0.972,null,null],"11571":[1.084,1.05,"LAC"],"7526":[0.953,1.075,"LV"],"13079":[1.013,0.993,"NO"],"13380":[1.009,0.891,"NYJ"],"13400":[1.008,0.978,"BUF"],"5870":[1.072,1.07,"HOU"],"13421":[0.913,null,null],"5844":[0.956,1.032,"SF"],"12529":[1.017,null,null],"13310":[1.055,1.12,"NO"],"13268":[1.021,0.993,"CAR"],"12535":[1.02,0.951,"TB"],"6790":[1.0,1.12,"NO"],"1373":[0.969,0.88,"LAC"],"12491":[1.017,null,null],"6768":[0.973,null,null],"6130":[0.988,0.88,"JAX"],"6904":[1.06,0.88,"PIT"],"11635":[1.009,0.891,"NYJ"],"13347":[1.029,0.994,"SF"],"12475":[0.972,null,null],"8154":[0.918,null,null],"11273":[0.982,0.952,"ARI"],"11620":[1.013,0.993,"NO"],"10232":[1.033,0.88,"KC"],"6804":[1.018,null,null],"11592":[1.103,1.12,"WAS"],"3634":[1.013,0.993,"NO"],"4037":[1.076,1.12,"DET"],"5906":[1.0,1.12,"MIA"],"8205":[0.981,0.88,"TB"],"1166":[1.013,0.88,"SF"],"8110":[0.886,0.899,"TEN"],"11589":[0.91,0.91,"KC"],"8131":[0.95,0.88,"JAX"],"4046":[1.044,1.12,"ARI"],"3286":[0.889,0.88,"MIN"],"11608":[0.96,1.12,"LAC"],"12524":[1.12,null,null],"7564":[0.976,1.1,"WAS"],"8117":[0.953,1.097,"BUF"],"6797":[1.022,1.035,"NYJ"],"6801":[0.976,1.1,"WAS"],"10859":[0.943,1.05,"TB"],"11633":[0.936,null,null],"9501":[1.032,null,null],"8180":[0.976,0.88,"DEN"],"12519":[1.013,0.993,"NO"],"9486":[1.017,0.967,"PIT"],"12455":[0.982,0.952,"ARI"],"4881":[0.983,1.0,"CAR"],"13349":[1.0,0.917,"PIT"],"11618":[1.076,1.12,"DET"],"2133":[0.96,null,null],"96":[0.996,1.105,"PHI"],"5872":[0.889,0.88,"MIN"],"9480":[0.904,0.917,"NYG"],"12545":[1.023,1.093,"CHI"],"4892":[1.013,1.12,"DET"],"4137":[0.91,0.91,"KC"],"12518":[0.892,0.88,"HOU"],"13264":[0.976,1.1,"WAS"],"13330":[1.04,0.88,"LAC"],"9506":[0.984,0.88,"DET"],"7607":[0.899,null,null],"8167":[0.99,null,null],"12509":[1.009,0.891,"NYJ"],"5947":[0.986,0.917,"NYG"],"13272":[1.035,0.88,"KC"],"3271":[1.011,null,null],"4988":[1.0,null,null],"11638":[0.889,0.88,"MIN"],"12514":[1.076,1.12,"DET"],"7569":[1.024,0.958,"IND"],"9228":[0.983,1.052,"BAL"],"12487":[1.011,null,null],"8408":[1.029,0.994,"SF"],"13296":[0.953,1.097,"BUF"],"7021":[0.976,0.924,"PHI"],"11630":[1.045,1.12,"PHI"],"7083":[0.983,1.0,"CAR"],"8137":[1.04,1.12,"TEN"],"7694":[1.005,0.972,"BAL"],"9484":[0.993,null,null],"11597":[0.95,0.88,"JAX"],"11576":[1.084,1.05,"LAC"],"8146":[0.96,1.12,"LAC"],"4663":[0.98,0.971,"CIN"],"9511":[1.001,1.12,"NYJ"],"13311":[0.953,1.097,"BUF"],"12543":[0.98,0.896,"WAS"],"11586":[1.008,null,null],"12504":[1.042,null,null],"12474":[0.953,1.12,"IND"],"3321":[1.0,null,null],"2216":[0.889,0.88,"MIN"],"7562":[0.96,null,null],"8132":[0.91,0.91,"KC"],"12523":[1.034,null,null],"13401":[0.886,0.899,"TEN"],"8107":[1.06,1.12,"NO"],"12489":[1.068,1.12,"LV"],"12482":[0.99,null,null],"13423":[0.976,0.924,"PHI"],"13424":[0.941,1.018,"HOU"],"3198":[1.006,1.12,"CAR"],"12522":[1.06,1.12,"DAL"],"8143":[0.91,0.91,"KC"],"12496":[1.015,0.88,"SF"],"2750":[1.02,0.951,"TB"],"9493":[0.96,null,null],"10226":[0.976,1.1,"WAS"],"11617":[1.034,null,null],"4981":[1.1,1.12,"DAL"],"13417":[0.889,0.88,"MIN"],"9479":[0.94,0.88,"PHI"],"11577":[1.026,0.91,"PIT"],"12540":[1.1,1.12,"DAL"],"13307":[1.004,1.008,"IND"],"5859":[1.032,null,null],"4034":[0.901,0.88,"MIN"],"7591":[1.044,1.12,"ARI"],"4866":[1.026,0.91,"PIT"],"5967":[0.944,1.12,"DAL"],"12048":[0.999,null,null],"13353":[0.974,1.072,"BAL"],"12641":[1.056,0.961,"CIN"],"10213":[0.976,0.88,"DEN"],"8130":[1.04,1.12,"KC"],"13286":[0.999,null,null],"8142":[1.052,1.12,"HOU"],"3214":[0.913,null,null],"7523":[1.033,1.041,"NYG"],"12508":[0.94,0.88,"JAX"],"4066":[1.053,1.12,"LV"],"12533":[0.98,0.971,"CIN"],"11565":[0.94,0.88,"JAX"],"8676":[0.972,null,null],"13285":[0.944,1.059,"JAX"],"6271":[0.976,null,null],"12527":[1.042,1.083,"DEN"],"12470":[1.072,1.07,"HOU"],"10219":[0.929,0.882,"NYG"],"13277":[1.038,0.943,"CHI"],"4983":[1.0,0.88,"MIA"],"5022":[1.0,0.917,"PIT"],"13414":[0.901,0.88,"MIN"],"12495":[1.066,1.12,"BUF"],"11655":[0.988,0.88,"JAX"],"10229":[0.99,1.021,"ARI"],"9226":[1.066,1.12,"BUF"],"9494":[0.953,1.075,"LV"],"11559":[0.973,null,null],"13279":[1.1,1.12,"DAL"],"4993":[1.103,1.12,"WAS"],"11627":[0.953,1.075,"LV"],"13151":[0.97,null,null],"13287":[0.91,0.91,"KC"],"9509":[0.918,null,null],"7525":[1.017,0.967,"PIT"],"12476":[0.98,0.971,"CIN"],"12511":[0.996,1.105,"PHI"],"8207":[0.954,0.98,"TEN"],"12490":[0.929,0.882,"NYG"],"12457":[1.078,null,null],"8112":[0.976,null,null],"11632":[0.944,1.059,"JAX"],"4177":[1.032,null,null],"12983":[1.008,1.12,"MIA"],"5848":[1.046,null,null],"9229":[1.072,1.07,"HOU"],"6770":[1.009,1.12,"WAS"],"11624":[0.99,1.021,"ARI"],"12499":[1.1,1.12,"DAL"],"13013":[0.993,null,null],"9221":[0.981,0.88,"TB"],"3163":[1.053,0.88,"TB"],"4039":[0.972,null,null],"12483":[0.976,0.88,"DEN"],"8148":[1.02,0.951,"TB"],"10444":[1.004,0.942,"CHI"],"7090":[0.944,1.059,"JAX"],"4217":[0.889,0.88,"MIN"],"11628":[1.024,0.958,"IND"],"2306":[0.94,0.88,"JAX"],"1479":[0.889,0.88,"MIN"],"13394":[0.986,0.917,"NYG"],"12531":[0.942,0.887,"BAL"],"13275":[0.88,null,null],"8183":[0.93,0.88,"MIN"],"13320":[0.976,null,null],"12541":[0.976,0.88,"DEN"],"13269":[0.909,0.929,"DEN"],"13420":[1.004,0.942,"CHI"],"12512":[1.07,null,null],"12634":[0.889,0.88,"MIN"],"13405":[1.066,1.12,"BUF"],"8151":[0.982,0.952,"ARI"],"10236":[1.0,1.12,"MIA"],"2078":[1.015,0.88,"SF"],"12062":[1.103,1.12,"WAS"],"7547":[1.02,0.951,"TB"],"11474":[0.976,null,null],"13413":[0.99,1.021,"ARI"],"12829":[1.06,null,null],"12718":[0.96,null,null],"9481":[0.993,null,null],"8129":[1.078,null,null],"13281":[1.004,0.942,"CHI"],"11581":[1.042,null,null],"13303":[0.969,0.88,"LAC"],"4147":[0.98,0.896,"WAS"],"13726":[1.04,1.12,"TEN"],"12536":[1.024,0.958,"IND"],"12492":[0.953,1.075,"LV"],"6826":[1.06,1.12,"NO"],"12526":[0.974,1.072,"BAL"],"13276":[0.96,1.12,"LAC"],"11563":[1.033,1.12,"LV"],"2449":[1.056,0.961,"CIN"],"7567":[0.984,0.88,"DET"],"7543":[1.038,0.943,"CHI"],"9508":[0.944,1.12,"DAL"],"11570":[1.006,1.12,"CAR"],"12534":[1.0,1.12,"NO"],"13533":[1.004,0.942,"CHI"],"13337":[0.982,0.952,"ARI"],"11631":[0.986,0.917,"NYG"],"5892":[0.953,1.12,"IND"],"13150":[1.017,0.967,"PIT"],"11186":[1.066,1.12,"BUF"],"11583":[0.942,0.887,"BAL"],"12497":[0.972,null,null],"12469":[1.07,null,null],"13425":[1.013,1.12,"DET"],"8219":[1.04,0.88,"LAC"],"13297":[1.033,0.88,"KC"],"12502":[1.02,0.96,"DAL"],"7571":[1.021,0.993,"CAR"],"5927":[1.056,0.961,"CIN"],"4199":[1.029,0.994,"SF"],"4950":[0.889,0.88,"MIN"],"12472":[1.07,null,null],"11646":[0.974,1.072,"BAL"],"4454":[1.033,0.88,"KC"],"12498":[1.04,0.88,"LAC"],"12481":[0.988,0.88,"JAX"],"10218":[1.024,0.958,"IND"],"6931":[1.029,0.994,"SF"],"9225":[1.026,0.91,"PIT"],"13411":[1.013,0.993,"NO"],"11603":[0.97,null,null],"13348":[0.929,0.882,"NYG"],"9757":[0.954,0.98,"TEN"],"7670":[1.0,0.88,"MIA"],"7611":[1.017,null,null],"12547":[1.032,null,null],"8150":[1.008,null,null],"8121":[1.032,null,null],"7600":[0.94,0.88,"PHI"],"12486":[1.12,null,null],"8161":[1.019,1.017,"BUF"],"11729":[0.981,0.88,"TB"],"8228":[0.976,0.924,"PHI"],"12494":[1.019,1.017,"BUF"],"11626":[0.974,1.072,"BAL"],"11637":[1.0,0.88,"MIA"],"13408":[0.904,0.917,"NYG"],"5857":[0.963,0.88,"CHI"],"9224":[0.98,0.896,"WAS"],"13477":[0.976,1.1,"WAS"],"12521":[0.97,null,null],"5012":[0.967,0.972,"CAR"],"12484":[1.024,0.958,"IND"],"13404":[1.044,1.12,"ARI"],"6794":[1.015,0.88,"SF"],"9230":[1.06,0.88,"PIT"],"9754":[1.009,0.891,"NYJ"],"13288":[0.944,1.12,"DAL"],"12503":[1.034,null,null],"11625":[0.96,1.12,"LAC"],"13274":[1.045,1.12,"PHI"],"12471":[0.941,1.018,"HOU"],"12467":[0.901,0.88,"MIN"],"8144":[1.004,0.942,"CHI"],"13305":[1.042,1.083,"DEN"],"4984":[0.978,1.099,"MIA"],"9500":[0.99,1.021,"ARI"],"6803":[0.889,0.88,"MIN"],"12544":[0.929,0.882,"NYG"],"9997":[1.021,0.993,"CAR"],"8172":[1.008,0.978,"BUF"],"12506":[1.061,null,null],"4144":[0.993,null,null],"13346":[1.034,null,null],"8126":[1.1,1.12,"DAL"],"13345":[1.068,1.12,"LV"],"13293":[1.021,0.993,"CAR"],"5045":[0.953,1.075,"LV"],"7594":[0.942,0.887,"BAL"],"11834":[1.004,0.942,"CHI"],"13208":[0.943,null,null],"13402":[1.0,0.88,"MIA"],"8127":[1.027,1.056,"NYJ"],"3200":[0.96,1.12,"LAC"],"7528":[0.999,null,null],"9482":[1.017,1.12,"DEN"],"8800":[0.954,0.98,"TEN"],"13278":[1.011,null,null],"10235":[1.0,1.12,"NO"],"11560":[1.055,1.12,"NO"],"13434":[1.008,0.978,"BUF"],"4035":[1.038,0.943,"CHI"],"11569":[1.067,null,null],"13319":[0.963,0.88,"CHI"],"11783":[1.04,1.12,"TEN"],"11435":[0.999,null,null],"3257":[0.983,1.0,"CAR"],"9758":[1.043,1.12,"IND"],"4972":[0.996,1.105,"PHI"],"9502":[1.024,0.958,"IND"],"2307":[1.107,1.12,"CIN"],"1466":[1.024,1.117,"ARI"],"6149":[1.0,null,null],"4017":[1.12,null,null],"13329":[0.976,0.88,"DEN"],"12510":[1.014,null,null],"2505":[1.005,0.972,"BAL"],"8210":[1.004,1.12,"CIN"],"12670":[1.009,0.891,"NYJ"],"13306":[1.12,null,null],"11256":[1.055,1.12,"NO"],"13317":[1.076,1.12,"DET"],"5850":[1.042,null,null],"9753":[0.999,null,null],"7527":[0.93,0.88,"MIN"],"13289":[0.996,1.105,"PHI"],"11604":[1.017,1.12,"DEN"],"11566":[1.107,1.12,"CIN"],"13338":[0.953,1.097,"BUF"],"13322":[1.06,1.12,"NO"],"5001":[1.004,1.008,"IND"],"11643":[1.066,1.12,"BUF"],"13602":[0.973,null,null],"9756":[1.015,0.88,"SF"],"4033":[1.027,1.056,"NYJ"],"13324":[0.967,0.972,"CAR"],"13298":[1.034,null,null],"5849":[1.013,0.88,"SF"],"6819":[1.045,1.12,"PHI"],"11575":[1.008,1.12,"MIA"],"7002":[0.963,0.88,"CHI"],"12485":[1.076,1.12,"DET"],"12738":[0.988,0.88,"JAX"],"5846":[1.045,1.12,"PHI"],"8155":[1.084,1.05,"LAC"],"13333":[1.052,1.12,"HOU"],"6806":[1.068,1.12,"LV"],"6813":[0.941,1.018,"HOU"],"11564":[0.926,null,null],"7588":[0.954,0.98,"TEN"],"8188":[0.99,1.021,"ARI"],"6865":[1.011,null,null],"13294":[1.017,0.967,"PIT"],"12505":[0.99,1.021,"ARI"],"12501":[0.99,null,null]};
       window.SOS = SOS;
             /* Playoff-path + bye data (baked Nov 10, 2026): NFLDEF = fantasy
          points allowed per game by each NFL defense to each position,
@@ -11491,7 +11588,7 @@ ${rdP ? "" : `
              points, and gets the "helps them more" warning instead. */
           const mySeller = !rdF && ffIsSellerStance(mine);
           const lines = [];
-          lines.push(`<p><strong>This season:</strong> your title odds ${titleMove(meB, meA)} (${(() => { const v = Math.round(meA.champ * 100) - Math.round(meB.champ * 100); return (v > 0 ? "+" : "") + v + " pp"; })()} overall), playoff odds <strong>${playoffLabel(meB)} → ${playoffLabel(meA)}</strong>. ${esc(partner.name)}’s title odds move ${titleMove(thB, thA)}. Your projected lineup: <strong>${Math.round(means[rid])} → ${Math.round(imp.meansAfter[rid])} pts/wk</strong> ROS${hasWkData ? ` — and <strong>${Math.round(meansWk[rid])} → ${Math.round(imp.meansWkAfter[rid])}</strong> this week` : ""}.</p>`);
+          lines.push(`<p><strong>This season:</strong> your title odds ${titleMove(meB, meA)} (${pp(dChamp)} overall), playoff odds <strong>${playoffLabel(meB)} → ${playoffLabel(meA)}</strong>. ${esc(partner.name)}’s title odds move ${titleMove(thB, thA)}. Your projected lineup: <strong>${Math.round(means[rid])} → ${Math.round(imp.meansAfter[rid])} pts/wk</strong> ROS${hasWkData ? ` — and <strong>${Math.round(meansWk[rid])} → ${Math.round(imp.meansWkAfter[rid])}</strong> this week` : ""}.</p>`);
           if ((rdF || !mySeller) && dChamp >= 0.03 && overpay >= 150)
             lines.push(`<p class="good">Worth the overpay: you’d pay ${fmt(overpay)} extra ${rdF ? "rest-of-season value" : "dynasty value"} for ${pp(dChamp)} of title odds — ${rdF ? "in redraft, this season is exactly when that trade makes sense" : "a contending window is exactly when that trade makes sense"}.</p>`);
           else if ((rdF || !mySeller) && dChamp >= 0.03 && overpay <= -150)
@@ -11685,7 +11782,7 @@ ${rdP ? "" : `
                 <div><span>Title odds · overall</span><b>${oddsPct(r.champ)}</b></div>
                 <div><span>Proj. pts/wk (ROS)</span><b>${Math.round(means[t.rid])}</b></div>
                 <div><span>Proj. this week (optimal lineup)</span><b>${Math.round(meansWk[t.rid])}</b></div>
-                <div><span>Actual pts/wk so far</span><b>${(t.pf / Math.max(1, (typeof DATA.league.week === "number" ? DATA.league.week : 6) - 1)).toFixed(1)}</b></div>
+                <div><span>Actual pts/wk so far</span><b>${(t.pf / Math.max(1, (typeof ffEffWeek === "function" ? ffEffWeek() : (typeof DATA.league.week === "number" ? DATA.league.week : 6) + 1) - 1)).toFixed(1)}</b></div>
               </div>
               <p class="expl">${esc(oneLiner(t))}</p>
               <button class="expand-btn" data-sexpand="${t.rid}">Projected lineup ▾</button>
@@ -11744,7 +11841,7 @@ ${rdP ? "" : `
           const sorted = DATA.teams.slice().sort((a, b) => (results[b.rid].playoff - results[a.rid].playoff) || (results[b.rid].champ - results[a.rid].champ));
           const rows = sorted.map((t, i) => {
             const r = results[t.rid];
-            return `<tr${t.isUser ? ' class="mine"' : ""}><td>${i + 1}</td><td class="team"><div class="ot-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div><div class="ot-team">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div></td><td class="num"><b>${playoffLabel(r)}</b></td><td class="num">${titlePct(r)}</td><td class="num">${oddsPct(r.champ)}</td><td class="num">${r.expWins.toFixed(1)}</td><td class="num">${Math.round(means[t.rid])}</td><td class="num col-wk">${Math.round(meansWk[t.rid])}</td><td class="num col-act">${(t.pf / Math.max(1, (typeof DATA.league.week === "number" ? DATA.league.week : 6) - 1)).toFixed(1)}</td></tr>`;
+            return `<tr${t.isUser ? ' class="mine"' : ""}><td>${i + 1}</td><td class="team"><div class="ot-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div><div class="ot-team">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div></td><td class="num"><b>${playoffLabel(r)}</b></td><td class="num">${titlePct(r)}</td><td class="num">${oddsPct(r.champ)}</td><td class="num">${r.expWins.toFixed(1)}</td><td class="num">${Math.round(means[t.rid])}</td><td class="num col-wk">${Math.round(meansWk[t.rid])}</td><td class="num col-act">${(t.pf / Math.max(1, (typeof ffEffWeek === "function" ? ffEffWeek() : (typeof DATA.league.week === "number" ? DATA.league.week : 6) + 1) - 1)).toFixed(1)}</td></tr>`;
           }).join("");
           el.innerHTML = `<div class="odds-table-wrap">
             <table class="odds-table">
@@ -11755,15 +11852,19 @@ ${rdP ? "" : `
         }
 
         const methodEl = document.getElementById("method-body");
-        if (methodEl && !window.__simMethodDone) { window.__simMethodDone = true; methodEl.innerHTML += `
+        if (methodEl && !window.__simMethodDone) { window.__simMethodDone = true;
+          /* FF-03: the copy counts completed weeks — the effective week
+             (first unplayed week), not the display week. */
+          const __effWk = (typeof ffEffWeek === "function") ? ffEffWeek() : DATA.league.week;
+          methodEl.innerHTML += `
           <h2>Season projections — a separate engine, on purpose</h2>
           <p>The Season Outlook tab prices players a completely different way from the dynasty board, and the two never mix: <strong>dynasty value is never an input to a projection, and a projection never moves a dynasty value or the trade calculator’s verdict.</strong> The only place the engines meet is trade advice, where a suggestion shows its dynasty fairness and its title-odds swing side by side.</p>
           <ul>
-            <li><strong>Rest-of-season PPG.</strong> Each player’s actual points per game through Week ${DATA.league.week - 1}, calculated from Sleeper’s weekly stats in this league’s exact scoring, is combined with a prior — the algorithm’s <em>single-season</em> value, its rest-of-season price — with the preseason expectation as the fallback where no single-season price exists. The prior steadies the small samples early in the season; by Week ${DATA.league.week}, a player’s own games carry most of the weight.</li>
-            <li><strong>Strength of schedule.</strong> Each NFL defense's fantasy points allowed per game to each position was computed from Weeks 1–${DATA.league.week - 1} in this league's scoring: the spread between the softest and toughest defenses is wide at every position. Short samples are noisy, so schedule is shown as context, never baked into a number: a player's ROS projection is his own projection, unadjusted for his remaining opponents, and the note on his Lineup tab line describes this week's opponent ("soft matchup: +8% vs MIA"). Schedule lives only in this engine; it never touches a dynasty value.</li>
+            <li><strong>Rest-of-season PPG.</strong> Each player’s actual points per game through Week ${__effWk - 1}, calculated from Sleeper’s weekly stats in this league’s exact scoring, is combined with a prior — the algorithm’s <em>single-season</em> value, its rest-of-season price — with the preseason expectation as the fallback where no single-season price exists. The prior steadies the small samples early in the season; by Week ${__effWk}, a player’s own games carry most of the weight.</li>
+            <li><strong>Strength of schedule.</strong> Each NFL defense's fantasy points allowed per game to each position was computed from Weeks 1–${__effWk - 1} in this league's scoring: the spread between the softest and toughest defenses is wide at every position. Short samples are noisy, so schedule is shown as context, never baked into a number: a player's ROS projection is his own projection, unadjusted for his remaining opponents, and the note on his Lineup tab line describes this week's opponent ("soft matchup: +8% vs MIA"). Schedule lives only in this engine; it never touches a dynasty value.</li>
             <li><strong>Availability &amp; role.</strong> The projection accounts for expected availability — a player set to miss time projects for fewer games — and leans toward his role where role and production disagree: when a projection and the prior disagree wildly, usage leads points. Players who haven’t appeared in a game yet are discounted heavily: a backup’s projection is mostly the chance he plays.</li>
             <li><strong>Team projection.</strong> Each week, a team fields its optimal lineup under this league’s own starter slots, by rest-of-season PPG. That sum is the team’s projected score — typically a little above its actual scoring pace, because real managers don’t set a perfect lineup every week.</li>
-            <li><strong>The simulation.</strong> 3,000 simulated finishes. For a connected league, each remaining week (${DATA.league.week}–14) plays the league's actual remaining schedule — the same opponents in every finish, with each score drawn around the team's projection with a realistic week-to-week spread. Where a league's real schedule isn't available to read, that league's pairings are drawn at random instead, so its odds carry a little more noise. The first of those weeks is priced from this week’s actual weekly projections — the same ESPN/Rotowire numbers behind the Lineup tab, bye weeks and all — while every later week uses the rest-of-season projection; if a week’s projections aren’t published yet, that week falls back to the rest-of-season number. That spread is measured from this league’s actual weekly scores, not guessed. Standings seed by wins, then total points; the top ${FIELD} make the playoffs (Weeks 15–17${FIELD === 6 ? ", top two seeds bye" : ""}, bracket reseeds).</li>
+            <li><strong>The simulation.</strong> 3,000 simulated finishes. For a connected league, each remaining week (${__effWk}–14) plays the league's actual remaining schedule — the same opponents in every finish, with each score drawn around the team's projection with a realistic week-to-week spread. Where a league's real schedule isn't available to read, that league's pairings are drawn at random instead, so its odds carry a little more noise. The first of those weeks is priced from this week’s actual weekly projections — the same ESPN/Rotowire numbers behind the Lineup tab, bye weeks and all — while every later week uses the rest-of-season projection; if a week’s projections aren’t published yet, that week falls back to the rest-of-season number. That spread is measured from this league’s actual weekly scores, not guessed. Standings seed by wins, then total points; the top ${FIELD} make the playoffs (Weeks 15–17${FIELD === 6 ? ", top two seeds bye" : ""}, bracket reseeds).</li>
             <li><strong>Title odds.</strong> Title odds are never counted directly from the sims — a longshot's true chance sits far below what 3,000 finishes can resolve by counting, so counting manufactures zeros. Instead they decompose: title odds = playoff odds × the probability of winning the bracket once in. That bracket term is priced from team strength — the single-game win probability against the likely playoff field under the same scoring model, ${FIELD === 6 ? "over the two wins a bye team needs or the three everyone else needs (the bye share itself comes from the sims' top-2 finishes, a common event the sims estimate well)" : "over the wins a plain single-elimination bracket of this size requires"}. The product is coherent by construction: never above the playoff odds, and never zero while the playoff odds aren't. On screen the headline title number is the bracket term itself — the chance of winning it all if the team makes the playoffs — with the overall product shown as the secondary figure; the 99% display ceiling applies to both terms. A team is shown 0% only when it is mathematically eliminated — at least ${FIELD} rivals already own more wins than it can reach by winning out, with every other result and tiebreak breaking its way. Short of elimination, a sub-1% chance displays as &lt;1%. The mirror test runs at the top: a team has clinched when, even if it loses out and loses every points tiebreak, fewer than ${FIELD} rivals can still reach its win total — that team displays 100%. Nothing else displays above 99%: title odds never pass 99% at all, and a team that survives all 3,000 simulated finishes without being mathematically locked in is capped at 99%, because the sim prices games, not injuries or chaos.</li>
             <li><strong>Playoff schedule difficulty (Weeks 15–17).</strong> The fantasy bracket isn't set yet, but the NFL half of every playoff matchup already is. Each defense is graded by the fantasy points it has allowed per game to each position (this season's results, in the snapshot's scoring, from Sleeper's actual weekly stats against each player's real opponent that week — the same points-allowed computation behind the strength-of-schedule factors). Every team's projected starters are then matched against the defenses they'll face in Weeks 15, 16 and 17 of the real NFL schedule, and the rating is the mean softness of those starter-weeks (one per starter, Weeks 15–17; rank 1 = softest defense, 32 = stingiest). It grades the schedule, not the bracket: who you draw in the fantasy playoffs still depends on seeding, but the defenses your players run into don't.</li>
             <li><strong>Trade impact.</strong> Title-odds swings on Player Targets and in the calculator come from paired simulations run before and after the deal under identical conditions, so the delta reflects the trade, not simulation noise — though the absolute odds still carry roughly ±2pp of sampling noise at 3,000 runs, so small title-odds moves should be read as ties. Draft picks don’t change 2026 odds — they change future seasons, which is the dynasty engine’s department.</li>
@@ -12853,9 +12954,28 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
          week, else the league week — Sleeper-only since 2026-11-11).
          Bye checks key off THIS week — the projections and the bye
          must describe the same Sunday. */
-      function wkActiveWeek() {
+      function wkBakedWeek() {
         if (window.SLEEPER_WK >= 1) return window.SLEEPER_WK;
         return LU_WEEK;
+      }
+      /* One active week (audit FF-01, 2026-11-17): once the display
+         week's games are all final, the week to be played is the next
+         one. The league builder records that as weekDone on the
+         connected bundle (buildConnLeague), and the active week is the
+         display week + 1. Before the week is done, the display week
+         IS the week to be played. Guest/demo snapshots carry no
+         weekDone, so they keep the display week. */
+      function ffActiveWeek() {
+        try {
+          var C = (typeof window !== "undefined") ? window.CONN_LEAGUE : null;
+          if (C && C.weekDone && C.league && typeof C.league.week === "number") return C.league.week + 1;
+          if (typeof DATA !== "undefined" && DATA && DATA.league && typeof DATA.league.week === "number") return DATA.league.week;
+        } catch (e) {}
+        return LU_WEEK;
+      }
+      window.ffActiveWeek = ffActiveWeek;
+      function wkActiveWeek() {
+        return ffActiveWeek();
       }
       /* Lineup tab week-view state: the This/Next toggle flips
          LU_VIEW_WEEK between null (the baked "this week") and
@@ -12867,7 +12987,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
       let LU_VIEW_WEEK = null;
       function wkViewWeek() {
         const W = window.WK_PROJ_WEEKS;
-        if (LU_VIEW_WEEK && W && W.next && LU_VIEW_WEEK === W.next) return W.next;
+        if (LU_VIEW_WEEK && W && (LU_VIEW_WEEK === W.next || LU_VIEW_WEEK === W.cur)) return LU_VIEW_WEEK;
         return wkActiveWeek();
       }
       function wkIsBye(p, wk) {
@@ -12887,15 +13007,22 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
 /* Game locks (injected) */ window.GAME_LOCKS = {"10":{"ARI":{"h":1,"o":"LAR","t":1794776700000},"ATL":{"h":1,"o":"KC","t":1794765600000},"BAL":{"h":1,"o":"LAC","t":1794878100000},"BUF":{"h":0,"o":"NYJ","t":1794765600000},"CAR":{"h":0,"o":"NO","t":1794765600000},"CIN":{"h":1,"o":"PIT","t":1794792000000},"CLE":{"h":1,"o":"HOU","t":1794765600000},"DAL":{"h":1,"o":"SF","t":1794777900000},"DET":{"h":1,"o":"NE","t":1794753000000},"GB":{"h":1,"o":"MIN","t":1794765600000},"HOU":{"h":0,"o":"CLE","t":1794765600000},"IND":{"h":1,"o":"MIA","t":1794765600000},"JAX":{"h":0,"o":"TEN","t":1794765600000},"KC":{"h":0,"o":"ATL","t":1794765600000},"LAC":{"h":0,"o":"BAL","t":1794878100000},"LAR":{"h":0,"o":"ARI","t":1794776700000},"LV":{"h":1,"o":"SEA","t":1794776700000},"MIA":{"h":0,"o":"IND","t":1794765600000},"MIN":{"h":0,"o":"GB","t":1794765600000},"NE":{"h":0,"o":"DET","t":1794753000000},"NO":{"h":1,"o":"CAR","t":1794765600000},"NYG":{"h":1,"o":"WAS","t":1794532500000},"NYJ":{"h":1,"o":"BUF","t":1794765600000},"PIT":{"h":0,"o":"CIN","t":1794792000000},"SEA":{"h":0,"o":"LV","t":1794776700000},"SF":{"h":0,"o":"DAL","t":1794777900000},"TEN":{"h":1,"o":"JAX","t":1794765600000},"WAS":{"h":0,"o":"NYG","t":1794532500000}},"11":{"ARI":{"h":0,"o":"KC","t":1795370400000},"BAL":{"h":0,"o":"CAR","t":1795370400000},"BUF":{"h":1,"o":"MIA","t":1795370400000},"CAR":{"h":1,"o":"BAL","t":1795370400000},"CHI":{"h":1,"o":"NO","t":1795370400000},"CIN":{"h":0,"o":"WAS","t":1795482900000},"DAL":{"h":1,"o":"TEN","t":1795370400000},"DEN":{"h":1,"o":"LV","t":1795382700000},"DET":{"h":1,"o":"TB","t":1795370400000},"HOU":{"h":1,"o":"IND","t":1795137300000},"IND":{"h":0,"o":"HOU","t":1795137300000},"JAX":{"h":0,"o":"NYG","t":1795382700000},"KC":{"h":1,"o":"ARI","t":1795370400000},"LAC":{"h":1,"o":"NYJ","t":1795381500000},"LV":{"h":0,"o":"DEN","t":1795382700000},"MIA":{"h":0,"o":"BUF","t":1795370400000},"MIN":{"h":0,"o":"SF","t":1795396800000},"NO":{"h":0,"o":"CHI","t":1795370400000},"NYG":{"h":1,"o":"JAX","t":1795382700000},"NYJ":{"h":0,"o":"LAC","t":1795381500000},"PHI":{"h":1,"o":"PIT","t":1795370400000},"PIT":{"h":0,"o":"PHI","t":1795370400000},"SF":{"h":1,"o":"MIN","t":1795396800000},"TB":{"h":0,"o":"DET","t":1795370400000},"TEN":{"h":0,"o":"DAL","t":1795370400000},"WAS":{"h":1,"o":"CIN","t":1795482900000}}};
       function wkProj(p, wkView) {
         if (!p) return { pts: 0, tag: null, cls: "", sos: null };
-        /* View week: defaults to the baked "this week". The Lineup
-           toggle passes WK_PROJ_WEEKS.next to plan ahead — then the
-           *_NEXT stat bakes are the sources, the bye check keys off
-           that Sunday, and the matchup label drops out (matchup factors
-           publish with the current week). Injury designations are
-           always today's — the best signal available — and the toggle
-           note in the UI says so. */
+        /* View week: defaults to the ACTIVE week (ffActiveWeek — the
+           week to be played, not the baked week). The Lineup toggle
+           passes another baked week to look at — then the *_NEXT stat
+           bakes are the sources when the viewed week is not the baked
+           week, the bye check keys off that Sunday, and the matchup
+           label drops out (matchup factors publish with the current
+           week). Injury designations are always today's — the best
+           signal available — and the toggle note in the UI says so.
+           isNext keys the SOURCE maps off the baked week; isLive keys
+           the fresh live pull and the SOS label off the active week.
+           The two split once a week finalizes (FF-01): the active
+           week IS the NEXT bake week, so the *_NEXT maps are live-week
+           data then, not plan-ahead data. */
         const VW = wkView || wkActiveWeek();
-        const isNext = VW !== wkActiveWeek();
+        const isNext = VW !== wkBakedWeek();
+        const isLive = VW === wkActiveWeek();
         // Unsigned first: no NFL team means no game this week — the
         // weekly projection is a hard zero, labeled, never a number
         // inherited from dynasty value.
@@ -12916,11 +13043,16 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            Bye and Unsigned keep their unconditional zeros above — no
            source projects a player who has no game at all. */
         const hardOut = inj === "IR" || inj === "PUP" || inj === "Out" || inj === "Suspended";
-        /* No SOS nudge in the plan-ahead view: the matchup-factor bake
-           describes this week's opponents, not next week's. */
-        const s = isNext ? null : (window.SOS ? window.SOS[p.id] : null);
+        /* No SOS nudge outside the active week: the matchup-factor bake
+           describes the week to be played, not a plan-ahead or last-week
+           view. */
+        const s = isLive ? (window.SOS ? window.SOS[p.id] : null) : null;
         const sf = s && s[1] != null ? s[1] : 1;
+        /* FF-05 guardrail: never print an opponent the bye table says
+           is idle that week — a stale bake once labeled London/Pitts
+           "vs CHI" on a week CHI was on bye. */
         const sos = s && s[1] != null && Math.abs(s[1] - 1) >= 0.02
+          && !(window.TEAM_BYE && s[2] && window.TEAM_BYE[s[2]] === VW)
           ? { pct: Math.round((s[1] - 1) * 100), opp: s[2] } : null;
         /* Signed but outside the priced pool: the projection is
            unknown, not zero — the unpriced flag rides along so every
@@ -12948,13 +13080,13 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            a fake zero, and never a season average in place of a
            missing weekly line.
            The plan-ahead view never reads the live maps. */
-        const rsLiveObj = !isNext && window.SLEEPER_STATS_LIVE ? window.SLEEPER_STATS_LIVE[p.id] : null;
-        const rsSupp = !isNext && !rsLiveObj && !!(window.SLEEPER_PROJ_EMPTY && window.SLEEPER_PROJ_EMPTY[p.id]);
+        const rsLiveObj = isLive && window.SLEEPER_STATS_LIVE ? window.SLEEPER_STATS_LIVE[p.id] : null;
+        const rsSupp = isLive && !rsLiveObj && !!(window.SLEEPER_PROJ_EMPTY && window.SLEEPER_PROJ_EMPTY[p.id]);
         const rs = rsLiveObj || (rsSupp ? null : rsBaked);
         const rMap = isNext ? window.SLEEPER_PROJ_NEXT : window.SLEEPER_PROJ;
         const rwBaked = (rMap && Object.prototype.hasOwnProperty.call(rMap, p.id))
           ? rMap[p.id] : undefined;
-        const rw = (!isNext && window.SLEEPER_PROJ_LIVE && Object.prototype.hasOwnProperty.call(window.SLEEPER_PROJ_LIVE, p.id))
+        const rw = (isLive && window.SLEEPER_PROJ_LIVE && Object.prototype.hasOwnProperty.call(window.SLEEPER_PROJ_LIVE, p.id))
           ? window.SLEEPER_PROJ_LIVE[p.id] : (rsSupp ? undefined : rwBaked);
         /* dis is retained in the return shape for sosTxt compatibility;
            with one feed there is no cross-source disagreement to flag,
@@ -13182,6 +13314,22 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            Crunch weeks are counted on the best lineup's starters —
            that's the hole a bye actually blows in the scoring eleven.
            Players with no NFL team have no bye and no row. */
+      /* K/DEF starters as lineup entries for the bye planner (FF-09):
+         found the same way renderLineup's kdSlots finds them — first
+         rostered player at the position — with a 0-pt projection so the
+         planner lists them as starters, never as bench cover. Totals
+         are untouched: the planner never sums projections. */
+      function kdLineupEntries(team) {
+        const out = [];
+        (DATA && DATA.league && DATA.league.slots || []).forEach(s => {
+          if (s !== "K" && s !== "DEF") return;
+          for (const id of team.playerIds) {
+            const p = PBY[id];
+            if (p && p.pos === s) { out.push({ p, slot: s, proj: { pts: 0 } }); break; }
+          }
+        });
+        return out;
+      }
       function byePlannerHtml(team, opt, VW, isNext) {
         let byeHtml = "";
         {
@@ -13289,6 +13437,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            planner all key off it — everything else in the app keeps
            current-week semantics. */
         const VW = wkViewWeek(), isNext = VW !== wkActiveWeek();
+        try { if (typeof window.__ffLuSyncLabels === "function") window.__ffLuSyncLabels(); } catch (e) {}
         /* Filter BEFORE projecting: a connected league's starters can
            include players outside the tracked value pool (PBY), and
            wkProj(undefined) throws — that throw is what killed the
@@ -13301,6 +13450,14 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         const cur = team.lineup.map(l => ({ p: PBY[l.id], slot: l.slot }))
           .filter(r => r.p)
           .map(r => ({ p: r.p, slot: r.slot, proj: wkProj(r.p, VW) }));
+        /* FF-09: K/DEF starters score no weekly projection (wkProj gives
+           them 0 / unpriced), so they add 0.0 to every total and can
+           never pair in the swap logic — but the current table must show
+           them once, in the correct section, as display-only rows like
+           the optimal table's kdSlots. cur keeps them for totals/pairs/
+           risk (all no-ops for K/DEF); curOff is what the table prints. */
+        const curKd = cur.filter(r => r.p.pos === "K" || r.p.pos === "DEF");
+        const curOff = cur.filter(r => r.p.pos !== "K" && r.p.pos !== "DEF");
         /* Optimal lineup on the same basis: anAnalyzerOptimal mirrors
            wkOptimal but scores by wkProj, so the recommended lineup
            counts a conflict player at his projection exactly the way
@@ -13436,7 +13593,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
                 `<div class="mv-row"><div>${hsImg(l.p, "phs-sm")}<span class="who">${esc(l.p.name)}</span> <span class="sub">${l.slot} · holds off ${esc(alt.p.name)} (${projTxt(alt.proj)})</span></div><div class="delta"><span class="lu-delta ${margin < 2 ? "dn" : "flat"}">${alt.proj.unpriced || l.proj.unpriced ? "Unpriced" : "margin " + f1(margin)}</span></div></div>`);
           }
           matchHtml = `<article class="team-card">
-            <div class="vs-names"><div class="team-name">Week ${LU_WEEK} matchup — ${esc(team.name)}</div><div class="team-name" style="color:var(--ink-2)">vs ${esc(opp.name)}</div></div>
+            <div class="vs-names"><div class="team-name">Week ${VW} matchup — ${esc(team.name)}</div><div class="team-name" style="color:var(--ink-2)">vs ${esc(opp.name)}</div></div>
             <div class="stat-row">
               <div><span>Your optimal lineup</span><b>${f1(opt.total)} pts</b></div>
               <div><span>${esc(opp.name)} optimal</span><b>${f1(oppOpt.total)} pts</b></div>
@@ -13449,18 +13606,18 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             ${swings.join("") || '<p class="expl">No close calls — the optimal lineup wins every slot comfortably.</p>'}
           </article>`;
         } else {
-          matchHtml = `<div class="diag"><h3>Week ${LU_WEEK} matchup</h3><p>No opponent pairing is published for your team in the snapshot, so there is no honest preview to show — the optimizer above still applies.</p></div>`;
+          matchHtml = `<div class="diag"><h3>Week ${VW} matchup</h3><p>No opponent pairing is published for your team in the snapshot, so there is no honest preview to show — the optimizer above still applies.</p></div>`;
         }
 
 
-              const byeHtml = byePlannerHtml(team, opt, VW, isNext);
+              const byeHtml = byePlannerHtml(team, { total: opt.total, lineup: opt.lineup.concat(kdLineupEntries(team)) }, VW, isNext);
 
         document.getElementById("lineup-out").innerHTML = `
           <div class="diag"><h3>${esc(team.name)} — Week ${VW} lineup check</h3>
             <p>Starters as set in the ${DATA.league.snapshot} snapshot project for <strong>${f1(curTotR)}</strong>. The optimal lineup — this league's ${opt.lineup.length + kdSlots.length} starter slots — projects for <strong>${f1(optTotR)}</strong>${kdSlots.length ? " — total excludes K/DEF" : ""} — ${gainR > 0.05 ? `<strong>${f1(gainR)} points are sitting on the bench.</strong>` : `<strong>nothing is being left on the table.</strong>`} ${isNext ? `Week ${VW} projections use injury statuses as of today — plan accordingly.` : `Projections are not adjusted for schedule — each player's line notes this week's matchup (his opponent's points allowed to the position) as context only.`}</p>
           </div>
           ${movesHtml}
-          <div class="mv-grid">${tbl("Current starters (snapshot)", cur, curTotR, kdSlots.length ? { rows: "", totNote: true } : null)}${tbl("Optimal Week " + VW, opt.lineup, optTotR, kdSlots.length ? { rows: kdSlots.map(kdRowHtml).join(""), totNote: true } : null)}</div>
+          <div class="mv-grid">${tbl("Current starters (snapshot)", curOff, curTotR, (curKd.length || kdSlots.length) ? { rows: curKd.map(k => kdRowHtml({ slot: k.slot, name: k.p.name, team: k.p.team })).join(""), totNote: true } : null)}${tbl("Optimal Week " + VW, opt.lineup, optTotR, kdSlots.length ? { rows: kdSlots.map(kdRowHtml).join(""), totNote: true } : null)}</div>
           ${byeHtml}
           ${matchHtml}`;
         if (typeof window.renderRiskPanel === "function") window.renderRiskPanel(team, cur, opt, VW);
@@ -13487,7 +13644,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         if (!team) { out.innerHTML = ""; return; }
         const VW = wkViewWeek(), isNext = VW !== wkActiveWeek();
         const opt = wkOptimal(team.playerIds, VW);
-        out.innerHTML = byePlannerHtml(team, opt, VW, isNext)
+        out.innerHTML = byePlannerHtml(team, { total: opt.total, lineup: opt.lineup.concat(kdLineupEntries(team)) }, VW, isNext)
           || `<div class="diag"><p>No bye calendar is baked into this snapshot, so there is no honest planner to show.</p></div>`;
       }
       window.renderByeView = renderByeView;
@@ -13640,19 +13797,33 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         const curB = document.getElementById("lu-wk-cur");
         const nxtB = document.getElementById("lu-wk-next");
         const note = document.getElementById("lu-wk-note");
-        curB.textContent = `Week ${W.cur} · This week`;
-        nxtB.textContent = `Week ${W.next} · Next week`;
-        ctl.hidden = false;
-        const setView = toNext => {
-          LU_VIEW_WEEK = toNext ? W.next : null;
-          curB.setAttribute("aria-pressed", String(!toNext));
-          nxtB.setAttribute("aria-pressed", String(toNext));
+        /* FF-01: "This week" is the ACTIVE week (the week to be played).
+           Once the display week has finalized, the active week is the NEXT
+           bake week and the baked week stays available as a "Last week /
+           finals" view; before that, the second button is the plan-ahead
+           week as before. Advanced-ness is decided at click time — the
+           IIFE runs before any league connects. */
+        const luAdvanced = () => { try { return (typeof wkActiveWeek === "function") && W.next != null && wkActiveWeek() === W.next; } catch (e) { return false; } };
+        const luSyncLabels = () => {
+          const act = (typeof wkActiveWeek === "function") ? wkActiveWeek() : W.cur;
+          const adv = luAdvanced();
+          curB.textContent = `Week ${act} · This week`;
+          nxtB.textContent = adv ? `Week ${W.cur} · Last week` : `Week ${W.next} · Next week`;
+          curB.setAttribute("aria-pressed", String(!LU_VIEW_WEEK));
+          nxtB.setAttribute("aria-pressed", String(!!LU_VIEW_WEEK));
           if (note) {
-            note.hidden = !toNext;
-            note.textContent = toNext
-              ? `Planning ahead — Week ${W.next} projections; injury statuses are as of today.`
+            note.hidden = !LU_VIEW_WEEK;
+            note.textContent = LU_VIEW_WEEK
+              ? (adv ? `Last week — Week ${W.cur} finals; scores are final.` : `Planning ahead — Week ${W.next} projections; injury statuses are as of today.`)
               : "";
           }
+        };
+        window.__ffLuSyncLabels = luSyncLabels;
+        luSyncLabels();
+        ctl.hidden = false;
+        const setView = toNext => {
+          LU_VIEW_WEEK = toNext ? (luAdvanced() ? W.cur : W.next) : null;
+          luSyncLabels();
           renderLineup();
         };
         curB.addEventListener("click", () => setView(false));
@@ -14829,7 +15000,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         const startSlots = (league.roster_positions || [])
           .filter(x => !["BN", "IR", "RES", "TAXI"].includes(x));
         const slotLabel = x => x === "SUPER_FLEX" ? "SF" : x;
-        const KEEP_SLOTS = ["QB", "RB", "WR", "TE", "FLEX", "SF", "WRRB_FLEX", "REC_FLEX"];
+        const KEEP_SLOTS = ["QB", "RB", "WR", "TE", "FLEX", "SF", "WRRB_FLEX", "REC_FLEX", "DEF", "K"];
         const n = rosters.length;
         /* Next-week set lineup (Eric, 2026-10-27): Sleeper's rosters[].starters
            still reflects the DISPLAY week, which lags the week to be played on
@@ -15118,7 +15289,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           if (prs.length) matchupPairs = prs;
         }
         ffStampTradeCounts(teams, b.transactions);
-        return { platform: "sleeper", leagueId: String(league.league_id), league: meta, teams, opp6, matchupPairs, format: fmt, wireItems: slpWireItems(b.transactions || [], byRid, week), username: user.username, today, leagueType: slpLeagueType(league), stubs };
+        return { platform: "sleeper", leagueId: String(league.league_id), league: meta, teams, opp6, matchupPairs, weekDone, format: fmt, wireItems: slpWireItems(b.transactions || [], byRid, week), username: user.username, today, leagueType: slpLeagueType(league), stubs };
       }
 
       /* Phase 4 — manager activity (offseason driver): completed-trade
@@ -16788,7 +16959,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         const membersById = {};
         (raw.members || []).forEach(m => { membersById[m.id] = m; });
         const slotCounts = (settings.rosterSettings && settings.rosterSettings.lineupSlotCounts) || {};
-        const KEEP_SLOTS = ["QB", "RB", "WR", "TE", "FLEX", "SF"];
+        const KEEP_SLOTS = ["QB", "RB", "WR", "TE", "FLEX", "SF", "DEF", "K"];
         const proj = {};
         const espnStubMap = {};
         const espnStubs = [];
@@ -18973,7 +19144,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
           if (v != null) return v;
           if (typeof VALMODE !== "undefined" && VALMODE === "redraft") return null;
           const gp = (typeof GPBY !== "undefined") ? GPBY["2027-" + round + "-M"] : null;
-          return gp ? gp.value : null;
+          return gp ? (typeof guestPickValue === "function" ? guestPickValue(gp) : gp.value) : null;
         }
         function returnPkgs(pid, fmtWanted) {
           const out = [];
@@ -19163,7 +19334,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             });
             const p = cands[0];
             used.add(p.id);
-            chosen.push({ kind: "player", id: p.id, label: `${p.name} (${p.pos}${p.posRank}, ${p.team})`, v: dispVal(p) });
+            chosen.push({ kind: "player", id: p.id, label: `${p.name} (${p.pos}${(typeof VALMODE !== "undefined" && VALMODE === "redraft" && typeof window.rdPosRank === "function" && window.rdPosRank(p) != null) ? window.rdPosRank(p) : p.posRank}, ${p.team})`, v: dispVal(p) });
           });
           if (!chosen.length) return null;
           const raw = chosen.reduce((s, a) => s + a.v, 0);
@@ -19198,7 +19369,7 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
             roster.forEach(p => {
               if (used.has(p.id)) return;
               const np = judgeWith(dispVal(p));
-              if (np < bestNp) { bestNp = np; bestC = { label: `${p.name} (${p.pos}${p.posRank})`, v: dispVal(p) }; }
+              if (np < bestNp) { bestNp = np; bestC = { label: `${p.name} (${p.pos}${(typeof VALMODE !== "undefined" && VALMODE === "redraft" && typeof window.rdPosRank === "function" && window.rdPosRank(p) != null) ? window.rdPosRank(p) : p.posRank})`, v: dispVal(p) }; }
             });
             (team.picks || []).forEach(pk => {
               if (chosen.some(c => c.kind === "pick" && c.key === pk.key)) return;
@@ -20049,7 +20220,7 @@ function rdRec(p){ const bits = []; const a = rdAdp(p); if(a !== "—") bits.pus
    snapshot of its own. */
 function drSyncPool(){
   const byId = PBY;
-  const cp = arr => { if (!Array.isArray(arr)) return; arr.forEach(e => { const s = byId[e.id]; if (!s) return; e.value = s.value; e.age = s.age; e.inj = s.inj; e.posRank = s.posRank; e.rank = s.rank; e.vrank = s.vrank; e.team = s.team; e.fc = s.fc; e.exp = s.exp; }); };
+  const cp = arr => { if (!Array.isArray(arr)) return; arr.forEach(e => { const s = byId[e.id]; if (!s) return; e.value = s.value; e.age = s.age; e.inj = s.inj; e.posRank = s.posRank; e.rank = s.rank; e.vrank = s.vrank; e.team = s.team; e.fc = s.fc; e.exp = s.exp; if (s.dc) e.dc = s.dc; }); };
   cp(DATA.pool); cp(DATA.rookies);
   if (typeof RDRAFT !== "undefined") Object.keys(RDRAFT).forEach(id => { const s = byId[id]; if (s && s.rdValue != null) RDRAFT[id] = s.rdValue; });
 }
@@ -20108,8 +20279,8 @@ function snakeSeq(order){
 }
 
 /* ---------- 1. ladder ---------- */
-(function(){
-  const max = Math.max(...DATA.ladder.map(l=>l.value));
+  (function(){
+    const max = Math.max(...DATA.ladder.map(l=>(typeof ladderPickVal === "function" ? ladderPickVal(l) : l.value)));
   const groups = [["2027 — the class on the clock", l=>l.label.startsWith("2027")],
                   ["2028 — one year out", l=>l.label.startsWith("2028")],
                   ["2029 — two years out", l=>l.label.startsWith("2029")]];
@@ -20119,8 +20290,9 @@ function snakeSeq(order){
   groups.forEach(([title, test])=>{
     html += '<tr class="grouprow"><td colspan="4">'+esc(title)+"</td></tr>";
     DATA.ladder.filter(test).forEach(l=>{
+      const lv = (typeof ladderPickVal === "function" ? ladderPickVal(l) : l.value);
       let vet = null, bd = Infinity;
-      poolSorted.forEach(v => { if (usedVets.has(v.id)) return; const d = Math.abs(v.value - l.value); if (d < bd) { bd = d; vet = v; } });
+      poolSorted.forEach(v => { if (usedVets.has(v.id)) return; const d = Math.abs(v.value - lv); if (d < bd) { bd = d; vet = v; } });
       if (vet) usedVets.add(vet.id);
       const vrank = vet ? (poolSorted.indexOf(vet) + 1) : "—";
       guideRank[l.label] = vrank;
@@ -20128,8 +20300,8 @@ function snakeSeq(order){
          Pick / Value / Ovr rank only — picks stand on value alone. The vet
          lookup above still runs because Ovr rank is the matched veteran's rank. */
       html += "<tr><td><span class='pickname'>"+esc(l.label)+"</span></td>"
-        + "<td class='r num' style='font-weight:700'>"+fmt(l.value)+"</td>"
-        + "<td><div class='valbar'><i style='width:"+Math.max(4, l.value/max*100)+"%'></i></div></td>"
+        + "<td class='r num' style='font-weight:700'>"+fmt(lv)+"</td>"
+        + "<td><div class='valbar'><i style='width:"+Math.max(4, lv/max*100)+"%'></i></div></td>"
         + "<td class='r num sub'>#"+vrank+"</td></tr>";
     });
   });
@@ -20150,8 +20322,8 @@ function snakeSeq(order){
    via DR_KEEPERS. ADP is reference only. */
 function drMasterRows(){
   const rows = DATA.pool.filter(p => p && p.value != null && p.value > 0 && !drIsKeeper(p.id))
-    .map(p => ({ kind: "player", id: p.id, name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, exp: p.exp, college: p.college, value: p.value }));
-  if (roomFmt() === "dynasty") DATA.ladder.forEach(l => rows.push({ kind: "pick", id: "pick:" + l.label, name: l.label, pos: "PK", team: "", age: null, inj: null, exp: null, college: null, value: l.value, vet: l.vet }));
+    .map(p => ({ kind: "player", id: p.id, name: p.name, pos: p.pos, team: p.team, age: p.age, inj: p.inj, exp: p.exp, college: p.college, value: p.value, dc: p.dc }));
+  if (roomFmt() === "dynasty") DATA.ladder.forEach(l => rows.push({ kind: "pick", id: "pick:" + l.label, name: l.label, pos: "PK", team: "", age: null, inj: null, exp: null, college: null, value: (typeof ladderPickVal === "function" ? ladderPickVal(l) : l.value), vet: l.vet }));
   rows.sort((a, b) => b.value - a.value);
   let tier = 1, top = rows.length ? rows[0].value : 0;
   rows.forEach((r, i) => { r.rank = i + 1; if (i > 0 && r.value < top * 0.85) { tier++; top = r.value; } r.tier = tier; });
@@ -20179,7 +20351,7 @@ function drMasterRows(){
       const dc = p.exp===0 ? dcText(p) : null;
       let status = "";
       if(dc) status = "<span class='chip dc'>"+esc(dc.label)+"</span> <span class='sub'>"+esc(dc.part)+"</span>";
-      else if(p.exp===0) status = "<span class='sub'>Draft capital outside the consensus top 400</span>";
+      else if(p.exp===0) status = "<span class='sub'>No draft-capital data</span>";
       if(p.inj) status += (status? " " : "") + "<span class='chip inj'>"+esc(p.inj)+"</span>";
       const dxs = dxSub(p, false);
       return "<tr><td class='r num sub'>"+p.rank+"</td>"
@@ -22317,7 +22489,7 @@ window.drDraft = {
   /* Pick ladder (baked vet equivalents included) for surfaces outside
      this IIFE — the main Player Values board's Picks tab reads it here
      because the site-wide DATA has no ladder key. */
-  ladder: ()=> (DATA.ladder || []).slice(),
+  ladder: ()=> (DATA.ladder || []).map(l => ({ ...l, value: (typeof ladderPickVal === "function" ? ladderPickVal(l) : l.value) })),
   keeperCount: ()=> drKeeperCount(),
   gated: ()=> drIsGated(),
   league: ()=> (window.CONN_LEAGUE && window.CURRENT_LEAGUE === "conn" ? { platform: window.CONN_LEAGUE.platform, leagueId: window.CONN_LEAGUE.leagueId, name: (window.CONN_LEAGUE.league && window.CONN_LEAGUE.league.name) || null, type: window.CONN_LEAGUE.leagueType || "dynasty" } : null)
@@ -22395,6 +22567,10 @@ window.drDraft = {
         const aA = sideAdjTotal("A"), aB = sideAdjTotal("B");
         const rawA = sideTotal("A"), rawB = sideTotal("B");
         if (!rawA && !rawB) { mount.innerHTML = window.__counterMode ? `<div class="bal-box"><div class="bal-head">Counteroffers — balance this trade</div><p class="bal-note">Got an offer you don't love? Build it in the calculator above — their side and yours — and this box shows the adds that make it fair, or the ones that get it closer when no single add gets there. That's your counter.</p></div>` : ""; return; }
+        /* FF-10: one side built is not a trade to balance — the verdict
+           already withholds, so the balancer must too. No
+           recommendations, no gap figure, just the next action. */
+        if (!rawA || !rawB) { mount.innerHTML = `<div class="bal-box"><div class="bal-head">${window.__counterMode ? "Counteroffers — balance this trade" : "Balance this trade"}</div><p class="bal-note">Add assets to both sides first — pick a player or a pick for each side above, and this box will show the adds that make the trade fair.</p></div>`; return; }
         const gap = Math.abs(aA - aB);
         const pct = gap / Math.max(aA, aB, 1);
         const trail = aA <= aB ? "A" : "B";
@@ -22438,7 +22614,7 @@ window.drDraft = {
           const v = dispVal(p);
           if (!(v > 0)) return;
           const surplus = (counts[p.pos] || 0) > (POS_DEPTH[p.pos] || 2) ? 0 : 1;
-          cands.push({ kind: "player", id: p.id, label: `${p.name} (${p.pos}${p.posRank}, ${p.team})`, value: v, pref: 1, surplus });
+          cands.push({ kind: "player", id: p.id, label: `${p.name} (${p.pos}${(typeof VALMODE !== "undefined" && VALMODE === "redraft" && typeof window.rdPosRank === "function" && window.rdPosRank(p) != null) ? window.rdPosRank(p) : p.posRank}, ${p.team})`, value: v, pref: 1, surplus });
         });
         /* Size every candidate by SIMULATING the add: append its
            value to the trailing side's value vector, recompute both
@@ -22489,7 +22665,7 @@ window.drDraft = {
           if (!c) return;
           if (c.kind === "pick") calc[trail].assets.push({ kind: "pick", key: c.key, fromTeam: c.fromTeam });
           else calc[trail].assets.push({ kind: "player", id: c.id });
-          renderSide(trail); renderVerdict();
+          renderSide(trail); renderVerdict(); renderResults(trail === "A" ? "B" : "A");
         }));
       }
       window.ff4Balancer = ff4Balancer;
@@ -24299,6 +24475,15 @@ window.drDraft = {
       async function ff4CCGoTool(idx, navKey) {
         const lg = (ff4.ccLeagues || [])[idx];
         const go = () => {
+          /* FF-02: Command Center tools focus the league the tile belongs
+             to BEFORE navigating — activateNav has no "command" branch
+             touching CC, and ff4RenderCC early-returns on an unchanged
+             session key, so without this the spotlight/queue/targets
+             stayed on the previously focused team. The focus reuses the
+             session bundle cache (no re-pull, no re-sim — Nov 11
+             refresh semantics; the Nov 13 ccDead fix lives in
+             ff4CCOpen, a different path). */
+          if (navKey === "command") { try { if (typeof ff4CCFocusLeague === "function") ff4CCFocusLeague(idx); } catch (e) {} }
           if (navKey === "ppath") {
             if (typeof window.ff4RenderPP === "function") window.ff4RenderPP();
             if (typeof window.renderLifeline === "function") window.renderLifeline();
@@ -25647,6 +25832,21 @@ window.drDraft = {
       function ff4LAPlayerName(pid) {
         const p = (typeof PBY !== "undefined") ? PBY[pid] : null;
         if (p && p.name) return p.name;
+        /* FF-11: the feed is cross-league, so dropped / free-agent /
+           other-league players are not in PBY — resolve them through
+           the full Sleeper players DB the site already fetches (the
+           same DB slpApplyPlayersDb upgrades stubs from). The DB lands
+           after the first feed render, so a name may read "Player N"
+           until it arrives; the next refreshAll re-renders the feed. */
+        try {
+          if (typeof slpDbData !== "undefined" && slpDbData) {
+            const rec = slpDbData[pid];
+            if (rec) {
+              const nm = rec.full_name || ((rec.first_name || "") + " " + (rec.last_name || "")).trim();
+              if (nm) return nm;
+            }
+          }
+        } catch (e) {}
         return window.ffStubPlayerName ? window.ffStubPlayerName(pid) : "Player " + pid;
       }
       function ff4LARowHtml(it) {
@@ -26076,7 +26276,7 @@ window.__lifeline = (function () {
           var platform = null, leagueId = null;
           if (C.platform === "espn" || (key && key.indexOf("espn:") === 0)) platform = "espn";
           else if (key && key.indexOf("sleeper:") === 0) { platform = "sleeper"; leagueId = key.slice("sleeper:".length); }
-          return { platform: platform, leagueId: leagueId, week: Number(DATA.league.week) };
+          return { platform: platform, leagueId: leagueId, week: (typeof ffEffWeek === "function") ? ffEffWeek() : Number(DATA.league.week) };
         }
 
         function lfFetchSchedule(leagueId, week, start) {
