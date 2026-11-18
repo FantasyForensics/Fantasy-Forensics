@@ -12003,7 +12003,11 @@ ${rdP ? "" : `
           const meanRank = {};
           DATA.teams.slice().sort((a, b) => means[b.rid] - means[a.rid]).forEach((t, i) => { meanRank[t.rid] = i + 1; });
           const me = DATA.teams.find(t => t.isUser);
-          const ms = results[me.rid];
+          /* G2/G7 (Nov 18): browse mode has no user team — the "Your
+             season" banner below is skipped, and the sim still builds
+             (the build used to throw on me.rid here, so no sim existed
+             at all while browsing). */
+          const ms = me ? results[me.rid] : null;
           function oneLiner(t) {
             const r = results[t.rid];
             let s = r.clinched
@@ -12051,7 +12055,7 @@ ${rdP ? "" : `
             </article>`;
           }).join("");
           el.innerHTML = `
-            <div class="team-card mine">
+            ${me ? `<div class="team-card mine">
               <div class="team-name" style="font-size:21px">Your season — ${esc(me.name)}</div>
               <div class="big-stats">
                 <div><div class="bs-num">${ms.expWins.toFixed(1)}</div><div class="bs-lbl">Expected final wins</div></div>
@@ -12061,7 +12065,7 @@ ${rdP ? "" : `
                 <div><div class="bs-num">${Math.round(meansWk[me.rid])}</div><div class="bs-lbl">Proj. this week (optimal lineup)</div></div>
               </div>
               <p class="expl">${esc(oneLiner(me))} Odds come from 3,000 simulated finishes of the season — the full method and its assumptions are in How Values Work.</p>
-            </div>
+            </div>` : ""}
             ${cards}
             <div class="pb-wrap" data-pb-root></div>
             <div class="diag"><h3>How to read this</h3>
