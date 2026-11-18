@@ -11737,6 +11737,19 @@ ${rdP ? "" : `
           </div>`;
         }
 
+        /* Cross-league flash guard (Eric, Nov 17, 2026 — audit
+           follow-up): the Playoff Odds table and the Season Outlook
+           panel only re-render when their tab opens, so after a league
+           switch they kept showing the PREVIOUS league's rows until
+           the tab was clicked. Clear both outputs on every league
+           change (focus switch and fresh connect) so they show an
+           honest empty state — never another league's teams — until
+           the landing hook re-renders them for the focused league
+           (renderSeason / renderOddsTable on tab open). */
+        function ffClearStaleLeagueTables() {
+          try { const o = document.getElementById("odds-table-out"); if (o) o.innerHTML = ""; } catch (e) {}
+          try { const s = document.getElementById("season-out"); if (s) s.innerHTML = ""; } catch (e) {}
+        }
         function renderSeason() {
           const el = document.getElementById("season-out");
           if (!el) return;
@@ -13125,7 +13138,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            not missing data: zero him instead of filling with his ROS
            per-game average. Mike Evans, Week 10: Questionable, no
            Week-10 line anywhere, ROS 18.31 — the old code priced him
-           at 18.31 and ffSwapPairs turned it into a false +10.8 NYF
+           at 18.31 and the old swap pass turned it into a false +10.8 NYF
            alert over Dylan Sampson. The ROS fallback below now runs
            ONLY for players absent from the live feed entirely. */
         if (rsSupp) return { pts: 0, tag: inj || "No projection", cls: "out" };
@@ -13370,7 +13383,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
          wkOptimal exactly — same slot fill, same Unsigned exclusion,
          same unpriced-last ordering — but scores by wkProj, so
          projection precedence holds here the way it already does in
-         Needs You First / the Command Center (ffSwapPairs): a player
+         Needs You First / the Command Center (ffSlotDiffPairs): a player
          with a real weekly projection keeps it even with an Out / IR /
          PUP / Suspended tag. wkOptimal / wkProjLineup are NOT touched
          (shared by CC/NYF). The post-cut plausibility guard
@@ -13525,14 +13538,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            Bug C: a pair with no real gain (gain must exceed 0.05 pts) is
            not a recommendation and drops. The headline below is the sum
            of the SHOWN pairs, by construction. */
-        const _usedOut = new Set();
-        const _slotDefs = (typeof starterSlots === "function") ? starterSlots() : [];
-        const pairs = ins.map(inn => {
-          const cand = outs.find(o => !_usedOut.has(o) && o.slot === inn.slot)
-            || outs.find(o => { if (_usedOut.has(o)) return false; const sd = _slotDefs.find(s => s.label === o.slot); return !!sd && sd.cands.includes(inn.p.pos); });
-          if (cand) _usedOut.add(cand);
-          return cand ? { inn, out: cand } : null;
-        }).filter(x => x && (x.inn.proj.pts - x.out.proj.pts) > 0.05);
+        /* Canonical pairing (FF-05 §3, Eric Nov 17, 2026): the slot-diff
+           pairing lives in ffPairBySlot now, shared with the Command
+           Center's Next Moves and the NYF fine-tuning pass, so every
+           surface shows the same "Start X over Y" pairs. */
+        const pairs = (typeof ffPairBySlot === "function") ? ffPairBySlot(ins, outs, 0.05) : [];
         const shownGain = pairs.reduce((s, x) => s + (x.inn.proj.pts - x.out.proj.pts), 0);
         let movesHtml = "";
         if (!pairs.length) {
@@ -15643,6 +15653,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
       function setConnectedLeague() {
         const C = window.CONN_LEAGUE;
         if (!C) return;
+        /* Cross-league flash guard (Eric, Nov 17, 2026): a fresh
+           connect swaps the league under the League tabs, whose
+           table/panel only re-render on tab open — clear them here so
+           they never show the previous league's rows. */
+        if (typeof ffClearStaleLeagueTables === "function") { try { ffClearStaleLeagueTables(); } catch (e) {} }
         /* Session bake (Eric, Nov 11): a fresh bundle for this league
            (slpLoadLeague fetched it this call, or ESPN just connected
            it) invalidates the old bake — new records/rosters may have
@@ -23171,20 +23186,24 @@ window.drDraft = {
       }
 
       /* ============ Shared start/sit swap validation (2026-11-10) ============
-         Every surface that says "start X over Y" (Needs You First
-         big-gap + fine-tuning, the Command Center's Your Next Moves
-         and the Next Moves page fed by it) builds its pairs HERE, so
-         no surface can emit an illegal or mispriced swap.
-         The two rules this enforces (Eric, 2026-11-10, after a
+         Canonical pairing since Nov 17, 2026 (FF-05 §3, Eric): every
+         surface that says "start X over Y" (the Lineup Analyzer's
+         "Make these moves", Needs You First big-gap + fine-tuning,
+         the Command Center's Your Next Moves and the Next Moves page
+         fed by it) pairs by SLOT from the same optimal-vs-submitted
+         diff (ffPairBySlot / ffSlotDiffPairs below), so no surface
+         can disagree with the Analyzer about which player replaces
+         whom. The two rules this enforces (Eric, 2026-11-10, after a
          "Stafford over Wilson +22" row that paired a QB with a WR
          slot and scored the WR as zero):
          ELIGIBILITY — the in-player must be able to hold the
          out-player's actual slot (the starterSlots() cands for that
-         slot's label). When he cannot, the pair survives only as a
-         validated CHAIN: the resulting starter set must admit a
-         complete legal slot assignment (recomputed in ffSwapAssign),
-         and the row is labeled with the slot the in-player actually
-         takes.
+         slot's label). He pairs with the starter holding his own
+         slot, or failing that the best remaining starter whose slot
+         he can legally hold; an incoming player with no legal out
+         gets no 1-for-1 row. (The retired greedy pairing also
+         allowed validated CHAINS; the slot-diff pairing never needs
+         one — every pair is a direct slot fit by construction.)
          POINTS — both sides are scored by wkProj for the same week:
          the live weekly projection when the feed has landed, the
          bake otherwise, with projection precedence intact (a player
@@ -23194,16 +23213,12 @@ window.drDraft = {
          wkProjLineup, whose lineup-context zeroing of conflict
          players is exactly what manufactured the +22.
          Candidate ins are the bench players who make the optimal
-         lineup ON THIS SAME BASIS (a greedy fill identical in shape
-         to wkOptimal but scored by wkProj, not wkProjLineup); the
-         outs are current starters that optimal leaves out. Gains
-         are in-minus-out on that one basis, rounded the way the
-         surfaces have always rounded. */
-      function ffSwapScore(p, wk) {
-        try { return wkProj(p, wk); } catch (e) { return { pts: 0, unpriced: !!(p && p.unpriced) }; }
-      }
+         lineup ON THIS SAME BASIS (anAnalyzerOptimal, scored by
+         wkProj, not wkProjLineup); the outs are current starters
+         that optimal leaves out. Gains are in-minus-out on that one
+         basis, rounded the way the surfaces have always rounded. */
       /* Startability evidence for a proposed IN (current week only —
-         the only week ffSwapPairs is called for). Projection
+         the only week the swap pass is called for). Projection
          precedence protects STARTERS from being scored zero on a
          stale tag; being told to START a bench player demands the
          stronger evidence. Until 2026-11-11 that evidence was a
@@ -23245,100 +23260,69 @@ window.drDraft = {
         if (!(ros > 0)) return false;
         return pr.pts <= 2.5 * Math.max(ros, 8);
       }
-      function ffSwapPool(ids, wk) {
-        return (ids || []).map(id => PBY[id]).filter(Boolean)
-          .map(p => { const pr = ffSwapScore(p, wk); return { p, pr, pts: pr.pts, unpriced: !!pr.unpriced, unsigned: !!pr.unsigned }; })
-          .filter(e => !e.unsigned)
-          .sort((a, b) => ((a.unpriced ? 1 : 0) - (b.unpriced ? 1 : 0)) || b.pts - a.pts);
+      /* Canonical swap pairing (FF-05 §3, Eric Nov 17, 2026): the
+         slot-diff pairing the Lineup Analyzer renders — each incoming
+         player is matched to the outgoing player holding his slot
+         (fallback: the best remaining starter whose slot the incoming
+         player can legally hold), so "Start X over Y" is always an
+         executable move and always the SAME move on every surface.
+         ins/outs are { p, slot, proj } rows from the optimal-vs-
+         submitted diff, each sorted by proj.pts desc (re-sorted here
+         so callers can't skew the pairing by passing unsorted rows).
+         A pair with no real gain (raw gain must exceed minGain) is
+         not a recommendation and drops; each out is used once. The
+         headline gain is the sum of the shown pairs, by construction.
+         Replaces the retired greedy max-gain pairing, which paired by
+         biggest gap regardless of slot and could show a different
+         "start X over Y" than the Analyzer for the same lineup. */
+      function ffPairBySlot(ins, outs, minGain) {
+        const floor = (minGain != null) ? minGain : 0.05;
+        const sortedIns = (ins || []).slice().sort((a, b) => b.proj.pts - a.proj.pts);
+        const sortedOuts = (outs || []).slice().sort((a, b) => b.proj.pts - a.proj.pts);
+        const slotDefs = (typeof starterSlots === "function") ? starterSlots() : [];
+        const usedOut = new Set();
+        return sortedIns.map(inn => {
+          const cand = sortedOuts.find(o => !usedOut.has(o) && o.slot === inn.slot)
+            || sortedOuts.find(o => { if (usedOut.has(o)) return false; const sd = slotDefs.find(s => s.label === o.slot); return !!sd && sd.cands.includes(inn.p.pos); });
+          if (cand) usedOut.add(cand);
+          return cand ? { inn, out: cand, gain: inn.proj.pts - cand.proj.pts } : null;
+        }).filter(x => x && x.gain > floor);
       }
-      function ffSwapFill(pool, slots) {
-        const used = new Set(); const lineup = [];
-        slots.forEach(s => {
-          for (const e of pool) {
-            if (used.has(e.p.id) || !s.cands.includes(e.p.pos)) continue;
-            used.add(e.p.id); lineup.push({ p: e.p, slot: s.label, pts: e.pts, pr: e.pr, unpriced: !!e.unpriced }); break;
-          }
-        });
-        return lineup;
-      }
-      /* A complete legal assignment for one exact starter set, or
-         null: greedy by projection first (the recomputed optimal
-         for that set); a most-constrained-first search as fallback,
-         so a legal set is never rejected on greedy's account. */
-      function ffSwapAssign(idSet, wk, slots) {
-        const ids = [...idSet];
-        const pool = ffSwapPool(ids, wk);
-        if (pool.length < slots.length) return null;
-        const greedy = ffSwapFill(pool, slots);
-        if (greedy.length === slots.length) return greedy;
-        const members = ids.map(id => PBY[id]).filter(Boolean);
-        const order = slots.map(s => ({ label: s.label, cands: s.cands, elig: members.filter(p => s.cands.includes(p.pos)) }))
-          .sort((a, b) => a.elig.length - b.elig.length);
-        const used = new Set(); const picked = [];
-        const dfs = i => {
-          if (i >= order.length) return true;
-          for (const p of order[i].elig) {
-            if (used.has(p.id)) continue;
-            used.add(p.id); picked.push({ p, slot: order[i].label });
-            if (dfs(i + 1)) return true;
-            used.delete(p.id); picked.pop();
-          }
-          return false;
-        };
-        return dfs(0) ? picked.map(x => ({ p: x.p, slot: x.slot, pts: ffSwapScore(x.p, wk).pts })) : null;
-      }
-      /* Validated swap pairs for one team. opts: { minGain,
-         excludeOutIds (starter ids that are never swap fodder —
-         NYF's problem starters), excludeInIds (roster ids that may
-         not be proposed as starters — IR-slot players) }. Returns an
-         array of { gain, inP, outP, chain, inSlot } with .optIds
-         attached (the swap-basis optimal lineup's ids, raw id type,
-         for consumers that protect them from drop suggestions). */
-      function ffSwapPairs(me, wk, opts) {
+      /* Slot-diff swap pairs for one team, in the shape the Command
+         Center and Needs You First consume: the same optimal-vs-
+         submitted diff the Analyzer renders (anAnalyzerOptimal on the
+         live wkProj basis, projection precedence intact), paired by
+         ffPairBySlot above. Returns an array of
+         { gain, inP, outP, chain: false, inSlot } with .optIds
+         attached (the optimal lineup's ids, raw id type, for
+         consumers that protect them from drop suggestions). Gains
+         are tenths-rounded the way the surfaces have always rounded
+         them. opts: { minGain, excludeOutIds (starter ids that are
+         never swap fodder — NYF's problem starters), excludeInIds
+         (roster ids that may not be proposed as starters — IR-slot
+         players) }. */
+      function ffSlotDiffPairs(me, wk, opts) {
         const o = opts || {};
         const minGain = o.minGain != null ? o.minGain : 0.5;
         const pairs = []; pairs.optIds = new Set();
-        const cur = (me.lineup || []).map(l => ({ p: PBY[l.id], slot: l.slot })).filter(r => r.p);
-        if (!cur.length) return pairs;
-        const slots = starterSlots();
-        if (!slots.length) return pairs;
-        const slotByLabel = {}; slots.forEach(s => { slotByLabel[s.label] = s; });
-        const pool = ffSwapPool(me.playerIds || [], wk);
-        const opt = ffSwapFill(pool, slots);
-        const optIdSet = new Set(opt.map(l => String(l.p.id)));
-        pairs.optIds = new Set(opt.map(l => l.p.id));
-        const curIds = new Set(cur.map(r => String(r.p.id)));
-        const outs = cur.map(r => {
-          const e = pool.find(x => String(x.p.id) === String(r.p.id));
-          return { p: r.p, slot: r.slot, pts: e ? e.pts : 0, unpriced: e ? !!e.unpriced : !!r.p.unpriced };
-        }).filter(x => !optIdSet.has(String(x.p.id)) && !x.unpriced && !(o.excludeOutIds && o.excludeOutIds.has(String(x.p.id))));
-        const cands = [];
-        opt.forEach(l => {
-          if (curIds.has(String(l.p.id)) || l.unpriced) return;
-          if (o.excludeInIds && o.excludeInIds.has(String(l.p.id))) return;
-          if (!ffSwapInOK(l.p, l.pr)) return;
-          outs.forEach(x => {
-            const gain = (Math.round(l.pts * 10) - Math.round(x.pts * 10)) / 10;
-            if (gain < minGain) return;
-            const sd = slotByLabel[x.slot];
-            const direct = sd ? sd.cands.includes(l.p.pos) : l.p.pos === x.p.pos;
-            if (direct) { cands.push({ gain, inP: l.p, outP: x.p, chain: false, inSlot: x.slot }); return; }
-            const newSet = new Set(cur.map(r => String(r.p.id)));
-            newSet.delete(String(x.p.id)); newSet.add(String(l.p.id));
-            if (newSet.size !== slots.length) return;
-            const assign = ffSwapAssign(newSet, wk, slots);
-            if (!assign) return;
-            const mine = assign.find(a => String(a.p.id) === String(l.p.id));
-            cands.push({ gain, inP: l.p, outP: x.p, chain: true, inSlot: mine ? mine.slot : l.slot });
+        try {
+          if (!me || typeof anAnalyzerOptimal !== "function" || typeof wkProj !== "function") return pairs;
+          const cur = (me.lineup || []).map(l => ({ p: PBY[l.id], slot: l.slot })).filter(r => r.p)
+            .map(r => ({ p: r.p, slot: r.slot, proj: wkProj(r.p, wk) }));
+          if (!cur.length) return pairs;
+          const curIds = new Set(cur.map(r => String(r.p.id)));
+          const opt = anAnalyzerOptimal(me.playerIds || [], wk, new Set(cur.map(r => r.p.id)));
+          pairs.optIds = new Set(opt.lineup.map(l => l.p.id));
+          const optIds = new Set(opt.lineup.map(l => String(l.p.id)));
+          let ins = opt.lineup.filter(l => !curIds.has(String(l.p.id)));
+          let outs = cur.filter(r => !optIds.has(String(r.p.id)));
+          if (o.excludeInIds) ins = ins.filter(l => !o.excludeInIds.has(String(l.p.id)));
+          if (o.excludeOutIds) outs = outs.filter(r => !o.excludeOutIds.has(String(r.p.id)));
+          ffPairBySlot(ins, outs, minGain).forEach(({ inn, out }) => {
+            const gain = (Math.round(inn.proj.pts * 10) - Math.round(out.proj.pts * 10)) / 10;
+            pairs.push({ gain, inP: inn.p, outP: out.p, chain: false, inSlot: out.slot });
           });
-        });
-        cands.sort((a, b) => (b.gain - a.gain) || ((a.chain ? 1 : 0) - (b.chain ? 1 : 0)));
-        const usedIn = new Set(), usedOut = new Set();
-        cands.forEach(c => {
-          const ii = String(c.inP.id), oo = String(c.outP.id);
-          if (usedIn.has(ii) || usedOut.has(oo)) return;
-          usedIn.add(ii); usedOut.add(oo); pairs.push(c);
-        });
+        } catch (e) { /* the swap pass never breaks its caller */ }
         return pairs;
       }
 
@@ -23427,7 +23411,7 @@ window.drDraft = {
              weekly projection (wkProj conflict): under the projection-
              precedence rule they are NOT problems, so the loop below
              records them here and skips the problem rows. (The swap
-             pass needs no map: ffSwapPairs scores both sides with
+             pass needs no map: ffSlotDiffPairs scores both sides with
              wkProj itself, where the precedence already lives.) */
           const conflictPts = new Map();
 
@@ -23516,9 +23500,9 @@ window.drDraft = {
           });
 
           /* Categories 2 + fine-tuning — one pairing pass through
-             the shared swap validator (ffSwapPairs): every pair is
-             slot-legal (a direct slot fit, or a chain whose
-             resulting lineup was recomputed legal) and priced on
+             the shared swap validator (ffSlotDiffPairs): every pair is
+             slot-legal (a direct slot fit — the same slot-diff
+             pairing the Lineup Analyzer shows) and priced on
              the one live wkProj basis with projection precedence,
              so a starter carrying a stale designation keeps his
              real points as the out side. Problem starters are not
@@ -23527,7 +23511,7 @@ window.drDraft = {
              guest/demo fill skips this pass. */
           if (hasSet) {
             try {
-              const swapPairs = ffSwapPairs(me, wk, { minGain: NYF_TUNE_MIN, excludeOutIds: problemIds, excludeInIds: irSet });
+              const swapPairs = ffSlotDiffPairs(me, wk, { minGain: NYF_TUNE_MIN, excludeOutIds: problemIds, excludeInIds: irSet });
               swapPairs.forEach(c => {
                 const row = { cls: "fyi", player: c.inP.name, issue: "over " + c.outP.name + " (+" + c.gain.toFixed(1) + " pts this week)" + (c.chain ? " · starts at " + c.inSlot : ""), gain: c.gain, inId: String(c.inP.id), outId: String(c.outP.id) };
                 if (c.gain >= NYF_BIG_GAP) items.push(Object.assign({}, row, { prio: 6, cat: 2 }));
@@ -24020,6 +24004,23 @@ window.drDraft = {
           }
         } catch (e) {}
         if (d.teamValue == null) d.teamValue = (me.totalVal || 0) + (me.picksVal || 0);
+        /* Live team-value inputs (Eric, Nov 17, 2026 — peg the
+           spotlight to the Team Portfolio sum): the spotlight and
+           Stock tiles must read the SAME live total the Team
+           Portfolio tab computes, at render time — not the value
+           cached here at detail-build time. The two surfaces read at
+           different times and drifted 1,028 apart on the audit
+           (spotlight 115,134 vs Portfolio 114,106, all of it the
+           roster sum). Stash the raw inputs (roster ids +
+           raw picks — including baseValue, which pickPrice reads;
+           pickPrice is applied fresh at render time, never a stale
+           baked pick value) so ff4CCPieces can re-derive via
+           tpBuild — the Portfolio's own builder — instead of trusting
+           this cached total. Do NOT use tpTeam() at render time: it
+           returns the Portfolio tab's persisted selection, which can
+           be a different team than the CC's focused team. */
+        d.tvIds = (me.playerIds || []).slice();
+        d.tvPicks = (me.picks || []).map(pk => ({ season: pk.season, round: pk.round, tier: pk.tier, tierIdx: pk.tierIdx, origName: pk.origName || "", baseValue: pk.baseValue, value: pk.value }));
         /* League-rundown grid data (Command Center 3x3, Eric 2026-10-26):
            computed once per detail pass and cached with the detail, so
            re-renders only format. Every piece is guarded — a failed
@@ -24135,8 +24136,9 @@ window.drDraft = {
            deliberately separate from the Needs-you-first queue (which
            keeps only time-critical starter issues). Three kinds, in
            order: (1) lineup swaps — a bench player beating a current
-           starter on this week's projection (the shared ffSwapPairs
-           validator: slot-legal pairs on the live wkProj basis,
+           starter on this week's projection (the shared ffSlotDiffPairs
+           validator: slot-diff pairs — the same pairs the Analyzer
+           shows — on the live wkProj basis,
            gain >= 0.5 pts as a noise floor, each displaced starter
            used once); (2) one
            waiver add — only when the player improves the optimal
@@ -24147,8 +24149,10 @@ window.drDraft = {
            lowest-valued priced bench player outside the optimal
            lineup and the swap pass's start-ins; (3) bye cover a week
            out — a starter on bye next week with no available backup
-           at that slot. Priced players only on both sides: unpriced
-           entities never drive a recommendation. Capped at 3. */
+           at that slot. Swap pairs mirror the Analyzer exactly, so an
+           unpriced player can appear in a pair if his projection earns
+           the slot (the same row the Analyzer would show); the waiver
+           move stays priced-only. Capped at 3. */
         try {
           const moves = [];
           const curLineup = (me.lineup || []).map(l => ({ id: l.id, slot: l.slot, p: PBY[l.id] })).filter(r => r.p);
@@ -24164,18 +24168,18 @@ window.drDraft = {
           const nmStartIns = new Set();
           let nmOptIds = new Set();
           /* (1) Lineup swaps, this week — through the shared swap
-             validator (ffSwapPairs): slot-legal pairs only (a direct
-             slot fit, or a chain whose resulting lineup was
-             recomputed legal), priced on the one live wkProj basis
+             validator (ffSlotDiffPairs): slot-diff pairs only — the
+             same pairs the Analyzer shows for this lineup — priced
+             on the one live wkProj basis
              with projection precedence, so a starter carrying a
              stale Out tag keeps his real projected points instead of
              being scored zero. The old pass scored the out side with
              wkProjLineup and paired by the in-player's slot, which
              is what produced "Stafford over Wilson, +22". */
           try {
-            if (curLineup.length && typeof wkActiveWeek === "function" && typeof ffSwapPairs === "function") {
+            if (curLineup.length && typeof wkActiveWeek === "function" && typeof ffSlotDiffPairs === "function") {
               const wk = wkActiveWeek();
-              const swapPairs = ffSwapPairs(me, wk, { minGain: 0.5, excludeInIds: new Set((me.irIds || []).map(String)) });
+              const swapPairs = ffSlotDiffPairs(me, wk, { minGain: 0.5, excludeInIds: new Set((me.irIds || []).map(String)) });
               nmOptIds = swapPairs.optIds || new Set();
               swapPairs.forEach(c => {
                 nmStartIns.add(c.inP.id);
@@ -24409,6 +24413,7 @@ window.drDraft = {
           return;
         }
         ff4.ccFocus = idx;
+        if (typeof ffClearStaleLeagueTables === "function") { try { ffClearStaleLeagueTables(); } catch (e) {} }
         ff4CCRenderRail(); ff4CCRenderSpot();
         if (!ff4.ccDetail[idx]) ff4CCDetail(idx);
       }
@@ -24529,6 +24534,61 @@ window.drDraft = {
       function ffGradeColor(g) { return FF_GRADE_COLORS[g] || "inherit"; }
       function ff4CCPieces(idx, d) {
         const snap = (ff4.ccSnaps || {})[idx] || null;
+        /* Live team value (Eric, Nov 17, 2026 — peg the spotlight to
+           the Team Portfolio sum): re-derive the total through tpBuild
+           — the Portfolio tab's own builder — at render time, from the
+           stashed roster ids + raw picks, so the spotlight, the Stock
+           Ticker tile and the 3x3 Stock tile always read the same
+           current numbers as the Portfolio tab. The cached d.teamValue
+           / d.ticker / d.tickerWk are only the fallback for details
+           built before this stash existed. The ticker series is
+           recomputed from the same live inputs (the same math as the
+           detail-build block, so the chart's last point is the fresh
+           total); the weekly change mirrors the detail-build's two
+           paths (tpBuild's full-team wkD/wkPct, else the players-only
+           fallback). Any failure here falls back to the cached
+           detail values — the spotlight never breaks on this pass. */
+        let teamValue = d.teamValue, ticker = d.ticker, tickerWk = d.tickerWk;
+        try {
+          if (Array.isArray(d.tvIds) && typeof tpBuild === "function") {
+            const teamObj = { players: d.tvIds.map(id => PBY[id]).filter(Boolean),
+              picks: (d.tvPicks || []).map(pk => ({ season: pk.season, round: pk.round, tier: pk.tier, tierIdx: pk.tierIdx, origName: pk.origName || "", value: (typeof pickPrice === "function") ? pickPrice(pk) : pk.value })) };
+            const b2 = tpBuild(teamObj);
+            teamValue = b2.total;
+            const rd = !!d.isRedraft;
+            tickerWk = (!rd) ? { d: b2.wkD, pct: b2.wkPct } : null;
+            const priced = d.tvIds.map(id => PBY[id]).filter(p => p && !p.unpriced && p.hist && p.hist.length >= 2 && (typeof dispVal === "function") && dispVal(p) != null);
+            if (priced.length >= 3) {
+              const n = Math.max(...priced.map(p => p.hist.length));
+              if (n >= 2) {
+                const pricedToday = priced.reduce((s, p) => s + (dispVal(p) || 0), 0);
+                const carried = teamValue - pricedToday;
+                const sums = [];
+                for (let j = 0; j < n; j++) {
+                  let s = carried;
+                  priced.forEach(p => { const h = p.hist; const idx = h.length - n + j; if (idx >= 0) s += Math.round(h[idx] * ((typeof factorRatio === "function") ? factorRatio(p.pos) : 1)); });
+                  sums.push(s);
+                }
+                const wkNow = (DATA.league && DATA.league.week) || 0;
+                const d0 = sums[n - 1] - sums[0];
+                ticker = { sums, rangePct: sums[0] ? d0 / sums[0] * 100 : 0, since: wkNow ? "Wk " + (wkNow - n + 1) : "Snapshot 1" };
+              } else { ticker = null; }
+            } else { ticker = null; }
+            if (!tickerWk) {
+              let wkD = 0, wkOk = false;
+              d.tvIds.forEach(id => {
+                const p = PBY[id];
+                if (!p || p.unpriced) return;
+                let w = null;
+                try { w = (typeof tpWk === "function") ? tpWk(p) : null; } catch (e) {}
+                if (w && typeof w.d === "number") { wkD += w.d; wkOk = true; }
+              });
+              const livePortTotal = d.tvIds.map(id => PBY[id]).filter(Boolean).reduce((s, p) => s + (p.unpriced ? 0 : (dispVal(p) || 0)), 0);
+              const prev = (livePortTotal || 0) - wkD;
+              tickerWk = (wkOk && prev > 0) ? { d: wkD, pct: wkD / prev * 100 } : null;
+            }
+          }
+        } catch (e) { teamValue = d.teamValue; ticker = d.ticker; tickerWk = d.tickerWk; }
         const tiles = [];
         const frac = d.odds == null ? 0 : Math.max(0, Math.min(1, d.odds));
         const col = frac >= 0.65 ? "#C6FF00" : frac >= 0.35 ? "#00E5FF" : "#FF2E88";
@@ -24562,8 +24622,8 @@ window.drDraft = {
            see ffMSBarHtml and ff4CCRenderSpot. */
         let tickerChart = "";
         let tickerBig = "";
-        if (d.ticker && d.ticker.sums && d.ticker.sums.length >= 2) {
-          const sums = d.ticker.sums;
+        if (ticker && ticker.sums && ticker.sums.length >= 2) {
+          const sums = ticker.sums;
           const W = 280, H = 88, PAD = 6;
           const lo0 = Math.min(...sums), hi0 = Math.max(...sums);
           const padV = Math.max((hi0 - lo0) * 0.18, hi0 * 0.02, 1);
@@ -24573,15 +24633,15 @@ window.drDraft = {
           const line = sums.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
           const area = `M${X(0).toFixed(1)},${Y(sums[0]).toFixed(1)} ` + sums.map((v, i) => `L${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ") + ` L${X(sums.length - 1).toFixed(1)},${(H - PAD).toFixed(1)} L${X(0).toFixed(1)},${(H - PAD).toFixed(1)} Z`;
           tickerChart = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Team value history" style="width:100%;height:auto;display:block"><path d="${area}" fill="rgba(255,196,0,.12)"/><polyline points="${line}" fill="none" stroke="#FFC400" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
-          const wp0 = (d.tickerWk && typeof d.tickerWk.pct === "number") ? d.tickerWk.pct : null;
+          const wp0 = (tickerWk && typeof tickerWk.pct === "number") ? tickerWk.pct : null;
           if (wp0 != null) {
             tickerBig = `<div class="cc-tile-big ${wp0 > 0 ? "t-up" : wp0 < 0 ? "t-dn" : ""}">${wp0 > 0 ? "▲ +" : wp0 < 0 ? "▼ −" : ""}${Math.abs(wp0).toFixed(1)}%</div><div class="cc-tile-sub">this week</div>`;
           } else {
-            const rp = d.ticker.rangePct;
-            tickerBig = `<div class="cc-tile-big ${rp > 0 ? "t-up" : rp < 0 ? "t-dn" : ""}">${rp > 0 ? "▲ +" : rp < 0 ? "▼ −" : ""}${Math.abs(rp).toFixed(1)}%</div><div class="cc-tile-sub">since ${esc(d.ticker.since)}</div>`;
+            const rp = ticker.rangePct;
+            tickerBig = `<div class="cc-tile-big ${rp > 0 ? "t-up" : rp < 0 ? "t-dn" : ""}">${rp > 0 ? "▲ +" : rp < 0 ? "▼ −" : ""}${Math.abs(rp).toFixed(1)}%</div><div class="cc-tile-sub">since ${esc(ticker.since)}</div>`;
           }
-        } else if (d.tickerWk && typeof d.tickerWk.pct === "number") {
-          const wp = d.tickerWk.pct;
+        } else if (tickerWk && typeof tickerWk.pct === "number") {
+          const wp = tickerWk.pct;
           tickerBig = `<div class="cc-tile-big ${wp > 0 ? "t-up" : wp < 0 ? "t-dn" : ""}">${wp > 0 ? "▲ +" : wp < 0 ? "▼ −" : ""}${Math.abs(wp).toFixed(1)}%</div><div class="cc-tile-sub">this week</div>`;
         } else if (!Array.isArray(d.portfolio)) {
           tickerBig = `<div class="cc-tile-sub">Portfolio values are still loading — reopen this league to refresh.</div>`;
@@ -24590,7 +24650,7 @@ window.drDraft = {
         } else {
           tickerBig = `<div class="cc-tile-sub">Value history needs more snapshots.</div>`;
         }
-        let tickerSub = `<div class="cc-tile-sub">Team value ${fmt(d.teamValue != null ? d.teamValue : (d.portfolioTotal || 0))}</div>`;
+        let tickerSub = `<div class="cc-tile-sub">Team value ${fmt(teamValue != null ? teamValue : (d.portfolioTotal || 0))}</div>`;
         tiles.push(`<div class="cc-tile" data-cc-tile-nav="teamport" style="--tile-accent:#FFC400"><div class="cc-tile-h">Stock Ticker</div><div class="cc-tile-body">${tickerChart}${tickerBig}${tickerSub}</div><div class="cc-tile-foot"><button type="button" data-cc-grid-tool="teamport">Full portfolio →</button></div></div>`);
         let movesBody = "";
         if (Array.isArray(d.nextMoves) && d.nextMoves.length) {
@@ -24673,12 +24733,12 @@ window.drDraft = {
            rendered. */
         const gradesCell = d.powerGrades ? ["QB", "RB", "WR", "TE"].map(pos => `<span class="cc3-gr"><i>${pos}</i><b style="color:${ffGradeColor(d.powerGrades[pos])}">${esc(d.powerGrades[pos])}</b></span>`).join("") : "";
         let stockMain = "", stockNote = "";
-        if (d.ticker && d.ticker.sums && d.ticker.sums.length >= 2) {
-          const wp0b = (d.tickerWk && typeof d.tickerWk.pct === "number") ? d.tickerWk.pct : null;
+        if (ticker && ticker.sums && ticker.sums.length >= 2) {
+          const wp0b = (tickerWk && typeof tickerWk.pct === "number") ? tickerWk.pct : null;
           if (wp0b != null) { stockMain = `<span class="${wp0b > 0 ? "t-up" : wp0b < 0 ? "t-dn" : ""}">${wp0b > 0 ? "▲ +" : wp0b < 0 ? "▼ −" : ""}${Math.abs(wp0b).toFixed(1)}%</span>`; stockNote = "this week"; }
-          else { const rp = d.ticker.rangePct; stockMain = `<span class="${rp > 0 ? "t-up" : rp < 0 ? "t-dn" : ""}">${rp > 0 ? "▲ +" : rp < 0 ? "▼ −" : ""}${Math.abs(rp).toFixed(1)}%</span>`; stockNote = `since ${esc(d.ticker.since)}`; }
-        } else if (d.tickerWk && typeof d.tickerWk.pct === "number") {
-          const wp = d.tickerWk.pct; stockMain = `<span class="${wp > 0 ? "t-up" : wp < 0 ? "t-dn" : ""}">${wp > 0 ? "▲ +" : wp < 0 ? "▼ −" : ""}${Math.abs(wp).toFixed(1)}%</span>`; stockNote = "this week";
+          else { const rp = ticker.rangePct; stockMain = `<span class="${rp > 0 ? "t-up" : rp < 0 ? "t-dn" : ""}">${rp > 0 ? "▲ +" : rp < 0 ? "▼ −" : ""}${Math.abs(rp).toFixed(1)}%</span>`; stockNote = `since ${esc(ticker.since)}`; }
+        } else if (tickerWk && typeof tickerWk.pct === "number") {
+          const wp = tickerWk.pct; stockMain = `<span class="${wp > 0 ? "t-up" : wp < 0 ? "t-dn" : ""}">${wp > 0 ? "▲ +" : wp < 0 ? "▼ −" : ""}${Math.abs(wp).toFixed(1)}%</span>`; stockNote = "this week";
         } else if (!Array.isArray(d.portfolio)) stockNote = "Portfolio values are still loading — reopen this league to refresh.";
         else if (!d.portfolio.length) stockNote = "No players on this roster.";
         else stockNote = "Value history needs more snapshots.";
@@ -24695,7 +24755,7 @@ window.drDraft = {
         return {
           oddsLabel, oddsCol: col, oddsFrac: frac, oddsSub,
           powerBig, cpBig, frBig, isRedraft: !!d.isRedraft, gradesCell, tickerChart, stockMain, stockNote,
-          teamValueText: `Team value ${fmt(d.teamValue != null ? d.teamValue : (d.portfolioTotal || 0))}`,
+          teamValueText: `Team value ${fmt(teamValue != null ? teamValue : (d.portfolioTotal || 0))}`,
           magicLine: magicParts.join(" · "),
           movesBody, watchBody, tradeBody, wvBody, toolsLinks
         };
@@ -27648,7 +27708,19 @@ window.__lifeline = (function () {
           out.innerHTML = `<p class="tab-intro">Connect your Sleeper league and this page tells its story — the race at the top, schedule luck, form and the playoff bubble, updated every week.</p>`;
           return;
         }
-        if (window.__storyCache && window.__storyCache.lid === lid) { out.innerHTML = window.__storyCache.html; return; }
+        /* FF-06 unify (Eric, Nov 17, 2026): the playoff odds below come
+           from the one versioned 3,000-run SeasonSim — the same object
+           the Playoff Odds table, Outlook, Your Team and Command Center
+           read. SIM_BY_LEAGUE.conn IS this league's cached sim (the
+           connected league, by construction); window.SeasonSim is the
+           active league's sim and is only trusted here when the active
+           league is this connected league. The cache is keyed by
+           league id AND the sim fingerprint, so a sim rebuild
+           (schedule landing, fresh connect) re-renders instead of
+           serving stale odds. */
+        const uniSim = (window.SIM_BY_LEAGUE && window.SIM_BY_LEAGUE.conn) || ((!window.GUEST_MODE && window.CURRENT_LEAGUE === "conn") ? window.SeasonSim : null);
+        const uniFp = uniSim ? String((uniSim.ffp != null ? uniSim.ffp : uniSim.schedKey) || "") : "";
+        if (window.__storyCache && window.__storyCache.lid === lid && uniFp && window.__storyCache.fp === uniFp) { out.innerHTML = window.__storyCache.html; return; }
         out.innerHTML = `<p class="tab-intro">Reading your league…</p>`;
         try {
           const state = await slpGet("/state/nfl");
@@ -27675,31 +27747,31 @@ window.__lifeline = (function () {
             const last3 = weeks.slice(-3).map(w => t.weekly[w]).filter(x => x != null);
             t.form = last3.length ? +(last3.reduce((a, b) => a + b, 0) / last3.length).toFixed(1) : 0;
             const all = weeks.map(w => t.weekly[w]).filter(x => x != null);
-            t.mean = all.length ? all.reduce((a, b) => a + b, 0) / all.length : 100;
-            let vv = 0; all.forEach(x => vv += (x - t.mean) * (x - t.mean));
-            t.sd = Math.max(18, all.length ? Math.sqrt(vv / all.length) : 25);
+            /* Historical mean/sd used to feed Storylines' own sim;
+               retired with it (FF-06 unify) — odds now come from the
+               unified SeasonSim below. */
           });
-          const remWeeks = []; for (let w = completed + 1; w <= regEnd; w++) remWeeks.push(w);
-          const pairs = [];
-          await Promise.all(remWeeks.map(async w => {
-            const mm = await slpGet(`/league/${lid}/matchups/${w}`).catch(() => null);
-            const by = {}; (mm || []).forEach(e => { (by[e.matchup_id] = by[e.matchup_id] || []).push(e.roster_id); });
-            Object.values(by).forEach(pr => { if (pr.length === 2) pairs.push(pr); });
-          }));
-          const counts = {}; ids.forEach(id => counts[id] = 0);
-          const SIMS = 2000, gauss = () => (Math.random() + Math.random() + Math.random() + Math.random() - 2) / 2;
-          for (let s = 0; s < SIMS; s++) {
-            const wins = {}, pts = {}; ids.forEach(id => { wins[id] = T[id].w; pts[id] = T[id].pf; });
-            pairs.forEach(pr => { const a = pr[0], b = pr[1]; const sa = T[a].mean + gauss() * T[a].sd * 1.73, sb = T[b].mean + gauss() * T[b].sd * 1.73; pts[a] += sa; pts[b] += sb; if (sa > sb) wins[a]++; else wins[b]++; });
-            ids.slice().sort((x, y) => (wins[y] - wins[x]) || (pts[y] - pts[x])).slice(0, pTeams).forEach(id => counts[id]++);
-          }
-          ids.forEach(id => T[id].odds = Math.round(counts[id] / SIMS * 100));
-          /* Story odds print through the site's shared odds formatter
-             (99% ceiling, "<1%" floor) — never the raw sim percent:
-             a 2,000-run sweep can read 100 for a team that has not
-             clinched, and Power Rankings would call the same number
-             99%. T[].odds is a 0-100 percent; oddsPct takes 0-1. */
+          /* Unified odds (FF-06 unify, Eric Nov 17, 2026): the same
+             3,000-run sim the Playoff Odds table reads. The separate
+             2,000-run historical-mean/sd engine is retired — its
+             half-spread draw (gauss() x 1.73 with the extra /2) made
+             games near-deterministic and flipped Bower/emily vs the
+             table. T[].odds stays a 0-100 percent for the bubble
+             filter; T[].oddsRes keeps the raw result so the display
+             can use the table's own playoffLabel (100% on a
+             mathematical clinch, 0% on elimination) and agree with
+             the table exactly. */
+          const uniRes = (uniSim && uniSim.results) || null;
+          ids.forEach(id => { const r = uniRes && uniRes[id]; T[id].oddsRes = (r && typeof r.playoff === "number") ? r : null; T[id].odds = T[id].oddsRes ? Math.round(T[id].oddsRes.playoff * 100) : null; });
+          /* Story odds print through the same formatter the Playoff
+             Odds table uses: a team whose unified-sim result carries
+             the mathematical-clinch/elimination flag shows 100%/0%
+             via playoffLabel, exactly as the table does; anything else
+             prints through the shared odds formatter (99% ceiling,
+             "<1%" floor). T[].odds is a 0-100 percent; oddsPct takes
+             0-1. */
           const storyOdds = p => oddsPct(p / 100);
+          const storyOddsLabel = t => (t.oddsRes && typeof playoffLabel === "function") ? playoffLabel(t.oddsRes) : storyOdds(t.odds);
           const standings = ids.map(id => T[id]).sort((a, b) => (b.w - a.w) || (b.pf - a.pf));
           const luckiest = standings.slice().sort((a, b) => b.luck - a.luck)[0];
           const unluckiest = standings.slice().sort((a, b) => a.luck - b.luck)[0];
@@ -27711,16 +27783,16 @@ window.__lifeline = (function () {
             .map(pr => { const srt = pr.slice().sort((x, y) => y.points - x.points); return { w: T[srt[0].roster_id], wp: srt[0].points, l: T[srt[1].roster_id], lp: srt[1].points, m: +(srt[0].points - srt[1].points).toFixed(1) }; })
             .sort((a, b) => b.m - a.m);
           const topScore = ids.map(id => ({ t: T[id], pts: T[id].weekly[lw] })).filter(x => x.pts != null).sort((a, b) => b.pts - a.pts)[0];
-          let html = `<p class="tab-intro">Your league through Week ${completed} — the race at the top, the schedule luck, and who's living on the playoff bubble in ${esc(league.name || "your league")}.</p>`;
-          if (standings[1]) html += `<div class="story-card"><h3>The race at the top</h3><p><strong>${esc(standings[0].name)}</strong> (${standings[0].w}-${standings[0].l}, ${fmt(Math.round(standings[0].pf))} pts) and <strong>${esc(standings[1].name)}</strong> (${standings[1].w}-${standings[1].l}) set the pace. Playoff odds: ${storyOdds(standings[0].odds)} and ${storyOdds(standings[1].odds)}.</p></div>`;
+          let html = `<p class="tab-intro">Your league through Week ${completed} — the race at the top, the schedule luck, and who's living on the playoff bubble in ${esc(league.name || "your league")}. Playoff odds are the same 3,000-sim numbers as the Playoff Odds table.</p>`;
+          if (standings[1]) html += `<div class="story-card"><h3>The race at the top</h3><p><strong>${esc(standings[0].name)}</strong> (${standings[0].w}-${standings[0].l}, ${fmt(Math.round(standings[0].pf))} pts) and <strong>${esc(standings[1].name)}</strong> (${standings[1].w}-${standings[1].l}) set the pace. Playoff odds: ${storyOddsLabel(standings[0])} and ${storyOddsLabel(standings[1])}.</p></div>`;
           html += `<div class="story-card"><h3>Schedule luck</h3><p>Luckiest: <strong>${esc(luckiest.name)}</strong> is ${luckiest.w}-${luckiest.l} with ${luckiest.exp} expected wins — ${luckiest.luck > 0 ? "+" : ""}${luckiest.luck} wins of pure schedule luck. Unluckiest: <strong>${esc(unluckiest.name)}</strong>, ${unluckiest.exp} expected wins but only ${unluckiest.w} in the bank.</p></div>`;
           html += `<div class="story-card"><h3>Form</h3><p>Hottest over the last three weeks: <strong>${esc(hottest.name)}</strong> at ${hottest.form} points a week.</p></div>`;
-          if (bubble.length) html += `<div class="story-card"><h3>The bubble</h3><p>${pTeams} teams make the playoffs. Living on the line: ${bubble.map(t => `<strong>${esc(t.name)}</strong> (${storyOdds(t.odds)})`).join(", ")}.</p></div>`;
+          if (bubble.length) html += `<div class="story-card"><h3>The bubble</h3><p>${pTeams} teams make the playoffs. Living on the line: ${bubble.map(t => `<strong>${esc(t.name)}</strong> (${storyOddsLabel(t)})`).join(", ")}.</p></div>`;
           if (games.length && topScore) {
             const closest = games[games.length - 1], blowout = games[0];
             html += `<div class="story-card"><h3>Week ${lw} recap</h3><p><strong>${esc(topScore.t.name)}</strong> hung ${topScore.pts.toFixed(1)} on the board — the week's top score. Closest game: ${esc(closest.w.name)} ${closest.wp.toFixed(1)}–${closest.lp.toFixed(1)} over ${esc(closest.l.name)}. Biggest blowout: ${esc(blowout.w.name)} by ${blowout.m} over ${esc(blowout.l.name)}.</p></div>`;
           }
-          window.__storyCache = { lid, html };
+          window.__storyCache = { lid, fp: uniFp, html };
           out.innerHTML = html;
         } catch (e) {
           out.innerHTML = `<p class="tab-intro">Couldn't load your league's storylines just now — reopen the tab to try again.</p>`;
