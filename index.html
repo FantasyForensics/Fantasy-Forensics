@@ -11372,6 +11372,20 @@ ${rdP ? "" : `
       }
       window.buildSeasonSim = function (opts) {
         opts = opts || {};
+        /* A2 (Nov 18): the league object this sim was built for.
+           renderSeason/renderOddsTable refuse to paint when DATA
+           points at a different league object — a stale sim (the
+           previous league) must never paint the new league's tabs.
+           The object is stable across the swap cycle (mtSwapTo
+           reuses C.league / DATA_D74.league), so identity is the
+           test; a re-connect builds a fresh league object, which
+           correctly retires the old sim. */
+        const __simLeague = (typeof DATA !== "undefined" && DATA) ? DATA.league : null;
+        /* A2 (Nov 18): this sim's input fingerprint — assigned beside
+           the return, from the same formula ff4SimFp() computes, so the
+           render guard can tell a re-loaded same league (fresh object,
+           same inputs) from a different league. */
+        let __simFp = "";
         const SIGMA = 30;          // weekly team-score sd (calibration in How Values Work)
         const SIMS = opts.sims || 3000;         // headline odds (3,000 finishes — the build gate proves 3k vs 10k convergence)
         const DELTA_SIMS = opts.deltaSims || 3000;   // trade-impact odds, common random numbers
@@ -11997,7 +12011,17 @@ ${rdP ? "" : `
         }
         function renderSeason() {
           const el = document.getElementById("season-out");
-          if (!el) return;
+          if (!el) return false;
+          /* A2 (Nov 18): never paint another league's season — see
+             __simLeague above. A same league re-loaded under a fresh
+             object still matches when its inputs match: the
+             fingerprint (week + records + points + rosters) is the
+             order-proof test, and a different league never shares it. */
+          if (__simLeague && typeof DATA !== "undefined" && DATA && DATA.league && DATA.league !== __simLeague) {
+            let __fpNow = null;
+            try { __fpNow = (typeof ff4SimFp === "function") ? ff4SimFp() : null; } catch (e) {}
+            if (!__fpNow || !__simFp || __simFp !== __fpNow) return false;
+          }
           const rdS = typeof VALMODE !== "undefined" && VALMODE === "redraft";
           const sorted = DATA.teams.slice().sort((a, b) => (results[b.rid].playoff - results[a.rid].playoff) || (results[b.rid].champ - results[a.rid].champ));
           const meanRank = {};
@@ -12087,6 +12111,7 @@ ${rdP ? "" : `
              refresh it with Outlook so the two never drift; guarded so a table
              failure can never sink the Outlook cards it was carved from. */
           try { renderOddsTable(); } catch (e) { /* the table never sinks Outlook */ }
+          return true;
         }
         renderSeason();
 
@@ -12099,7 +12124,17 @@ ${rdP ? "" : `
            the Outlook cards can never disagree — one engine, two presentations, same sims.
            The phone columns (this week, actual pts/wk) hide under 640px via CSS, and the wrap scrolls. */        function renderOddsTable() {
           const el = document.getElementById("odds-table-out");
-          if (!el) return;
+          if (!el) return false;
+          /* A2 (Nov 18): never paint another league's table — see
+             __simLeague above. A same league re-loaded under a fresh
+             object still matches when its inputs match: the
+             fingerprint (week + records + points + rosters) is the
+             order-proof test, and a different league never shares it. */
+          if (__simLeague && typeof DATA !== "undefined" && DATA && DATA.league && DATA.league !== __simLeague) {
+            let __fpNow = null;
+            try { __fpNow = (typeof ff4SimFp === "function") ? ff4SimFp() : null; } catch (e) {}
+            if (!__fpNow || !__simFp || __simFp !== __fpNow) return false;
+          }
           const sorted = DATA.teams.slice().sort((a, b) => (results[b.rid].playoff - results[a.rid].playoff) || (results[b.rid].champ - results[a.rid].champ));
           const rows = sorted.map((t, i) => {
             const r = results[t.rid];
@@ -12127,6 +12162,7 @@ ${rdP ? "" : `
               <tbody>${rows}</tbody>
             </table>
           </div>${fieldAssumed ? `<p class="tb-note">Playoff field not set for this league — the sim assumes a 6-team field${FIELD < 6 ? `, capped at ${FIELD} for a ${DATA.teams.length}-team league (every team makes the playoffs)` : ""}.</p>` : ""}${(fieldAssumed || manual) ? `<div data-ff-manual-wrap><p class="tb-note">${manual ? "Playoff format saved for this league (entered by hand)." : "Know your league's playoff format?"} <button type="button" class="btn ghost" data-ff-manual-toggle>${manual ? "Edit" : "Enter it"}</button></p><div data-ff-manual-mount></div></div>` : ""}${anyTiebreak ? `<p class="tb-note">† &lt;1% with this mark: the sim never drew the team into the playoffs in 3,000 finishes — the path that exists runs only through winning out and the points tiebreak.</p>` : ""}`;
+          return true;
         }
 
         const methodEl = document.getElementById("method-body");
@@ -12210,7 +12246,11 @@ ${rdP ? "" : `
            from connect until a sim is rebuilt in the new order, and
            the engine reads the no-sim record fallback for Stance. */
         const ffRidOrder = (a, b) => ((+a.rid || 0) - (+b.rid || 0)) || String(a.rid).localeCompare(String(b.rid));
-        return { results, means, meansWk, baseOpt, finderImpact, calcImpactHtml, impact, renderSeason, renderOddsTable, oddsWithMeans, path: pathAPI, format: FMT, playoffHtml: playoffSection, schedKey, recFp: (function () { try { return (DATA.league && DATA.league.week) + "|" + [...(DATA.teams || [])].sort(ffRidOrder).map(t => t.rid + ":" + t.record).join(";"); } catch (e) { return ""; } })(), ffp: (function () { try { return (DATA.league.week || "") + "|" + [...(DATA.teams || [])].sort(ffRidOrder).map(t => [t.rid, t.record, t.pf, (t.playerIds || []).slice().sort().join(",")].join(":")).join(";"); } catch (e) { return ""; } })() };
+        /* A2 (Nov 18): capture the fingerprint here — same formula as
+           the ffp field below, so the guard and the stored stamp can
+           never drift apart. */
+        __simFp = (function () { try { return (DATA.league.week || "") + "|" + [...(DATA.teams || [])].sort(ffRidOrder).map(t => [t.rid, t.record, t.pf, (t.playerIds || []).slice().sort().join(",")].join(":")).join(";"); } catch (e) { return ""; } })();
+        return { results, means, meansWk, baseOpt, finderImpact, calcImpactHtml, impact, renderSeason, renderOddsTable, oddsWithMeans, path: pathAPI, format: FMT, playoffHtml: playoffSection, schedKey, recFp: (function () { try { return (DATA.league && DATA.league.week) + "|" + [...(DATA.teams || [])].sort(ffRidOrder).map(t => t.rid + ":" + t.record).join(";"); } catch (e) { return ""; } })(), ffp: __simFp };
       };
       window.SeasonSim = DATA.teams.length ? window.buildSeasonSim() : null;
       window.SIM_BY_LEAGUE = {};
@@ -16063,7 +16103,17 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
                      own renderOddsTable — re-render it on landing too,
                      so a tab opened before the bake landed doesn't
                      keep showing the previous league's numbers. */
-                  try { if (typeof window.SeasonSim.renderOddsTable === "function") window.SeasonSim.renderOddsTable(); } catch (e) {}
+                  let __oddsOk = true;
+                  try { if (typeof window.SeasonSim.renderOddsTable === "function") __oddsOk = window.SeasonSim.renderOddsTable() !== false; } catch (e) {}
+                  if (!__oddsOk) {
+                    /* A2 (Nov 18): the landing render was refused —
+                       the page was mid-swap to another league when the
+                       bake landed. The swap is brief; one retry once
+                       it has settled paints the right league. */
+                    setTimeout(function () {
+                      try { if (window.SeasonSim === sim) { window.SeasonSim.renderSeason(); if (typeof window.SeasonSim.renderOddsTable === "function") window.SeasonSim.renderOddsTable(); } } catch (e) {}
+                    }, 1200);
+                  }
                   renderPower();
                   renderTeamStrip();
                   renderFinder();
