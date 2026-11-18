@@ -1645,6 +1645,7 @@
       .lf-chip.controls { color: var(--cyan); border-color: rgba(0,229,255,.45); }
       .lf-chip.needs-help { color: var(--gold); border-color: rgba(255,176,32,.45); }
       .lf-chip.brink { color: var(--mag); border-color: rgba(255,46,136,.5); }
+      .lf-chip.tiebreak { color: var(--gold); border-color: rgba(255,176,32,.45); border-style: dashed; }
       .lf-chip.eliminated { color: var(--ink-3); }
       /* ---------- bye-week planner ---------- */
       .bye-grid { border-collapse: collapse; width: 100%; font-size: 12px; }
@@ -3190,6 +3191,17 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .tb-refresh, .tb-open-board { font: inherit; font-size: 13px; font-weight: 700; color: var(--accent); background: none; border: 1px solid rgba(198,255,0,.45); border-radius: 999px; padding: 5px 13px; cursor: pointer; }
       .tb-open-board { margin-top: 12px; }
       .tb-note { color: var(--ink-3); font-size: 13px; line-height: 1.5; margin: 10px 0 0; }
+      /* D (Nov 18): hand-entered playoff format — a compact inline
+         form (Odds tab, Explorer). Full-width fields at phone width;
+         no new nav, no modal. */
+      .ff-mfmt { margin-top: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; max-width: 520px; }
+      .ff-mfmt-intro { margin: 0; color: var(--ink-2); font-size: 13.5px; line-height: 1.5; }
+      .ff-mfmt label { display: grid; gap: 4px; color: var(--ink-2); font-size: 13px; font-weight: 600; }
+      .ff-mfmt input, .ff-mfmt select { width: 100%; background: var(--bg1); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 14px; outline: none; }
+      .ff-mfmt input:focus, .ff-mfmt select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(198,255,0,.16); }
+      .ff-mfmt-err { margin: 0; color: #ff8a8a; font-size: 13px; line-height: 1.45; }
+      .ff-mfmt-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+      .ff-mfmt .tb-note { margin: 0; }
       .tb-empty { color: var(--ink-2); font-size: 15px; line-height: 1.55; border: 1px dashed rgba(255,255,255,.2); border-radius: 14px; padding: 18px; }
       .tb-empty p { margin: 0 0 10px; }
       .tb-loading { color: var(--ink-2); font-size: 15px; }
@@ -3205,6 +3217,10 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       .la-kind.drop { color: #FF7EB6; border: 1px solid rgba(255,46,136,.45); background: rgba(255,46,136,.07); }
       .la-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
       .la-player { font-size: 14px; font-weight: 600; color: var(--ink); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      /* G5 (Nov 18): an unresolvable name renders muted + italic —
+         a skeleton while the players DB lands, "Unknown player"
+         after it — never a "Player N" placeholder. */
+      .la-unresolved .la-player { color: var(--ink-3); font-weight: 500; font-style: italic; }
       .la-meta { font-size: 12.5px; color: var(--ink-3); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .la-when { flex: 0 0 auto; font-size: 12.5px; color: var(--ink-3); white-space: nowrap; }
       /* Command Center slip: four rows visible, the rest scroll —
@@ -5915,7 +5931,157 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          setting, and the guest snapshot's behavior — when unknown. */
       function playoffField() {
         const n = DATA && DATA.league && Number(DATA.league.playoffTeams);
-        return (Number.isFinite(n) && n >= 2 && n <= 16) ? Math.round(n) : 6;
+        if (Number.isFinite(n) && n >= 2 && n <= 16) return Math.round(n);
+        /* D (Nov 18): a field entered by hand for this league stands
+           in when the league's own settings carry none. */
+        const man = (typeof ffManualFormat === "function") ? ffManualFormat() : null;
+        const mf = man ? Number(man.field) : NaN;
+        if (Number.isFinite(mf) && mf >= 2 && mf <= 16) return Math.round(mf);
+        return 6;
+      }
+      /* G7 (Nov 18): true when the league never configured a playoff
+         field — playoffField() is then the 6-team assumption, not a
+         real setting. The Odds tab discloses it (the note names the
+         assumed field and the cap). A field the user enters by hand
+         (D) counts as configured. */
+      function ffFieldAssumed() {
+        const n = DATA && DATA.league && Number(DATA.league.playoffTeams);
+        if (Number.isFinite(n) && n >= 2 && n <= 16) return false;
+        const man = (typeof ffManualFormat === "function") ? ffManualFormat() : null;
+        return !(man && Number.isFinite(Number(man.field)) && Number(man.field) >= 2 && Number(man.field) <= 16);
+      }
+
+      /* ============ D — hand-entered playoff format (Nov 18) ============
+         When a league's own settings don't carry a playoff format
+         (ESPN never reports round/seeding details, and some leagues
+         report no field at all), the visitor can enter it by hand.
+         It lives ON the saved-league record (ff_saved_leagues) —
+         local, no account needed; the account mirror carries it
+         across devices when signed in. The sim's readers merge it
+         in below (playoffField / playoffFormat / playoffStartWeek):
+         the league's own values always win where present, the manual
+         ones fill only what's missing. */
+      function ffManualFormat() {
+        try {
+          var key = (typeof ffBakeKeyForContext === "function") ? ffBakeKeyForContext() : null;
+          if (!key || key === "d74") return null;
+          var list = JSON.parse(localStorage.getItem("ff_saved_leagues") || "[]");
+          if (!Array.isArray(list)) return null;
+          for (var i = 0; i < list.length; i++) {
+            var e = list[i];
+            if (!e || typeof e !== "object") continue;
+            var k = String(e.platform || "").trim().toLowerCase() + ":" + String(e.leagueId == null ? "" : e.leagueId).trim();
+            if (k === key && e.manualFormat && typeof e.manualFormat === "object") return e.manualFormat;
+          }
+          return null;
+        } catch (err) { return null; }
+      }
+      /* Write (or clear, when fmt is null) the manual format on the
+         connected league's saved record. Returns false when there is
+         no saved record to attach to (guest, or a league that was
+         never saved) — the input never renders there. */
+      function ffSaveManualFormat(fmt) {
+        try {
+          if (window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn" || !window.CONN_LEAGUE) return false;
+          var key = String(window.CONN_LEAGUE.platform || "sleeper").toLowerCase() + ":" + String(window.CONN_LEAGUE.leagueId);
+          var saved = (window.__ffSaved && typeof window.__ffSaved.list === "function") ? window.__ffSaved.list() : [];
+          var entry = null;
+          for (var i = 0; i < saved.length; i++) {
+            var e = saved[i];
+            if (e && (String(e.platform || "").toLowerCase() + ":" + String(e.leagueId)) === key) { entry = e; break; }
+          }
+          if (!entry) return false;
+          if (fmt) entry.manualFormat = fmt; else delete entry.manualFormat;
+          if (typeof window.__ffSavedRecord === "function") window.__ffSavedRecord(entry);
+          return true;
+        } catch (err) { return false; }
+      }
+      /* The form itself — one renderer for both mounts (Odds tab,
+         Explorer). Prefills from the saved manual format, else from
+         the league's own partial meta (an ESPN team count pre-fills
+         the field; a 0 start week stays blank, 0 means unknown).
+         Bracket/seeding store the site's own playoffRoundType /
+         playoffSeedType slots — today only the Explorer's validity
+         check reads them, the sim's bracket is single-elimination
+         seeded by record either way. */
+      function ffManualFormatHtml() {
+        var man = null;
+        try { man = ffManualFormat(); } catch (e) {}
+        var lg = (typeof DATA !== "undefined" && DATA && DATA.league) || {};
+        var n = DATA && DATA.teams ? DATA.teams.length : 16;
+        var fieldVal = (man && man.field != null) ? man.field : ((Number(lg.playoffTeams) >= 2 && Number(lg.playoffTeams) <= 16) ? Number(lg.playoffTeams) : "");
+        var startVal = (man && man.start != null) ? man.start : ((Number(lg.playoffStart) >= 12 && Number(lg.playoffStart) <= 17) ? Number(lg.playoffStart) : "");
+        var roundVal = (man && man.roundType != null) ? man.roundType : 0;
+        var seedVal = (man && man.seedType != null) ? man.seedType : 0;
+        var avgVal = (man && man.avgMatch != null) ? man.avgMatch : 0;
+        var maxField = Math.max(2, Math.min(16, n || 16));
+        return `<div class="ff-mfmt" data-ff-manual-form>
+          <p class="ff-mfmt-intro">Enter it once — it's saved with this league.</p>
+          <label>Playoff teams<input type="number" inputmode="numeric" min="2" max="${maxField}" step="1" value="${fieldVal}" data-ff-mf-field></label>
+          <label>Playoffs start — week<input type="number" inputmode="numeric" min="12" max="17" step="1" value="${startVal}" data-ff-mf-start></label>
+          <label>Bracket<select data-ff-mf-round><option value="0"${roundVal === 0 ? " selected" : ""}>Single elimination</option><option value="1"${roundVal === 1 ? " selected" : ""}>Double elimination</option></select></label>
+          <label>Seeding<select data-ff-mf-seed><option value="0"${seedVal === 0 ? " selected" : ""}>By record</option><option value="1"${seedVal === 1 ? " selected" : ""}>By points</option></select></label>
+          <label>Median game — does each playoff team also play the league average?<select data-ff-mf-avg><option value="0"${avgVal === 0 ? " selected" : ""}>No</option><option value="1"${avgVal === 1 ? " selected" : ""}>Yes</option></select></label>
+          <p class="ff-mfmt-err" data-ff-mf-err hidden></p>
+          <div class="ff-mfmt-actions"><button type="button" class="btn solid" data-ff-manual-save>Save playoff format</button>${man ? `<button type="button" class="btn ghost" data-ff-manual-clear>Remove what I entered</button>` : ""}</div>
+          <p class="tb-note">Saved with this league — no account needed. The outlook re-runs when you save.</p>
+        </div>`;
+      }
+      /* Read, validate, save, and re-run the sim on the saved format.
+         Validation is inline: the first bad field gets the error and
+         focus, nothing is written. */
+      function ffManualFormatSave(form) {
+        try {
+          var errEl = form.querySelector("[data-ff-mf-err]");
+          var fail = function (msg, sel) {
+            if (errEl) { errEl.textContent = msg; errEl.hidden = false; }
+            var bad = sel ? form.querySelector(sel) : null;
+            if (bad && bad.focus) bad.focus();
+            return false;
+          };
+          var n = DATA && DATA.teams ? DATA.teams.length : 16;
+          var field = Number((form.querySelector("[data-ff-mf-field]") || {}).value);
+          if (!Number.isFinite(field) || Math.round(field) !== field || field < 2 || field > 16) return fail("Playoff teams must be a whole number from 2 to 16.", "[data-ff-mf-field]");
+          if (field > n) return fail("Playoff teams can't be more than the " + n + " teams in this league.", "[data-ff-mf-field]");
+          var start = Number((form.querySelector("[data-ff-mf-start]") || {}).value);
+          if (!Number.isFinite(start) || Math.round(start) !== start || start < 12 || start > 17) return fail("Playoffs start must be a whole week from 12 to 17.", "[data-ff-mf-start]");
+          var fmt = {
+            field: Math.round(field),
+            start: Math.round(start),
+            roundType: Number((form.querySelector("[data-ff-mf-round]") || {}).value) === 1 ? 1 : 0,
+            seedType: Number((form.querySelector("[data-ff-mf-seed]") || {}).value) === 1 ? 1 : 0,
+            avgMatch: Number((form.querySelector("[data-ff-mf-avg]") || {}).value) === 1 ? 1 : 0,
+          };
+          if (!ffSaveManualFormat(fmt)) return fail("Couldn't save this format for this league — try reconnecting it first.");
+          ffManualFormatRerun();
+          return true;
+        } catch (e) { return false; }
+      }
+      /* Re-run the sim on the saved format and re-render every
+         surface that reads it. When a bake is still building, the
+         pending build reads the record when it lands — nothing to
+         do here. When no bake exists yet, the next build reads it. */
+      function ffManualFormatRerun() {
+        try {
+          var bk = (typeof ffBakeKeyForContext === "function") ? ffBakeKeyForContext() : null;
+          if (!bk) return;
+          if (window.__ffBakeWait && window.__ffBakeWait[bk]) return;
+          if (typeof ffBakeClear === "function") ffBakeClear(bk);
+          var sim = (typeof ffBakeBuild === "function") ? ffBakeBuild(bk, false) : null;
+          if (sim) {
+            window.SeasonSim = sim;
+            if (window.SIM_BY_LEAGUE) window.SIM_BY_LEAGUE.conn = sim;
+            try { if (typeof window.ffComputeTwoRankings === "function") window.ffComputeTwoRankings(); } catch (e) {}
+            try { if (typeof restampPickTiers === "function") restampPickTiers(); } catch (e) {}
+          }
+          try { if (window.SeasonSim && typeof window.SeasonSim.renderSeason === "function") window.SeasonSim.renderSeason(); } catch (e) {}
+          try { if (window.SeasonSim && typeof window.SeasonSim.renderOddsTable === "function") window.SeasonSim.renderOddsTable(); } catch (e) {}
+          try { if (typeof window.renderOddsPanel === "function") window.renderOddsPanel(); } catch (e) {}
+          try { if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched(); } catch (e) {}
+          try { if (typeof window.renderLifeline === "function") window.renderLifeline(); } catch (e) {}
+          try { if (typeof window.ff4RenderPP === "function") window.ff4RenderPP(); } catch (e) {}
+          try { if (typeof renderPower === "function") renderPower(); } catch (e) {}
+        } catch (e) {}
       }
       /* The connected league's full playoff format, read from its own
          settings at runtime (Eric, 2026-10-22): field size, start week,
@@ -5931,13 +6097,26 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       function playoffFormat() {
         const lg = (typeof DATA !== "undefined" && DATA && DATA.league) || {};
         const num = v => { if (v == null || v === "") return null; const n = Number(v); return Number.isFinite(n) ? n : null; };
-        const teams = num(lg.playoffTeams);
+        /* D (Nov 18): a format entered by hand fills each field the
+           league's own settings leave blank — the league's own
+           values always win where present. A 0 teams/start counts
+           as blank (ESPN reports 0 for unknown). Round/seed keep
+           0 as a real value (single elimination / by record). */
+        const man = (typeof ffManualFormat === "function") ? ffManualFormat() : null;
+        const teams = num(lg.playoffTeams) || (man && num(man.field));
+        const start = num(lg.playoffStart) || (man && num(man.start));
+        const rt = num(lg.playoffRoundType);
+        const roundType = (rt != null) ? rt : (man && num(man.roundType));
+        const st = num(lg.playoffSeedType);
+        const seedType = (st != null) ? st : (man && num(man.seedType));
+        const am = num(lg.leagueAverageMatch);
+        const avgMatch = (am != null) ? am : (man && num(man.avgMatch));
         const f = {
           teams,
-          start: num(lg.playoffStart),
-          roundType: num(lg.playoffRoundType),
-          seedType: num(lg.playoffSeedType),
-          avgMatch: num(lg.leagueAverageMatch),
+          start,
+          roundType,
+          seedType,
+          avgMatch,
           divisions: num(lg.divisions) || 0,
           byes: teams && teams >= 2 ? Math.pow(2, Math.ceil(Math.log2(teams))) - teams : null,
         };
@@ -5951,7 +6130,12 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
          rather than guess when this says otherwise. */
       function playoffStartWeek() {
         const n = DATA && DATA.league && Number(DATA.league.playoffStart);
-        return (Number.isFinite(n) && n >= 12 && n <= 17) ? Math.round(n) : null;
+        if (Number.isFinite(n) && n >= 12 && n <= 17) return Math.round(n);
+        /* D (Nov 18): a start week entered by hand stands in when
+           the league's own settings carry none (ESPN reports 0). */
+        const man = (typeof ffManualFormat === "function") ? ffManualFormat() : null;
+        const m = man ? Number(man.start) : NaN;
+        return (Number.isFinite(m) && m >= 12 && m <= 17) ? Math.round(m) : null;
       }
       function bestBallLineup(ids) {
         const valOf = p => VALMODE === "redraft" ? (p.rdValue ?? p.value) : p.value;
@@ -6871,7 +7055,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
       }
       const USER_RID = 4;
 
-      function teamName(rid) { return rid === "FA" ? "Free Agents" : TBY[rid].name; }
+      function teamName(rid) { return rid === "FA" ? "Free Agents" : (TBY[rid] ? TBY[rid].name : "Team"); }
       function ownerLabel(p) {
         /* Guest mode: ownership is unknown until a league connects. */
         if (window.GUEST_MODE) return "—";
@@ -7701,25 +7885,31 @@ ${rdP ? "" : `
          already pointed at this league (active league, or via mtSwapTo). */
       function mtSnapshot(id) {
         const teams = DATA.teams;
-        const me = teams.find(t => t.isUser) || teams[0];
+        /* G2 (Nov 18): "Just browsing" — no team was picked, so there
+           is no "me". Every personal field stays null; the card
+           renders a spectator state instead of borrowing teams[0]. */
+        const me = teams.find(t => t.isUser) || null;
         const sim = window.SIM_BY_LEAGUE ? window.SIM_BY_LEAGUE[id] : null;
-        const sr = sim ? sim.results[me.rid] : null;
+        const sr = (me && sim) ? sim.results[me.rid] : null;
         const oppMap = window.CONN_LEAGUE ? window.CONN_LEAGUE.opp6 : null;
-        const oppRid = oppMap ? oppMap[String(me.rid)] : null;
+        const oppRid = (me && oppMap) ? oppMap[String(me.rid)] : null;
         const opp = oppRid != null ? teams.find(t => t.rid === oppRid) : null;
         return {
           me, total: teams.length,
           /* Phase 3 piece 2 (S49): the card stat is the Current Power
              rank + score; the sub-line tag is the Stance label
              (dynasty only — mtCard gates it on format, as before). */
-          powerRank: (me.cpRank != null) ? me.cpRank : null, power: (me.cpScore != null) ? me.cpScore : null, stance: (me.stanceLabel != null) ? me.stanceLabel : null, record: me.record,
+          powerRank: me ? ((me.cpRank != null) ? me.cpRank : null) : null, power: me ? ((me.cpScore != null) ? me.cpScore : null) : null, stance: me ? ((me.stanceLabel != null) ? me.stanceLabel : null) : null, record: me ? me.record : null,
           playoff: sr ? sr.playoff : null, champ: sr ? sr.champ : null, expWins: sr ? sr.expWins : null,
           clinched: sr ? !!sr.clinched : false, titleIfIn: sr ? titlePct(sr) : null,
-          simPending: !sr && teams.length === 12 && !mtSimFailed.has(id),
-          simNA: !sr && teams.length !== 12 ? "size" : (!sr && mtSimFailed.has(id) ? "failed" : null),
+          /* G7 (Nov 18): the sim runs for any league size (2–32) —
+             no size gate. Pending while the bake settles; failed
+             only when the build itself failed. */
+          simPending: !sr && !mtSimFailed.has(id),
+          simNA: !sr && mtSimFailed.has(id) ? "failed" : null,
           week: (typeof ffActiveWeek === "function") ? ffActiveWeek() : DATA.league.week,
           opp: opp ? { name: opp.name, record: opp.record } : null,
-          waivers: mtWaivers(me),
+          waivers: me ? mtWaivers(me) : [],
         };
       }
 
@@ -7787,13 +7977,33 @@ ${rdP ? "" : `
 
       function mtCard(lg, s) {
         if (!s) return "";
+        if (!s.me) {
+          /* G2 (Nov 18): spectator card — the league is connected but
+             no team was picked, so nothing here is "yours". */
+          return `<article class="mt-card">
+            <div class="mt-head">
+              <div class="mt-head-main">
+                <div class="mt-league">${esc(lg.name)}<span class="mt-badge ${lg.badgeCls}">${lg.badge}</span></div>
+                <div class="mt-team"><strong>Browsing this league</strong></div>
+                <div class="mt-meta">NFL Week ${s.week} · ${s.total} teams · No team picked yet</div>
+              </div>
+              <button type="button" class="mt-open" data-mt-go="${lg.id}:teams">Open league →</button>
+            </div>
+            <div class="mt-stats">
+              <div class="mt-stat mt-wide"><span class="mt-lbl">Your team</span><span class="mt-big" style="font-size:19px">Not picked yet</span><span class="mt-sub2">Current Power, playoff odds, matchup and waiver targets for your team appear here once you pick one.</span></div>
+            </div>
+            <div class="mt-waivers">
+              <button type="button" class="locked-cta" data-ff-choose-team="1">Choose your team</button>
+            </div>
+          </article>`;
+        }
         const pct = x => oddsPct(x);
         const me = s.me;
         const odds = s.playoff != null
           ? `<button type="button" class="mt-stat" data-mt-go="${lg.id}:season"><span class="mt-lbl">Playoff odds</span><span class="mt-big">${s.clinched ? "100%" : pct(s.playoff)}</span><span class="mt-sub2">Title if in ${s.titleIfIn} · ${pct(s.champ)} overall · ${s.expWins.toFixed(1)} exp. wins</span></button>`
           : s.simPending
             ? `<div class="mt-stat"><span class="mt-lbl">Playoff odds</span><span class="mt-big mt-pending">Simulating…</span><span class="mt-sub2">The 3,000-sim outlook is running for this league</span></div>`
-            : `<div class="mt-stat"><span class="mt-lbl">Playoff odds</span><span class="mt-big">—</span><span class="mt-sub2">${s.simNA === "size" ? `The sim is calibrated for 12-team leagues — this one has ${s.total}` : "The sim couldn't be built for this league"}</span></div>`;
+            : `<div class="mt-stat"><span class="mt-lbl">Playoff odds</span><span class="mt-big">—</span><span class="mt-sub2">The sim couldn't be built for this league</span></div>`;
         const match = s.opp
           ? `<button type="button" class="mt-stat mt-wide" data-mt-go="${lg.id}:lineup"><span class="mt-lbl">Week ${s.week} matchup</span><span class="mt-big" style="font-size:19px">vs ${esc(s.opp.name)}</span><span class="mt-sub2">They're ${esc(s.opp.record)} — matchup preview &amp; optimal lineup →</span></button>`
           : `<div class="mt-stat mt-wide"><span class="mt-lbl">Week ${s.week} matchup</span><span class="mt-big" style="font-size:19px">—</span><span class="mt-sub2">No opponent pairing is published for this league this week</span></div>`;
@@ -7963,7 +8173,10 @@ ${rdP ? "" : `
       /* Display name for a side: team sides speak in team names;
          guest and Any Player sides use the guest phrasing. */
       function calcSideName(side) {
-        return (window.GUEST_MODE || sideIsAny(side)) ? "Side " + side : teamName(calc[side].team);
+        /* G2 (Nov 18): a team side with no team behind it (browse
+           session before any team is picked) has no name to show. */
+        if (window.GUEST_MODE || sideIsAny(side) || calc[side].team == null) return "Side " + side;
+        return teamName(calc[side].team);
       }
 
       /* Value adjustment: raw sums understate the side of a deal
@@ -8113,7 +8326,7 @@ ${rdP ? "" : `
          may exist. */
       /* A baked ladder pick's live price under the current format
          settings (FF-07): the ladder is priced in Superflex; in 1 QB
-         the pickScalar ratio (2027 R1 Late 1.0126: 4,657 -> 4,716)
+         the pickScalar ratio (2027 R1 Late 1.0196: 4,657 -> 4,748)
          applies, parsed off the label ("2027 1st (Late)"). Unparseable
          labels fall back to the raw baked value. */
       function ladderPickVal(l) {
@@ -8184,10 +8397,12 @@ ${rdP ? "" : `
         const el = document.getElementById(side === "A" ? "side-a" : "side-b");
         const guest = !!window.GUEST_MODE;
         const anyMode = !guest && st.src === "any";
-        const teamOpts = DATA.teams.map(t =>
+        const teamOpts = (st.team == null ? `<option value="" selected>Choose a team…</option>` : "") + DATA.teams.map(t =>
           `<option value="${t.rid}" ${String(st.team) === String(t.rid) ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("") +
           `<option value="FA" ${st.team === "FA" ? "selected" : ""}>Free Agents</option>`;
-        const teamPicks = !guest && !anyMode && VALMODE !== "redraft" && st.team !== "FA" ? TBY[st.team].picks.filter(pk => pk.value >= 150).sort((x, y) => pickPrice(y) - pickPrice(x)) : [];
+        /* G2 (Nov 18): a team side with no team behind it has no roster
+           to offer picks from — empty list, never TBY[null]. */
+        const teamPicks = !guest && !anyMode && VALMODE !== "redraft" && st.team !== "FA" && st.team != null && TBY[st.team] ? TBY[st.team].picks.filter(pk => pk.value >= 150).sort((x, y) => pickPrice(y) - pickPrice(x)) : [];
         /* One "Add a pick" dropdown per side (Eric, Nov 12, 2026 — the
            wall of pick buttons is gone). Team sides offer their owned
            picks; guest / Any Player sides offer the standard rookie
@@ -8224,7 +8439,9 @@ ${rdP ? "" : `
           </div>`;
         const teamSel = document.getElementById("team-" + side);
         if (teamSel) teamSel.addEventListener("change", e => {
-          st.team = e.target.value === "FA" ? "FA" : Number(e.target.value);
+          /* G2 (Nov 18): re-picking the placeholder clears the team
+             (null, never Number("") === 0 — there is no team 0). */
+          st.team = e.target.value === "FA" ? "FA" : (e.target.value === "" ? null : Number(e.target.value));
           st.assets = [];
           renderSide(side); renderVerdict(); renderResults(side === "A" ? "B" : "A");
         });
@@ -8304,7 +8521,9 @@ ${rdP ? "" : `
         let list;
         if (window.GUEST_MODE || st.src === "any") list = [...DATA.players];
         else if (st.team === "FA") list = DATA.players.filter(p => !p.owner);
-        else list = TBY[st.team].playerIds.map(id => PBY[id]).filter(Boolean);
+        /* G2 (Nov 18): team side with no team behind it — no roster to
+           search; empty list, never TBY[null]. */
+        else list = TBY[st.team] ? TBY[st.team].playerIds.map(id => PBY[id]).filter(Boolean) : [];
         const chosen = new Set(st.assets.filter(a => a.kind === "player").map(a => a.id));
         /* FF-03 (audit 2026-11-08): a player already on the OPPOSITE
            side can't be offered here either — the same player on both
@@ -10768,6 +10987,27 @@ ${rdP ? "" : `
          The Tuesday refresh appends a point each week. Where the snapshot
          carries an injury/designation status it is marked on the current
          point — the only dated designation the data holds. */
+      /* G4 (Nov 18): one time stamp for the value-history charts — the
+         bare "now" conflated three different times (performance
+         through W10, values updated Nov 17, projections from W11).
+         The performance week is derived, never hardcoded: the
+         projections week (ffEffWeek) starts after the last completed
+         week, so performance runs through the week before it. The
+         values date is the baked snapshot date
+         (DATA.league.snapshot) — a delayed feed shows its stale date,
+         never today's. */
+      function ffChartStamp() {
+        const eff = (typeof ffEffWeek === "function") ? ffEffWeek() : ((DATA.league && typeof DATA.league.week === "number") ? DATA.league.week : 0);
+        if (!eff || eff < 1) return "";
+        const perf = eff - 1;
+        let upd = "";
+        try {
+          const snap = (typeof DATA !== "undefined" && DATA.league && DATA.league.snapshot) || "";
+          const t = snap ? new Date(snap) : null;
+          if (t && isFinite(t.getTime())) upd = t.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        } catch (e) { /* no baked date — the stamp carries the weeks only */ }
+        return "Performance through W" + perf + (upd ? " · Values updated " + upd : "") + " · Projections from W" + eff;
+      }
       function histChart(p) {
         if (!p.hist || p.hist.length < 2) return "";
         const f = factorRatio(p.pos);
@@ -10787,24 +11027,25 @@ ${rdP ? "" : `
         const dpct = first ? d / first * 100 : 0;
         const dCls = d > 0 ? "up" : d < 0 ? "dn" : "flat";
         const dTxt = `${d > 0 ? "+" : d < 0 ? "−" : ""}${fmt(Math.abs(d))} (${dpct > 0 ? "+" : dpct < 0 ? "−" : ""}${Math.abs(dpct).toFixed(1)}%) since Week ${DATA.league.week - pts.length + 1}`;
+        const stamp = ffChartStamp();
         const wk = i => "Wk " + (DATA.league.week - pts.length + 1 + i);
         const dots = pts.map((v, i) => {
           const isLast = i === pts.length - 1;
           return `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${isLast ? 4.5 : 3}" fill="${isLast ? "#C6FF00" : "#0A0A1A"}" stroke="#C6FF00" stroke-width="2"/>` +
             (i === 0 || isLast ? `<text x="${X(i).toFixed(1)}" y="${(Y(v) - 10).toFixed(1)}" text-anchor="${i === 0 ? "start" : "end"}" font-size="12.5" font-weight="700" fill="#F2F2F5" font-family="Space Grotesk, sans-serif">${fmt(v)}</text>` : "") +
-            `<text x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="#83839C" font-family="Space Grotesk, sans-serif">${wk(i)}${isLast ? " · now" : ""}</text>`;
+            `<text x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="#83839C" font-family="Space Grotesk, sans-serif">${wk(i)}</text>`;
         }).join("");
         const injMark = p.inj ? `<circle cx="${X(pts.length - 1).toFixed(1)}" cy="${Y(last).toFixed(1)}" r="9" fill="none" stroke="#FFB020" stroke-width="1.6" stroke-dasharray="3 3"/>` : "";
         const title = VALMODE === "redraft" ? "Dynasty value history — weekly snapshots" : "Value history — weekly snapshots";
         return `<div class="vh">
           <div class="vh-head"><span class="vh-title">${title}</span><span class="vh-delta ${dCls}">${dTxt}</span></div>
-          <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Value history chart for ${esc(p.name)}: ${fmt(first)} in week ${DATA.league.week - pts.length + 1} to ${fmt(last)} now">
+          <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Value history chart for ${esc(p.name)}: ${fmt(first)} in week ${DATA.league.week - pts.length + 1} to ${fmt(last)}${stamp ? " — " + stamp : ""}">
             <path d="${area}" fill="rgba(198,255,0,.10)"/>
             <polyline points="${line}" fill="none" stroke="#C6FF00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
             ${dots}${injMark}
           </svg>
           ${p.inj ? `<div class="vh-inj">Current designation: ${esc(injLabel(p))} — Week ${DATA.league.week} snapshot</div>` : ""}
-          <div class="vh-note">One point per week.${p.inj ? " The dashed marker flags the designation the current snapshot carries — dated injury history isn't published by any free source, so earlier weeks aren't marked." : ""}</div>
+          <div class="vh-note">One point per week.${stamp ? " " + stamp + "." : ""}${p.inj ? " The dashed marker flags the designation the current snapshot carries — dated injury history isn't published by any free source, so earlier weeks aren't marked." : ""}</div>
         </div>`;
       }
       function redraftWhy(p) {
@@ -11146,8 +11387,12 @@ ${rdP ? "" : `
         /* Playoff field size from the connected league's real setting
            (playoffField() reads league meta playoffTeams; default 6,
            the guest snapshot's behavior). Every cut below — berths,
-           byes, elimination, clinch — keys off this, never a literal 6. */
-        const FIELD = playoffField();
+           byes, elimination, clinch — keys off this, never a literal 6.
+           G7 (Nov 18): capped at the league size — a field larger
+           than the league is nonsense (a 6-team assumption in a
+           4-team league would put everyone in and price a 3-round
+           bracket for 4 teams). */
+        const FIELD = Math.min(playoffField(), DATA.teams.length);
         const DELTA_SEED = 777001;
         /* Playoff format for this league, from playoffFormat() — the
            same settings playoffField() reads (Eric, 2026-10-22).
@@ -11854,14 +12099,30 @@ ${rdP ? "" : `
           const sorted = DATA.teams.slice().sort((a, b) => (results[b.rid].playoff - results[a.rid].playoff) || (results[b.rid].champ - results[a.rid].champ));
           const rows = sorted.map((t, i) => {
             const r = results[t.rid];
-            return `<tr${t.isUser ? ' class="mine"' : ""}><td>${i + 1}</td><td class="team"><div class="ot-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div><div class="ot-team">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div></td><td class="num"><b>${playoffLabel(r)}</b></td><td class="num">${titlePct(r)}</td><td class="num">${oddsPct(r.champ)}</td><td class="num">${r.expWins.toFixed(1)}</td><td class="num">${Math.round(means[t.rid])}</td><td class="num col-wk">${Math.round(meansWk[t.rid])}</td><td class="num col-act">${(t.pf / Math.max(1, (typeof ffEffWeek === "function" ? ffEffWeek() : (typeof DATA.league.week === "number" ? DATA.league.week : 6) + 1) - 1)).toFixed(1)}</td></tr>`;
+            /* F4 (Eric, Nov 18, 2026): a team alive per the standings
+               math but never drawn into the playoffs in 3,000 finishes
+               carries the 0.005 sliver — its path runs only through
+               winning out and the points tiebreak. Mark it; the
+               footnote below says so in plain words. */
+            const tiebreakOnly = !r.elim && r.playoff === 0.005;
+            return `<tr${t.isUser ? ' class="mine"' : ""}><td>${i + 1}</td><td class="team"><div class="ot-name">${esc(t.name)}${t.isUser ? '<span class="you-tag">Your team</span>' : ""}</div><div class="ot-team">${esc(t.owner)} · ${t.record} · ${fmt(t.pf)} pts for</div></td><td class="num"><b>${playoffLabel(r)}</b>${tiebreakOnly ? '<span title="Path exists only through the points tiebreak — the sim never drew this team into the playoffs in 3,000 finishes">†</span>' : ""}</td><td class="num">${titlePct(r)}</td><td class="num">${oddsPct(r.champ)}</td><td class="num">${r.expWins.toFixed(1)}</td><td class="num">${Math.round(means[t.rid])}</td><td class="num col-wk">${Math.round(meansWk[t.rid])}</td><td class="num col-act">${(t.pf / Math.max(1, (typeof ffEffWeek === "function" ? ffEffWeek() : (typeof DATA.league.week === "number" ? DATA.league.week : 6) + 1) - 1)).toFixed(1)}</td></tr>`;
           }).join("");
+          const anyTiebreak = sorted.some(t => { const rr = results[t.rid]; return rr && !rr.elim && rr.playoff === 0.005; });
+          /* G7 (Nov 18): when the league never configured a playoff
+             field, the sim assumes a 6-team field (capped at the
+             league size) — say so on the tab, with the cap named. */
+          const fieldAssumed = (typeof ffFieldAssumed === "function") ? ffFieldAssumed() : false;
+          /* D (Nov 18): the manual-format entry — offered when the
+             field is assumed (the note above says so), and an edit
+             affordance once one is saved. Hidden otherwise: a league
+             with a full pulled format never sees it. */
+          const manual = (typeof ffManualFormat === "function") ? ffManualFormat() : null;
           el.innerHTML = `<div class="odds-table-wrap">
             <table class="odds-table">
               <thead><tr><th>#</th><th>Team</th><th class="num">Playoffs</th><th class="num">Title if in</th><th class="num">Title odds · overall</th><th class="num">Expected final wins</th><th class="num">Proj. pts/wk (ROS)</th><th class="num col-wk">Proj. this week (optimal lineup)</th><th class="num col-act">Actual pts/wk so far</th></tr></thead>
               <tbody>${rows}</tbody>
             </table>
-          </div>`;
+          </div>${fieldAssumed ? `<p class="tb-note">Playoff field not set for this league — the sim assumes a 6-team field${FIELD < 6 ? `, capped at ${FIELD} for a ${DATA.teams.length}-team league (every team makes the playoffs)` : ""}.</p>` : ""}${(fieldAssumed || manual) ? `<div data-ff-manual-wrap><p class="tb-note">${manual ? "Playoff format saved for this league (entered by hand)." : "Know your league's playoff format?"} <button type="button" class="btn ghost" data-ff-manual-toggle>${manual ? "Edit" : "Enter it"}</button></p><div data-ff-manual-mount></div></div>` : ""}${anyTiebreak ? `<p class="tb-note">† &lt;1% with this mark: the sim never drew the team into the playoffs in 3,000 finishes — the path that exists runs only through winning out and the points tiebreak.</p>` : ""}`;
         }
 
         const methodEl = document.getElementById("method-body");
@@ -13640,14 +13901,18 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         const out = document.getElementById("bye-out");
         if (!sel || !out) return;
         if (window.GUEST_MODE || !DATA.teams.length) { out.innerHTML = ""; return; }
-        const wantOpts = DATA.teams.map(t => String(t.rid)).join(",");
+        /* G2 (Nov 18): no team picked — the planner shows a
+           "Choose a team…" placeholder instead of defaulting to the
+           first team in the league. */
+        const hasUser = DATA.teams.some(t => t.isUser);
+        const wantOpts = (hasUser ? "" : "none,") + DATA.teams.map(t => String(t.rid)).join(",");
         const haveOpts = [...sel.options].map(o => o.value).join(",");
         if (wantOpts !== haveOpts) {
           const defRid = (DATA.teams.find(t => t.isUser) || {}).rid;
-          sel.innerHTML = DATA.teams.map(t => `<option value="${t.rid}" ${t.rid === defRid ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("");
+          sel.innerHTML = (hasUser ? "" : `<option value="none" selected>Choose a team…</option>`) + DATA.teams.map(t => `<option value="${t.rid}" ${t.rid === defRid ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("");
         }
-        const team = TBY[Number(sel.value)] || DATA.teams.find(t => t.isUser) || DATA.teams[0];
-        if (!team) { out.innerHTML = ""; return; }
+        const team = sel.value !== "none" ? (TBY[Number(sel.value)] || DATA.teams.find(t => String(t.rid) === sel.value) || null) : null;
+        if (!team) { out.innerHTML = `<div class="diag"><p>Pick a team above to see its bye plan — who is out each week and which bench players cover.</p></div>`; return; }
         const VW = wkViewWeek(), isNext = VW !== wkActiveWeek();
         const opt = wkOptimal(team.playerIds, VW);
         out.innerHTML = byePlannerHtml(team, { total: opt.total, lineup: opt.lineup.concat(kdLineupEntries(team)) }, VW, isNext)
@@ -14524,7 +14789,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
       <div class="slp-dialog" role="dialog" aria-modal="true" aria-labelledby="ff-auth-title">
         <button type="button" class="slp-x" id="ff-auth-close" aria-label="Close sign in">&times;</button>
         <h3 id="ff-auth-title">Log in / Sign up</h3>
-        <p class="slp-sub" id="ff-auth-sub">One account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email.</p>
+        <p class="slp-sub" id="ff-auth-sub">One account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email. Use the email from the founding list and your $3.99/mo or $29.99/yr rate for life is locked in.</p>
         <button type="button" class="ff-google-btn" id="ff-google-btn">Continue with Google</button>
         <div class="ff-or"><span>or</span></div>
         <label class="slp-label" for="ff-email">Email address</label>
@@ -14539,6 +14804,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         <button type="button" class="slp-x" id="ff-privacy-close" aria-label="Close privacy">&times;</button>
         <h3 id="ff-privacy-title">Privacy</h3>
         <p><strong>If you create an account,</strong> we store your email address, your league identifiers — your Sleeper username and league IDs, or your ESPN league ID — your display preferences, and your Manager Score snapshots, so your saved leagues and settings follow you between devices. That is all an account stores.</p>
+        <p><strong>Founding list:</strong> if you join the founding list, we store your email address to hold your founding rate ($3.99/mo or $29.99/yr for life) and to send you the launch announcement and the weekly digest. Your email is tied to your account when you sign up with the same address. Every founding email carries an unsubscribe link — unsubscribing stops the emails only, never the rate. To remove your email from the founding list entirely, email <a href="mailto:thefantasyforensics@gmail.com">thefantasyforensics@gmail.com</a>.</p>
         <p><strong>Problem reports:</strong> if you send a problem report, we receive the category, your description, the tool you were using, and your email if you choose to give one. Reports are used only to fix the problem and reply to you.</p>
         <p><strong>If you don't have an account,</strong> your saved leagues live only in this browser, on this device. Clear your browser data and they're gone — nothing about them ever reaches us.</p>
         <p><strong>We never collect passwords.</strong> Sleeper connects with your public username and ESPN with your league ID. Neither platform shares a password with us, and we never ask for one.</p>
@@ -14554,6 +14820,8 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         <p><strong>What this is:</strong> Fantasy Forensics provides free fantasy football tools for information and entertainment. Values, projections, grades, and scores are estimates and opinions — not guarantees, and not financial or gambling advice. Your lineup and trade decisions are your own.</p>
         <p><strong>Not affiliated:</strong> Fantasy Forensics is not affiliated with, endorsed by, or sponsored by Sleeper, ESPN, the NFL, or any NFL team or player.</p>
         <p><strong>Accounts:</strong> you must be 13 or older to use the site. You're responsible for activity under your sign-in.</p>
+        <p><strong>Founding members:</strong> anyone who joins the founding list locks in $3.99/mo or $29.99/yr for life — no cap, no cutoff. The rate is tied to the email you joined with: use that same email for your account, and you'll receive a promo code for the founding rate when premium opens. It covers both the monthly and annual plans, and switching plans keeps it. Cancel and come back later, and the rate is still yours. If a payment fails, you get a grace period to fix it before the rate is lost.</p>
+        <p><strong>Founding emails:</strong> we'll email you the launch announcement with your promo code, plus the weekly digest. Every email carries an unsubscribe link — unsubscribing stops the emails only, never the rate. To remove your email from the founding list entirely, email <a href="mailto:thefantasyforensics@gmail.com">thefantasyforensics@gmail.com</a>.</p>
         <p><strong>Acceptable use:</strong> don't abuse the site — no automated hammering or scraping that degrades it, no attempts to access other users' data, and no unlawful use.</p>
         <p><strong>As-is:</strong> the site is provided "as is," without warranties of any kind. Availability and accuracy aren't guaranteed, and to the maximum extent permitted by law, Fantasy Forensics isn't liable for losses arising from use of the site or reliance on its numbers.</p>
         <p><strong>Changes:</strong> these terms may be updated. Continued use after an update means you accept the current version.</p>
@@ -15554,7 +15822,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
          projected finish. Runs once per connect, from both sim paths
          in setConnectedLeague (cached and fresh); the projection is
          the per-connect sim itself (SIM_BY_LEAGUE), never recomputed
-         here. Leagues the sim can't run (not 12 teams) keep the
+         here. Leagues with no sim yet keep the
          builders' points-for tiers. */
       function projFinishRanks(sim) {
         if (!sim || !sim.results || !DATA.teams.length) return null;
@@ -15748,15 +16016,21 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           try { if (typeof window.ffComputeTwoRankings === "function") window.ffComputeTwoRankings(); } catch (e) {}
           restampPickTiers();
           window.SeasonSim.renderSeason();
+          /* G7 / A2 (Nov 18): re-render the Odds table too, so a tab
+             opened before the bake landed doesn't keep showing the
+             previous league's numbers. */
+          try { if (typeof window.SeasonSim.renderOddsTable === "function") window.SeasonSim.renderOddsTable(); } catch (e) {}
           if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
           if (typeof window.renderLifeline === "function") window.renderLifeline();
         } else {
           window.SeasonSim = null;
           const so = document.getElementById("season-out");
-          if (so) so.innerHTML = DATA.teams.length === 12
+          /* G7 (Nov 18): the sim runs for any league size (2–32) —
+             the connect flow waits for the bake whatever the size. */
+          if (so) so.innerHTML = DATA.teams.length >= 2
             ? `<div class="diag"><h3>Simulating this season…</h3><p>3,000 simulated finishes for ${esc(C.league.name)} are running — the outlook, playoff and title odds, and the trade-impact lines appear as soon as they land.</p></div>`
-            : `<div class="diag"><h3>Season sim unavailable for this league size</h3><p>The outlook engine is calibrated for 12-team leagues; ${esc(C.league.name)} has ${DATA.teams.length} teams. Everything else on this page — values, teams, trades, lineup, waivers — is fully live on this league.</p></div>`;
-          if (DATA.teams.length === 12) {
+            : `<div class="diag"><h3>Season sim unavailable for this league</h3><p>This league doesn't have enough teams to simulate — everything else on this page is fully live on it.</p></div>`;
+          if (DATA.teams.length >= 2) {
             /* The bake waiter owns the build now: it waits for the
                entry pull to settle (schedule, matchup points, live
                projections, players DB) or the deadline, builds once,
@@ -15772,9 +16046,20 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
                     return;
                   }
                   window.SeasonSim = sim;
+                  /* G7 (Nov 18): install the baked sim where the
+                     spotlight tile reads it (SIM_BY_LEAGUE.conn) —
+                     the bake build only mirrors it when no swap key
+                     is set, so a build landing mid-swap left the
+                     tile reading nothing ("—" instead of odds). */
+                  if (window.SIM_BY_LEAGUE) window.SIM_BY_LEAGUE.conn = sim;
                   try { if (typeof window.ffComputeTwoRankings === "function") window.ffComputeTwoRankings(); } catch (e) {}
                   restampPickTiers();
                   window.SeasonSim.renderSeason();
+                  /* G7 / A2 (Nov 18): the Odds table reads the sim's
+                     own renderOddsTable — re-render it on landing too,
+                     so a tab opened before the bake landed doesn't
+                     keep showing the previous league's numbers. */
+                  try { if (typeof window.SeasonSim.renderOddsTable === "function") window.SeasonSim.renderOddsTable(); } catch (e) {}
                   renderPower();
                   renderTeamStrip();
                   renderFinder();
@@ -15789,20 +16074,37 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           }
         }
         document.body.classList.toggle("l2", false);
-        const user = DATA.teams.find(t => t.isUser) || DATA.teams[0];
+        const user = DATA.teams.find(t => t.isUser) || null;
         const opts = DATA.teams.map(t =>
-          `<option value="${t.rid}" ${t.rid === user.rid ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("");
-        finderSel.innerHTML = opts;
-        waiverSel.innerHTML = opts;
-        lineupSel.innerHTML = opts;
+          `<option value="${t.rid}" ${user && t.rid === user.rid ? "selected" : ""}>${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("");
+        /* G2 (Nov 18): "Just browsing" — no team was picked, so no team
+           is assigned. The finder/waiver/lineup selects get a
+           "Choose a team…" placeholder (value "none": Number("none")
+           is NaN, so the renders fall through to their empty states
+           instead of the guest-demo USER_RID fallback) and the
+           calculator runs both sides Any Player until a team is picked. */
+        const noTeamOpt = user ? "" : `<option value="none" selected>Choose a team…</option>`;
+        finderSel.innerHTML = noTeamOpt + opts;
+        waiverSel.innerHTML = noTeamOpt + opts;
+        lineupSel.innerHTML = noTeamOpt + opts;
         boardOwnerSel.innerHTML = `<option value="ALL">All owners + free agents</option><option value="FA">Free agents only</option>` +
           DATA.teams.map(t => `<option value="${t.rid}">${esc(t.name)}${t.isUser ? " (you)" : ""}</option>`).join("");
         boardState.owner = "ALL";
         boardState.shown = 60;
-        calc.A.team = user.rid;
-        calc.B.team = (DATA.teams.find(t => t.rid !== user.rid) || DATA.teams[0]).rid;
-        calc.A.src = "team";
-        calc.B.src = "team";
+        if (user) {
+          calc.A.team = user.rid;
+          calc.B.team = (DATA.teams.find(t => t.rid !== user.rid) || DATA.teams[0]).rid;
+          calc.A.src = "team";
+          calc.B.src = "team";
+        } else {
+          /* G2 (Nov 18): no team picked — both sides run Any Player
+             (guest-style neutral "Side A"/"Side B"); picking a team
+             re-runs this block and restores team sides. */
+          calc.A.team = null;
+          calc.B.team = null;
+          calc.A.src = "any";
+          calc.B.src = "any";
+        }
         calc.A.assets = [];
         calc.B.assets = [];
         const isEspn = C.platform === "espn";
@@ -16322,7 +16624,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           pr.setAttribute("role", "status");
           var tx = document.createElement("span");
           tx.className = "fc-acct-prompt-t";
-          tx.appendChild(document.createTextNode("Create a free account to keep your leagues saved across devices. "));
+          tx.appendChild(document.createTextNode("Create a free account with your founding-list email — it keeps your leagues saved across devices and locks in $3.99/mo or $29.99/yr for life. "));
           var btn = document.createElement("button");
           btn.type = "button";
           btn.className = "fc-acct-prompt-b";
@@ -16574,7 +16876,20 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
              switch renders. The bake promise always resolves (deadline),
              so the record is deferred, never dropped. */
           (function () {
-            var doRecord = function () { try { window.__ffSavedRecord({ platform: "sleeper", leagueId: String(lg.league_id), name: lg.name || null, username: (slpState.user && slpState.user.username) || null, season: Number(lg.season) || null }); } catch (e) { /* saved leagues are best-effort */ } };
+            var t0 = Date.now();
+            var doRecord = function () {
+              /* G7 (Nov 18): the record is deferred until the bake
+                 lands — if the user removed this league while the
+                 bake was pending, the removal wins and no record is
+                 written. A later re-connect registers a newer t0
+                 and records normally. */
+              try {
+                var rk = "sleeper:" + String(lg.league_id).trim();
+                var removed = window.__ffSavedRemoved && window.__ffSavedRemoved[rk];
+                if (removed && removed >= t0) return;
+              } catch (e) { /* check is best-effort; record on doubt */ }
+              try { window.__ffSavedRecord({ platform: "sleeper", leagueId: String(lg.league_id), name: lg.name || null, username: (slpState.user && slpState.user.username) || null, season: Number(lg.season) || null }); } catch (e) { /* saved leagues are best-effort */ }
+            };
             try {
               var rbk = (typeof ffBakeKeyForContext === "function") ? ffBakeKeyForContext() : null;
               if (rbk && typeof ffBakeAwait === "function" && !((typeof ffBakeFor === "function") && ffBakeFor(rbk))) {
@@ -17523,6 +17838,25 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
              credential), persisted so the league can silently
              reconnect and be scored between visits. */
           if (c.platform === "espn") c.yourRid = (e.yourRid != null && e.yourRid !== "" && isFinite(Number(e.yourRid))) ? Number(e.yourRid) : null;
+          /* D (Nov 18): a playoff format entered by hand for this
+             league (field, start week, bracket, seeding, median
+             game) — validated here so a corrupt stored value can
+             never reach the sim; anything outside the ranges is
+             dropped, never trusted. */
+          if (e.manualFormat && typeof e.manualFormat === "object") {
+            var mf = e.manualFormat, kept = {};
+            var mField = Number(mf.field);
+            if (Number.isFinite(mField) && mField >= 2 && mField <= 16) kept.field = Math.round(mField);
+            var mStart = Number(mf.start);
+            if (Number.isFinite(mStart) && mStart >= 12 && mStart <= 17) kept.start = Math.round(mStart);
+            var mRound = Number(mf.roundType);
+            if (mRound === 0 || mRound === 1) kept.roundType = mRound;
+            var mSeed = Number(mf.seedType);
+            if (mSeed === 0 || mSeed === 1) kept.seedType = mSeed;
+            var mAvg = Number(mf.avgMatch);
+            if (mAvg === 0 || mAvg === 1) kept.avgMatch = mAvg;
+            if (Object.keys(kept).length) c.manualFormat = kept;
+          }
           return c;
         }
         function cleanList(raw) {
@@ -17540,6 +17874,10 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             if (keep.season == null) keep.season = other.season;
             if (keep.platform === "sleeper" && !keep.username) keep.username = other.username;
             if (keep.platform === "espn" && keep.yourRid == null && other.yourRid != null) keep.yourRid = other.yourRid;
+            /* D (Nov 18): a hand-entered format survives a dupe
+               merge the same way — the newer entry wins when it
+               has one, otherwise the older one's carries over. */
+            if (!keep.manualFormat && other.manualFormat) keep.manualFormat = other.manualFormat;
             byKey[k] = keep;
           });
           return order.map(function (k) { return byKey[k]; });
@@ -17697,6 +18035,13 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           },
           remove: function (platform, leagueId) {
             var k = normPlatform(platform) + ":" + normId(leagueId);
+            /* G7 (Nov 18): stamp the removal so a record deferred
+               until the bake lands (Sleeper connect) doesn't re-add
+               an entry the user just removed — the bake can land
+               seconds after the click. In-memory only: a later
+               manual re-connect registers a newer time and records
+               normally. */
+            try { (window.__ffSavedRemoved = window.__ffSavedRemoved || {})[k] = Date.now(); } catch (e) {}
             persist(cleanList(read()).filter(function (x) { return normKey(x) !== k; }), false);
           },
           replaceAll: function (l) { persist(l || [], true); },
@@ -18308,10 +18653,10 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
             var s = document.getElementById("ff-auth-sub");
             if (mode === "signup") {
               if (t) t.textContent = "Create your account";
-              if (s) s.textContent = "One free account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email.";
+              if (s) s.textContent = "One free account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email. Use the email from the founding list and your $3.99/mo or $29.99/yr rate for life is locked in.";
             } else {
               if (t) t.textContent = "Log in / Sign up";
-              if (s) s.textContent = "One account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email.";
+              if (s) s.textContent = "One account keeps your saved leagues in sync on every device. No new password — use Google, or get a sign-in link by email. Use the email from the founding list and your $3.99/mo or $29.99/yr rate for life is locked in.";
             }
           }
           function closePanel() { if (overlay) { overlay.hidden = true; document.body.style.overflow = ""; } }
@@ -22518,6 +22863,13 @@ window.drDraft = {
     if (!window.drDraft) return;
     if (hashDriven && lastDraftMode === null) { lastDraftMode = "hash"; return; }   /* a shared link pinned the format itself */
     if (window.drDraft.mockBusy && window.drDraft.mockBusy()) return;   /* never re-render mid-mock */
+    /* G1 (Nov 18): the boards are built once at load from the load-time
+       format; the refresh gate only repaints when the league key changes,
+       so a connected league's re-priced values never landed on first open
+       (Allen 9,883 in the room vs 5,080 everywhere else). Repaint both
+       boards unconditionally on every open — the arrays are already synced. */
+    if (typeof window.__drRenderPool === "function") window.__drRenderPool();
+    if (typeof window.__drRenderSnake === "function") window.__drRenderSnake();
     if (window.drDraft.syncFormat) window.drDraft.syncFormat();
   };
   /* The room carries the Draft Sheet, so entering it arms the sheet
@@ -23025,10 +23377,10 @@ window.drDraft = {
       }
       /* Build the sim ONCE for the league DATA points at and store it as
          that league's session bake. Mirrors into SIM_BY_LEAGUE.conn /
-         window.SeasonSim only when the context IS the connected league
-         in its own (unswapped) context, so existing readers keep
-         working and a Command Center swap baking another league never
-         overwrites them. Never called twice for one key unless force
+         window.SeasonSim only when the sim IS the connected league's
+         own (its key matches the saved connected league), so existing
+         readers keep working and a Command Center swap baking another
+         league never overwrites them. Never called twice for one key unless force
          clears the bake first (Refresh). Returns the sim or null. */
       function ffBakeBuild(key, force) {
         try {
@@ -23044,7 +23396,11 @@ window.drDraft = {
           try { (DATA_D74.players || []).forEach(p => { if (p && p.id != null) inj[p.id] = p.inj || null; }); } catch (e) {}
           window.__ffBake[key] = { sim, at: Date.now(), schedKey: sim.schedKey || null, ffp: sim.ffp || null, inj };
           try {
-            const isConnCtx = !window.__ffSwapKey && !window.GUEST_MODE && window.CURRENT_LEAGUE === "conn" && window.CONN_LEAGUE
+            /* G7 (Nov 18): the key match alone scopes the mirror to
+               the connected league's own sim — a swap baking another
+               league still can't overwrite it, but a build landing
+               mid-swap no longer leaves SIM_BY_LEAGUE.conn empty. */
+            const isConnCtx = !window.GUEST_MODE && window.CURRENT_LEAGUE === "conn" && window.CONN_LEAGUE
               && (String(window.CONN_LEAGUE.platform || "sleeper").toLowerCase() + ":" + String(window.CONN_LEAGUE.leagueId)) === key;
             if (isConnCtx) {
               if (window.SIM_BY_LEAGUE) window.SIM_BY_LEAGUE.conn = sim;
@@ -23681,7 +24037,9 @@ window.drDraft = {
                explains why there is no odds number. */
             const seasonDone = String(league.status) === "complete";
             if (seasonDone) snap.seasonComplete = true;
-            if (DATA.teams.length === 12 && !seasonDone) {
+            /* G7 (Nov 18): the light sim runs for any league size
+               (2–32) — no 12-team gate. */
+            if (!seasonDone) {
               try { const ccSim = ff4CCSimCached("Sleeper:" + lg.league_id, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
               try { const fs = (typeof ff4CCIsActive === "function" && ff4CCIsActive(lg) && typeof ff4CCFreshSim === "function") ? ff4CCFreshSim() : null; if (fs && fs.results && fs.results[me.rid]) { snap.odds = fs.results[me.rid].playoff; snap.clinched = !!fs.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
             try { if (ff4.ccDetail[idx] && snap.odds != null && ff4.ccDetail[idx].odds !== snap.odds) { delete ff4.ccDetail[idx]; if (ff4.ccFocus === idx) ff4CCDetail(idx); } } catch (e) {}
@@ -23793,11 +24151,11 @@ window.drDraft = {
             /* Phase 3 piece 2 (S42): stored snapshot rank is Current
                Power — same meaning as the Sleeper light pass. */
             snap.teamName = me.name; snap.record = me.record; snap.powerRank = (me.cpRank != null) ? me.cpRank : null; snap.total = DATA.teams.length;
-            if (DATA.teams.length === 12) {
-              try { const ccSim = ff4CCSimCached("ESPN:" + entry.leagueId, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
+            /* G7 (Nov 18): the light sim runs for any league size
+               (2–32) — no 12-team gate. */
+            try { const ccSim = ff4CCSimCached("ESPN:" + entry.leagueId, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
             try { const fs = (typeof ff4CCIsActive === "function" && ff4CCIsActive(entry) && typeof ff4CCFreshSim === "function") ? ff4CCFreshSim() : null; if (fs && fs.results && fs.results[me.rid]) { snap.odds = fs.results[me.rid].playoff; snap.clinched = !!fs.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
             try { if (ff4.ccDetail[idx] && snap.odds != null && ff4.ccDetail[idx].odds !== snap.odds) { delete ff4.ccDetail[idx]; if (ff4.ccFocus === idx) ff4CCDetail(idx); } } catch (e) {}
-            }
             const standings = DATA.teams.slice().sort((x, y) => (parseInt(y.record) - parseInt(x.record)) || (y.pf - x.pf));
             const standing = standings.findIndex(t => t.rid === me.rid) + 1;
             const wk = Number(DATA.league.week) || 1;
@@ -23941,7 +24299,9 @@ window.drDraft = {
         try { if (typeof ffPhaseState === "function") seasonDone = ffPhaseState().phase === "offseason"; } catch (e) {}
         if (seasonDone) d.seasonComplete = true;
         let sim = simIn || null;
-        if (DATA.teams.length === 12) {
+        /* G7 (Nov 18): the detail sim runs for any league size
+           (2–32) — no 12-team gate. */
+        {
           if (!sim) { try { sim = (typeof ffBakeSimRead === "function" && ffBakeSimRead()) || (typeof ffBakeBuild === "function" ? ffBakeBuild((typeof ffBakeKeyForContext === "function") ? ffBakeKeyForContext() : null, false) : null); } catch (e) { sim = null; } }
           /* Item 8 (Nov 11): the detail builds the league's OWN sim —
              re-run the engine with it installed so Stance reads the
@@ -23973,7 +24333,8 @@ window.drDraft = {
              back into the snap so the rail shows the same number. The
              light-pass odds only stand until a detail exists. */
           try { const sn = ff4.ccSnaps ? ff4.ccSnaps[idx] : null; if (sn && d.odds != null) { sn.odds = d.odds; sn.clinched = !!d.clinched; } } catch (e) {}
-        } else d.noSim = true;
+        }
+        if (!sim || !sim.results || !sim.results[me.rid]) d.noSim = true;
         /* Power Rank tile extras (Eric, 2026-10-27): the team's
            positional letter grades (already computed by
            recomputeValues), its value-weighted core age, and — Phase 3
@@ -25597,13 +25958,23 @@ window.drDraft = {
         if (window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn") { mount.innerHTML = ""; return; }
         const fmt = typeof window.playoffFormat === "function" ? window.playoffFormat() : null;
         if (!fmt || !fmt.valid) {
-          mount.innerHTML = `<div class="pp-box"><h3>Playoff Path Explorer<span class="launch-badge">Free during launch</span></h3><p class="pp-note">Playoff format couldn't be read for this league — the Explorer is unavailable here rather than guessing at a format.</p></div>`;
+          /* D (Nov 18): the format can't be read — offer the
+             hand-entry here too, so the Explorer can open for a
+             league whose round/seeding details never come across. */
+          mount.innerHTML = `<div class="pp-box"><h3>Playoff Path Explorer<span class="launch-badge">Free during launch</span></h3><p class="pp-note">Playoff format couldn't be read for this league — the Explorer is unavailable here rather than guessing at a format.</p><div data-ff-manual-wrap><p class="pp-note"><button type="button" class="btn ghost" data-ff-manual-toggle>Enter your league's playoff format</button></p><div data-ff-manual-mount></div></div></div>`;
           return;
         }
         const sim = window.SeasonSim;
         if (!sim || !sim.results || !sim.path) { mount.innerHTML = `<div class="pp-box"><h3>Playoff Path Explorer<span class="launch-badge">Free during launch</span></h3><p class="pp-note">Simulating this season… the Explorer opens when the outlook lands.</p></div>`; return; }
         const key = (DATA.league.name || "") + "@" + DATA.league.week;
         const me = DATA.teams.find(t => t.isUser);
+        if (!me) {
+          /* G2 (Nov 18): no team picked — the Explorer traces YOUR
+             path, so it waits for a team instead of borrowing the
+             first team in the league. */
+          mount.innerHTML = `<div class="pp-box"><h3>Playoff Path Explorer<span class="launch-badge">Free during launch</span></h3><p class="pp-note">The Explorer traces your team's path to the playoffs — pick your team first and it opens here.</p><p><button type="button" class="locked-cta" data-ff-choose-team="1">Choose your team</button></p></div>`;
+          return;
+        }
         if (ff4.ppKey !== key) {
           ff4.ppKey = key; ff4.ppRid = me ? me.rid : (DATA.teams[0] && DATA.teams[0].rid); ff4.ppWin = {}; ff4.ppSwingKey = null; ff4.ppSwing = null;
           const pairs0 = sim.path.pairs || [];
@@ -25891,9 +26262,7 @@ window.drDraft = {
         /* FF-11: the feed is cross-league, so dropped / free-agent /
            other-league players are not in PBY — resolve them through
            the full Sleeper players DB the site already fetches (the
-           same DB slpApplyPlayersDb upgrades stubs from). The DB lands
-           after the first feed render, so a name may read "Player N"
-           until it arrives; the next refreshAll re-renders the feed. */
+           same DB slpApplyPlayersDb upgrades stubs from). */
         try {
           if (typeof slpDbData !== "undefined" && slpDbData) {
             const rec = slpDbData[pid];
@@ -25903,11 +26272,41 @@ window.drDraft = {
             }
           }
         } catch (e) {}
-        return window.ffStubPlayerName ? window.ffStubPlayerName(pid) : "Player " + pid;
+        /* G5 (Nov 18): never paint a "Player N" placeholder. A real
+           label (defense, trade-directory name) still resolves; an
+           id with no name anywhere returns null — the row renders a
+           skeleton while the DB is still landing, "Unknown player"
+           once it has landed and the id still doesn't resolve. */
+        const stub = window.ffStubPlayerName ? window.ffStubPlayerName(pid) : null;
+        if (stub && !/^Player \d+$/.test(stub)) return stub;
+        return null;
+      }
+      /* G5 (Nov 18): true while the players DB hasn't landed yet — an
+         unresolvable name may still resolve. Once the DB has landed,
+         an unresolvable id is genuinely unknown, not pending. */
+      function ff4LANamePending(pid) {
+        if (ff4LAPlayerName(pid)) return false;
+        try { return typeof slpDbData === "undefined" || !slpDbData; } catch (e) { return false; }
+      }
+      /* G5 (Nov 18): when names are still resolving, fetch the players
+         DB (deduped by the ensure) and re-paint both feeds when it
+         lands, so no skeleton outlives the data. */
+      function ff4LAEnsureNames() {
+        try {
+          if (typeof slpPlayersDb !== "function") return;
+          slpPlayersDb(false).then(function () {
+            try { if (typeof ff4RenderLA === "function") ff4RenderLA(); } catch (e) {}
+            try { if (typeof ff4RenderCCLA === "function") ff4RenderCCLA(); } catch (e) {}
+          }).catch(function () { /* DB failed — skeletons stay honest */ });
+        } catch (e) {}
       }
       function ff4LARowHtml(it) {
         const nm = (it.pname && String(it.pid).indexOf("espn-") === 0) ? it.pname : ff4LAPlayerName(it.pid);
-        return `<div class="la-row"><span class="la-kind ${it.kind}">${it.kind === "add" ? "Added" : "Dropped"}</span><span class="la-main"><span class="la-player" title="${esc(nm)}">${esc(nm)}</span><span class="la-meta" title="${esc(it.team)} · ${esc(it.leagueName)}">${esc(it.team)} · ${esc(it.leagueName)}</span></span><span class="la-when">${esc(ff4LAWhen(it.created))}</span></div>`;
+        /* G5 (Nov 18): no "Player N" ever — a name still resolving
+           shows a skeleton; one the DB can't resolve shows as
+           unknown. The team, league and time still render. */
+        const label = nm || (ff4LANamePending(it.pid) ? "Loading…" : "Unknown player");
+        return `<div class="la-row${nm ? "" : " la-unresolved"}"><span class="la-kind ${it.kind}">${it.kind === "add" ? "Added" : "Dropped"}</span><span class="la-main"><span class="la-player" title="${esc(label)}">${esc(label)}</span><span class="la-meta" title="${esc(it.team)} · ${esc(it.leagueName)}">${esc(it.team)} · ${esc(it.leagueName)}</span></span><span class="la-when">${esc(ff4LAWhen(it.created))}</span></div>`;
       }
 
       function ff4RenderLA() {
@@ -25927,6 +26326,9 @@ window.drDraft = {
         }
         const parts = [];
         const shown = la.items.slice(0, 30);
+        /* G5 (Nov 18): names still resolving — fetch the players DB
+           and re-paint when it lands. */
+        if (shown.some(function (it) { return !(it.pname && String(it.pid).indexOf("espn-") === 0) && ff4LANamePending(it.pid); })) ff4LAEnsureNames();
         const when = la.checkedAt ? new Date(la.checkedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
         parts.push(`<div class="tb-head"><span class="tb-count">${la.items.length} move${la.items.length === 1 ? "" : "s"} in the last two weeks</span><button type="button" class="tb-refresh" id="la-refresh">Re-check</button></div>`);
         if (la.failed) parts.push(`<p class="tb-note">${la.failed} league${la.failed === 1 ? "" : "s"} couldn't be checked just now — hit Re-check to try again.</p>`);
@@ -25953,6 +26355,9 @@ window.drDraft = {
            ESPN league hides by its own key alone. */
         const sessU = ff4CCSessionUsername();
         const items = la.items.filter(it => !ff4CCIsHiddenKey((it.platform || "sleeper") + ":" + String(it.leagueId), it.platform === "espn" ? null : sessU));
+        /* G5 (Nov 18): names still resolving — fetch the players DB
+           and re-paint when it lands. */
+        if (items.slice(0, 12).some(function (it) { return !(it.pname && String(it.pid).indexOf("espn-") === 0) && ff4LANamePending(it.pid); })) ff4LAEnsureNames();
         let body;
         if (!items.length) {
           const when = la.checkedAt ? new Date(la.checkedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "";
@@ -26208,11 +26613,15 @@ window.__lifeline = (function () {
      { w, R, maxW, clinchA, minAliveA, lossesLeft, status }
      clinchA: additional wins that GUARANTEE a berth (0 = already in,
      null = even winning out doesn't lock it). minAliveA: additional
-     wins below which no path exists at all (null = eliminated).
-     lossesLeft: further losses the team can absorb — placed against
-     it in the most damaging way — and still have a path (null when
-     eliminated). status: clinched | controls | needs-help | brink |
-     eliminated. */
+     wins below which no path exists at all (null = eliminated under
+     the strict tiebreaks-count-against test). lossesLeft: further
+     losses the team can absorb — placed against it in the most
+     damaging way — and still have a path (null when eliminated).
+     status: clinched | controls | needs-help | brink | tiebreak |
+     eliminated. "tiebreak" is the F4 rule (Eric, Nov 18, 2026): the
+     strict test says no path, but the sim's elimination test says a
+     path exists — so the path runs only through the points tiebreak,
+     and the team is never labelled Eliminated. */
   function analyze(teams, games, K) {
     var n = teams.length;
     var wins = teams.map(function (t) { return t.w; });
@@ -26266,7 +26675,18 @@ window.__lifeline = (function () {
       }
       var lossesLeft = lossesLeftFor(T, minAliveA);
       var status;
-      if (minAliveA == null) status = "eliminated";
+      if (minAliveA == null) {
+        /* F4 (Eric, Nov 18, 2026): "Eliminated" only at true 0% — the
+           sim's own test (at least K rivals already own more wins
+           than this team can reach by winning out, every tiebreak in
+           its favor). Short of that, a path exists only through the
+           points tiebreak: never "Eliminated". One loss ends that
+           path, so lossesLeft is 0. */
+        var aboveMax = 0;
+        for (var q = 0; q < n; q++) if (q !== T && wins[q] > maxW) aboveMax++;
+        status = aboveMax >= K ? "eliminated" : "tiebreak";
+        if (status === "tiebreak") lossesLeft = 0;
+      }
       else if (clinchA === 0) status = "clinched";
       else if (lossesLeft != null && lossesLeft <= 1) status = "brink";
       else if (clinchA != null) status = "controls";
@@ -26312,7 +26732,8 @@ window.__lifeline = (function () {
                -> unavailable note, never an assumed format.
              - A weekly league-average (median) game adds wins the
                published schedule doesn't carry, so median leagues get
-               the note too — the sim odds below still cover them.
+               the note too — playoff odds live on the Playoff Odds tab
+               instead.
              - Cache is keyed by league + current week + fetch end
                (the later of playoff start and Week 15) and refetched
                on league change or after 15 minutes. The same cache
@@ -26419,8 +26840,8 @@ window.__lifeline = (function () {
           }
         }
 
-        var LF_STATUS_ORDER = { clinched: 0, controls: 1, "needs-help": 2, brink: 3, eliminated: 4 };
-        var LF_STATUS_LABEL = { clinched: "Clinched", controls: "Controls destiny", "needs-help": "Needs help", brink: "On the brink", eliminated: "Eliminated" };
+        var LF_STATUS_ORDER = { clinched: 0, controls: 1, "needs-help": 2, brink: 3, tiebreak: 4, eliminated: 5 };
+        var LF_STATUS_LABEL = { clinched: "Clinched", controls: "Controls destiny", "needs-help": "Needs help", brink: "On the brink", tiebreak: "Tiebreak only", eliminated: "Eliminated" };
 
         function lfOrd(n) {
           var s = ["th", "st", "nd", "rd"], v = n % 100;
@@ -26430,6 +26851,7 @@ window.__lifeline = (function () {
         function lfSentence(r) {
           if (r.status === "clinched") return "You're in. Even losing out can't knock you out.";
           if (r.status === "eliminated") return "No path remains — even winning out isn't enough.";
+          if (r.status === "tiebreak") return "Only winning out and winning the points tiebreak on " + r.maxW + " wins saves you.";
           var parts = [];
           if (r.clinchA != null) parts.push("Win " + r.clinchA + " of your last " + r.R + " and you're in — no help needed.");
           else parts.push("Winning out still isn't a lock — you'll need help.");
@@ -26456,7 +26878,7 @@ window.__lifeline = (function () {
 
         function lfSection(inner) {
           return '<h2 class="block-title">Playoff Lifeline</h2>' +
-            '<p class="lf-sub">The hard math — no sims. What locks you in, and what knocks you out. A tie on wins counts against you: points tiebreakers can\'t be promised.</p>' + inner;
+            '<p class="lf-sub">The hard math — no sims. What locks you in, and what knocks you out. "Eliminated" means no path at all — a team alive only on the points tiebreak is never eliminated.</p>' + inner;
         }
         function lfNote(html) {
           return lfSection('<div class="lf-card"><p class="lf-note">' + html + "</p></div>");
@@ -26464,11 +26886,11 @@ window.__lifeline = (function () {
 
         function lfPaint(mount, K, cached) {
           if (cached.state === "error") {
-            mount.innerHTML = lfNote("Couldn't pull this league's remaining schedule just now — the Lifeline retries when you come back to this view. The sim odds below are unaffected.");
+            mount.innerHTML = lfNote("Couldn't pull this league's remaining schedule just now — the Lifeline retries when you come back to this view. Playoff odds still live on the Playoff Odds tab.");
             return;
           }
           if (cached.state === "empty") {
-            mount.innerHTML = lfNote("This league's future schedule isn't published yet, so the hard math isn't available — the sim odds below still work.");
+            mount.innerHTML = lfNote("This league's future schedule isn't published yet, so the hard math isn't available — playoff odds still live on the Playoff Odds tab.");
             return;
           }
           var idxByRid = {};
@@ -26497,6 +26919,7 @@ window.__lifeline = (function () {
               var r = x.r;
               var lock = r.status === "clinched" ? "In"
                 : r.status === "eliminated" ? "—"
+                : r.status === "tiebreak" ? "Win out + tiebreak"
                 : r.clinchA != null ? "Win " + r.clinchA + " of " + r.R
                 : "Needs help";
               var canLose = r.lossesLeft == null ? "—" : String(r.lossesLeft);
@@ -26516,7 +26939,7 @@ window.__lifeline = (function () {
           var ctx = lfCtx();
           if (!ctx) { mount.innerHTML = ""; return; }
           if (ctx.platform === "espn") {
-            mount.innerHTML = lfNote("The hard math needs this league's remaining schedule, and ESPN doesn't publish future matchup pairings here — so the Lifeline sits this league out rather than guess. The sim odds below still cover you.");
+            mount.innerHTML = lfNote("The hard math needs this league's remaining schedule, and ESPN doesn't publish future matchup pairings here — so the Lifeline sits this league out rather than guess. Playoff odds still live on the Playoff Odds tab.");
             return;
           }
           if (ctx.platform !== "sleeper" || !ctx.leagueId) { mount.innerHTML = ""; return; }
@@ -26528,7 +26951,7 @@ window.__lifeline = (function () {
             return;
           }
           if (Number(DATA.league.leagueAverageMatch)) {
-            mount.innerHTML = lfNote("This league also plays a weekly median game, and those extra wins aren't on the published schedule — the hard math would be wrong here, so the Lifeline sits this league out. The sim odds below still apply.");
+            mount.innerHTML = lfNote("This league also plays a weekly median game, and those extra wins aren't on the published schedule — the hard math would be wrong here, so the Lifeline sits this league out. Playoff odds still live on the Playoff Odds tab.");
             return;
           }
           var week = ctx.week;
@@ -26560,7 +26983,7 @@ window.__lifeline = (function () {
             var now = lfCtx();
             if (!now || now.leagueId !== ctx.leagueId || now.week !== week) return;
             if (lfRangeState(entry, week, start) === "error") {
-              mount.innerHTML = lfNote("Couldn't pull this league's remaining schedule just now — the Lifeline retries when you come back to this view. The sim odds below are unaffected.");
+              mount.innerHTML = lfNote("Couldn't pull this league's remaining schedule just now — the Lifeline retries when you come back to this view. Playoff odds still live on the Playoff Odds tab.");
               return;
             }
             lfNotifySim(ctx.leagueId, week, fetchEnd);
@@ -26765,7 +27188,11 @@ window.__lifeline = (function () {
         const key = tpCtxKey();
         if (tpState.ctx !== key) { tpState.ctx = key; tpState.rid = null; }
         let t = DATA.teams.find(x => String(x.rid) === String(tpState.rid));
-        if (!t) t = DATA.teams.find(x => x.isUser) || DATA.teams[0];
+        /* G2 (Nov 18): no team picked and none selected — no default.
+           The portfolio is a viewer; it shows a choose state until the
+           visitor picks a team. */
+        if (!t) t = DATA.teams.find(x => x.isUser) || null;
+        if (!t) return null;
         tpState.rid = t.rid;
         return {
           name: t.name, rid: t.rid, isUser: !!t.isUser, record: t.record, powerRank: t.powerRank, demo: false,
@@ -26829,20 +27256,21 @@ window.__lifeline = (function () {
         const dpct = sums[0] ? d / sums[0] * 100 : 0;
         const dCls = d > 0 ? "up" : d < 0 ? "dn" : "flat";
         const dTxt = `${d > 0 ? "+" : d < 0 ? "−" : ""}${fmt(Math.abs(d))} (${dpct > 0 ? "+" : dpct < 0 ? "−" : ""}${Math.abs(dpct).toFixed(1)}%) since ${wkLbl(0)}`;
+        const stamp = ffChartStamp();
         const dots = sums.map((v, i) => {
           const isLast = i === n - 1;
           return `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${isLast ? 4.5 : 3}" fill="${isLast ? "#C6FF00" : "#0A0A1A"}" stroke="#C6FF00" stroke-width="2"/>` +
             (i === 0 || isLast ? `<text x="${X(i).toFixed(1)}" y="${(Y(v) - 10).toFixed(1)}" text-anchor="${i === 0 ? "start" : "end"}" font-size="12.5" font-weight="700" fill="#F2F2F5" font-family="Space Grotesk, sans-serif">${fmt(v)}</text>` : "") +
-            `<text x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="#83839C" font-family="Space Grotesk, sans-serif">${wkLbl(i)}${isLast ? " · now" : ""}</text>`;
+            `<text x="${X(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="11" fill="#83839C" font-family="Space Grotesk, sans-serif">${wkLbl(i)}</text>`;
         }).join("");
         return `<div class="vh">
           <div class="vh-head"><span class="vh-title">Team value — the current roster at each weekly snapshot<span class="launch-badge">Free during launch</span></span><span class="vh-delta ${dCls}">${dTxt}</span></div>
-          <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Team value history chart for ${esc(team.name)}: ${fmt(sums[0])} at ${wkLbl(0)} to ${fmt(sums[n - 1])} now">
+          <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Team value history chart for ${esc(team.name)}: ${fmt(sums[0])} at ${wkLbl(0)} to ${fmt(sums[n - 1])}${stamp ? " — " + stamp : ""}">
             <path d="${area}" fill="rgba(198,255,0,.10)"/>
             <polyline points="${line}" fill="none" stroke="#C6FF00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
             ${dots}
           </svg>
-          <div class="vh-note">One point per weekly snapshot${DATA.league && DATA.league.snapshot ? ` · latest snapshot ${esc(DATA.league.snapshot)}` : ""}. Players without snapshot history, and picks, are carried at today's prices in every week.</div>
+          <div class="vh-note">One point per weekly snapshot${stamp ? ". " + stamp : ""}. Players without snapshot history, and picks, are carried at today's prices in every week.</div>
         </div>`;
       }
       function tpDeltaCell(w) {
@@ -26856,6 +27284,24 @@ window.__lifeline = (function () {
         if (!out) return;
         const rd = tpIsRedraft();
         const team = tpTeam();
+        if (!team) {
+          /* G2 (Nov 18): no team picked and none selected — show the
+             team picker and a choose state instead of a borrowed team. */
+          out.innerHTML = `<div class="tp-wrap">
+            <div class="pk-hero">
+              <div class="pk-hero-main">
+                <div class="pk-kicker">Team Portfolio</div>
+                <div class="pk-total" style="font-size:26px">No team picked yet</div>
+                <div class="pk-sub">Pick a team to see its portfolio — every player and pick, priced live.</div>
+              </div>
+              <div class="tp-side"><div class="tp-selrow"><label for="tp-team-sel">Team</label><select id="tp-team-sel"><option value="none" selected>Choose a team…</option>${DATA.teams.slice().sort((a, b) => (a.powerRank || 99) - (b.powerRank || 99)).map(t => `<option value="${t.rid}">${esc(t.name)}</option>`).join("")}</select></div></div>
+            </div>
+            <p><button type="button" class="locked-cta" data-ff-choose-team="1">Choose your team</button></p>
+          </div>`;
+          const sel0 = document.getElementById("tp-team-sel");
+          if (sel0) sel0.addEventListener("change", () => { if (sel0.value === "none") return; tpState.rid = sel0.value; tpState.ctx = tpCtxKey(); tpRender(); });
+          return;
+        }
         const built = tpBuild(team);
         const rows = built.rows.slice();
         const s = tpState.dir;
@@ -26996,7 +27442,7 @@ window.__lifeline = (function () {
           fd.append(FF_WAITLIST_ENTRY_ID, email);
           fetch(FF_WAITLIST_URL, { method: "POST", mode: "no-cors", body: fd }).then(function () {
             form.reset();
-            say("You're on the founding list — watch your inbox when premium opens.", "ok");
+            say("You're on the founding list — $3.99/mo or $29.99/yr for life, locked to this email. Use the same email for your account; your promo code arrives when premium opens.", "ok");
             try { if (typeof gtag === "function") gtag("event", "waitlist_signup"); } catch (e) { /* analytics only */ }
             /* Founding-list → account nudge (Oct 24): only when the
                visitor is Firebase-signed-out with the dialog
@@ -27009,7 +27455,7 @@ window.__lifeline = (function () {
                 if (!band.querySelector(".wl-acct-prompt")) {
                   var pr = document.createElement("div");
                   pr.className = "wl-acct-prompt";
-                  pr.appendChild(document.createTextNode("Create a free account to keep your leagues saved across devices. "));
+                  pr.appendChild(document.createTextNode("Create a free account with the same email — it keeps your leagues saved across devices and locks in your founding rate. "));
                   var pb = document.createElement("button");
                   pb.type = "button";
                   pb.textContent = "Create a free account";
@@ -27560,6 +28006,16 @@ window.__lifeline = (function () {
       try { me = (DATA.teams || []).find(function (t) { return t.isUser; }) || null; } catch (e) {}
       if (window.GUEST_MODE || window.CURRENT_LEAGUE !== "conn" || !me) {
         out.innerHTML = "";
+        /* G2 (Nov 18): connected browse, no team picked — the gate is
+           a .locked-state, invisible unless body.guest, so the tab
+           was blank. Render the browse state into the output
+           instead; the guest path keeps the existing gate. */
+        if (window.CURRENT_LEAGUE === "conn" && !window.GUEST_MODE && !me) {
+          if (gate) gate.hidden = true;
+          var lgName = (window.CONN_LEAGUE && window.CONN_LEAGUE.league && window.CONN_LEAGUE.league.name) || (DATA.league && DATA.league.name) || "this league";
+          out.innerHTML = "<div class=\"diag\"><h3>No team picked yet</h3><p>You&rsquo;re browsing " + esc(lgName) + " without a team, so there&rsquo;s no roster to show here. Pick your team to see its starters and bench, priced live.</p><p><button type=\"button\" class=\"locked-cta\" data-ff-choose-team=\"1\">Choose your team</button></p></div>";
+          return;
+        }
         if (gate) gate.hidden = false;
         return;
       }
@@ -27588,6 +28044,44 @@ window.__lifeline = (function () {
         "<h3 class=\"mv-sub\" style=\"margin-top:14px\">Starters</h3>" + tbl(starters.map(function (r) { return row(r.p, r.slot); }).join("")) +
         "<h3 class=\"mv-sub\" style=\"margin-top:18px\">Bench</h3>" + tbl(bench.map(function (p) { return row(p, ""); }).join(""));
     };
+    /* G2 (Nov 18): every "Choose your team" button (spotlight card,
+       roster tab, portfolio, Explorer) re-opens the connect dialog,
+       where the saved league entry lands on the pick-your-team step. */
+    if (!window.__ffChooseTeamWired) {
+      window.__ffChooseTeamWired = true;
+      document.addEventListener("click", function (e) {
+        var b = e.target && e.target.closest ? e.target.closest("[data-ff-choose-team]") : null;
+        if (b) {
+          if (typeof window.openSleeperConnect === "function") window.openSleeperConnect();
+          return;
+        }
+        /* D (Nov 18): hand-entered playoff format — one delegated
+           listener for the toggle, save, and remove buttons in both
+           mounts (Odds tab, Explorer). */
+        var t = e.target && e.target.closest ? e.target.closest("[data-ff-manual-toggle]") : null;
+        if (t) {
+          var wrap = t.closest("[data-ff-manual-wrap]");
+          var mount = wrap ? wrap.querySelector("[data-ff-manual-mount]") : null;
+          if (mount) {
+            if (mount.innerHTML) { mount.innerHTML = ""; }
+            else if (typeof ffManualFormatHtml === "function") { mount.innerHTML = ffManualFormatHtml(); }
+          }
+          return;
+        }
+        var s = e.target && e.target.closest ? e.target.closest("[data-ff-manual-save]") : null;
+        if (s) {
+          var form = s.closest("[data-ff-manual-form]");
+          if (form && typeof ffManualFormatSave === "function") ffManualFormatSave(form);
+          return;
+        }
+        var c = e.target && e.target.closest ? e.target.closest("[data-ff-manual-clear]") : null;
+        if (c) {
+          if (typeof ffSaveManualFormat === "function") ffSaveManualFormat(null);
+          if (typeof ffManualFormatRerun === "function") ffManualFormatRerun();
+          return;
+        }
+      });
+    }
     </script>
     <script>
     /* Redraft positional rank, shared by every roster table: a player's
