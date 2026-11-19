@@ -13,7 +13,10 @@
          connectable entry counts, last-selected (ff_last_league)
          first, not just the single most recent entry; and only a
          share-payload hash (#kind=…) vetoes, never the in-app
-         routes (#/insights, #/draft/…) a reload can carry.) */
+         routes (#/insights, #/draft/…) a reload can carry.
+         Nov 19, 2026: an ESPN spectator entry counts too — the
+         spectator flag, or no team on saves written before the
+         flag shipped.) */
       try {
         var ffEarly = JSON.parse(localStorage.getItem("ff_saved_leagues") || "[]");
         if (Array.isArray(ffEarly) && ffEarly.length && !/^#[A-Za-z0-9_]+=/.test(location.hash || "")) {
@@ -23,8 +26,16 @@
           var ffPick = null;
           for (var ffI = 0; ffI < ffSorted.length; ffI++) {
             var ffE = ffSorted[ffI];
-            if (!ffE || String(ffE.platform).trim().toLowerCase() !== "sleeper" || !ffE.username) continue;
-            if (ffLastKey && ffLastKey === "sleeper:" + String(ffE.leagueId).trim()) { ffPick = ffE; break; }
+            if (!ffE) continue;
+            var ffPlat = String(ffE.platform).trim().toLowerCase();
+            var ffKey = ffPlat + ":" + String(ffE.leagueId).trim();
+            /* Sleeper needs its username; an ESPN entry counts when
+               it restores as a spectator — the spectator flag, or no
+               team on saves written before the flag shipped. */
+            if (ffPlat === "sleeper") { if (!ffE.username) continue; }
+            else if (ffPlat === "espn") { if (!(ffE.spectator === true || ffE.yourRid == null)) continue; }
+            else continue;
+            if (ffLastKey && ffLastKey === ffKey) { ffPick = ffE; break; }
             if (!ffPick) ffPick = ffE;
           }
           if (ffPick) document.documentElement.classList.add("ff-restoring");
@@ -17621,8 +17632,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
              team id (a team ID, not a credential) — the way Sleeper
              records carry the username, so the league can silently
              reconnect on the next visit and the Manager Score
-             light pass can score it. Browse connects save null. */
-          try { window.__ffSavedRecord({ platform: "espn", leagueId: String(espnState.leagueId), name: espnState.name || null, season: espnState.season || null, yourRid: espnState.yourRid != null ? Number(espnState.yourRid) : null }); } catch (e) { /* saved leagues are best-effort */ }
+             light pass can score it. Browse connects save null
+             plus the spectator flag, so the league restores as a
+             spectator on refresh instead of vanishing; picking a
+             team later records a team id and the flag clears. */
+          try { window.__ffSavedRecord({ platform: "espn", leagueId: String(espnState.leagueId), name: espnState.name || null, season: espnState.season || null, yourRid: espnState.yourRid != null ? Number(espnState.yourRid) : null, spectator: espnState.yourRid == null }); } catch (e) { /* saved leagues are best-effort */ }
           /* Landing (Eric, 2026-10-27): a fresh ESPN entry from the
              dialog's pick-your-team step (landCommand) lands on
              Command Center, same as a fresh Sleeper entry. Stored
@@ -17792,6 +17806,35 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         } catch (e) { return false; }
       };
 
+      /* Silent spectator restore (Nov 19, 2026 — Eric's decision):
+         a saved ESPN entry carrying the spectator flag (no team)
+         restores exactly like the owned silent path, but applied
+         with no team: fetch the league, apply it as a spectator,
+         never open the dialog. Any failure resolves false and the
+         entry stays one click away in the menu, on the
+         pick-your-team step as before. */
+      window.__ffReconnectEspnSpectator = async function (entry) {
+        try {
+          if (!entry || entry.yourRid != null) return false;
+          const lid = String(entry.leagueId || "");
+          if (!lid) return false;
+          let raw = null;
+          const seasons = [];
+          [entry.season, 2026, 2025].forEach(s => { if (s != null && !seasons.includes(Number(s))) seasons.push(Number(s)); });
+          for (const season of seasons) {
+            try { raw = await espnGetLeague(lid, season); break; }
+            catch (e) { if (e.message !== "notfound") return false; }
+          }
+          if (!raw) return false;
+          espnState.raw = raw;
+          espnState.leagueId = lid;
+          espnState.yourRid = null;
+          espnState.name = null;
+          espnState.connected = false;
+          return espnConnect(null, { quiet: true }) === true;
+        } catch (e) { return false; }
+      };
+
       /* ---- Profile-menu data hooks (identity-first menu, 2026-10-24) --
          The saved-leagues layer renders the header profile menu; it
          reads the connected league's key (for the "Connected" mark)
@@ -17892,6 +17935,14 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
              credential), persisted so the league can silently
              reconnect and be scored between visits. */
           if (c.platform === "espn") c.yourRid = (e.yourRid != null && e.yourRid !== "" && isFinite(Number(e.yourRid))) ? Number(e.yourRid) : null;
+          /* Spectator restore (Nov 19, 2026 — Eric's decision):
+             an ESPN league saved with no team is a spectator
+             league — it restores on refresh instead of vanishing.
+             Normalized here, so saves written before the flag
+             shipped (browse connects, yourRid null) upgrade
+             automatically, and a record carrying a team id never
+             keeps the flag. */
+          if (c.platform === "espn" && c.yourRid == null) c.spectator = true;
           /* D (Nov 18): a playoff format entered by hand for this
              league (field, start week, bracket, seeding, median
              game) — validated here so a corrupt stored value can
@@ -18011,7 +18062,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           listEl.innerHTML = groupEntries(entries).map(function (g) {
             var rows = g.entries.map(function (e) {
               var conn = !!ck && normKey(e) === ck;
-              var meta = (e.platform === "espn" ? "ESPN" : "Sleeper") + (e.season ? " · " + e.season + " season" : "") + (conn ? ' · <span class="ff-saved-conn">Connected</span>' : "");
+              var meta = (e.platform === "espn" ? "ESPN" : "Sleeper") + (e.spectator ? " · Spectator" : "") + (e.season ? " · " + e.season + " season" : "") + (conn ? ' · <span class="ff-saved-conn">Connected</span>' : "");
               return '<div class="ff-saved-row">' +
                 '<button type="button" class="ff-saved-item" data-ff-saved="' + escHtml(normKey(e)) + '">' +
                 '<span class="ff-saved-name">' + escHtml(e.name || "League " + e.leagueId) + '</span>' +
@@ -18046,11 +18097,19 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           if (entry.platform === "espn") {
             if (!manual) {
               /* Auto restore runs quiet, like Sleeper's: an entry
-                 carrying its team id reconnects silently; one
-                 without stays un-restored (never an uninvited
-                 dialog) and remains one click away in the menu. */
+                 carrying its team id reconnects silently as that
+                 team; a spectator entry (no team, spectator flag)
+                 reconnects silently as a spectator — same quiet
+                 contract, never an uninvited dialog. Any failure
+                 resolves false and the entry stays one click away
+                 in the menu. */
               if (entry.yourRid != null && window.__ffReconnectEspnSilent) {
                 return window.__ffReconnectEspnSilent(entry)
+                  .then(function (ok) { return !!ok; })
+                  .catch(function () { return false; });
+              }
+              if (entry.spectator && window.__ffReconnectEspnSpectator) {
+                return window.__ffReconnectEspnSpectator(entry)
                   .then(function (ok) { return !!ok; })
                   .catch(function () { return false; });
               }
@@ -18267,7 +18326,7 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
               var conn = !!ck && normKey(e) === ck;
               var right = conn
                 ? '<span class="ff-menu-conn"><span class="ff-menu-dot"></span>Connected</span>'
-                : '<span class="ff-menu-tag">' + (e.platform === "espn" ? "ESPN" : "Sleeper") + '</span>';
+                : '<span class="ff-menu-tag">' + (e.platform === "espn" ? (e.spectator ? "ESPN · Spectator" : "ESPN") : "Sleeper") + '</span>';
               return '<button type="button" class="ff-menu-league" data-ff-league-id="' + escHtml(e.leagueId) + '" data-ff-league-key="' + escHtml(normKey(e)) + '">' +
                 '<span class="ff-menu-league-name">' + escHtml(e.name || ("League " + e.leagueId)) + '</span>' + right + '</button>';
             }).join("");
@@ -18454,16 +18513,17 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
            its second chance from the top of the list. */
         var autoTriedKeys = {};
         /* Auto-connectable = the quiet path can land it with zero
-           clicks: a Sleeper entry carrying its username, or an
-           ESPN entry carrying its team id (yourRid, saved at
-           connect — a team ID, not a login). Entries saved
-           without one cannot resolve silently — both stay one
-           click away in the menu, they just no longer veto the
+           clicks: a Sleeper entry carrying its username, an ESPN
+           entry carrying its team id (yourRid, saved at connect —
+           a team ID, not a login), or an ESPN spectator entry (no
+           team, spectator flag — Nov 19, 2026: restores as a
+           spectator instead of vanishing). Anything else stays one
+           click away in the menu; it just no longer vetoes the
            restore. */
         function autoConnectable(e) {
           if (!e) return false;
           if (e.platform === "sleeper") return !!e.username;
-          if (e.platform === "espn") return e.yourRid != null;
+          if (e.platform === "espn") return e.yourRid != null || e.spectator === true;
           return false;
         }
         /* The restore candidate: the league this device last had
