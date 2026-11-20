@@ -3365,7 +3365,7 @@ body.ff-sheet-mode.pdoc-full #sheetOrder:not(:empty){page-break-before:always}
           <span class="mode-badge" id="mode-badge">Guest — no league</span>
           <span class="mode-ctl">
             <span class="format-label" id="format-label">Format</span>
-            <span class="seg" role="group" aria-label="League format — dynasty or redraft" aria-describedby="format-note">
+            <span class="seg" role="group" aria-label="Value prices — dynasty or redraft" aria-describedby="format-note">
               <button type="button" id="vm-dynasty" aria-pressed="true">Dynasty</button>
               <button type="button" id="vm-redraft" aria-pressed="false">Redraft</button>
             </span>
@@ -8531,7 +8531,10 @@ ${rdP ? "" : `
            off window.CONN_LEAGUE directly. */
         const C = (connected && window.CONN_LEAGUE) ? window.CONN_LEAGUE : null;
         if (C && C.league && C.league.name) {
-          bar.textContent = (C.league.name + " · " + (VALMODE === "redraft" ? "Redraft" : "Dynasty") + " · " + ((typeof SETTINGS !== "undefined" && SETTINGS.sf === false) ? "1 QB" : "Superflex")).toUpperCase();
+          /* Identity, not lens (Nov 19, 2026): the type slot is the
+             league's true format — a redraft league flipped to
+             dynasty prices still reads Redraft here. */
+          bar.textContent = (C.league.name + " · " + ((C.leagueType || "dynasty") === "redraft" ? "Redraft" : "Dynasty") + " · " + ((typeof SETTINGS !== "undefined" && SETTINGS.sf === false) ? "1 QB" : "Superflex")).toUpperCase();
         } else {
           bar.textContent = ("Guest · Full player pool · " + (VALMODE === "redraft" ? "Redraft" : "Dynasty") + " · " + ((typeof SETTINGS !== "undefined" && SETTINGS.sf === false) ? "1 QB" : "Superflex")).toUpperCase();
         }
@@ -16465,11 +16468,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
         document.getElementById("calc-intro").innerHTML = CALC_INTRO_DEMO;
         /* #league-name is the view title now (Batch 2) — the league's
            identity rides in the sidebar switcher and league-sub. */
-        document.getElementById("league-sub").textContent = slpLeagueSub(C, (C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "Redraft" : "Dynasty");
+        document.getElementById("league-sub").textContent = slpLeagueSub(C, (C.leagueType || "dynasty") === "redraft" ? "Redraft" : "Dynasty");
         document.title = "Fantasy Forensics — " + C.league.name;
         document.getElementById("page-footer").textContent = isEspn
           ? `Fantasy Forensics · Values are computed by our proprietary algorithm (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, scoring and matchups are live from ESPN (league ${C.leagueId}), pulled ${C.today}. ESPN doesn't publish full transaction history or traded future picks, so the waiver wire runs on rosters + projections and pick capital assumes each team holds its own picks. Player values: ${DATA.league.snapshot} · Rosters imported: ${C.today}.`
-          : `Fantasy Forensics · Values are computed by our proprietary algorithm (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, ${(C.typeOverride || C.leagueType || "dynasty") === "redraft" ? "" : "picks and "}matchups are live from Sleeper for @${C.username}, pulled ${C.today}. Player values: ${DATA.league.snapshot} · Rosters imported: ${C.today}.`;
+          : `Fantasy Forensics · Values are computed by our proprietary algorithm (${DATA.league.snapshot} snapshot), re-priced for ${C.league.name}'s scoring (${slpFormatSummary(C.format)}). Rosters, standings, ${(C.leagueType || "dynasty") === "redraft" ? "" : "picks and "}matchups are live from Sleeper for @${C.username}, pulled ${C.today}. Player values: ${DATA.league.snapshot} · Rosters imported: ${C.today}.`;
         document.getElementById("mode-badge").textContent = isEspn ? "Your ESPN league" : "Your league";
         renderLeagueSwitcher();
         try { if (typeof ffRolloverRenderBanner === "function") ffRolloverRenderBanner(); } catch (e) { /* banner is best-effort */ }
@@ -20276,29 +20279,32 @@ window.REAL_TRADES = {"meta":{"source":"Sleeper public API (api.sleeper.app/v1)"
         if (tgBtn) tgBtn.style.display = rd ? "none" : "";
         const xl = document.getElementById("calc-xlink");
         if (xl) xl.style.display = rd ? "none" : "";
+        /* Identity chrome vs pricing lens (Nov 19, 2026): the badge,
+           the league-sub type slot and the "Values" label describe the
+           LEAGUE's true format (C.leagueType, as detected from the
+           platform) — they never follow VALMODE or a manual override.
+           A redraft league flipped to dynasty PRICES still reads as a
+           redraft league; the toggle itself is only the pricing lens,
+           and the note beside it says so in plain words. */
+        const lt = (conn && C.leagueType) ? C.leagueType : "dynasty";
+        const ltTok = lt === "redraft" ? "Redraft" : "Dynasty";
         const fn = document.getElementById("format-note");
         if (fn) {
           if (conn) {
-            /* The detected-type explainer line is GONE (Eric,
-               2026-10-23 — "people know what dynasty leagues are"):
-               the note hides while a league is connected, and the
-               type rides in the header meta line instead, refreshed
-               here on every mode transition so a manual override
-               updates it too. */
-            fn.textContent = "";
-            fn.style.display = "none";
+            fn.style.display = "";
+            fn.textContent = rd ? "Redraft prices — rest of season" : "Dynasty prices — long-term value, picks count";
             const sub = document.getElementById("league-sub");
             if (sub && typeof slpLeagueSub === "function")
-              sub.textContent = slpLeagueSub(C, rd ? "Redraft" : "Dynasty");
+              sub.textContent = slpLeagueSub(C, ltTok);
           } else {
             fn.style.display = "";
             fn.textContent = rd ? "Redraft prices — rest of season" : "Dynasty prices — long-term value, picks count";
           }
         }
         const fl = document.getElementById("format-label");
-        if (fl) fl.textContent = conn ? "League type" : "Format";
+        if (fl) fl.textContent = conn ? "Values" : "Format";
         const badge = document.getElementById("mode-badge");
-        if (badge && conn) badge.textContent = (C.platform === "espn" ? "Your ESPN league" : "Your league") + " · " + (rd ? "Redraft" : "Dynasty");
+        if (badge && conn) badge.textContent = (C.platform === "espn" ? "Your ESPN league" : "Your league") + " · " + ltTok;
         const fi = document.getElementById("finder-intro");
         if (fi) {
           if (window.__fiDyn == null) window.__fiDyn = fi.innerHTML;
@@ -24642,7 +24648,7 @@ window.drDraft = {
          have — the built format is the same information). */
       function ff4CCEspnChips(entry, built) {
         const chips = [];
-        const lt = built ? (built.typeOverride || built.leagueType || "redraft") : "redraft";
+        const lt = built ? (built.leagueType || "redraft") : "redraft";
         chips.push(lt === "dynasty" ? "Dynasty" : "Redraft");
         const f = (built && built.format) || {};
         chips.push(f.sf ? "Superflex" : "1 QB");
