@@ -16241,6 +16241,11 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
           renderVerdict();
           if (typeof window.renderOddsPanel === "function") window.renderOddsPanel();
           if (typeof window.renderPlayoffSched === "function") window.renderPlayoffSched();
+          /* List-odds flip (Nov 19): the rebuild healed this league's
+             sim, but the rail snapshot still holds the degraded
+             number it was built from. Refresh it so the list agrees
+             with the header. */
+          try { if (typeof ffCCRefreshSnap === "function") setTimeout(function () { try { ffCCRefreshSnap(leagueId); } catch (e) {} }, 0); } catch (e) {}
         } catch (e) { /* the schedule is an upgrade, never a breaker */ }
       };
 
@@ -23855,6 +23860,11 @@ window.drDraft = {
       function ffBakeBuild(key, force) {
         try {
           if (!key) return null;
+          /* List-odds flip (Nov 19): remember whether this key's bake
+             was degraded, so a build that heals it can refresh the
+             rail snapshot that was showing the degraded number. */
+          let _prevDegraded = false;
+          try { const _pex = ffBakeFor(key); _prevDegraded = !!(_pex && _pex.degraded); } catch (e) {}
           if (!force) {
             const ex = ffBakeFor(key);
             if (ex) {
@@ -23913,6 +23923,17 @@ window.drDraft = {
           const inj = {};
           try { (DATA_D74.players || []).forEach(p => { if (p && p.id != null) inj[p.id] = p.inj || null; }); } catch (e) {}
           window.__ffBake[key] = { sim, at: Date.now(), schedKey: sim.schedKey || null, ffp: sim.ffp || null, inj, week: (DATA.league && DATA.league.week) || null, degraded: (!sim.path || !sim.path.pairs || !sim.schedKey) };
+          /* A build that healed a degraded bake also heals the rail:
+             the snapshot for this league was showing the degraded
+             number (or "—") and never re-reads on its own. Deferred
+             a tick so it never runs inside this build's own call
+             chain. */
+          try {
+            if (_prevDegraded && window.__ffBake[key] && !window.__ffBake[key].degraded && typeof ffCCRefreshSnap === "function") {
+              const _sm = /^(sleeper|espn):(.+)$/i.exec(String(key));
+              if (_sm) setTimeout(function () { try { ffCCRefreshSnap(_sm[2]); } catch (e) {} }, 0);
+            }
+          } catch (e) {}
           try {
             /* G7 (Nov 18): the key match alone scopes the mirror to
                the connected league's own sim — a swap baking another
@@ -24489,6 +24510,21 @@ window.drDraft = {
           } catch (e) { return null; }
         })();
         if (!sim || !sim.results[me.rid]) return null;
+        /* List-odds flip (Nov 19): a degraded bake prices random
+           pairings — its odds are not real odds. The light pass must
+           never snapshot them into a rail row: the row would keep the
+           wrong number all session while the header, which reads the
+           live sim, shows the healed one. Refuse here (the snap stays
+           blank, "—") until the bake heals; the heal notification
+           re-runs this league's light pass. Refusals are not cached —
+           the fingerprint does not distinguish a degraded sim from a
+           healthy one, so caching one would keep serving it after the
+           bake healed. */
+        try {
+          const bkD = String(cacheKey || "").replace(/^(Sleeper|ESPN):/i, function (m) { return m.toLowerCase(); });
+          const exD = (typeof ffBakeFor === "function") ? ffBakeFor(bkD) : null;
+          if (exD && exD.degraded) return null;
+        } catch (e) {}
         if (!shared) {
           /* A sim built for the connected league itself becomes
              the page's detailed sim, so the detail surfaces that
@@ -24571,7 +24607,7 @@ window.drDraft = {
                (2–32) — no 12-team gate. */
             if (!seasonDone) {
               try { const ccSim = ff4CCSimCached("Sleeper:" + lg.league_id, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
-              try { const fs = (typeof ff4CCIsActive === "function" && ff4CCIsActive(lg) && typeof ff4CCFreshSim === "function") ? ff4CCFreshSim() : null; if (fs && fs.results && fs.results[me.rid]) { snap.odds = fs.results[me.rid].playoff; snap.clinched = !!fs.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
+              try { const fs = (typeof ff4CCIsActive === "function" && ff4CCIsActive(lg) && typeof ff4CCFreshSim === "function") ? ff4CCFreshSim() : null; const _bkA = (typeof ffBakeFor === "function") ? ffBakeFor("sleeper:" + String(lg.league_id)) : null; if (fs && fs.results && fs.results[me.rid] && !(_bkA && _bkA.degraded)) { snap.odds = fs.results[me.rid].playoff; snap.clinched = !!fs.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
             /* J3 (Nov 19): a no-sim detail is also rebuilt here — a
                fresh snap landing after the sim did is the same signal
                as an odds change. */
@@ -24687,7 +24723,7 @@ window.drDraft = {
             /* G7 (Nov 18): the light sim runs for any league size
                (2–32) — no 12-team gate. */
             try { const ccSim = ff4CCSimCached("ESPN:" + entry.leagueId, idx, me); if (ccSim) { snap.odds = ccSim.odds; snap.clinched = ccSim.clinched; snap.__oddsPct = (typeof ccSim.oddsPct === "number") ? ccSim.oddsPct : null; } } catch (e) { /* odds stay blank */ }
-            try { const fs = (typeof ff4CCIsActive === "function" && ff4CCIsActive(entry) && typeof ff4CCFreshSim === "function") ? ff4CCFreshSim() : null; if (fs && fs.results && fs.results[me.rid]) { snap.odds = fs.results[me.rid].playoff; snap.clinched = !!fs.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
+            try { const fs = (typeof ff4CCIsActive === "function" && ff4CCIsActive(entry) && typeof ff4CCFreshSim === "function") ? ff4CCFreshSim() : null; const _bkA = (typeof ffBakeFor === "function") ? ffBakeFor("espn:" + String(entry.leagueId)) : null; if (fs && fs.results && fs.results[me.rid] && !(_bkA && _bkA.degraded)) { snap.odds = fs.results[me.rid].playoff; snap.clinched = !!fs.results[me.rid].clinched; } } catch (e) { /* light sim stands */ }
             /* J3 (Nov 19): a no-sim detail is also rebuilt here — a
                fresh snap landing after the sim did is the same signal
                as an odds change. */
@@ -25300,6 +25336,36 @@ window.drDraft = {
         const lg = (ff4.ccLeagues || [])[idx];
         if (lg && ff4CCIsActive(lg) && ff4CCVisibleOrder().indexOf(idx) !== -1) { ff4.ccFocus = idx; ff4CCRenderRail(); ff4CCRenderSpot(); ff4CCDetail(idx); }
         else if ((ff4.ccDone || 0) + 1 >= (ff4.ccLeagues || []).length) ff4CCPickFocus();
+      }
+
+      /* Snap refresh (Nov 19, list-odds flip): a snapshot is a
+         point-in-time read of its league's bake. When that bake heals
+         (degraded -> healthy) the snapshot's odds go stale — the rail
+         keeps showing the degraded number while the header, which
+         reads the live sim, shows the healed one. Re-running the
+         light pass for that league re-reads the bake and re-renders
+         the rail (and the Switch Teams rows, via ff4CCAfterLight).
+         No-op unless the Command Center session holds a snapshot for
+         the league. Serialized on the light-pass lock so it never
+         runs against a pass in flight; a refresh that finds the
+         snapshot already right is a cheap re-read, never a rebuild. */
+      async function ffCCRefreshSnap(leagueId) {
+        try {
+          if (!leagueId || !window.ff4 || !Array.isArray(ff4.ccLeagues) || !ff4.ccSnaps) return;
+          if (ff4.ccDead) return;
+          const idx = ff4.ccLeagues.findIndex(function (lg) { return String(lg.league_id || lg.leagueId) === String(leagueId); });
+          if (idx < 0) return;
+          const snap = ff4.ccSnaps[idx];
+          if (!snap || snap.failed) return;
+          await ff4CCLock();
+          try {
+            if (ff4.ccDead) return;
+            const lg = ff4.ccLeagues[idx];
+            if (!lg) return;
+            if (ff4CCIsEspn(lg)) await ff4CCLoadEspn(lg, idx);
+            else await ff4CCLoad(lg, idx, ff4.ccUser);
+          } finally { ff4.ccBusy = false; }
+        } catch (e) { /* a snap refresh never breaks the page */ }
       }
 
       function ff4CCPickFocus() {
@@ -26519,6 +26585,23 @@ window.drDraft = {
                 if (cbk) await ffBakeAwait(cbk);
               }
             } catch (e) { /* the light pass proceeds on whatever is in hand */ }
+            /* List-odds flip (Nov 19): a warmup bake built before its
+               league's remaining schedule lands prices random
+               pairings, and the rail snapshots that wrong number for
+               the session. Kick every Sleeper league's schedule fetch
+               in parallel and wait (bounded) so the bakes build on
+               the real schedule. A league whose fetch is still out
+               after the bound keeps a blank ("—") snap until its heal
+               notification re-runs its light pass — never a wrong
+               number. The end week mirrors the sim's own window
+               (max of playoff start and 15) so the cache key matches
+               the one the sim peeks. */
+            try {
+              if (typeof window.__ffSchedEnsure === "function") {
+                const _sp = entries.filter(function (e) { try { return !ff4CCIsEspn(e); } catch (err) { return true; } }).map(function (e) { try { const _wk = ff4CCWeek(e); const _ps = Number((e.settings && e.settings.playoff_week_start) || 15); return window.__ffSchedEnsure(String(e.league_id), _wk, Math.max(_ps || 15, 15)); } catch (err) { return null; } }).filter(Boolean);
+                if (_sp.length) await Promise.race([Promise.all(_sp.map(function (p) { return p.catch(function () { return null; }); })), new Promise(function (r) { setTimeout(r, 6000); })]);
+              }
+            } catch (e) { /* the light pass proceeds on whatever is in hand */ }
             for (let i = 0; i < entries.length; i++) {
               if (ff4.ccDead) break;
               await ff4CCLock();
@@ -27428,6 +27511,25 @@ window.__lifeline = (function () {
             delete lfPending[ckey];
             var entry = { at: Date.now(), state: res.state, games: res.games, weeks: res.weeks };
             if (res.state !== "error") lfCache[ckey] = entry;
+            /* List-odds flip (Nov 19): a schedule landing can heal a
+               degraded warmup bake — but nothing ever told the bake,
+               and the rail snapshot built from it kept the wrong
+               number all session. Drop the stale bake here so the
+               next build prices the real schedule, and refresh that
+               league's snapshot so the rail upgrades to the real
+               number instead of holding the degraded one. The
+               refresh is deferred a tick so it never runs inside
+               this fetch's own resolution chain. */
+            try {
+              if (res.state === "ok" && typeof ffBakeFor === "function" && typeof ffBakeClear === "function") {
+                var _bk = "sleeper:" + String(leagueId);
+                var _ex = ffBakeFor(_bk);
+                if (_ex && _ex.degraded) {
+                  ffBakeClear(_bk);
+                  if (typeof ffCCRefreshSnap === "function") setTimeout(function () { try { ffCCRefreshSnap(leagueId); } catch (e) {} }, 0);
+                }
+              }
+            } catch (e) { /* the heal is best-effort */ }
             return entry;
           });
           lfPending[ckey] = p;
