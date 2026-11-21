@@ -15665,7 +15665,23 @@ window.NMU_TEAMS = {"TB|RB":{"wk":8,"starter":"11584","snaps":{"11584":0.5,"9506
              over Courtland Sutton 9.42, a +0.5 fine-tune row for
              players who do not play this week). */
           const useNext = weekDone && (nxtOk || matchesNext);
-          const effLineup = curOk ? cur.starters : useNext ? nxt.starters : (r.starters || []);
+          /* Mid-week fix (2026-11-21, Eric): once Thursday points are
+             banked, cur.points > 0, so entryOk(cur) fails and the
+             lineup falls back to rosters[].starters — which Sleeper
+             leaves on the pre-week set (Dynasty 2025, Week 11: London /
+             Pitts / Higbee / Watson still "starting" there while the
+             Week 11 matchup entry already has Bryant / Andrews in, so
+             the queue flagged four bye players he had already benched
+             and the Action Slip re-suggested swaps he had already
+             made). The current week's matchup entry IS the live set
+             lineup even mid-week — starters lock per game as it
+             starts — so a full-length cur entry wins while the week is
+             still in progress, whatever its points. The weekDone flip
+             is untouched: once the week completes, useNext still wins
+             over the live entry, and a missing/partial cur entry still
+             falls back exactly as before. */
+          const curLive = !!(cur && Array.isArray(cur.starters) && cur.starters.length === startSlots.length);
+          const effLineup = (curLive && !weekDone) ? cur.starters : curOk ? cur.starters : useNext ? nxt.starters : (r.starters || []);
           const lineup = effLineup.map((pid, i) => ({ id: pid, slot: slotLabel(startSlots[i] || "") }))
             .filter(l => KEEP_SLOTS.includes(l.slot));
           const lineupWeek = (curOk || !useNext) ? week : week + 1;
