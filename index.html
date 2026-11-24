@@ -10952,7 +10952,7 @@ ${rdP ? "" : `
          group out, tapping it again restores it. "All" is the master
          switch (see syncFilterButtons). Picks are in the value-ordered
          list by default (PICKS on). */
-      const boardState = { groups: { QB: true, RB: true, WR: true, TE: true, FLEX: true, PICKS: true, INJ: true }, q: "", sort: "value", owner: "ALL", shown: 60 };
+      const boardState = { pos: "ALL", q: "", sort: "value", owner: "ALL", shown: 60 };
       const boardOwnerSel = document.getElementById("board-owner");
       DATA.teams.forEach(t => {
         const o = document.createElement("option");
@@ -10969,8 +10969,8 @@ ${rdP ? "" : `
            1st sits beside the veteran it buys. Dynasty only: picks carry
            no redraft price. Picks are IN the list by default; the Picks
            toggle drops them out. */
-        const g = boardState.groups;
-        if (VALMODE !== "redraft" && g.PICKS) {
+        const pos = boardState.pos;
+        if (VALMODE !== "redraft" && (pos === "ALL" || pos === "PICKS")) {
           /* The pick ladder lives in the Draft Room's own DATA (IIFE scope,
              line ~19419) — the site-wide DATA this function sees has no
              ladder key, so read it through the drDraft accessor. */
@@ -10981,17 +10981,18 @@ ${rdP ? "" : `
           const dv = p => p.isPick ? (p.value || 0) : dispVal(p);
           list.sort((a, b) => dv(b) - dv(a));
         }
-        /* All-toggle strip (Eric, 2026-11-12): every group is in the list
-           by default; tapping a lit button drops that group out, tapping
-           it again restores it. FLEX is the flex-eligible set (RB/WR/TE);
-           INJ is the injured set. Picks carry pos "PK" and no injury
-           flag, so the position/injury filters never touch them. */
-        if (!g.QB) list = list.filter(p => p.pos !== "QB");
-        if (!g.RB) list = list.filter(p => p.pos !== "RB");
-        if (!g.WR) list = list.filter(p => p.pos !== "WR");
-        if (!g.TE) list = list.filter(p => p.pos !== "TE");
-        if (!g.FLEX) list = list.filter(p => !["RB", "WR", "TE"].includes(p.pos));
-        if (!g.INJ) list = list.filter(p => !p.inj);
+        /* Single-select position filter (Eric, 2026-11-24): tapping a
+           pill shows ONLY that group. The all-toggle strip it replaced
+           (Nov 12) hid the tapped group instead, so TE/Picks/Injured
+           taps changed nothing visible at the top of the list and only
+           QB — Josh Allen at #1 — had an unmissable effect. FLEX is
+           the flex-eligible set (RB/WR/TE); INJ is the injured set.
+           Picks carry pos "PK" and no injury flag, so they appear
+           only under All and Picks. */
+        if (pos === "QB" || pos === "RB" || pos === "WR" || pos === "TE") list = list.filter(p => p.pos === pos);
+        else if (pos === "FLEX") list = list.filter(p => ["RB", "WR", "TE"].includes(p.pos));
+        else if (pos === "PICKS") list = list.filter(p => p.isPick);
+        else if (pos === "INJ") list = list.filter(p => p.inj);
         if (boardState.owner === "FA") list = list.filter(p => !p.owner);
         else if (boardState.owner !== "ALL") list = list.filter(p => p.owner === Number(boardState.owner));
         if (boardState.q) list = list.filter(p => p.name.toLowerCase().includes(boardState.q));
@@ -11149,6 +11150,9 @@ ${rdP ? "" : `
            hides — picks carry no redraft price and never enter the list. */
         const pickBtn = document.querySelector('#pos-filter button[data-pos="PICKS"]');
         if (pickBtn) pickBtn.style.display = (VALMODE === "redraft") ? "none" : "";
+        /* Redraft has no pick ladder: a Picks filter carried over from
+           dynasty mode would show an empty list — fall back to All. */
+        if (VALMODE === "redraft" && boardState.pos === "PICKS") { boardState.pos = "ALL"; syncFilterButtons(); }
         const list = boardList();
         const body = document.getElementById("board-body");
         const rows = list.slice(0, boardState.shown);
@@ -11221,31 +11225,21 @@ ${rdP ? "" : `
       document.getElementById("board-search").addEventListener("input", e => { boardState.q = e.target.value.toLowerCase().trim(); boardState.shown = 60; renderBoard(); });
       document.getElementById("board-sort").addEventListener("change", e => { boardState.sort = e.target.value; renderBoard(); });
       boardOwnerSel.addEventListener("change", e => { boardState.owner = e.target.value; boardState.shown = 60; renderBoard(); });
-      /* All-toggle strip (Eric, 2026-11-12): every group is lit by
-         default and in the list; tapping a lit button drops that group
-         out, tapping it again restores it. "All" is select-all only:
-         tapping it turns every group on (including INJ) and never
-         turns anything off — if all are already on it changes
-         nothing. FLEX is the flex-eligible set (RB/WR/TE); INJ is
-         the injured set. The separate Show/Hide picks button is
-         deleted — the Picks toggle in this strip owns picks now. */
+      /* Single-select filter strip (Eric, 2026-11-24 — replaces the
+         Nov 12 all-toggle strip): exactly one pill is lit — the active
+         filter. Tapping a pill shows only that group; tapping the lit
+         pill again goes back to All. FLEX is the flex-eligible set
+         (RB/WR/TE); INJ is the injured set; Picks shows only the pick
+         ladder rows. */
       function syncFilterButtons() {
-        const g = boardState.groups;
         document.querySelectorAll("#pos-filter button").forEach(b => {
-          const k = b.dataset.pos;
-          b.setAttribute("aria-pressed", k === "ALL" ? String(Object.values(g).every(Boolean)) : String(!!g[k]));
+          b.setAttribute("aria-pressed", String(b.dataset.pos === boardState.pos));
         });
       }
       document.getElementById("pos-filter").querySelectorAll("button").forEach(btn => {
         btn.addEventListener("click", () => {
-          const k = btn.dataset.pos, g = boardState.groups;
-          if (k === "ALL") {
-            /* Select-all only: never turns anything off, so Injured
-               can never be deselected by tapping All. */
-            Object.keys(g).forEach(key => { g[key] = true; });
-          } else if (k in g) {
-            g[k] = !g[k];
-          }
+          const k = btn.dataset.pos;
+          boardState.pos = (k === boardState.pos) ? "ALL" : k;
           syncFilterButtons();
           boardState.shown = 60; renderBoard();
         });
